@@ -51,6 +51,20 @@ export const PLAN_LIMITS = {
   },
 } as const;
 
+/**
+ * Resolve the effective plan based on subscription billing status.
+ * ACTIVE → paid plan works as stored.
+ * PAST_DUE or CANCELED (or missing) → downgrade to FREE entitlements.
+ */
+export function getEffectivePlanType(
+  storedPlanType: string,
+  subscriptionStatus?: string | null,
+): keyof typeof PLAN_LIMITS {
+  if (storedPlanType === "FREE") return "FREE";
+  if (subscriptionStatus === "ACTIVE") return storedPlanType as keyof typeof PLAN_LIMITS;
+  return "FREE";
+}
+
 export const LITHUANIAN_CITIES = [
   "Vilnius",
   "Kaunas",

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -99,6 +100,7 @@ async function main() {
         status: "OPEN",
         clientEmail: "klientas1@example.lt",
         clientName: "Marius",
+        trackingToken: crypto.randomBytes(32).toString("hex"),
       },
     }),
     prisma.serviceRequest.create({
@@ -111,6 +113,7 @@ async function main() {
         status: "OPEN",
         clientEmail: "klientas2@example.lt",
         clientName: "Giedrė",
+        trackingToken: crypto.randomBytes(32).toString("hex"),
       },
     }),
     prisma.serviceRequest.create({
@@ -123,6 +126,7 @@ async function main() {
         status: "OPEN",
         clientEmail: "klientas3@example.lt",
         clientName: "UAB Saulė",
+        trackingToken: crypto.randomBytes(32).toString("hex"),
       },
     }),
     prisma.serviceRequest.create({
@@ -135,6 +139,7 @@ async function main() {
         status: "OPEN",
         clientEmail: "klientas4@example.lt",
         clientName: "Antanas",
+        trackingToken: crypto.randomBytes(32).toString("hex"),
       },
     }),
     prisma.serviceRequest.create({
@@ -147,6 +152,7 @@ async function main() {
         status: "OPEN",
         clientEmail: "klientas5@example.lt",
         clientName: "Indrė",
+        trackingToken: crypto.randomBytes(32).toString("hex"),
       },
     }),
   ]);

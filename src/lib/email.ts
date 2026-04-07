@@ -42,8 +42,8 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   }
 }
 
-export function requestConfirmationEmail(name: string, requestId: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${requestId}`;
+export function requestConfirmationEmail(name: string, trackingToken: string) {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
   return {
     subject: "Jūsų užklausa gauta — PaslaugųRinka",
     html: `
@@ -51,14 +51,31 @@ export function requestConfirmationEmail(name: string, requestId: string) {
         <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
         <p>Jūsų užklausa sėkmingai pateikta. Paslaugų tiekėjai netrukus peržiūrės ją ir atsiųs pasiūlymus.</p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Sekti užklausą</a></p>
-        <p style="color: #6b7280; font-size: 14px;">Jūsų užklausos ID: ${requestId}</p>
+        <p style="color: #6b7280; font-size: 14px;">Išsaugokite šią nuorodą — ji leidžia sekti jūsų užklausos būseną.</p>
       </div>
     `,
   };
 }
 
-export function newResponseEmail(clientName: string, requestTitle: string, requestId: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${requestId}`;
+export function requestVerificationEmail(name: string, verificationToken: string, trackingToken: string) {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/requests/verify?token=${verificationToken}`;
+  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
+  return {
+    subject: "Patvirtinkite užklausą — PaslaugųRinka",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
+        <p>Dar liko vienas žingsnis: patvirtinkite savo el. pašto adresą, kad aktyvuotume jūsų užklausą ir perduotume ją paslaugų tiekėjams.</p>
+        <p><a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti užklausą</a></p>
+        <p style="color: #6b7280; font-size: 14px;">Nuoroda galioja 24 valandas.</p>
+        <p style="color: #6b7280; font-size: 14px;">Jei norite tik peržiūrėti užklausą, naudokite šią nuorodą: <a href="${trackingUrl}">sekti užklausą</a>.</p>
+      </div>
+    `,
+  };
+}
+
+export function newResponseEmail(clientName: string, requestTitle: string, trackingToken: string) {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
   return {
     subject: `Naujas pasiūlymas: ${requestTitle} — PaslaugųRinka`,
     html: `
@@ -72,7 +89,7 @@ export function newResponseEmail(clientName: string, requestTitle: string, reque
 }
 
 export function newRequestAlertEmail(providerName: string, requestTitle: string, category: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekėjas/uzklausos`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/uzklausos`;
   return {
     subject: `Nauja užklausa: ${requestTitle} — PaslaugųRinka`,
     html: `
@@ -92,7 +109,37 @@ export function providerActivatedEmail(name: string) {
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
         <p>Jūsų tiekėjo paskyra buvo aktyvuota. Dabar galite peržiūrėti ir atsakyti į klientų užklausas.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekėjas" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
+      </div>
+    `,
+  };
+}
+
+export function passwordResetEmail(name: string, token: string) {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/slaptazodis/reset?token=${token}`;
+  return {
+    subject: "Slaptažodžio atstatymas — PaslaugųRinka",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4f46e5;">Sveiki, ${name}!</h2>
+        <p>Gavome jūsų prašymą atstatyti slaptažodį. Spauskite žemiau esantį mygtuką:</p>
+        <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; border-radius: 12px;">Atstatyti slaptažodį</a></p>
+        <p style="color: #6b7280; font-size: 14px;">Ši nuoroda galioja 1 valandą. Jei neprašėte atstatyti slaptažodžio, ignoruokite šį laišką.</p>
+      </div>
+    `,
+  };
+}
+
+export function emailVerificationEmail(name: string, token: string) {
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/verify-email?token=${token}`;
+  return {
+    subject: "Patvirtinkite el. paštą — PaslaugųRinka",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4f46e5;">Sveiki, ${name}!</h2>
+        <p>Dėkojame už registraciją. Patvirtinkite savo el. pašto adresą spausdami žemiau:</p>
+        <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; border-radius: 12px;">Patvirtinti el. paštą</a></p>
+        <p style="color: #6b7280; font-size: 14px;">Ši nuoroda galioja 24 valandas.</p>
       </div>
     `,
   };
@@ -105,7 +152,7 @@ export function subscriptionConfirmationEmail(name: string, plan: string) {
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
         <p>Jūsų <strong>${plan}</strong> planas sėkmingai aktyvuotas. Dabar galite naudotis visomis plano galimybėmis.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekėjas/planai" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti planą</a></p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/planai" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti planą</a></p>
       </div>
     `,
   };

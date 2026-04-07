@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
+export const dynamic = "force-dynamic";
+
 // TODO: Set STRIPE_SECRET_KEY in .env.local
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2023-10-16",
@@ -26,7 +28,7 @@ export async function GET() {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekėjas/planai`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/planai`,
     });
 
     return NextResponse.json({ success: true, data: { url: portalSession.url } });

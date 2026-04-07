@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import Select from "@/components/ui/Select";
 import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Request {
   id: string;
@@ -20,24 +20,38 @@ interface Request {
   _count: { responses: number };
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export default function AdminRequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
 
-  useEffect(() => { fetchRequests(); }, [statusFilter, categoryFilter]);
-
-  async function fetchRequests() {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
     if (categoryFilter) params.set("category", categoryFilter);
+    params.set("page", String(page));
     const res = await fetch(`/api/admin/uzklausos?${params}`);
     const data = await res.json();
-    if (data.success) setRequests(data.data);
+    if (data.success) {
+      setRequests(data.data);
+      setPagination(data.pagination);
+    }
     setLoading(false);
-  }
+  }, [statusFilter, categoryFilter, page]);
+
+  useEffect(() => { setPage(1); }, [statusFilter, categoryFilter]);
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
   async function handleAction(id: string, action: string, status?: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti?")) return;
@@ -56,6 +70,7 @@ export default function AdminRequestsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Select
           options={[
+            { value: "PENDING_CONFIRMATION", label: "Laukia patvirtinimo" },
             { value: "OPEN", label: "Atidarytos" },
             { value: "IN_PROGRESS", label: "Vykdomos" },
             { value: "CLOSED", label: "Uždarytos" },
@@ -100,6 +115,7 @@ export default function AdminRequestsPage() {
                         onChange={(e) => handleAction(req.id, "updateStatus", e.target.value)}
                         className="rounded-xl border border-surface-300 bg-white px-2.5 py-1.5 text-micro font-medium focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
                       >
+                        <option value="PENDING_CONFIRMATION">Laukia patvirtinimo</option>
                         <option value="OPEN">Atidaryta</option>
                         <option value="IN_PROGRESS">Vykdoma</option>
                         <option value="CLOSED">Uždaryta</option>
@@ -117,6 +133,32 @@ export default function AdminRequestsPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-micro text-surface-500">
+            Rodoma {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} iš {pagination.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="rounded-xl border border-surface-300 p-2 text-surface-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-surface-600 dark:hover:bg-surface-800"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-body-sm text-surface-700 dark:text-surface-300">{page} / {pagination.totalPages}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page >= pagination.totalPages}
+              className="rounded-xl border border-surface-300 p-2 text-surface-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-surface-600 dark:hover:bg-surface-800"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

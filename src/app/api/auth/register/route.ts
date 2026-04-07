@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { registerSchema } from "@/lib/validations";
+import { registerSchemaBase } from "@/lib/validations";
+import { rateLimit, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { sendEmail, emailVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = rateLimit(`auth:register:${ip}`, RATE_LIMITS.auth);
+    if (!rl.success) {
+      return NextResponse.json(
+        { success: false, error: "Per daug bandymų. Bandykite vėliau." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
-    const parsed = registerSchema.omit({ confirmPassword: true }).safeParse(body);
+    const parsed = registerSchemaBase.omit({ confirmPassword: true }).safeParse(body);
 
     if (!parsed.success) {
       const issues = parsed.error.issues || [];
@@ -27,6 +39,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: "PROVIDER",
+        emailVerified: null,
         providerProfile: {
           create: {
             specializations: "[]",
@@ -35,6 +48,19 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Send verification email
+    const token = crypto.randomBytes(32).toString("hex");
+    await prisma.emailVerificationToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      },
+    });
+
+    const emailData = emailVerificationEmail(name || "Tiekėjas", token);
+    await sendEmail({ to: email, ...emailData });
 
     return NextResponse.json({ success: true, data: { id: user.id, email: user.email } });
   } catch (error) {

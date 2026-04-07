@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,18 +15,30 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "";
     const category = searchParams.get("category") || "";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (category) where.category = category;
 
-    const requests = await prisma.serviceRequest.findMany({
-      where,
-      include: { _count: { select: { responses: true } } },
-      orderBy: { createdAt: "desc" },
-    });
+    const [requests, total] = await Promise.all([
+      prisma.serviceRequest.findMany({
+        where,
+        include: { _count: { select: { responses: true } } },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.serviceRequest.count({ where }),
+    ]);
 
-    return NextResponse.json({ success: true, data: requests });
+    return NextResponse.json({
+      success: true,
+      data: requests,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error("Admin requests error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
@@ -43,7 +57,16 @@ export async function PATCH(req: NextRequest) {
     if (action === "delete") {
       await prisma.serviceRequest.delete({ where: { id } });
     } else if (action === "updateStatus" && status) {
-      await prisma.serviceRequest.update({ where: { id }, data: { status } });
+      const validStatuses = ["PENDING_CONFIRMATION", "OPEN", "IN_PROGRESS", "CLOSED"];
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json({ success: false, error: "Netinkamas statusas" }, { status: 400 });
+      }
+      // When admin re-opens a request, clear the accepted response
+      const data: Record<string, unknown> = { status };
+      if (status === "OPEN") {
+        data.acceptedResponseId = null;
+      }
+      await prisma.serviceRequest.update({ where: { id }, data });
     }
 
     return NextResponse.json({ success: true });

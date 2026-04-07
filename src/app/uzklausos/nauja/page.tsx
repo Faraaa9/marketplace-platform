@@ -37,9 +37,20 @@ function NewRequestForm() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  const trimmedDescriptionLength = form.description.trim().length;
+  const descriptionMinLength = 20;
+  const descriptionError =
+    form.description.length > 0 && trimmedDescriptionLength < descriptionMinLength
+      ? `Aprašymas turi būti bent ${descriptionMinLength} simbolių`
+      : "";
+
   function canProceed(): boolean {
-    if (step === 1) return !!(form.category && form.title.length >= 5 && form.description.length >= 20 && form.location);
-    if (step === 2) return !!(form.clientName.length >= 2 && form.clientEmail.includes("@"));
+    if (step === 1) return !!(form.category && form.title.trim().length >= 5 && trimmedDescriptionLength >= descriptionMinLength && form.location);
+    if (step === 2) {
+      const baseValid = form.clientName.length >= 2 && form.clientEmail.includes("@");
+      if (form.createAccount) return baseValid && form.password.length >= 6;
+      return baseValid;
+    }
     return true;
   }
 
@@ -54,10 +65,11 @@ function NewRequestForm() {
       });
       const data = await res.json();
       if (data.success) {
-        router.push(`/uzklausos/sekti/${data.data.id}`);
+        router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
       } else {
         setError(data.error || "Klaida pateikiant užklausą");
-        setStep(1);
+        // Stay on step 2 for account-related errors so user can uncheck or fix
+        setStep(res.status === 409 ? 2 : 1);
       }
     } catch {
       setError("Klaida pateikiant užklausą");
@@ -114,7 +126,16 @@ function NewRequestForm() {
             placeholder="Aprašykite detaliau — ką reikia padaryti, kokie darbų mastai, ar turite medžiagas..."
             value={form.description}
             onChange={(e) => updateForm("description", e.target.value)}
+            error={descriptionError || undefined}
           />
+          <div className="flex items-center justify-between text-micro">
+            <span className={descriptionError ? "text-red-500 dark:text-red-400" : "text-surface-400"}>
+              Bent {descriptionMinLength} simbolių, kad tiekėjai suprastų užduotį
+            </span>
+            <span className={trimmedDescriptionLength >= descriptionMinLength ? "text-emerald-600 dark:text-emerald-400" : "text-surface-400"}>
+              {trimmedDescriptionLength}/{descriptionMinLength}
+            </span>
+          </div>
           <Select
             id="location"
             label="Miestas"
@@ -236,6 +257,9 @@ function NewRequestForm() {
                 </div>
               )}
             </dl>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            Po pateikimo reikės patvirtinti el. paštą. Tik po patvirtinimo užklausa bus perduota tiekėjams.
           </div>
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)}>Atgal</Button>

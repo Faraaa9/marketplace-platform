@@ -13,6 +13,7 @@ import { FileText, Plus } from "lucide-react";
 
 interface Request {
   id: string;
+  trackingToken: string;
   title: string;
   category: string;
   status: string;
@@ -36,6 +37,7 @@ export default function MyRequestsPage() {
   if (loading) return <LoadingSpinner />;
 
   const statusMap: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
+    PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
     OPEN: { label: "Atidaryta", variant: "success" },
     IN_PROGRESS: { label: "Vykdoma", variant: "warning" },
     CLOSED: { label: "Uždaryta", variant: "default" },
@@ -63,7 +65,7 @@ export default function MyRequestsPage() {
             const status = statusMap[req.status] || statusMap.OPEN;
             const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === req.category)?.label;
             return (
-              <Link key={req.id} href={`/uzklausos/sekti/${req.id}`}>
+              <Link key={req.id} href={`/uzklausos/sekti/${req.trackingToken}`}>
                 <Card hover>
                   <div className="flex items-start justify-between">
                     <div>

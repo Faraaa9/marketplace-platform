@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { getRoleHomePath } from "@/lib/redirects";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(getRoleHomePath(session?.user?.role));
+    }
+  }, [router, session?.user?.role, status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +37,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/");
+        const refreshedSession = await getSession();
+        router.push(getRoleHomePath(refreshedSession?.user?.role));
         router.refresh();
       }
     } catch {
@@ -81,7 +90,13 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-body-sm text-surface-500 dark:text-surface-400">
+          <div className="mt-4 text-center">
+            <Link href="/slaptazodis" className="text-body-sm text-surface-500 hover:text-brand-600 transition-colors dark:text-surface-400 dark:hover:text-brand-400">
+              Pamiršote slaptažodį?
+            </Link>
+          </div>
+
+          <p className="mt-4 text-center text-body-sm text-surface-500 dark:text-surface-400">
             Esate paslaugų tiekėjas?{" "}
             <Link href="/registruotis" className="text-brand-600 hover:text-brand-700 font-medium transition-colors dark:text-brand-400 dark:hover:text-brand-300">
               Registruokitės čia

@@ -64,7 +64,7 @@ export default function Header() {
               <>
                 {role === "PROVIDER" && (
                   <Link
-                    href="/tiekėjas"
+                    href="/tiekejas"
                     className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                   >
                     <LayoutDashboard className="h-4 w-4" />
@@ -124,7 +124,7 @@ export default function Header() {
               )}
               {session && (
                 <>
-                  {role === "PROVIDER" && <MobileLink href="/tiekėjas" onClick={() => setMobileOpen(false)}>Valdymo panelė</MobileLink>}
+                  {role === "PROVIDER" && <MobileLink href="/tiekejas" onClick={() => setMobileOpen(false)}>Valdymo panelė</MobileLink>}
                   {role === "ADMIN" && <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Admin panelė</MobileLink>}
                   <button
                     onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}

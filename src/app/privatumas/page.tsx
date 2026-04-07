@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  title: "Privatumo politika",
+  description: "PaslaugųRinka privatumo politika – kaip renkame, saugome ir naudojame jūsų duomenis.",
+};
 
 export default function PrivacyPage() {
   return (

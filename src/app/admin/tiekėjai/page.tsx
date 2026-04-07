@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Search, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Provider {
   id: string;
@@ -21,23 +21,37 @@ interface Provider {
   _count: { responses: number };
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export default function AdminProvidersPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
-  useEffect(() => { fetchProviders(); }, [search]);
-
-  async function fetchProviders() {
+  const fetchProviders = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
+    params.set("page", String(page));
     const res = await fetch(`/api/admin/tiekėjai?${params}`);
     const data = await res.json();
-    if (data.success) setProviders(data.data);
+    if (data.success) {
+      setProviders(data.data);
+      setPagination(data.pagination);
+    }
     setLoading(false);
-  }
+  }, [search, page]);
+
+  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { fetchProviders(); }, [fetchProviders]);
 
   async function handleAction(userId: string, action: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti šį tiekėją?")) return;
@@ -117,6 +131,32 @@ export default function AdminProvidersPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-micro text-surface-500">
+            Rodoma {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} iš {pagination.total}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="rounded-xl border border-surface-300 p-2 text-surface-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-surface-600 dark:hover:bg-surface-800"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-body-sm text-surface-700 dark:text-surface-300">{page} / {pagination.totalPages}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page >= pagination.totalPages}
+              className="rounded-xl border border-surface-300 p-2 text-surface-500 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-surface-600 dark:hover:bg-surface-800"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 

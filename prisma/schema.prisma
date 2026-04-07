@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -18,12 +18,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  providerProfile ProviderProfile?
-  serviceRequests ServiceRequest[]
-  responses       Response[]
-  messages        Message[]
-  subscription    Subscription?
-  notifications   Notification[]
+  providerProfile         ProviderProfile?
+  serviceRequests         ServiceRequest[]
+  responses               Response[]
+  messages                Message[]
+  subscription            Subscription?
+  notifications           Notification[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -31,7 +33,7 @@ model User {
 model ProviderProfile {
   id              String    @id @default(cuid())
   userId          String    @unique
-  description     String?
+  description     String?   @db.Text
   specializations String    @default("[]")
   location        String?
   phone           String?
@@ -49,23 +51,31 @@ model ProviderProfile {
 }
 
 model ServiceRequest {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  category    String
-  location    String
-  budget      String?
-  status      String   @default("OPEN")
-  clientId    String?
-  clientEmail String
-  clientName  String
-  clientPhone String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  trackingToken      String   @unique @default(cuid())
+  requestVerificationToken String?  @unique
+  requestVerificationExpiresAt DateTime?
+  contactVerifiedAt  DateTime?
+  title              String
+  description        String   @db.Text
+  category           String
+  location           String
+  budget             String?
+  status             String   @default("OPEN")
+  acceptedResponseId String?
+  clientId           String?
+  clientEmail        String
+  clientName         String
+  clientPhone        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   client    User?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   responses Response[]
 
+  @@index([status])
+  @@index([category])
+  @@index([location])
   @@map("service_requests")
 }
 
@@ -73,7 +83,7 @@ model Response {
   id         String   @id @default(cuid())
   requestId  String
   providerId String
-  message    String
+  message    String   @db.Text
   price      Float?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -82,18 +92,20 @@ model Response {
   provider User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
   messages Message[]
 
+  @@index([providerId])
   @@map("responses")
 }
 
 model Message {
   id         String   @id @default(cuid())
   responseId String
-  senderId   String
-  content    String
+  senderId   String?
+  senderName String?
+  content    String   @db.Text
   createdAt  DateTime @default(now())
 
   response Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  sender   User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender   User?    @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }
@@ -126,5 +138,30 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, isRead])
   @@map("notifications")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
 }

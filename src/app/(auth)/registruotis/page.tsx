@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { getRoleHomePath } from "@/lib/redirects";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(getRoleHomePath(session?.user?.role));
+    }
+  }, [router, session?.user?.role, status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +46,7 @@ export default function RegisterPage() {
 
       // Auto-login
       await signIn("credentials", { email: form.email, password: form.password, redirect: false });
-      router.push("/tiekėjas");
+      router.push(getRoleHomePath("PROVIDER"));
       router.refresh();
     } catch {
       setError("Įvyko klaida. Bandykite dar kartą.");

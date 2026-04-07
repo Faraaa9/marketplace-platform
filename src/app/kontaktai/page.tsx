@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { Mail, MapPin, Phone } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Kontaktai",
+  description: "Susisiekite su PaslaugųRinka komanda. Atsakome per 24 valandas.",
+};
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";

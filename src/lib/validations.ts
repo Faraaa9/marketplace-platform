@@ -5,12 +5,14 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Slaptažodis turi būti bent 6 simbolių"),
 });
 
-export const registerSchema = z.object({
+export const registerSchemaBase = z.object({
   name: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
   email: z.string().email("Neteisingas el. pašto formatas"),
   password: z.string().min(6, "Slaptažodis turi būti bent 6 simbolių"),
   confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
+});
+
+export const registerSchema = registerSchemaBase.refine((data) => data.password === data.confirmPassword, {
   message: "Slaptažodžiai nesutampa",
   path: ["confirmPassword"],
 });
@@ -25,8 +27,11 @@ export const serviceRequestSchema = z.object({
   clientEmail: z.string().email("Neteisingas el. pašto formatas"),
   clientPhone: z.string().optional(),
   createAccount: z.boolean().optional(),
-  password: z.string().min(6).optional(),
-});
+  password: z.string().optional(),
+}).refine(
+  (data) => !data.createAccount || (data.password && data.password.length >= 6),
+  { message: "Slaptažodis turi būti bent 6 simbolių", path: ["password"] }
+);
 
 export const responseSchema = z.object({
   message: z.string().min(10, "Žinutė turi būti bent 10 simbolių").max(2000),

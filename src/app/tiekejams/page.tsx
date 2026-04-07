@@ -1,4 +1,10 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
+
+export const metadata: Metadata = {
+  title: "Tiekėjams – Pritraukite naujų klientų",
+  description: "Prisijunkite prie PaslaugųRinka ir gaukite užklausas iš klientų visoje Lietuvoje. Nemokamas ir mokamas planai.",
+};
 import { ArrowRight, Check, Users, TrendingUp, Shield, Star, Crown } from "lucide-react";
 import { PLAN_LIMITS } from "@/lib/constants";
 
@@ -23,12 +29,16 @@ export default function ForProvidersPage() {
           <p className="mt-6 text-body-lg text-surface-500 dark:text-surface-400 max-w-2xl mx-auto">
             Prisijunkite prie platformos ir gaukite tiesiogines užklausas iš klientų, kurie ieško jūsų paslaugų.
           </p>
-          <Link
-            href="/registruotis"
+          <ProviderCtaLink
             className="mt-8 inline-flex items-center rounded-xl bg-brand-600 px-6 py-3.5 text-body font-semibold text-white shadow-sm hover:bg-brand-700 transition-all duration-150 hover:shadow-md"
+            providerLabel={
+              <>
+                Eiti į valdymo panelę <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            }
           >
             Pradėti nemokamai <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          </ProviderCtaLink>
         </div>
       </section>
 
@@ -100,12 +110,16 @@ export default function ForProvidersPage() {
               </div>
             ))}
           </div>
-          <Link
-            href="/registruotis"
+          <ProviderCtaLink
             className="mt-10 inline-flex items-center rounded-xl bg-brand-600 px-6 py-3.5 text-body font-semibold text-white shadow-sm hover:bg-brand-700 transition-all duration-150 hover:shadow-md"
+            providerLabel={
+              <>
+                Eiti į valdymo panelę <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            }
           >
             Registruotis nemokamai <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          </ProviderCtaLink>
         </div>
       </section>
     </div>

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, providerActivatedEmail } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,18 +15,28 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const skip = (page - 1) * limit;
 
-    const providers = await prisma.user.findMany({
-      where: {
-        role: "PROVIDER",
-        ...(search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] } : {}),
-      },
-      include: {
-        providerProfile: true,
-        _count: { select: { responses: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const where = {
+      role: "PROVIDER" as const,
+      ...(search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] } : {}),
+    };
+
+    const [providers, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          providerProfile: true,
+          _count: { select: { responses: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     const data = providers.map((p) => ({
       ...p,
@@ -34,7 +46,11 @@ export async function GET(req: NextRequest) {
       } : null,
     }));
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error("Admin providers error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
@@ -72,7 +88,7 @@ export async function PATCH(req: NextRequest) {
               type: "ACCOUNT_ACTIVATED",
               title: "Paskyra aktyvuota",
               body: "Jūsų tiekėjo paskyra buvo aktyvuota. Galite pradėti atsakinėti į užklausas.",
-              link: "/tiekėjas",
+              link: "/tiekejas",
             },
           });
         }

@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { serviceRequestSchema } from "@/lib/validations";
-import { sendEmail, requestConfirmationEmail } from "@/lib/email";
+import { sendEmail, requestVerificationEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { rateLimit, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = rateLimit(`requests:create:${ip}`, RATE_LIMITS.requests);
+    if (!rl.success) {
+      return NextResponse.json(
+        { success: false, error: "Per daug bandymų. Bandykite vėliau." },
+        { status: 429 }
+      );
+    }
     const body = await req.json();
     const parsed = serviceRequestSchema.safeParse(body);
 
@@ -13,7 +24,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: (parsed.error.issues?.[0]?.message || "Validacijos klaida") }, { status: 400 });
     }
 
-    const { title, description, category, location, budget, clientName, clientEmail, clientPhone, createAccount, password } = parsed.data;
+    const data = parsed.data;
+    const title = sanitizeHtml(data.title);
+    const description = sanitizeHtml(data.description);
+    const { category, location, budget, clientName, clientEmail, clientPhone, createAccount, password } = data;
 
     let clientId: string | undefined;
 
@@ -21,20 +35,28 @@ export async function POST(req: NextRequest) {
     if (createAccount && password) {
       const existing = await prisma.user.findUnique({ where: { email: clientEmail } });
       if (existing) {
-        clientId = existing.id;
-      } else {
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const user = await prisma.user.create({
-          data: {
-            email: clientEmail,
-            name: clientName,
-            password: hashedPassword,
-            role: "CLIENT",
-          },
-        });
-        clientId = user.id;
+        return NextResponse.json(
+          { success: false, error: "Šis el. paštas jau užregistruotas. Prisijunkite prie paskyros arba pateikite užklausą be paskyros kūrimo." },
+          { status: 409 }
+        );
       }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const user = await prisma.user.create({
+        data: {
+          email: clientEmail,
+          name: clientName,
+          password: hashedPassword,
+          role: "CLIENT",
+        },
+      });
+      clientId = user.id;
     }
+
+    // Generate a secure tracking token (32 bytes hex = 64 chars, unguessable)
+    const trackingToken = crypto.randomBytes(32).toString("hex");
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const request = await prisma.serviceRequest.create({
       data: {
@@ -43,18 +65,23 @@ export async function POST(req: NextRequest) {
         category,
         location,
         budget: budget || null,
+        status: "PENDING_CONFIRMATION",
         clientEmail,
         clientName,
         clientPhone: clientPhone || null,
         clientId: clientId || null,
+        trackingToken,
+        requestVerificationToken: verificationToken,
+        requestVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
-    // Send confirmation email
-    const emailData = requestConfirmationEmail(clientName, request.id);
+    // Send verification email; providers are notified only after confirmation.
+    const emailData = requestVerificationEmail(clientName, verificationToken, request.trackingToken);
     await sendEmail({ to: clientEmail, ...emailData });
 
-    return NextResponse.json({ success: true, data: { id: request.id } });
+    // Return tracking token to redirect the user
+    return NextResponse.json({ success: true, data: { trackingToken: request.trackingToken } });
   } catch (error) {
     console.error("Create request error:", error);
     return NextResponse.json({ success: false, error: "Nepavyko sukurti užklausos" }, { status: 500 });
