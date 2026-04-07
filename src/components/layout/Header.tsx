@@ -1,0 +1,161 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { Menu, X, LogOut, LayoutDashboard, ChevronRight } from "lucide-react";
+import { APP_NAME } from "@/lib/constants";
+import NotificationBell from "@/components/layout/NotificationBell";
+
+export default function Header() {
+  const { data: session } = useSession();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const role = session?.user?.role;
+
+  return (
+    <header className="sticky top-0 z-40 glass">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-sm">P</span>
+            </div>
+            <span className="text-heading-3 tracking-tight text-surface-900 dark:text-white">
+              {APP_NAME}
+            </span>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Link
+              href="/uzklausos/nauja"
+              className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+            >
+              Pateikti užklausą
+            </Link>
+
+            {!session && (
+              <>
+                <Link
+                  href="/tiekejams"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                >
+                  Tiekėjams
+                </Link>
+                <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
+                <Link
+                  href="/prisijungti"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                >
+                  Prisijungti
+                </Link>
+                <Link
+                  href="/registruotis"
+                  className="ml-1 px-4 py-2 text-body-sm font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-sm transition-all duration-150 hover:shadow-md"
+                >
+                  Registruotis
+                </Link>
+              </>
+            )}
+
+            {session && (
+              <>
+                {role === "PROVIDER" && (
+                  <Link
+                    href="/tiekėjas"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Valdymo panelė
+                  </Link>
+                )}
+                {role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Admin
+                  </Link>
+                )}
+                {role === "CLIENT" && (
+                  <Link
+                    href="/paskyra/uzklausos"
+                    className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  >
+                    Mano užklausos
+                  </Link>
+                )}
+                <NotificationBell />
+                <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors dark:text-surface-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Atsijungti
+                </button>
+              </>
+            )}
+          </nav>
+
+          {/* Mobile toggle */}
+          <button
+            className="md:hidden rounded-xl p-2 text-surface-600 hover:bg-surface-100 transition-colors dark:text-surface-400 dark:hover:bg-surface-800"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-surface-200/50 py-3 animate-slide-down dark:border-surface-700/50">
+            <div className="flex flex-col gap-0.5">
+              <MobileLink href="/uzklausos/nauja" onClick={() => setMobileOpen(false)}>Pateikti užklausą</MobileLink>
+              {!session && (
+                <>
+                  <MobileLink href="/tiekejams" onClick={() => setMobileOpen(false)}>Tiekėjams</MobileLink>
+                  <MobileLink href="/prisijungti" onClick={() => setMobileOpen(false)}>Prisijungti</MobileLink>
+                  <MobileLink href="/registruotis" onClick={() => setMobileOpen(false)} highlight>Registruotis</MobileLink>
+                </>
+              )}
+              {session && (
+                <>
+                  {role === "PROVIDER" && <MobileLink href="/tiekėjas" onClick={() => setMobileOpen(false)}>Valdymo panelė</MobileLink>}
+                  {role === "ADMIN" && <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Admin panelė</MobileLink>}
+                  <button
+                    onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
+                    className="flex items-center justify-between w-full px-3 py-2.5 text-body-sm font-medium text-red-600 rounded-xl hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    Atsijungti
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function MobileLink({ href, onClick, children, highlight }: { href: string; onClick: () => void; children: React.ReactNode; highlight?: boolean }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center justify-between px-3 py-2.5 text-body-sm font-medium rounded-xl transition-colors ${
+        highlight
+          ? "text-brand-600 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/10"
+          : "text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
+      }`}
+    >
+      {children}
+      <ChevronRight className="h-4 w-4 text-surface-400" />
+    </Link>
+  );
+}

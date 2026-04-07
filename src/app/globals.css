@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #111827;
+    --brand: #4f46e5;
+    --brand-light: #eef2ff;
+    --surface-muted: #f4f5f7;
+    --border: rgba(0, 0, 0, 0.06);
+  }
+
+  .dark {
+    --background: #0a0d14;
+    --foreground: #f4f5f7;
+    --brand: #818cf8;
+    --brand-light: rgba(99, 102, 241, 0.1);
+    --surface-muted: #1f2937;
+    --border: rgba(255, 255, 255, 0.06);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+  }
+
+  ::selection {
+    background: rgba(79, 70, 229, 0.15);
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Gradient text utility */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/70 dark:bg-surface-900/70 backdrop-blur-xl;
+    border: 1px solid var(--border);
+  }
+
+  /* Stripe-style multi-layer shadow cards */
+  .card-stripe {
+    @apply bg-white dark:bg-surface-800/50 rounded-2xl;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.03),
+      rgba(50, 50, 93, 0.08) 0px 4px 12px -2px,
+      rgba(0, 0, 0, 0.04) 0px 2px 6px -1px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .card-stripe:hover {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.04),
+      rgba(50, 50, 93, 0.12) 0px 8px 24px -4px,
+      rgba(0, 0, 0, 0.06) 0px 4px 12px -2px;
+    transform: translateY(-1px);
+  }
+
+  /* Subtle dot grid background */
+  .bg-grid {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .dark .bg-grid {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  }
+
+  /* Gradient border effect */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(168,85,247,0.3), rgba(236,72,153,0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+}

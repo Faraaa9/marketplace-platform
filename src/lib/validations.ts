@@ -1,0 +1,53 @@
+import { z } from "zod";
+
+export const loginSchema = z.object({
+  email: z.string().email("Neteisingas el. pašto formatas"),
+  password: z.string().min(6, "Slaptažodis turi būti bent 6 simbolių"),
+});
+
+export const registerSchema = z.object({
+  name: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
+  email: z.string().email("Neteisingas el. pašto formatas"),
+  password: z.string().min(6, "Slaptažodis turi būti bent 6 simbolių"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Slaptažodžiai nesutampa",
+  path: ["confirmPassword"],
+});
+
+export const serviceRequestSchema = z.object({
+  title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
+  description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
+  category: z.string().min(1, "Pasirinkite kategoriją"),
+  location: z.string().min(1, "Pasirinkite miestą"),
+  budget: z.string().optional(),
+  clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
+  clientEmail: z.string().email("Neteisingas el. pašto formatas"),
+  clientPhone: z.string().optional(),
+  createAccount: z.boolean().optional(),
+  password: z.string().min(6).optional(),
+});
+
+export const responseSchema = z.object({
+  message: z.string().min(10, "Žinutė turi būti bent 10 simbolių").max(2000),
+  price: z.number().positive("Kaina turi būti teigiama").optional(),
+});
+
+export const messageSchema = z.object({
+  content: z.string().min(1, "Žinutė negali būti tuščia").max(1000),
+});
+
+export const providerProfileSchema = z.object({
+  description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
+  specializations: z.array(z.string()).min(1, "Pasirinkite bent vieną specializaciją"),
+  location: z.string().min(1, "Pasirinkite miestą"),
+  phone: z.string().optional(),
+  website: z.string().url("Neteisingas URL formatas").optional().or(z.literal("")),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
+export type ResponseInput = z.infer<typeof responseSchema>;
+export type MessageInput = z.infer<typeof messageSchema>;
+export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;
