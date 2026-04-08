@@ -38,14 +38,8 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        role: "PROVIDER",
+        role: "CLIENT",
         emailVerified: null,
-        providerProfile: {
-          create: {
-            specializations: "[]",
-            images: "[]",
-          },
-        },
       },
     });
 
@@ -55,11 +49,11 @@ export async function POST(req: NextRequest) {
       data: {
         token,
         userId: user.id,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
-    const emailData = emailVerificationEmail(name || "Tiekėjas", token);
+    const emailData = emailVerificationEmail(name || "Vartotojas", token);
     await sendEmail({ to: email, ...emailData });
 
     return NextResponse.json({ success: true, data: { id: user.id, email: user.email } });

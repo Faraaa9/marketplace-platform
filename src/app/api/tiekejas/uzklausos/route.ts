@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const category = searchParams.get("category") || "";
     const location = searchParams.get("location") || "";
+    const search = searchParams.get("search") || "";
+    const sort = searchParams.get("sort") || "relevance";
     const perPage = 20;
 
     // Load provider profile for relevance scoring
@@ -26,14 +28,17 @@ export async function GET(req: NextRequest) {
       : [];
     const providerLocation = profile?.location || "";
 
-    // Build filter — user-selected filters narrow the set
+    // Build filter
     const where: Record<string, unknown> = { status: "OPEN" };
     if (category) where.category = category;
     if (location) where.location = location;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
-    // Fetch all matching requests (for scoring + pagination)
-    // In a large-scale app this would use SQL CASE WHEN ordering;
-    // for MVP volumes this is simpler and easier to maintain.
     const allRequests = await prisma.serviceRequest.findMany({
       where,
       select: {
@@ -50,10 +55,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Score and sort
-    // +2  specialization match (request category is in provider's specializations)
-    // +1  location match (exact match OR request is "Visa Lietuva")
-    // Tie-break: newest first
+    // Score relevance
     const scored = allRequests.map((req) => {
       let score = 0;
       if (providerSpecs.includes(req.category)) score += 2;
@@ -67,10 +69,21 @@ export async function GET(req: NextRequest) {
       return { ...req, relevance: score };
     });
 
-    scored.sort((a, b) => {
-      if (b.relevance !== a.relevance) return b.relevance - a.relevance;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    // Sort
+    if (sort === "newest") {
+      scored.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    } else {
+      // relevance (default)
+      scored.sort((a, b) => {
+        if (b.relevance !== a.relevance) return b.relevance - a.relevance;
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+    }
 
     const total = scored.length;
     const pages = Math.ceil(total / perPage);
@@ -82,6 +95,9 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Provider requests error:", error);
-    return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Klaida" },
+      { status: 500 }
+    );
   }
 }

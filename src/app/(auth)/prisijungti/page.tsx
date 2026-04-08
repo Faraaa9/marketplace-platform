@@ -97,9 +97,9 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-4 text-center text-body-sm text-surface-500 dark:text-surface-400">
-            Esate paslaugų tiekėjas?{" "}
+            Neturite paskyros?{" "}
             <Link href="/registruotis" className="text-brand-600 hover:text-brand-700 font-medium transition-colors dark:text-brand-400 dark:hover:text-brand-300">
-              Registruokitės čia
+              Registruokitės
             </Link>
           </p>
         </div>

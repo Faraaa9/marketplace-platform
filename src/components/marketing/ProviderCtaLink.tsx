@@ -18,9 +18,19 @@ export default function ProviderCtaLink({
   const { data: session } = useSession();
   const isProvider = session?.user?.role === "PROVIDER";
 
+  if (isProvider) {
+    return (
+      <Link href="/tiekejas" className={className}>
+        {providerLabel || children}
+      </Link>
+    );
+  }
+
+  // Both logged-in non-providers and anonymous users go to /tiekejams
+  // where they can either register or use the "become provider" flow
   return (
-    <Link href={isProvider ? "/tiekejas" : "/registruotis"} className={className}>
-      {isProvider ? providerLabel || children : children}
+    <Link href={session ? "/tapti-tiekeju" : "/registruotis"} className={className}>
+      {children}
     </Link>
   );
 }

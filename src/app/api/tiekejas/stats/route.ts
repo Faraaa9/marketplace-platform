@@ -9,14 +9,25 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== "PROVIDER") {
+    if (!session?.user?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const [totalRequests, myResponses, profile, user, subscription] = await Promise.all([
+    // Check for provider profile existence (not just role)
+    const profile = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo profilio", code: "NOT_PROVIDER" },
+        { status: 403 }
+      );
+    }
+
+    const [totalRequests, myResponses, user, subscription] = await Promise.all([
       prisma.serviceRequest.count({ where: { status: "OPEN" } }),
       prisma.response.count({ where: { providerId: session.user.id } }),
-      prisma.providerProfile.findUnique({ where: { userId: session.user.id } }),
       prisma.user.findUnique({ where: { id: session.user.id }, select: { emailVerified: true } }),
       prisma.subscription.findUnique({ where: { userId: session.user.id }, select: { status: true } }),
     ]);
@@ -28,7 +39,7 @@ export async function GET() {
       },
     });
 
-    const storedPlan = profile?.planType || "FREE";
+    const storedPlan = profile.planType || "FREE";
     const effectivePlan = getEffectivePlanType(storedPlan, subscription?.status);
     const limit = PLAN_LIMITS[effectivePlan]?.responsesPerMonth ?? 3;
     const responsesRemaining = limit === -1 ? -1 : Math.max(0, limit - thisMonthResponses);
@@ -42,7 +53,7 @@ export async function GET() {
         planType: effectivePlan,
         storedPlanType: storedPlan,
         subscriptionStatus: subscription?.status || null,
-        isActive: profile?.isActive || false,
+        isActive: profile.isActive || false,
         emailVerified: !!user?.emailVerified,
         responsesRemaining,
         responsesLimit: limit,

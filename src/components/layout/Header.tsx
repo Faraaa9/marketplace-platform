@@ -12,6 +12,8 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const role = session?.user?.role;
+  const isProvider = role === "PROVIDER";
+  const isAdmin = role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 glass">
@@ -62,16 +64,34 @@ export default function Header() {
 
             {session && (
               <>
-                {role === "PROVIDER" && (
+                {/* All logged-in users can see their requests */}
+                <Link
+                  href="/paskyra/uzklausos"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                >
+                  Mano užklausos
+                </Link>
+
+                {isProvider && (
                   <Link
                     href="/tiekejas"
                     className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                    Valdymo panelė
+                    Tiekėjo panelė
                   </Link>
                 )}
-                {role === "ADMIN" && (
+
+                {!isProvider && !isAdmin && (
+                  <Link
+                    href="/tiekejams"
+                    className="px-3.5 py-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 rounded-xl hover:bg-brand-50 transition-colors dark:text-brand-400 dark:hover:text-brand-300 dark:hover:bg-brand-500/10"
+                  >
+                    Tapti tiekėju
+                  </Link>
+                )}
+
+                {isAdmin && (
                   <Link
                     href="/admin"
                     className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
@@ -80,14 +100,7 @@ export default function Header() {
                     Admin
                   </Link>
                 )}
-                {role === "CLIENT" && (
-                  <Link
-                    href="/paskyra/uzklausos"
-                    className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
-                  >
-                    Mano užklausos
-                  </Link>
-                )}
+
                 <NotificationBell />
                 <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
                 <button
@@ -124,8 +137,10 @@ export default function Header() {
               )}
               {session && (
                 <>
-                  {role === "PROVIDER" && <MobileLink href="/tiekejas" onClick={() => setMobileOpen(false)}>Valdymo panelė</MobileLink>}
-                  {role === "ADMIN" && <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Admin panelė</MobileLink>}
+                  <MobileLink href="/paskyra/uzklausos" onClick={() => setMobileOpen(false)}>Mano užklausos</MobileLink>
+                  {isProvider && <MobileLink href="/tiekejas" onClick={() => setMobileOpen(false)}>Tiekėjo panelė</MobileLink>}
+                  {!isProvider && !isAdmin && <MobileLink href="/tiekejams" onClick={() => setMobileOpen(false)} highlight>Tapti tiekėju</MobileLink>}
+                  {isAdmin && <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Admin panelė</MobileLink>}
                   <button
                     onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
                     className="flex items-center justify-between w-full px-3 py-2.5 text-body-sm font-medium text-red-600 rounded-xl hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"

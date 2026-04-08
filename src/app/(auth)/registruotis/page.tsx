@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
       // Auto-login
       await signIn("credentials", { email: form.email, password: form.password, redirect: false });
-      router.push(getRoleHomePath("PROVIDER"));
+      router.push("/");
       router.refresh();
     } catch {
       setError("Įvyko klaida. Bandykite dar kartą.");
@@ -63,9 +63,9 @@ export default function RegisterPage() {
             <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-lg">P</span>
             </div>
-            <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Tiekėjo registracija</h1>
+            <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Sukurti paskyrą</h1>
             <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
-              Sukurkite paskyrą ir pradėkite gauti užklausas
+              Pateikite užklausas arba tapkite tiekėju
             </p>
           </div>
 
@@ -78,7 +78,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               id="name"
-              label="Vardas / Įmonės pavadinimas"
+              label="Vardas"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required

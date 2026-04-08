@@ -87,56 +87,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20 bg-white dark:bg-surface-900">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <p className="text-caption font-semibold text-brand-600 uppercase tracking-wider mb-3">Kaip tai veikia</p>
-            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Trys paprasti žingsniai</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              { step: "1", title: "Aprašykite užduotį", desc: "Užpildykite trumpą formą — ką reikia padaryti, kur ir kada.", icon: <FileText className="h-6 w-6 text-brand-600" /> },
-              { step: "2", title: "Gaukite pasiūlymus", desc: "Patikimi tiekėjai peržiūrės jūsų užklausą ir atsiųs savo pasiūlymus.", icon: <Users className="h-6 w-6 text-brand-600" /> },
-              { step: "3", title: "Pasirinkite geriausią", desc: "Palyginkite kainas ir atsiliepimus, susisiekite tiesiogiai.", icon: <Shield className="h-6 w-6 text-brand-600" /> },
-            ].map((item) => (
-              <div key={item.step} className="relative text-center group">
-                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 ring-1 ring-brand-100 transition-all group-hover:shadow-glow dark:bg-brand-950 dark:ring-brand-800">
-                  {item.icon}
-                </div>
-                <div className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-brand-600 flex items-center justify-center text-white text-micro font-bold md:right-auto md:left-1/2 md:ml-4 md:-top-1">
-                  {item.step}
-                </div>
-                <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{item.title}</h3>
-                <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 max-w-sm mx-auto">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="py-20 bg-surface-50 dark:bg-surface-950">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <p className="text-caption font-semibold text-brand-600 uppercase tracking-wider mb-3">Kategorijos</p>
-            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Paslaugų kategorijos</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {SERVICE_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.value}
-                href={`/uzklausos/nauja?category=${cat.value}`}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-surface-200/60 bg-white p-6 text-center transition-all duration-200 hover:shadow-stripe hover:border-brand-200 hover:-translate-y-0.5 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700"
-              >
-                <div className="text-brand-600 dark:text-brand-400">{iconMap[cat.icon]}</div>
-                <span className="text-body-sm font-medium text-surface-900 dark:text-white">{cat.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Recent requests */}
       {recentRequests.length > 0 && (
         <section className="py-20 bg-white dark:bg-surface-900">
@@ -196,6 +146,56 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* How it works */}
+      <section className="py-20 bg-surface-50 dark:bg-surface-950">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-caption font-semibold text-brand-600 uppercase tracking-wider mb-3">Kaip tai veikia</p>
+            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Trys paprasti žingsniai</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {[
+              { step: "1", title: "Aprašykite užduotį", desc: "Užpildykite trumpą formą — ką reikia padaryti, kur ir kada.", icon: <FileText className="h-6 w-6 text-brand-600" /> },
+              { step: "2", title: "Gaukite pasiūlymus", desc: "Patikimi tiekėjai peržiūrės jūsų užklausą ir atsiųs savo pasiūlymus.", icon: <Users className="h-6 w-6 text-brand-600" /> },
+              { step: "3", title: "Pasirinkite geriausią", desc: "Palyginkite kainas ir atsiliepimus, susisiekite tiesiogiai.", icon: <Shield className="h-6 w-6 text-brand-600" /> },
+            ].map((item) => (
+              <div key={item.step} className="relative text-center group">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 ring-1 ring-brand-100 transition-all group-hover:shadow-glow dark:bg-brand-950 dark:ring-brand-800">
+                  {item.icon}
+                </div>
+                <div className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-brand-600 flex items-center justify-center text-white text-micro font-bold md:right-auto md:left-1/2 md:ml-4 md:-top-1">
+                  {item.step}
+                </div>
+                <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{item.title}</h3>
+                <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 max-w-sm mx-auto">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-20 bg-white dark:bg-surface-900">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-caption font-semibold text-brand-600 uppercase tracking-wider mb-3">Kategorijos</p>
+            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Paslaugų kategorijos</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {SERVICE_CATEGORIES.map((cat) => (
+              <Link
+                key={cat.value}
+                href={`/uzklausos/nauja?category=${cat.value}`}
+                className="flex flex-col items-center gap-3 rounded-2xl border border-surface-200/60 bg-white p-6 text-center transition-all duration-200 hover:shadow-stripe hover:border-brand-200 hover:-translate-y-0.5 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700"
+              >
+                <div className="text-brand-600 dark:text-brand-400">{iconMap[cat.icon]}</div>
+                <span className="text-body-sm font-medium text-surface-900 dark:text-white">{cat.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Stats */}
       <section className="py-20 bg-surface-50 dark:bg-surface-950">

@@ -8,14 +8,13 @@ export type ProviderGuardResult =
   | { authorized: false; response: NextResponse };
 
 /**
- * Checks that the caller is a PROVIDER with verified email and active profile.
- * Use for routes that expose client data (request browsing, detail, responding).
- * Profile/stats/plans routes should NOT use this — they use basic role checks only.
+ * Checks that the caller has a providerProfile with verified email and active status.
+ * Uses providerProfile existence as the source of truth (not just user.role).
  */
 export async function requireActiveProvider(): Promise<ProviderGuardResult> {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id || session.user.role !== "PROVIDER") {
+  if (!session?.user?.id) {
     return {
       authorized: false,
       response: NextResponse.json(
@@ -36,6 +35,16 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     }),
   ]);
 
+  if (!profile) {
+    return {
+      authorized: false,
+      response: NextResponse.json(
+        { success: false, error: "Neturite tiekėjo profilio", code: "NOT_PROVIDER" },
+        { status: 403 }
+      ),
+    };
+  }
+
   if (!user?.emailVerified) {
     return {
       authorized: false,
@@ -50,7 +59,7 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
-  if (!profile?.isActive) {
+  if (!profile.isActive) {
     return {
       authorized: false,
       response: NextResponse.json(

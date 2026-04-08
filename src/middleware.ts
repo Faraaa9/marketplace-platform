@@ -29,8 +29,11 @@ export default withAuth(
       return NextResponse.redirect(new URL("/prisijungti", req.url));
     }
 
-    // Provider routes
+    // Provider routes — logged in but not provider → become provider page
     if (isProviderPath(path) && token?.role !== "PROVIDER") {
+      if (token) {
+        return NextResponse.redirect(new URL("/tapti-tiekeju", req.url));
+      }
       return NextResponse.redirect(new URL("/prisijungti", req.url));
     }
 
