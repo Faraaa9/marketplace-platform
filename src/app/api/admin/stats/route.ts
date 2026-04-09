@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { isDynamicServerError } from "next/dist/client/components/hooks-server-context";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -70,6 +71,9 @@ export async function GET() {
       },
     });
   } catch (error) {
+    if (isDynamicServerError(error)) {
+      throw error;
+    }
     console.error("Admin stats error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
   }
