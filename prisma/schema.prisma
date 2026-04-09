@@ -26,24 +26,32 @@ model User {
   notifications           Notification[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  reviewsGiven            Review[]    @relation("ReviewClient")
+  reviewsReceived         Review[]    @relation("ReviewProvider")
 
   @@map("users")
 }
 
 model ProviderProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  description     String?   @db.Text
-  specializations String    @default("[]")
-  location        String?
-  phone           String?
-  website         String?
-  isActive        Boolean   @default(false)
-  planType        String    @default("FREE")
-  planExpiresAt   DateTime?
-  images          String    @default("[]")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  description           String?   @db.Text
+  headline              String?
+  services              String?   @db.Text
+  priceFrom             Int?
+  experienceYears       Int?
+  offersInvoices        Boolean   @default(false)
+  availableForUrgent    Boolean   @default(false)
+  specializations       String    @default("[]")
+  location              String?
+  phone                 String?
+  website               String?
+  isActive              Boolean   @default(false)
+  planType              String    @default("FREE")
+  planExpiresAt         DateTime?
+  images                String    @default("[]")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -72,6 +80,7 @@ model ServiceRequest {
 
   client    User?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   responses Response[]
+  reviews   Review[]
 
   @@index([status])
   @@index([category])
@@ -91,6 +100,7 @@ model Response {
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   provider User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
   messages Message[]
+  reviews  Review[]
 
   @@index([providerId])
   @@map("responses")
@@ -164,4 +174,25 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_verification_tokens")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?  @db.Text
+  clientId   String?
+  providerId String
+  requestId  String
+  responseId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  client   User? @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
+  provider User  @relation("ReviewProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  response Response       @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, responseId])
+  @@index([providerId])
+  @@map("reviews")
 }

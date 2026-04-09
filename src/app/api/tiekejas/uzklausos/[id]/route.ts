@@ -5,6 +5,7 @@ import { sendEmail, newResponseEmail } from "@/lib/email";
 import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
+import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 
 /**
  * Provider view of a request.
@@ -91,6 +92,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
+    // Rate limit: 10 responses per 10 minutes
+    const rl = await rateLimitAsync(`resp:${guard.userId}`, RATE_LIMITS.responses);
+    if (!rl.success) {
+      return NextResponse.json({ success: false, error: "Per daug pasiūlymų. Palaukite kelias minutes." }, { status: 429 });
+    }
+
     const body = await req.json();
     const parsed = responseSchema.safeParse(body);
     if (!parsed.success) {
@@ -136,6 +143,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const request = await prisma.serviceRequest.findUnique({ where: { id: params.id } });
     if (!request) {
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
+    }
+
+    // Block self-interaction: provider cannot respond to own request
+    if (request.clientId === guard.userId) {
+      return NextResponse.json({ success: false, error: "Negalite atsakyti į savo paties užklausą" }, { status: 403 });
     }
 
     if (request.status !== "OPEN") {

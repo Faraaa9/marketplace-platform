@@ -6,6 +6,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/admin/tiekėjai",
+        destination: "/admin/tiekejai",
+        permanent: false,
+      },
+      {
+        source: "/api/admin/tiekėjai",
+        destination: "/api/admin/tiekejai",
+        permanent: false,
+      },
+      {
         source: "/tiekėjas",
         destination: "/tiekejas",
         permanent: false,
@@ -18,6 +28,11 @@ const nextConfig = {
       {
         source: "/api/tiekėjas/:path*",
         destination: "/api/tiekejas/:path*",
+        permanent: false,
+      },
+      {
+        source: "/api/admin/tiekėjai/:path*",
+        destination: "/api/admin/tiekejai/:path*",
         permanent: false,
       },
     ];

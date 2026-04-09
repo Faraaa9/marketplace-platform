@@ -19,10 +19,23 @@ export async function GET() {
     });
 
     // Parse JSON strings for client
+    let parsedImages: { url: string; publicId: string }[] = [];
+    if (profile) {
+      try {
+        const rawImages: unknown[] = JSON.parse(profile.images || "[]");
+        parsedImages = rawImages.map((img) => {
+          if (typeof img === "string") {
+            try { return JSON.parse(img); } catch { return null; }
+          }
+          return img;
+        }).filter(Boolean);
+      } catch { /* empty */ }
+    }
+
     const data = profile ? {
       ...profile,
       specializations: JSON.parse(profile.specializations || "[]"),
-      images: JSON.parse(profile.images || "[]"),
+      images: parsedImages,
     } : null;
 
     return NextResponse.json({ success: true, data });
@@ -49,6 +62,12 @@ export async function PUT(req: NextRequest) {
       where: { userId: session.user.id },
       data: {
         description: sanitizeHtml(parsed.data.description),
+        headline: parsed.data.headline ? sanitizeHtml(parsed.data.headline) : null,
+        services: parsed.data.services ? sanitizeHtml(parsed.data.services) : null,
+        priceFrom: parsed.data.priceFrom ?? null,
+        experienceYears: parsed.data.experienceYears ?? null,
+        offersInvoices: parsed.data.offersInvoices ?? false,
+        availableForUrgent: parsed.data.availableForUrgent ?? false,
         specializations: JSON.stringify(parsed.data.specializations),
         location: parsed.data.location,
         phone: parsed.data.phone || null,

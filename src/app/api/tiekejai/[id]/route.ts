@@ -1,0 +1,203 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+
+/**
+ * GET /api/tiekejai/[id] — Public provider profile.
+ * Only returns safe, public-facing data for active providers.
+ * Includes trust signals: profile completeness, acceptance rate, avg response time.
+ */
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const provider = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        createdAt: true,
+        emailVerified: true,
+        providerProfile: {
+          select: {
+            description: true,
+            headline: true,
+            services: true,
+            priceFrom: true,
+            experienceYears: true,
+            offersInvoices: true,
+            availableForUrgent: true,
+            specializations: true,
+            location: true,
+            phone: true,
+            website: true,
+            images: true,
+            planType: true,
+            isActive: true,
+            createdAt: true,
+          },
+        },
+        subscription: { select: { status: true } },
+        _count: { select: { responses: true } },
+        responses: {
+          select: {
+            id: true,
+            createdAt: true,
+            requestId: true,
+          },
+          orderBy: { createdAt: "desc" as const },
+        },
+      },
+    });
+
+    if (
+      !provider ||
+      !provider.providerProfile?.isActive ||
+      !provider.emailVerified
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Tiekėjas nerastas" },
+        { status: 404 }
+      );
+    }
+
+    const planType = getEffectivePlanType(
+      provider.providerProfile.planType || "FREE",
+      provider.subscription?.status
+    );
+    const badge = PLAN_LIMITS[planType]?.badge || null;
+
+    let images: string[] = [];
+    try {
+      const raw = provider.providerProfile.images || "[]";
+      const parsed = JSON.parse(raw);
+      images = Array.isArray(parsed)
+        ? parsed
+            .map((img: { url?: string } | string) =>
+              typeof img === "string" ? img : img.url || ""
+            )
+            .filter(Boolean)
+        : [];
+    } catch {}
+
+    let specializations: string[] = [];
+    try {
+      specializations = JSON.parse(provider.providerProfile.specializations || "[]");
+    } catch {}
+
+    // --- Trust signals ---
+
+    // 1. Profile completeness (0-100)
+    const profile = provider.providerProfile;
+    let completenessPoints = 0;
+    const maxPoints = 7;
+    if (profile.description && profile.description.length >= 20) completenessPoints++;
+    if (profile.headline) completenessPoints++;
+    if (specializations.length > 0) completenessPoints++;
+    if (profile.services) completenessPoints++;
+    if (profile.location) completenessPoints++;
+    if (profile.phone) completenessPoints++;
+    if (images.length > 0) completenessPoints++;
+    const profileCompleteness = Math.round((completenessPoints / maxPoints) * 100);
+
+    // 2. Accepted responses count (how many of their responses were chosen by clients)
+    const responseIds = provider.responses.map((r) => r.id);
+    let acceptedCount = 0;
+    if (responseIds.length > 0) {
+      acceptedCount = await prisma.serviceRequest.count({
+        where: {
+          acceptedResponseId: { in: responseIds },
+        },
+      });
+    }
+
+    // 3. Average response time (how fast they respond to requests)
+    let avgResponseTimeHours: number | null = null;
+    if (provider.responses.length > 0) {
+      // Get the requests these responses belong to (limit to last 20 for performance)
+      const recentResponses = provider.responses.slice(0, 20);
+      const requestIds = Array.from(new Set(recentResponses.map((r) => r.requestId)));
+      const requests = await prisma.serviceRequest.findMany({
+        where: { id: { in: requestIds } },
+        select: { id: true, createdAt: true },
+      });
+      const requestMap = new Map(requests.map((r) => [r.id, r.createdAt]));
+
+      let totalMs = 0;
+      let counted = 0;
+      for (const resp of recentResponses) {
+        const reqCreated = requestMap.get(resp.requestId);
+        if (reqCreated) {
+          const diff = resp.createdAt.getTime() - reqCreated.getTime();
+          if (diff > 0) {
+            totalMs += diff;
+            counted++;
+          }
+        }
+      }
+      if (counted > 0) {
+        avgResponseTimeHours = Math.round(totalMs / counted / (1000 * 60 * 60));
+      }
+    }
+
+    // 4. Reviews
+    const reviews = await prisma.review.findMany({
+      where: { providerId: provider.id },
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+        client: { select: { name: true } },
+        request: { select: { title: true, category: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+
+    const avgRating =
+      reviews.length > 0
+        ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
+        : null;
+
+    const data = {
+      id: provider.id,
+      name: provider.name,
+      image: images[0] || provider.image || null,
+      images,
+      description: provider.providerProfile.description,
+      headline: provider.providerProfile.headline,
+      services: provider.providerProfile.services,
+      priceFrom: provider.providerProfile.priceFrom,
+      experienceYears: provider.providerProfile.experienceYears,
+      offersInvoices: provider.providerProfile.offersInvoices,
+      availableForUrgent: provider.providerProfile.availableForUrgent,
+      specializations,
+      location: provider.providerProfile.location,
+      website: provider.providerProfile.website,
+      planType,
+      badge,
+      responseCount: provider._count.responses,
+      acceptedCount,
+      avgResponseTimeHours,
+      profileCompleteness,
+      avgRating,
+      totalReviews: reviews.length,
+      reviews: reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        createdAt: r.createdAt,
+        clientName: r.client?.name || "Klientas",
+        requestTitle: r.request.title,
+        requestCategory: r.request.category,
+      })),
+      lastActiveAt: provider.responses[0]?.createdAt || provider.providerProfile.createdAt,
+      memberSince: provider.createdAt,
+    };
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error("Public provider profile error:", error);
+    return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
+  }
+}

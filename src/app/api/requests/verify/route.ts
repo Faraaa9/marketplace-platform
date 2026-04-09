@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         title: true,
         category: true,
         location: true,
+        clientId: true,
         requestVerificationExpiresAt: true,
       },
     });
@@ -51,7 +52,20 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    notifyRelevantProviders(request.title, request.category, request.location).catch((error) =>
+    // Notify client (only if request is attached to an account)
+    if (request.clientId) {
+      await prisma.notification.create({
+        data: {
+          userId: request.clientId,
+          type: "REQUEST_ACTIVATED",
+          title: "Užklausa aktyvuota",
+          body: `Jūsų užklausa „${request.title}" patvirtinta ir perduota tiekėjams. Netrukus gausite pasiūlymų.`,
+          link: `/paskyra/uzklausos`,
+        },
+      });
+    }
+
+    notifyRelevantProviders(request.title, request.category, request.location, request.clientId).catch((error) =>
       console.error("Provider notification error:", error)
     );
 

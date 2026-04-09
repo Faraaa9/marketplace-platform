@@ -44,6 +44,37 @@ export async function GET() {
     const limit = PLAN_LIMITS[effectivePlan]?.responsesPerMonth ?? 3;
     const responsesRemaining = limit === -1 ? -1 : Math.max(0, limit - thisMonthResponses);
 
+    // Profile completeness
+    let images: string[] = [];
+    try {
+      const parsed = JSON.parse(profile.images || "[]");
+      images = Array.isArray(parsed) ? parsed : [];
+    } catch {}
+    let specs: string[] = [];
+    try { specs = JSON.parse(profile.specializations || "[]"); } catch {}
+
+    const completenessItems = [
+      { key: "description", done: !!(profile.description && profile.description.length >= 20), label: "Aprašymas" },
+      { key: "headline", done: !!profile.headline, label: "Antraštė" },
+      { key: "specializations", done: specs.length > 0, label: "Specializacijos" },
+      { key: "services", done: !!profile.services, label: "Paslaugos" },
+      { key: "location", done: !!profile.location, label: "Miestas" },
+      { key: "phone", done: !!profile.phone, label: "Telefonas" },
+      { key: "images", done: images.length > 0, label: "Nuotraukos" },
+    ];
+    const profileCompleteness = Math.round(
+      (completenessItems.filter((i) => i.done).length / completenessItems.length) * 100
+    );
+    const missingProfileItems = completenessItems.filter((i) => !i.done).map((i) => i.label);
+
+    // Accepted responses count
+    const acceptedCount = await prisma.serviceRequest.count({
+      where: {
+        acceptedResponseId: { not: null },
+        responses: { some: { providerId: session.user.id } },
+      },
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -57,6 +88,9 @@ export async function GET() {
         emailVerified: !!user?.emailVerified,
         responsesRemaining,
         responsesLimit: limit,
+        profileCompleteness,
+        missingProfileItems,
+        acceptedCount,
       },
     });
   } catch (error) {

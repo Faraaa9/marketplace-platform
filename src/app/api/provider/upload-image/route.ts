@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { cloudinary, isConfigured } from "@/lib/cloudinary";
+import {
+  getCloudinaryErrorDetails,
+  getConfiguredCloudinary,
+  isCloudinaryConfigured,
+} from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -11,16 +15,18 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== "PROVIDER") {
+    if (!session?.user?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!isConfigured) {
+    if (!isCloudinaryConfigured()) {
       return NextResponse.json(
         { success: false, error: "Nuotraukų įkėlimo paslauga nekonfigūruota" },
         { status: 503 }
       );
     }
+
+    const cloudinary = getConfiguredCloudinary();
 
     const formData = await req.formData();
     const file = formData.get("image") as File | null;
@@ -40,13 +46,17 @@ export async function POST(req: NextRequest) {
     // Check current image count
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: session.user.id },
+      select: { images: true },
     });
 
     if (!profile) {
-      return NextResponse.json({ success: false, error: "Profilis nerastas" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo profilio" },
+        { status: 403 }
+      );
     }
 
-    const currentImages: string[] = JSON.parse(profile.images || "[]");
+    const currentImages: unknown[] = JSON.parse(profile.images || "[]");
     if (currentImages.length >= 5) {
       return NextResponse.json({ success: false, error: "Maksimalus nuotraukų skaičius — 5" }, { status: 400 });
     }
@@ -68,8 +78,16 @@ export async function POST(req: NextRequest) {
       ).end(buffer);
     });
 
-    // Update provider profile with new image
-    const updatedImages = [...currentImages, JSON.stringify({ url: result.secure_url, publicId: result.public_id })];
+    // Parse existing images (handle both object and double-encoded string formats)
+    const parsedImages = currentImages.map((img: unknown) => {
+      if (typeof img === "string") {
+        try { return JSON.parse(img); } catch { return null; }
+      }
+      return img;
+    }).filter(Boolean);
+
+    // Store as array of objects (not double-encoded strings)
+    const updatedImages = [...parsedImages, { url: result.secure_url, publicId: result.public_id }];
     await prisma.providerProfile.update({
       where: { userId: session.user.id },
       data: { images: JSON.stringify(updatedImages) },
@@ -81,6 +99,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ success: false, error: "Nepavyko įkelti nuotraukos" }, { status: 500 });
+    const { status, message } = getCloudinaryErrorDetails(error);
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

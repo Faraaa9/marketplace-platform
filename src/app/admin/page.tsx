@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Users, FileText, MessageCircle, UserCheck } from "lucide-react";
+import { Users, FileText, MessageCircle, UserCheck, AlertTriangle, Clock } from "lucide-react";
 
 interface ChartDay {
   date: string;
@@ -16,6 +17,8 @@ interface Stats {
   totalProviders: number;
   totalRequests: number;
   totalResponses: number;
+  pendingRequests: number;
+  pendingActivation: number;
   chartData: ChartDay[];
 }
 
@@ -34,6 +37,7 @@ export default function AdminDashboard() {
   if (!stats) return null;
 
   const maxCount = Math.max(...stats.chartData.map((d) => d.count), 1);
+  const hasActions = stats.pendingActivation > 0 || stats.pendingRequests > 0;
 
   const statCards = [
     { label: "Naudotojai", value: stats.totalUsers, icon: Users, bgClass: "bg-brand-50 dark:bg-brand-500/10", iconClass: "text-brand-600 dark:text-brand-400" },
@@ -45,6 +49,44 @@ export default function AdminDashboard() {
   return (
     <div className="p-6 lg:p-8">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-8">Suvestinė</h1>
+
+      {/* Action items */}
+      {hasActions && (
+        <div className="mb-6 space-y-3">
+          {stats.pendingActivation > 0 && (
+            <Link href="/admin/tiekejai" className="block">
+              <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors dark:border-amber-800 dark:bg-amber-500/10 dark:hover:bg-amber-500/20">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-sm font-medium text-amber-900 dark:text-amber-200">
+                    {stats.pendingActivation} {stats.pendingActivation === 1 ? "tiekėjas laukia" : "tiekėjai laukia"} aktyvacijos
+                  </p>
+                  <p className="text-micro text-amber-700/70 dark:text-amber-400/70">Peržiūrėkite ir aktyvuokite naujus tiekėjus</p>
+                </div>
+                <span className="text-micro font-medium text-amber-600 dark:text-amber-400">Peržiūrėti →</span>
+              </div>
+            </Link>
+          )}
+          {stats.pendingRequests > 0 && (
+            <Link href="/admin/uzklausos" className="block">
+              <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 hover:bg-blue-100 transition-colors dark:border-blue-800 dark:bg-blue-500/10 dark:hover:bg-blue-500/20">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                  <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-sm font-medium text-blue-900 dark:text-blue-200">
+                    {stats.pendingRequests} {stats.pendingRequests === 1 ? "užklausa laukia" : "užklausos laukia"} el. pašto patvirtinimo
+                  </p>
+                  <p className="text-micro text-blue-700/70 dark:text-blue-400/70">Klientai dar nepatvirtino savo el. pašto</p>
+                </div>
+                <span className="text-micro font-medium text-blue-600 dark:text-blue-400">Peržiūrėti →</span>
+              </div>
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat) => (

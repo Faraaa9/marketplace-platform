@@ -12,38 +12,62 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const [totalUsers, totalProviders, totalRequests, totalResponses] = await Promise.all([
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    fourteenDaysAgo.setHours(0, 0, 0, 0);
+
+    const [
+      totalUsers,
+      totalProviders,
+      totalRequests,
+      totalResponses,
+      pendingRequests,
+      pendingActivation,
+      recentRequests,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "PROVIDER" } }),
       prisma.serviceRequest.count(),
       prisma.response.count(),
+      prisma.serviceRequest.count({ where: { status: "PENDING_CONFIRMATION" } }),
+      prisma.providerProfile.count({ where: { isActive: false } }),
+      // Get all requests from last 14 days in one query
+      prisma.serviceRequest.findMany({
+        where: { createdAt: { gte: fourteenDaysAgo } },
+        select: { createdAt: true },
+      }),
     ]);
 
-    // Last 14 days requests for chart
-    const days = [];
+    // Build chart data from the batch query
+    const dayCounts = new Map<string, number>();
     for (let i = 13; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0);
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
-
-      const count = await prisma.serviceRequest.count({
-        where: {
-          createdAt: { gte: date, lt: nextDate },
-        },
-      });
-
-      days.push({
-        date: date.toISOString().split("T")[0],
-        label: date.toLocaleDateString("lt-LT", { month: "short", day: "numeric" }),
-        count,
-      });
+      dayCounts.set(date.toISOString().split("T")[0], 0);
     }
+    for (const req of recentRequests) {
+      const key = req.createdAt.toISOString().split("T")[0];
+      if (dayCounts.has(key)) {
+        dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
+      }
+    }
+    const chartData = Array.from(dayCounts.entries()).map(([date, count]) => ({
+      date,
+      label: new Date(date).toLocaleDateString("lt-LT", { month: "short", day: "numeric" }),
+      count,
+    }));
 
     return NextResponse.json({
       success: true,
-      data: { totalUsers, totalProviders, totalRequests, totalResponses, chartData: days },
+      data: {
+        totalUsers,
+        totalProviders,
+        totalRequests,
+        totalResponses,
+        pendingRequests,
+        pendingActivation,
+        chartData,
+      },
     });
   } catch (error) {
     console.error("Admin stats error:", error);

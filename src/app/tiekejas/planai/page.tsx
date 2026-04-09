@@ -3,11 +3,10 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PLAN_LIMITS } from "@/lib/constants";
-import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Check, X, Crown, Star, AlertTriangle } from "lucide-react";
+import { BorderBeam } from "@/components/magicui/border-beam";
+import { Check, X, Crown, Star, AlertTriangle, Sparkles } from "lucide-react";
 
 interface StatsData {
   planType: string;
@@ -74,7 +73,7 @@ function PlansContent() {
       label: "Nemokamas",
       price: "€0",
       period: "per mėn.",
-      icon: null,
+      icon: <Sparkles className="h-5 w-5 text-surface-400" />,
       features: [
         { label: `${PLAN_LIMITS.FREE.responsesPerMonth} atsakymai/mėn.`, included: true },
         { label: "El. pašto kontaktai", included: true },
@@ -115,30 +114,35 @@ function PlansContent() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-2">Planai ir kainos</h1>
-      <p className="text-body text-surface-500 dark:text-surface-400 mb-10">Pasirinkite planą, kuris tinka jūsų verslui</p>
+      <div className="mb-10">
+        <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Planai ir kainos</h1>
+        <p className="mt-1 text-body text-surface-500 dark:text-surface-400">Pasirinkite planą, kuris tinka jūsų verslui</p>
+      </div>
 
       {success && (
-        <div className="mb-6 rounded-xl bg-emerald-50 p-4 text-body-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-          Planas sėkmingai aktyvuotas!
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200/60 bg-emerald-50 px-5 py-4 dark:border-emerald-800/40 dark:bg-emerald-500/10">
+          <Check className="h-5 w-5 text-emerald-600" />
+          <p className="text-body-sm font-medium text-emerald-700 dark:text-emerald-400">Planas sėkmingai aktyvuotas!</p>
         </div>
       )}
 
       {hasBillingProblem && (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-500/10">
-          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200/60 bg-red-50 p-5 dark:border-red-800/40 dark:bg-red-500/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-500/20">
+            <AlertTriangle className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />
+          </div>
           <div>
-            <p className="text-body-sm font-medium text-red-800 dark:text-red-300">
+            <p className="text-body-sm font-semibold text-red-800 dark:text-red-300">
               {subStatus === "PAST_DUE" ? "Mokėjimas nepavyko" : "Prenumerata atšaukta"} — {storedPlan} planas neaktyvus
             </p>
-            <p className="text-body-sm text-red-700 dark:text-red-400 mt-1">
+            <p className="text-body-sm text-red-700/80 dark:text-red-400/80 mt-1">
               {subStatus === "PAST_DUE"
                 ? "Atnaujinkite mokėjimo būdą, kad atgautumėte plano funkcijas."
                 : "Galite pasirinkti naują planą žemiau."
               }
             </p>
             {subStatus === "PAST_DUE" && (
-              <button onClick={handlePortal} className="mt-2 text-body-sm font-medium text-red-700 underline hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+              <button onClick={handlePortal} className="mt-2 text-body-sm font-medium text-red-700 underline hover:text-red-800 dark:text-red-400">
                 Atnaujinti mokėjimo būdą →
               </button>
             )}
@@ -148,17 +152,26 @@ function PlansContent() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan) => (
-          <Card
+          <div
             key={plan.name}
-            className={`relative ${plan.name === "BASIC" ? "border-brand-500 ring-2 ring-brand-500 shadow-stripe" : ""}`}
+            className={`relative rounded-2xl border p-8 transition-all duration-300 ${
+              plan.name === "BASIC"
+                ? "border-brand-500 bg-white shadow-elevated ring-1 ring-brand-500/50 -translate-y-1 dark:bg-surface-900 dark:border-brand-600"
+                : "border-surface-200/60 bg-white hover:shadow-stripe dark:border-surface-700/50 dark:bg-surface-900/50"
+            }`}
           >
             {plan.name === "BASIC" && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge variant="brand">Populiariausias</Badge>
-              </div>
+              <>
+                <BorderBeam size={150} duration={8} color="#6366f1" />
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center rounded-full bg-brand-600 px-3 py-1 text-micro font-medium text-white shadow-sm">
+                    Populiariausias
+                  </span>
+                </div>
+              </>
             )}
             <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="flex items-center justify-center gap-2 mb-3">
                 {plan.icon}
                 <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{plan.label}</h3>
               </div>
@@ -166,13 +179,17 @@ function PlansContent() {
               <p className="text-body-sm text-surface-500">{plan.period}</p>
             </div>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-8">
               {plan.features.map((feature) => (
                 <li key={feature.label} className="flex items-center gap-2.5 text-body-sm">
                   {feature.included ? (
-                    <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/10">
+                      <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                    </div>
                   ) : (
-                    <X className="h-4 w-4 text-surface-300 flex-shrink-0 dark:text-surface-600" />
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-100 dark:bg-surface-800">
+                      <X className="h-3 w-3 text-surface-300 dark:text-surface-600" />
+                    </div>
                   )}
                   <span className={feature.included ? "text-surface-700 dark:text-surface-300" : "text-surface-400 dark:text-surface-500"}>
                     {feature.label}
@@ -199,12 +216,12 @@ function PlansContent() {
                 Pasirinkti
               </Button>
             )}
-          </Card>
+          </div>
         ))}
       </div>
 
       {(currentPlan !== "FREE" || hasBillingProblem) && (
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <Button variant="ghost" onClick={handlePortal}>
             Valdyti prenumeratą
           </Button>

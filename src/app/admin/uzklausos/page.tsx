@@ -6,7 +6,7 @@ import { formatRelativeDate } from "@/lib/utils";
 import Select from "@/components/ui/Select";
 import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 interface Request {
   id: string;
@@ -32,6 +32,7 @@ export default function AdminRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
@@ -40,6 +41,7 @@ export default function AdminRequestsPage() {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
     if (categoryFilter) params.set("category", categoryFilter);
+    if (search) params.set("search", search);
     params.set("page", String(page));
     const res = await fetch(`/api/admin/uzklausos?${params}`);
     const data = await res.json();
@@ -50,7 +52,7 @@ export default function AdminRequestsPage() {
     setLoading(false);
   }, [statusFilter, categoryFilter, page]);
 
-  useEffect(() => { setPage(1); }, [statusFilter, categoryFilter]);
+  useEffect(() => { setPage(1); }, [statusFilter, categoryFilter, search]);
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
   async function handleAction(id: string, action: string, status?: string) {
@@ -66,6 +68,17 @@ export default function AdminRequestsPage() {
   return (
     <div className="p-6 lg:p-8">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-6">Užklausos</h1>
+
+      <div className="mb-4 relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
+        <input
+          type="text"
+          placeholder="Ieškoti pagal pavadinimą ar klientą..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-xl border border-surface-300 bg-white pl-10 pr-4 py-2.5 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
+        />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <Select

@@ -110,4 +110,27 @@
   .animate-delay-300 {
     animation-delay: 300ms;
   }
+
+  /* Magic UI glow effects */
+  .glow-brand {
+    box-shadow: 0 0 40px -8px rgba(99, 102, 241, 0.3);
+  }
+
+  .glow-brand-lg {
+    box-shadow: 0 0 60px -12px rgba(99, 102, 241, 0.4);
+  }
+
+  /* Radial gradient backgrounds */
+  .bg-radial-brand {
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent);
+  }
+
+  .bg-radial-brand-subtle {
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(99, 102, 241, 0.08), transparent);
+  }
+
+  /* Noise texture overlay */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  }
 }

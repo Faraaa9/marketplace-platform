@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, emailVerificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`resend-verify:${ip}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+    const rl = await rateLimitAsync(`resend-verify:${ip}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Per-user rate limit
-    const userRl = rateLimit(`resend-verify:user:${user.id}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+    const userRl = await rateLimitAsync(`resend-verify:user:${user.id}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
     if (!userRl.success) {
       return NextResponse.json({ success: true }); // Silent — don't reveal rate limit per user
     }

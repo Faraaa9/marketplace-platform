@@ -39,11 +39,17 @@ export const responseSchema = z.object({
 });
 
 export const messageSchema = z.object({
-  content: z.string().min(1, "Žinutė negali būti tuščia").max(1000),
+  content: z.string().min(5, "Žinutė turi būti bent 5 simbolių").max(1000),
 });
 
 export const providerProfileSchema = z.object({
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
+  headline: z.string().max(120).optional().or(z.literal("")),
+  services: z.string().max(1000).optional().or(z.literal("")),
+  priceFrom: z.number().int().min(0).nullable().optional(),
+  experienceYears: z.number().int().min(0).max(99).nullable().optional(),
+  offersInvoices: z.boolean().optional(),
+  availableForUrgent: z.boolean().optional(),
   specializations: z.array(z.string()).min(1, "Pasirinkite bent vieną specializaciją"),
   location: z.string().min(1, "Pasirinkite miestą"),
   phone: z.string().optional(),

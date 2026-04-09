@@ -1,4 +1,3 @@
-// TODO: Configure RESEND_API_KEY in .env.local
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 interface SendEmailParams {
@@ -7,10 +6,30 @@ interface SendEmailParams {
   html: string;
 }
 
+// In-memory store for dev email preview (only used when RESEND_API_KEY is not set)
+const devEmailLog: Array<{ to: string; subject: string; html: string; sentAt: string }> = [];
+const DEV_EMAIL_LOG_MAX = 20;
+
+export function getDevEmailLog() {
+  return devEmailLog;
+}
+
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
   if (!RESEND_API_KEY) {
     console.warn("WARNING: RESEND_API_KEY not set — email will not be sent");
     console.log(`[Email Mock] To: ${to}, Subject: ${subject}`);
+
+    // Extract and log action URLs so developers can click them
+    const urlMatches = html.match(/href="([^"]+)"/g);
+    if (urlMatches) {
+      const urls = urlMatches.map((m) => m.replace(/href="([^"]+)"/, "$1"));
+      urls.forEach((url) => console.log(`[Email Mock] Action URL: ${url}`));
+    }
+
+    // Store in dev log for preview endpoint
+    devEmailLog.unshift({ to, subject, html, sentAt: new Date().toISOString() });
+    if (devEmailLog.length > DEV_EMAIL_LOG_MAX) devEmailLog.length = DEV_EMAIL_LOG_MAX;
+
     return { success: true, mock: true };
   }
 

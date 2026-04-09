@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
+import { Particles } from "@/components/magicui/particles";
 
 export default function VerifyEmailPage() {
   return <Suspense fallback={<LoadingSpinner />}><VerifyEmailContent /></Suspense>;
@@ -42,7 +43,7 @@ function ResendButton({ email }: { email?: string }) {
           placeholder="Jūsų el. paštas"
           value={inputEmail}
           onChange={(e) => setInputEmail(e.target.value)}
-          className="w-full rounded-xl border border-surface-300 bg-white px-3 py-2 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none dark:border-surface-600 dark:bg-surface-800 dark:text-white"
+          className="w-full rounded-xl border border-surface-300 bg-white px-3 py-2.5 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-colors dark:border-surface-600 dark:bg-surface-800 dark:text-white"
         />
       )}
       <Button onClick={handleResend} isLoading={sending} variant="outline" className="w-full" disabled={!inputEmail}>
@@ -56,11 +57,16 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
 
+  const wrapper = "relative flex min-h-[85vh] items-center justify-center px-4";
+  const card = "rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90";
+
   if (status === "success") {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-8 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className={wrapper}>
+        <div className="absolute inset-0 bg-radial-brand-subtle" />
+        <Particles className="opacity-10" quantity={20} color="#10b981" size={1} speed={0.1} />
+        <div className="relative w-full max-w-md text-center">
+          <div className={card}>
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10">
               <span className="text-display font-bold text-emerald-500">✓</span>
             </div>
@@ -70,7 +76,7 @@ function VerifyEmailContent() {
             </p>
             <Link
               href="/prisijungti"
-              className="mt-6 inline-flex rounded-xl bg-brand-600 px-6 py-3 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              className="mt-6 inline-flex rounded-2xl bg-brand-600 px-6 py-3 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
             >
               Prisijungti
             </Link>
@@ -82,9 +88,10 @@ function VerifyEmailContent() {
 
   if (status === "expired") {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-8 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className={wrapper}>
+        <div className="absolute inset-0 bg-radial-brand-subtle" />
+        <div className="relative w-full max-w-md text-center">
+          <div className={card}>
             <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Nuoroda nebegalioja</h1>
             <p className="mt-2 text-body text-surface-500 dark:text-surface-400">
               Ši patvirtinimo nuoroda nebegalioja. Įveskite el. paštą, kad gautumėte naują nuorodą.
@@ -98,9 +105,10 @@ function VerifyEmailContent() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-8 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className={wrapper}>
+        <div className="absolute inset-0 bg-radial-brand-subtle" />
+        <div className="relative w-full max-w-md text-center">
+          <div className={card}>
             <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Įvyko klaida</h1>
             <p className="mt-2 text-body text-surface-500 dark:text-surface-400">
               Nepavyko patvirtinti el. pašto adreso. Bandykite dar kartą.
@@ -113,9 +121,11 @@ function VerifyEmailContent() {
 
   // Default: check your email message (shown after registration)
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-8 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+    <div className={wrapper}>
+      <div className="absolute inset-0 bg-radial-brand-subtle" />
+      <Particles className="opacity-10" quantity={20} color="#6366f1" size={1} speed={0.1} />
+      <div className="relative w-full max-w-md text-center">
+        <div className={card}>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-500/10">
             <span className="text-display font-bold text-brand-500">✉</span>
           </div>

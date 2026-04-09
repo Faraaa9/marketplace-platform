@@ -19,14 +19,26 @@ export async function GET() {
         trackingToken: true,
         title: true,
         category: true,
+        location: true,
         status: true,
         createdAt: true,
         _count: { select: { responses: true } },
+        responses: {
+          select: { createdAt: true },
+          orderBy: { createdAt: "desc" as const },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: requests });
+    // Flatten last response date
+    const data = requests.map(({ responses, ...rest }) => ({
+      ...rest,
+      lastResponseAt: responses[0]?.createdAt || null,
+    }));
+
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("Get my requests error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });

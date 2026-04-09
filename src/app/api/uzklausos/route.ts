@@ -9,11 +9,20 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const category = searchParams.get("category") || "";
     const location = searchParams.get("location") || "";
+    const budget = searchParams.get("budget") || "";
+    const search = searchParams.get("search") || "";
     const perPage = 20;
 
     const where: Record<string, unknown> = { status: "OPEN" };
     if (category) where.category = category;
     if (location) where.location = location;
+    if (budget) where.budget = budget;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     const [requests, total] = await Promise.all([
       prisma.serviceRequest.findMany({

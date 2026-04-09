@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const request = await prisma.serviceRequest.findUnique({
       where: { trackingToken: params.id },
       select: {
+        id: true,
         title: true,
         description: true,
         category: true,
@@ -19,16 +20,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         budget: true,
         status: true,
         acceptedResponseId: true,
+        clientId: true,
         clientName: true,
         createdAt: true,
+        reviews: {
+          select: { id: true, responseId: true },
+        },
         responses: {
           select: {
             id: true,
+            providerId: true,
             message: true,
             price: true,
             createdAt: true,
             provider: {
               select: {
+                id: true,
                 name: true,
                 image: true,
                 providerProfile: { select: { location: true, planType: true } },
@@ -72,18 +79,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    // Add badge info to each response for client display
+    // Build review lookup set
+    const reviewedResponseIds = new Set(request.reviews.map((r) => r.responseId));
+
+    // Add badge info and review status to each response for client display
     const responsesWithBadge = sortedResponses.map((resp) => {
       const pt = resolveProviderPlan(resp);
       return {
         ...resp,
         providerBadge: PLAN_LIMITS[pt]?.badge || null,
+        hasReview: reviewedResponseIds.has(resp.id),
       };
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { reviews: _reviews, ...requestWithoutReviews } = request;
+
     return NextResponse.json({
       success: true,
-      data: { ...request, responses: responsesWithBadge },
+      data: { ...requestWithoutReviews, responses: responsesWithBadge },
     });
   } catch (error) {
     console.error("Get request error:", error);

@@ -3,13 +3,13 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchemaBase } from "@/lib/validations";
-import { rateLimit, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, emailVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`auth:register:${ip}`, RATE_LIMITS.auth);
+    const rl = await rateLimitAsync(`auth:register:${ip}`, RATE_LIMITS.auth);
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },

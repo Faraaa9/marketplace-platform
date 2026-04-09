@@ -2,14 +2,17 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { SERVICE_CATEGORIES, BUDGET_OPTIONS } from "@/lib/constants";
+import { clearGuestRequest } from "@/lib/guest-request";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
-import { MapPin, Clock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Clock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star } from "lucide-react";
 
 interface MessageData {
   id: string;
@@ -21,11 +24,14 @@ interface MessageData {
 
 interface ResponseData {
   id: string;
+  providerId: string;
   message: string;
   price?: number;
   createdAt: string;
   providerBadge?: string | null;
+  hasReview?: boolean;
   provider: {
+    id: string;
     name: string;
     providerProfile?: { location: string; planType?: string };
   };
@@ -33,6 +39,7 @@ interface ResponseData {
 }
 
 interface RequestData {
+  id: string;
   title: string;
   description: string;
   category: string;
@@ -40,6 +47,7 @@ interface RequestData {
   budget?: string;
   status: string;
   acceptedResponseId?: string;
+  clientId?: string | null;
   clientName: string;
   createdAt: string;
   responses: ResponseData[];
@@ -202,11 +210,67 @@ export default function TrackRequestPage() {
         </div>
       )}
 
+      {/* Status timeline */}
+      <StatusTimeline status={request.status} responseCount={request.responses.length} />
+
+      {/* Next action guidance */}
+      {isOpen && request.responses.length === 0 && (
+        <div className="mb-6 rounded-2xl border border-blue-200/60 bg-blue-50/50 p-5 dark:border-blue-800/40 dark:bg-blue-950/30">
+          <div className="flex items-center gap-2 mb-1">
+            <SearchIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <p className="text-body-sm font-semibold text-blue-900 dark:text-blue-200">Užklausa aktyvuota</p>
+          </div>
+          <p className="text-body-sm text-blue-800/80 dark:text-blue-300/80">
+            Tiekėjai mato jūsų užklausą ir netrukus pradės siųsti pasiūlymus. Paprastai pirmieji pasiūlymai ateina per kelias valandas.
+          </p>
+        </div>
+      )}
+
+      {isOpen && request.responses.length > 0 && !request.acceptedResponseId && (
+        <div className="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/50 p-5 dark:border-emerald-800/40 dark:bg-emerald-950/30">
+          <div className="flex items-center gap-2 mb-1">
+            <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-body-sm font-semibold text-emerald-900 dark:text-emerald-200">
+              Turite {request.responses.length} {request.responses.length === 1 ? "pasiūlymą" : "pasiūlymus"}!
+            </p>
+          </div>
+          <p className="text-body-sm text-emerald-800/80 dark:text-emerald-300/80">
+            Peržiūrėkite pasiūlymus žemiau. Galite rašyti žinutes tiekėjams ir priimti geriausią pasiūlymą.
+          </p>
+        </div>
+      )}
+
+      {request.status === "IN_PROGRESS" && (
+        <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
+          <div className="flex items-center gap-2 mb-1">
+            <Handshake className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+            <p className="text-body-sm font-semibold text-brand-900 dark:text-brand-200">Pasiūlymas priimtas</p>
+          </div>
+          <p className="text-body-sm text-brand-800/80 dark:text-brand-300/80">
+            Susisiekite su tiekėju per žinučių sistemą žemiau ir suderinkite darbo detales. Kai darbas bus atliktas, galite uždaryti užklausą.
+          </p>
+        </div>
+      )}
+
       {isPendingConfirmation && (
         <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-700 dark:bg-amber-500/10">
-          <h2 className="text-body font-semibold text-amber-900 dark:text-amber-200">Patvirtinkite el. paštą</h2>
-          <p className="mt-2 text-body-sm text-amber-800 dark:text-amber-300">
-            Jūsų užklausa dar nėra aktyvi. Kol nepatvirtinsite el. pašto, tiekėjai jos nematys ir negaus pranešimų.
+          <h2 className="text-body font-semibold text-amber-900 dark:text-amber-200">Liko 1 žingsnis — patvirtinkite el. paštą</h2>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
+              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">1.</span>
+              <span>Patikrinkite savo el. pašto dėžutę (ir spam/šiukšlių aplanką)</span>
+            </div>
+            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
+              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">2.</span>
+              <span>Spauskite patvirtinimo nuorodą laiške</span>
+            </div>
+            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
+              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">3.</span>
+              <span>Po patvirtinimo jūsų užklausa iškart bus perduota tiekėjams ir jie pradės siųsti pasiūlymus</span>
+            </div>
+          </div>
+          <p className="mt-3 text-micro text-amber-700/70 dark:text-amber-400/70">
+            Kol el. paštas nepatvirtintas, tiekėjai jūsų užklausos nemato.
           </p>
           {confirmationSent ? (
             <p className="mt-3 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -220,9 +284,15 @@ export default function TrackRequestPage() {
         </div>
       )}
 
-      <Card className="mb-8">
+      <Card className="mb-6">
         <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap">{request.description}</p>
       </Card>
+
+      {/* Account value / claim — context-aware */}
+      <AccountValueBox clientId={request.clientId} trackingToken={params.id as string} onClaimed={fetchRequest} />
+
+      {/* Bookmark reminder for anonymous users */}
+      <BookmarkReminder />
 
       {/* Close request button */}
       {!isClosed && !isPendingConfirmation && (
@@ -310,6 +380,26 @@ export default function TrackRequestPage() {
                   </div>
                 )}
 
+                {/* Review form — only for accepted response, not yet reviewed */}
+                {isAccepted && !resp.hasReview && (
+                  <ReviewForm
+                    requestId={request.id}
+                    responseId={resp.id}
+                    providerName={resp.provider.name}
+                    trackingToken={params.id as string}
+                    clientId={request.clientId}
+                    onSubmitted={fetchRequest}
+                  />
+                )}
+
+                {/* Review submitted badge */}
+                {isAccepted && resp.hasReview && (
+                  <div className="mt-3 flex items-center gap-1.5 text-body-sm text-emerald-600 dark:text-emerald-400">
+                    <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
+                    Atsiliepimas pateiktas
+                  </div>
+                )}
+
                 {/* Thread messages */}
                 {resp.messages.length > 0 && (
                   <div className="mt-4 border-t border-surface-200/50 pt-4 dark:border-surface-700">
@@ -352,6 +442,303 @@ export default function TrackRequestPage() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function AccountValueBox({ clientId, trackingToken, onClaimed }: { clientId?: string | null; trackingToken: string; onClaimed: () => void }) {
+  const { data: session } = useSession();
+  const [claiming, setClaiming] = useState(false);
+  const [claimed, setClaimed] = useState(false);
+  const [claimError, setClaimError] = useState("");
+
+  // Already attached to an account — nothing to show
+  if (clientId) return null;
+
+  async function handleClaim() {
+    setClaiming(true);
+    setClaimError("");
+    try {
+      const res = await fetch("/api/requests/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingToken }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        clearGuestRequest();
+        setClaimed(true);
+        onClaimed();
+      } else {
+        setClaimError(data.error || "Nepavyko priskirti");
+      }
+    } catch {
+      setClaimError("Klaida");
+    } finally {
+      setClaiming(false);
+    }
+  }
+
+  // Logged-in user viewing unclaimed request → offer to claim
+  if (session) {
+    if (claimed) {
+      return (
+        <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-500/10">
+          <p className="text-body-sm text-emerald-700 dark:text-emerald-400">
+            Užklausa priskirta jūsų paskyrai. Dabar ją matysite skiltyje &bdquo;Mano užklausos&ldquo;.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
+        <h3 className="text-body font-semibold text-surface-900 dark:text-white mb-1">
+          Priskirti šią užklausą savo paskyrai?
+        </h3>
+        <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-3">
+          Tada ją matysite &bdquo;Mano užklausos&ldquo; skiltyje ir nereikės saugoti nuorodos.
+        </p>
+        {claimError && (
+          <p className="text-body-sm text-red-600 dark:text-red-400 mb-2">{claimError}</p>
+        )}
+        <Button size="sm" onClick={handleClaim} isLoading={claiming}>
+          Priskirti prie mano paskyros
+        </Button>
+      </div>
+    );
+  }
+
+  // Anonymous user → show value prop + register CTA
+  return (
+    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className="flex items-center gap-2 mb-3">
+        <UserPlus className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+        <h3 className="text-body font-semibold text-surface-900 dark:text-white">Nori patogiau?</h3>
+      </div>
+      <ul className="space-y-2 mb-4">
+        {[
+          { icon: <Eye className="h-3.5 w-3.5" />, text: "Visos užklausos vienoje vietoje" },
+          { icon: <Bell className="h-3.5 w-3.5" />, text: "Pranešimai apie naujus pasiūlymus" },
+          { icon: <Zap className="h-3.5 w-3.5" />, text: "Greičiau pateiksite būsimas užklausas" },
+        ].map((item) => (
+          <li key={item.text} className="flex items-center gap-2.5 text-body-sm text-surface-600 dark:text-surface-400">
+            <span className="text-brand-500">{item.icon}</span>
+            {item.text}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href="/registruotis"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
+      >
+        <UserPlus className="h-3.5 w-3.5" />
+        Sukurti nemokamą paskyrą
+      </Link>
+    </div>
+  );
+}
+
+function BookmarkReminder() {
+  const { data: session } = useSession();
+  if (session) return null;
+
+  return (
+    <div className="mb-6 rounded-xl bg-surface-50 border border-surface-200/60 px-4 py-3 dark:bg-surface-800/50 dark:border-surface-700/50">
+      <p className="text-micro text-surface-500 dark:text-surface-400">
+        <span className="font-medium text-surface-600 dark:text-surface-300">Patarimas:</span>{" "}
+        Išsaugokite šį puslapį (bookmark), kad lengvai sugrįžtumėte prie savo užklausos.
+      </p>
+    </div>
+  );
+}
+
+function StatusTimeline({ status, responseCount }: { status: string; responseCount: number }) {
+  const steps = [
+    { key: "PENDING_CONFIRMATION", label: "Patvirtinimas", icon: <Mail className="h-4 w-4" /> },
+    { key: "OPEN", label: "Pasiūlymų laukimas", icon: <SearchIcon className="h-4 w-4" /> },
+    { key: "IN_PROGRESS", label: "Vykdoma", icon: <Handshake className="h-4 w-4" /> },
+    { key: "CLOSED", label: "Uždaryta", icon: <Lock className="h-4 w-4" /> },
+  ];
+
+  const statusOrder = ["PENDING_CONFIRMATION", "OPEN", "IN_PROGRESS", "CLOSED"];
+  const currentIndex = statusOrder.indexOf(status);
+
+  return (
+    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className="flex items-center justify-between">
+        {steps.map((step, i) => {
+          const isCompleted = i < currentIndex;
+          const isCurrent = i === currentIndex;
+          const isFuture = i > currentIndex;
+
+          return (
+            <div key={step.key} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
+                    isCompleted
+                      ? "bg-emerald-500 text-white"
+                      : isCurrent
+                        ? "bg-brand-600 text-white ring-4 ring-brand-100 dark:ring-brand-900/50"
+                        : "bg-surface-100 text-surface-400 dark:bg-surface-800"
+                  }`}
+                >
+                  {isCompleted ? <CheckCircle className="h-4 w-4" /> : step.icon}
+                </div>
+                <span
+                  className={`mt-1.5 text-micro font-medium text-center ${
+                    isCurrent
+                      ? "text-brand-600 dark:text-brand-400"
+                      : isCompleted
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-surface-400"
+                  }`}
+                >
+                  {step.label}
+                </span>
+                {isCurrent && step.key === "OPEN" && responseCount > 0 && (
+                  <span className="mt-0.5 text-micro text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {responseCount} pasiūl.
+                  </span>
+                )}
+              </div>
+              {i < steps.length - 1 && (
+                <div
+                  className={`flex-1 h-0.5 mx-2 rounded-full ${
+                    i < currentIndex
+                      ? "bg-emerald-500"
+                      : isFuture
+                        ? "bg-surface-200 dark:bg-surface-700"
+                        : "bg-brand-200 dark:bg-brand-800"
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ReviewForm({
+  requestId,
+  responseId,
+  providerName,
+  trackingToken,
+  clientId,
+  onSubmitted,
+}: {
+  requestId: string;
+  responseId: string;
+  providerName: string;
+  trackingToken: string;
+  clientId?: string | null;
+  onSubmitted: () => void;
+}) {
+  const { data: session } = useSession();
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+
+  async function handleSubmit() {
+    if (rating === 0) {
+      setReviewError("Pasirinkite įvertinimą");
+      return;
+    }
+    setSubmitting(true);
+    setReviewError("");
+    try {
+      // Logged-in user who owns the request → use session-auth endpoint
+      // Guest (no session or no clientId) → use tracking token endpoint
+      const useSessionEndpoint = session?.user?.id && clientId === session.user.id;
+      const url = useSessionEndpoint
+        ? "/api/reviews"
+        : `/api/tracking/${trackingToken}/reviews`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, responseId, rating, comment }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubmitted(true);
+        onSubmitted();
+      } else {
+        setReviewError(data.error || "Klaida");
+      }
+    } catch {
+      setReviewError("Klaida pateikiant atsiliepimą");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="mt-4 rounded-xl border border-emerald-200/60 bg-emerald-50 p-4 dark:border-emerald-800/40 dark:bg-emerald-500/10">
+        <p className="text-body-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+          <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
+          Ačiū už atsiliepimą!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-brand-200/60 bg-brand-50/30 p-4 dark:border-brand-800/40 dark:bg-brand-950/30">
+      <p className="text-body-sm font-medium text-surface-900 dark:text-white mb-3">
+        Įvertinkite {providerName}
+      </p>
+
+      {/* Star rating */}
+      <div className="flex gap-1 mb-3">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => setRating(star)}
+            onMouseEnter={() => setHoveredRating(star)}
+            onMouseLeave={() => setHoveredRating(0)}
+            className="p-0.5 transition-transform hover:scale-110"
+          >
+            <Star
+              className={`h-7 w-7 transition-colors ${
+                star <= (hoveredRating || rating)
+                  ? "fill-amber-400 text-amber-400"
+                  : "text-surface-300 dark:text-surface-600"
+              }`}
+            />
+          </button>
+        ))}
+        {rating > 0 && (
+          <span className="ml-2 text-body-sm text-surface-500 self-center">
+            {rating}/5
+          </span>
+        )}
+      </div>
+
+      {/* Comment */}
+      <textarea
+        placeholder="Palikite komentarą (neprivaloma)..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={2}
+        className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-body-sm text-surface-900 placeholder:text-surface-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-white mb-3"
+      />
+
+      {reviewError && (
+        <p className="text-body-sm text-red-600 dark:text-red-400 mb-2">{reviewError}</p>
+      )}
+
+      <Button size="sm" onClick={handleSubmit} isLoading={submitting} disabled={rating === 0}>
+        <Star className="h-3.5 w-3.5 mr-1" />
+        Pateikti atsiliepimą
+      </Button>
     </div>
   );
 }

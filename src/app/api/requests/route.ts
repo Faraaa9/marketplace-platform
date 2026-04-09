@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { serviceRequestSchema } from "@/lib/validations";
 import { sendEmail, requestVerificationEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { rateLimit, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sanitizeHtml } from "@/lib/sanitize";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`requests:create:${ip}`, RATE_LIMITS.requests);
+    const rl = await rateLimitAsync(`requests:create:${ip}`, RATE_LIMITS.requests);
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
         { status: 429 }
       );
     }
+
+    const session = await getServerSession(authOptions);
+    const isLoggedIn = !!session?.user?.id;
+
     const body = await req.json();
     const parsed = serviceRequestSchema.safeParse(body);
 
@@ -31,8 +37,11 @@ export async function POST(req: NextRequest) {
 
     let clientId: string | undefined;
 
-    // Optionally create account
-    if (createAccount && password) {
+    if (isLoggedIn) {
+      // Logged-in user — attach request to their account directly
+      clientId = session.user.id;
+    } else if (createAccount && password) {
+      // Guest opting to create account
       const existing = await prisma.user.findUnique({ where: { email: clientEmail } });
       if (existing) {
         return NextResponse.json(

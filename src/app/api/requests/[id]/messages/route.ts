@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 
 /**
  * Post a message to a response thread.
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         id: true,
         providerId: true,
         request: {
-          select: { clientId: true },
+          select: { clientId: true, status: true },
         },
       },
     });
@@ -39,12 +40,42 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ success: false, error: "Atsakymas nerastas" }, { status: 404 });
     }
 
+    // Block messages on closed requests
+    if (response.request.status === "CLOSED") {
+      return NextResponse.json({ success: false, error: "Užklausa uždaryta, žinučių siųsti nebegalima" }, { status: 403 });
+    }
+
     // Authorization: only the response's provider or the request's client can post
     const isProvider = response.providerId === session.user.id;
     const isClient = response.request.clientId === session.user.id;
 
     if (!isProvider && !isClient) {
       return NextResponse.json({ success: false, error: "Neturite teisės rašyti šioje diskusijoje" }, { status: 403 });
+    }
+
+    // Block self-thread: same user is both provider and client
+    if (isProvider && isClient) {
+      return NextResponse.json({ success: false, error: "Negalite rašyti žinučių savo paties diskusijoje" }, { status: 403 });
+    }
+
+    // Rate limit: 5 messages per minute per user
+    const rl = await rateLimitAsync(`msg:${session.user.id}`, RATE_LIMITS.messages);
+    if (!rl.success) {
+      return NextResponse.json({ success: false, error: "Per daug žinučių. Palaukite minutę." }, { status: 429 });
+    }
+
+    // Duplicate detection: block identical message within last 30 seconds
+    const recentDuplicate = await prisma.message.findFirst({
+      where: {
+        responseId: params.id,
+        senderId: session.user.id,
+        content: sanitizeHtml(parsed.data.content),
+        createdAt: { gte: new Date(Date.now() - 30 * 1000) },
+      },
+      select: { id: true },
+    });
+    if (recentDuplicate) {
+      return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
     }
 
     const message = await prisma.message.create({

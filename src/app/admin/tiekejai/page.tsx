@@ -32,6 +32,7 @@ export default function AdminProvidersPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
@@ -40,8 +41,9 @@ export default function AdminProvidersPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
     params.set("page", String(page));
-    const res = await fetch(`/api/admin/tiekėjai?${params}`);
+    const res = await fetch(`/api/admin/tiekejai?${params}`);
     const data = await res.json();
     if (data.success) {
       setProviders(data.data);
@@ -50,12 +52,12 @@ export default function AdminProvidersPage() {
     setLoading(false);
   }, [search, page]);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
   useEffect(() => { fetchProviders(); }, [fetchProviders]);
 
   async function handleAction(userId: string, action: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti šį tiekėją?")) return;
-    await fetch("/api/admin/tiekėjai", {
+    await fetch("/api/admin/tiekejai", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action }),
@@ -68,15 +70,36 @@ export default function AdminProvidersPage() {
     <div className="p-6 lg:p-8">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-6">Tiekėjai</h1>
 
-      <div className="mb-6 relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
-        <input
-          type="text"
-          placeholder="Ieškoti pagal vardą ar el. paštą..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-surface-300 bg-white pl-10 pr-4 py-2.5 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
-        />
+      <div className="mb-6 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" />
+          <input
+            type="text"
+            placeholder="Ieškoti pagal vardą ar el. paštą..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-surface-300 bg-white pl-10 pr-4 py-2.5 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
+          />
+        </div>
+        <div className="flex gap-1 rounded-xl bg-surface-100 p-1 dark:bg-surface-800 shrink-0">
+          {[
+            { value: "", label: "Visi" },
+            { value: "active", label: "Aktyvūs" },
+            { value: "inactive", label: "Neaktyvūs" },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`rounded-lg px-3 py-1.5 text-body-sm font-medium transition-all ${
+                statusFilter === tab.value
+                  ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
+                  : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? <LoadingSpinner /> : (

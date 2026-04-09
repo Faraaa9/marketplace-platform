@@ -28,8 +28,11 @@ export async function GET(req: NextRequest) {
       : [];
     const providerLocation = profile?.location || "";
 
-    // Build filter
-    const where: Record<string, unknown> = { status: "OPEN" };
+    // Build filter — exclude provider's own requests
+    const where: Record<string, unknown> = {
+      status: "OPEN",
+      clientId: { not: guard.userId },
+    };
     if (category) where.category = category;
     if (location) where.location = location;
     if (search) {
@@ -51,11 +54,16 @@ export async function GET(req: NextRequest) {
         status: true,
         createdAt: true,
         _count: { select: { responses: true } },
+        responses: {
+          where: { providerId: guard.userId },
+          select: { id: true },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    // Score relevance
+    // Score relevance + mark responded
     const scored = allRequests.map((req) => {
       let score = 0;
       if (providerSpecs.includes(req.category)) score += 2;
@@ -66,7 +74,8 @@ export async function GET(req: NextRequest) {
       ) {
         score += 1;
       }
-      return { ...req, relevance: score };
+      const { responses, ...rest } = req;
+      return { ...rest, relevance: score, hasResponded: responses.length > 0 };
     });
 
     // Sort

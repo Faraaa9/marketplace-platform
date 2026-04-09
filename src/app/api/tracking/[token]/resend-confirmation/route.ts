@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, requestVerificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`request-resend:${ip}:${params.token}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+    const rl = await rateLimitAsync(`request-resend:${ip}:${params.token}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },

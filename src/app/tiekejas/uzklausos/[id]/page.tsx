@@ -12,7 +12,7 @@ import Textarea from "@/components/ui/Textarea";
 import Input from "@/components/ui/Input";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
-import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock } from "lucide-react";
+import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft } from "lucide-react";
 
 interface MessageData {
   id: string;
@@ -133,6 +133,14 @@ export default function ProviderRequestDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <button
+        onClick={() => router.push("/tiekejas/uzklausos")}
+        className="mb-4 inline-flex items-center gap-1.5 text-body-sm text-surface-500 hover:text-surface-700 transition-colors dark:text-surface-400 dark:hover:text-surface-200"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Grįžti į užklausas
+      </button>
+
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Badge variant="brand">{categoryLabel}</Badge>
@@ -172,16 +180,41 @@ export default function ProviderRequestDetailPage() {
       {/* Response form */}
       {!hasResponded && request.status === "OPEN" && (
         <Card className="mb-8">
-          <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-4">Pateikti pasiūlymą</h3>
+          <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1">Pateikti pasiūlymą</h3>
+          {request.totalResponses != null && (
+            <p className={`text-micro mb-4 ${
+              request.totalResponses === 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : request.totalResponses <= 2
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-surface-400"
+            }`}>
+              {request.totalResponses === 0
+                ? "Dar niekas neatsakė — būkite pirmas!"
+                : `Jau ${request.totalResponses} ${request.totalResponses === 1 ? "pasiūlymas" : "pasiūlymai"}`}
+            </p>
+          )}
           {error && <p className="text-body-sm text-red-500 mb-3">{error}</p>}
           <div className="space-y-4">
-            <Textarea
-              id="response"
-              label="Jūsų pasiūlymas"
-              placeholder="Aprašykite ką galite pasiūlyti, terminus, sąlygas..."
-              value={responseMessage}
-              onChange={(e) => setResponseMessage(e.target.value)}
-            />
+            <div>
+              <Textarea
+                id="response"
+                label="Jūsų pasiūlymas"
+                placeholder="Aprašykite ką galite pasiūlyti, terminus, sąlygas..."
+                value={responseMessage}
+                onChange={(e) => setResponseMessage(e.target.value)}
+              />
+              <div className="mt-1.5 flex items-center justify-between text-micro">
+                <span className={responseMessage.length > 0 && responseMessage.length < 10 ? "text-red-500 dark:text-red-400" : "text-surface-400"}>
+                  {responseMessage.length > 0 && responseMessage.length < 10
+                    ? `Bent 10 simbolių (dar ${10 - responseMessage.length})`
+                    : "Bent 10 simbolių"}
+                </span>
+                <span className={responseMessage.length >= 10 ? "text-emerald-600 dark:text-emerald-400" : "text-surface-400"}>
+                  {responseMessage.length}/10
+                </span>
+              </div>
+            </div>
             <Input
               id="price"
               label="Kaina, € (neprivaloma)"

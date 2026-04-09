@@ -19,10 +19,17 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
     const skip = (page - 1) * limit;
 
-    const where = {
+    const statusFilter = searchParams.get("status") || "";
+
+    const where: Record<string, unknown> = {
       role: "PROVIDER" as const,
-      ...(search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] } : {}),
+      ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { email: { contains: search, mode: "insensitive" } }] } : {}),
     };
+    if (statusFilter === "active") {
+      where.providerProfile = { isActive: true };
+    } else if (statusFilter === "inactive") {
+      where.providerProfile = { isActive: false };
+    }
 
     const [providers, total] = await Promise.all([
       prisma.user.findMany({

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, passwordResetEmail } from "@/lib/email";
-import { rateLimit, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = rateLimit(`auth:forgot:${ip}`, RATE_LIMITS.auth);
+    const rl = await rateLimitAsync(`auth:forgot:${ip}`, RATE_LIMITS.auth);
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },

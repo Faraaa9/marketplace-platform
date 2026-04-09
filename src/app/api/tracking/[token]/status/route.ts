@@ -56,6 +56,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { token: str
         return NextResponse.json({ success: false, error: "Atsakymas nepriklauso šiai užklausai" }, { status: 403 });
       }
 
+      // Block self-accept: cannot accept your own response
+      if (request.clientId && response.providerId === request.clientId) {
+        return NextResponse.json({ success: false, error: "Negalite priimti savo paties pasiūlymo" }, { status: 403 });
+      }
+
       await prisma.serviceRequest.update({
         where: { id: request.id },
         data: { status: "IN_PROGRESS", acceptedResponseId: responseId },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, X, LogOut, LayoutDashboard, ChevronRight } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, ChevronRight, Sparkles } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 import NotificationBell from "@/components/layout/NotificationBell";
 
@@ -16,12 +16,12 @@ export default function Header() {
   const isAdmin = role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 glass">
+    <header className="sticky top-0 z-40 border-b border-surface-200/40 bg-white/80 backdrop-blur-xl dark:border-surface-800/40 dark:bg-surface-950/80">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-sm">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative h-8 w-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-sm transition-shadow group-hover:shadow-glow">
               <span className="text-white font-bold text-sm">P</span>
             </div>
             <span className="text-heading-3 tracking-tight text-surface-900 dark:text-white">
@@ -32,8 +32,20 @@ export default function Header() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
             <Link
+              href="/tiekejai"
+              className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+            >
+              Tiekėjai
+            </Link>
+            <Link
+              href="/uzklausos"
+              className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+            >
+              Užklausos
+            </Link>
+            <Link
               href="/uzklausos/nauja"
-              className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+              className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
             >
               Pateikti užklausą
             </Link>
@@ -42,20 +54,20 @@ export default function Header() {
               <>
                 <Link
                   href="/tiekejams"
-                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                 >
                   Tiekėjams
                 </Link>
                 <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
                 <Link
                   href="/prisijungti"
-                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                 >
                   Prisijungti
                 </Link>
                 <Link
                   href="/registruotis"
-                  className="ml-1 px-4 py-2 text-body-sm font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-sm transition-all duration-150 hover:shadow-md"
+                  className="ml-1 px-5 py-2 text-body-sm font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-sm shadow-brand-600/20 transition-all duration-200 hover:shadow-md hover:shadow-brand-600/25"
                 >
                   Registruotis
                 </Link>
@@ -64,10 +76,9 @@ export default function Header() {
 
             {session && (
               <>
-                {/* All logged-in users can see their requests */}
                 <Link
                   href="/paskyra/uzklausos"
-                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                  className="px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                 >
                   Mano užklausos
                 </Link>
@@ -75,7 +86,7 @@ export default function Header() {
                 {isProvider && (
                   <Link
                     href="/tiekejas"
-                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     Tiekėjo panelė
@@ -85,8 +96,9 @@ export default function Header() {
                 {!isProvider && !isAdmin && (
                   <Link
                     href="/tiekejams"
-                    className="px-3.5 py-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 rounded-xl hover:bg-brand-50 transition-colors dark:text-brand-400 dark:hover:text-brand-300 dark:hover:bg-brand-500/10"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 rounded-xl hover:bg-brand-50 transition-all duration-200 dark:text-brand-400 dark:hover:text-brand-300 dark:hover:bg-brand-500/10"
                   >
+                    <Sparkles className="h-3.5 w-3.5" />
                     Tapti tiekėju
                   </Link>
                 )}
@@ -94,7 +106,7 @@ export default function Header() {
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-colors dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
+                    className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-600 hover:text-surface-900 rounded-xl hover:bg-surface-100/80 transition-all duration-200 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-800/50"
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     Admin
@@ -105,7 +117,7 @@ export default function Header() {
                 <div className="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-1" />
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors dark:text-surface-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-body-sm font-medium text-surface-500 hover:text-red-600 rounded-xl hover:bg-red-50 transition-all duration-200 dark:text-surface-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
                 >
                   <LogOut className="h-4 w-4" />
                   Atsijungti
@@ -127,6 +139,8 @@ export default function Header() {
         {mobileOpen && (
           <div className="md:hidden border-t border-surface-200/50 py-3 animate-slide-down dark:border-surface-700/50">
             <div className="flex flex-col gap-0.5">
+              <MobileLink href="/tiekejai" onClick={() => setMobileOpen(false)}>Tiekėjai</MobileLink>
+              <MobileLink href="/uzklausos" onClick={() => setMobileOpen(false)}>Užklausos</MobileLink>
               <MobileLink href="/uzklausos/nauja" onClick={() => setMobileOpen(false)}>Pateikti užklausą</MobileLink>
               {!session && (
                 <>

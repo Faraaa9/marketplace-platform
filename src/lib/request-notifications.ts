@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, newRequestAlertEmail } from "@/lib/email";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 
-export async function notifyRelevantProviders(title: string, category: string, location: string) {
+export async function notifyRelevantProviders(title: string, category: string, location: string, excludeUserId?: string | null) {
   const providers = await prisma.user.findMany({
     where: {
       role: "PROVIDER",
@@ -20,6 +20,9 @@ export async function notifyRelevantProviders(title: string, category: string, l
   const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === category)?.label || category;
 
   for (const provider of providers) {
+    // Skip the request creator (prevent self-notification)
+    if (excludeUserId && provider.id === excludeUserId) continue;
+
     let specs: string[] = [];
     try {
       specs = typeof provider.providerProfile?.specializations === "string"

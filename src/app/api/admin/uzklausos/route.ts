@@ -19,9 +19,18 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));
     const skip = (page - 1) * limit;
 
+    const search = searchParams.get("search") || "";
+
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (category) where.category = category;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { clientName: { contains: search, mode: "insensitive" } },
+        { clientEmail: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     const [requests, total] = await Promise.all([
       prisma.serviceRequest.findMany({

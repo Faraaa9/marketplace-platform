@@ -2,12 +2,15 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { SERVICE_CATEGORIES, BUDGET_OPTIONS, LITHUANIAN_CITIES } from "@/lib/constants";
+import { saveGuestRequest } from "@/lib/guest-request";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
 
 export default function NewRequestPage() {
   return <Suspense fallback={<LoadingSpinner />}><NewRequestForm /></Suspense>;
@@ -16,6 +19,8 @@ export default function NewRequestPage() {
 function NewRequestForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,8 +31,8 @@ function NewRequestForm() {
     description: "",
     location: "",
     budget: "",
-    clientName: "",
-    clientEmail: "",
+    clientName: session?.user?.name || "",
+    clientEmail: session?.user?.email || "",
     clientPhone: "",
     createAccount: false,
     password: "",
@@ -65,6 +70,9 @@ function NewRequestForm() {
       });
       const data = await res.json();
       if (data.success) {
+        if (!isLoggedIn) {
+          saveGuestRequest(data.data.trackingToken, form.title);
+        }
         router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
       } else {
         setError(data.error || "Klaida pateikiant užklausą");
@@ -84,7 +92,14 @@ function NewRequestForm() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-2">Nauja užklausa</h1>
-      <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-8">Aprašykite ko jums reikia ir gaukite pasiūlymus</p>
+      <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-6">Aprašykite ko jums reikia ir gaukite pasiūlymus</p>
+
+      {/* Show recovery banner only for guests */}
+      {!isLoggedIn && (
+        <div className="mb-6">
+          <RecentRequestBanner />
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="mb-10 flex items-center gap-3">
@@ -184,27 +199,38 @@ function NewRequestForm() {
             value={form.clientPhone}
             onChange={(e) => updateForm("clientPhone", e.target.value)}
           />
-          <div className="flex items-center gap-2.5">
-            <input
-              type="checkbox"
-              id="createAccount"
-              checked={form.createAccount}
-              onChange={(e) => updateForm("createAccount", e.target.checked)}
-              className="h-4 w-4 rounded-md border-surface-300 text-brand-600 focus:ring-brand-500 dark:border-surface-600"
-            />
-            <label htmlFor="createAccount" className="text-body-sm text-surface-700 dark:text-surface-300">
-              Sukurti paskyrą ir sekti užklausas patogiau
-            </label>
-          </div>
-          {form.createAccount && (
-            <Input
-              id="password"
-              label="Slaptažodis"
-              type="password"
-              placeholder="Bent 6 simboliai"
-              value={form.password}
-              onChange={(e) => updateForm("password", e.target.value)}
-            />
+          {!isLoggedIn && (
+            <>
+              <div className="rounded-xl border border-surface-200/60 bg-surface-50/50 p-4 dark:border-surface-700/50 dark:bg-surface-800/30">
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="createAccount"
+                    checked={form.createAccount}
+                    onChange={(e) => updateForm("createAccount", e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded-md border-surface-300 text-brand-600 focus:ring-brand-500 dark:border-surface-600"
+                  />
+                  <div>
+                    <label htmlFor="createAccount" className="text-body-sm font-medium text-surface-700 dark:text-surface-300 cursor-pointer">
+                      Sukurti nemokamą paskyrą
+                    </label>
+                    <p className="text-micro text-surface-400 mt-0.5">
+                      Matysite visas užklausas vienoje vietoje ir nereikės ieškoti sekimo nuorodos
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {form.createAccount && (
+                <Input
+                  id="password"
+                  label="Slaptažodis"
+                  type="password"
+                  placeholder="Bent 6 simboliai"
+                  value={form.password}
+                  onChange={(e) => updateForm("password", e.target.value)}
+                />
+              )}
+            </>
           )}
           <div className="flex justify-between pt-2">
             <Button variant="outline" onClick={() => setStep(1)}>Atgal</Button>
@@ -258,8 +284,18 @@ function NewRequestForm() {
               )}
             </dl>
           </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-            Po pateikimo reikės patvirtinti el. paštą. Tik po patvirtinimo užklausa bus perduota tiekėjams.
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-500/10">
+            <p className="text-body-sm font-medium text-amber-900 dark:text-amber-200">
+              Ką reikės padaryti po pateikimo:
+            </p>
+            <ul className="mt-2 space-y-1 text-body-sm text-amber-800 dark:text-amber-300">
+              <li>• Patvirtinti el. paštą — tik tada tiekėjai matys jūsų užklausą</li>
+              {isLoggedIn ? (
+                <li>• Užklausą rasite skiltyje &bdquo;Mano užklausos&ldquo;</li>
+              ) : (
+                <li>• Neuždarykite sekimo puslapio arba išsaugokite nuorodą — ji leidžia grįžti prie užklausos</li>
+              )}
+            </ul>
           </div>
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)}>Atgal</Button>
