@@ -9,6 +9,12 @@ import { NumberTicker } from "@/components/magicui/number-ticker";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
@@ -48,6 +54,45 @@ const HOME_PAGE_FALLBACK_DATA = {
   responseCount: 0,
   categoryCount: 0,
 };
+
+const FAQ_ITEMS = [
+  {
+    value: "free",
+    question: "Ar klientams platforma nemokama?",
+    answer:
+      "Taip. Užklausą galite pateikti nemokamai ir be įsipareigojimo. Pirmiausia gaunate pasiūlymus, o tik tada sprendžiate ar norite tęsti su pasirinktu tiekėju.",
+  },
+  {
+    value: "speed",
+    question: "Per kiek laiko gausiu pasiūlymų?",
+    answer:
+      "Dažniausiai pirmų atsakymų sulaukiama tą pačią dieną, o skubesnėse kategorijose ir greičiau. Tikslus greitis priklauso nuo miesto, kategorijos ir užklausos aiškumo.",
+  },
+  {
+    value: "registration",
+    question: "Ar reikia registracijos, kad pateikčiau užklausą?",
+    answer:
+      "Ne būtinai. Užklausą galite pateikti ir be pilnos registracijos, tačiau paskyra leidžia patogiau sekti savo užklausas, pasiūlymus ir žinutes vienoje vietoje.",
+  },
+  {
+    value: "providers",
+    question: "Kaip tiekėjai gauna užklausas?",
+    answer:
+      "Tiekėjai mato užklausas pagal savo specializacijas ir vietovę. Tai reiškia, kad santechnikas nemato elektros darbų kaip tinkamų atsakymui, o klientai gauna labiau taiklius pasiūlymus.",
+  },
+  {
+    value: "contacts",
+    question: "Kada tiekėjas mato mano kontaktus?",
+    answer:
+      "Kontaktų matomumas priklauso nuo tiekėjo plano ir konkretaus platformos flow. Pagrindinis tikslas yra pirmiausia leisti gauti pasiūlymą, o tada pereiti prie tiesioginio kontakto tada, kai yra realus susidomėjimas.",
+  },
+  {
+    value: "trust",
+    question: "Kaip žinoti, ar tiekėjas patikimas?",
+    answer:
+      "Platformoje galite matyti tiekėjo profilį, aprašymą, specializacijas, darbų pavyzdžius, planą ir atsiliepimus. Ilgainiui tai padeda greičiau atsirinkti patikimiausius specialistus.",
+  },
+];
 
 async function getHomePageData() {
   try {
@@ -332,6 +377,42 @@ export default async function HomePage() {
                   <div className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 font-medium">{stat.label}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Q&A */}
+      <section className="py-24 bg-surface-50 dark:bg-surface-900">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 items-start">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
+                Klausimai ir atsakymai
+              </div>
+              <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">
+                Ką verta žinoti prieš pradedant
+              </h2>
+              <p className="mt-4 max-w-md text-body text-surface-500 dark:text-surface-400 leading-relaxed">
+                Trumpi atsakymai į dažniausius klausimus naujiems klientams ir tiekėjams.
+                Jei vis tiek lieka neaišku, visada galite pradėti nuo pirmos užklausos ir išbandyti platformą praktiškai.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-surface-200/60 bg-white p-6 shadow-soft dark:border-surface-700/50 dark:bg-surface-950/70">
+              <Accordion
+                type="single"
+                collapsible
+                defaultValue="free"
+                className="w-full"
+              >
+                {FAQ_ITEMS.map((item) => (
+                  <AccordionItem key={item.value} value={item.value}>
+                    <AccordionTrigger>{item.question}</AccordionTrigger>
+                    <AccordionContent>{item.answer}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </div>
