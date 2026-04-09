@@ -50,3 +50,12 @@ next-env.d.ts
 .agents/
 skills-lock.json
 vercel-env-import.txt
+
+# Local tooling
+.claude/
+.mcp.json
+.trae/
+.windsurf/
+.agents/
+skills-lock.json
+vercel-env-import.txt
