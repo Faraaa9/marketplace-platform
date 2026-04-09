@@ -20,6 +20,7 @@ import {
   ArrowDownUp,
   CheckCircle2,
   Wallet,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface Request {
@@ -51,7 +52,26 @@ function ProviderRequestsContent() {
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [searchInput, setSearchInput] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Lock body scroll when mobile filter sheet is open
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, [filtersOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!filtersOpen) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setFiltersOpen(false);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [filtersOpen]);
 
   const page = parseInt(searchParams.get("page") || "1");
   const category = searchParams.get("category") || "";
@@ -133,9 +153,6 @@ function ProviderRequestsContent() {
   if (location) activeFilters.push({ key: "location", label: location });
   if (search) activeFilters.push({ key: "search", label: `„${search}"` });
 
-  const selectClass =
-    "h-10 w-full rounded-xl border border-surface-200 bg-white px-3 text-body-sm text-surface-900 appearance-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_12px_center] bg-no-repeat pr-10";
-
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
       {/* Page header — compact */}
@@ -146,11 +163,6 @@ function ProviderRequestsContent() {
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
                 Aktyvios užklausos
               </h1>
-              {!loading && (
-                <p className="mt-0.5 text-micro text-surface-400">
-                  {total} {total === 1 ? "užklausa" : total < 10 ? "užklausos" : "užklausų"}
-                </p>
-              )}
             </div>
             <div className="flex items-center gap-1.5">
               <ArrowDownUp className="h-3.5 w-3.5 text-surface-400" />
@@ -168,75 +180,100 @@ function ProviderRequestsContent() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
-        {/* Control bar — search + filters */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white shadow-sm dark:border-surface-700/50 dark:bg-surface-900 mb-5">
-          {/* Search row */}
-          <div className="p-4 pb-0">
-            <div className="relative">
+        {/* Search + filter trigger */}
+        <div className="mb-5 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Ieškoti pagal pavadinimą ar aprašymą..."
+                placeholder="Ieškoti užklausų..."
                 value={searchInput}
                 onChange={(e) => handleSearchInput(e.target.value)}
                 className="w-full h-11 rounded-xl border border-surface-200 bg-surface-50 pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:focus:bg-surface-800"
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className={`relative flex items-center gap-2 h-11 rounded-xl border px-4 text-body-sm font-medium transition-all duration-150 shrink-0 ${
+                filtersOpen || activeFilters.length > 0
+                  ? "border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
+                  : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+              }`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline">Filtrai</span>
+              {activeFilters.length > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
+                  {activeFilters.length}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Filters row */}
-          <div className="p-4 pt-3">
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-              <select
-                value={category}
-                onChange={(e) => updateFilter("category", e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Visos kategorijos</option>
-                {SERVICE_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+          {/* Filter panel — mobile: bottom sheet, desktop: inline dropdown */}
+          {filtersOpen && (
+            <>
+              {/* Mobile backdrop */}
+              <div
+                className="sm:hidden fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-150"
+                onClick={() => setFiltersOpen(false)}
+              />
+              {/* Mobile bottom sheet */}
+              <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-surface-200 bg-white shadow-2xl dark:border-surface-700 dark:bg-surface-900 animate-in slide-in-from-bottom duration-200 max-h-[70vh] flex flex-col">
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="h-1 w-10 rounded-full bg-surface-200 dark:bg-surface-700" />
+                </div>
+                <div className="flex items-center justify-between px-5 pb-3">
+                  <h3 className="text-body font-semibold text-surface-900 dark:text-white">Filtrai</h3>
+                  <button onClick={() => setFiltersOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                    <X className="h-4 w-4 text-surface-500" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-4">
+                  <FilterSelects category={category} location={location} onUpdate={updateFilter} />
+                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
+                </div>
+              </div>
+              {/* Desktop inline panel */}
+              <div className="hidden sm:block rounded-xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+                <div className="flex items-end gap-3">
+                  <FilterSelects category={category} location={location} onUpdate={updateFilter} />
+                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
+                </div>
+              </div>
+            </>
+          )}
 
-              <select
-                value={location}
-                onChange={(e) => updateFilter("location", e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Visi miestai</option>
-                {LITHUANIAN_CITIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Active filters pills */}
-          {activeFilters.length > 0 && (
-            <div className="px-4 pb-4 flex flex-wrap items-center gap-2 border-t border-surface-100 dark:border-surface-800 pt-3">
-              <span className="text-micro text-surface-400">Aktyvūs:</span>
+          {/* Active filter chips + result count */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {activeFilters.map((f) => (
                 <button
                   key={f.key}
                   onClick={() => updateFilter(f.key, "")}
-                  className="inline-flex items-center gap-1 rounded-full bg-brand-50 border border-brand-200 px-2.5 py-1 text-micro font-medium text-brand-700 hover:bg-brand-100 transition-colors dark:bg-brand-950 dark:border-brand-800 dark:text-brand-400 dark:hover:bg-brand-900"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 border border-brand-100 px-2.5 py-1 text-caption font-medium text-brand-700 hover:bg-brand-100 transition-colors dark:bg-brand-950 dark:border-brand-900 dark:text-brand-400 dark:hover:bg-brand-900"
                 >
                   {f.label}
                   <X className="h-3 w-3" />
                 </button>
               ))}
-              <button
-                onClick={clearFilters}
-                className="text-micro text-surface-500 hover:text-surface-700 underline underline-offset-2 transition-colors dark:text-surface-400 dark:hover:text-surface-200"
-              >
-                Išvalyti viską
-              </button>
+              {activeFilters.length > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-caption text-surface-400 hover:text-surface-600 transition-colors dark:hover:text-surface-300"
+                >
+                  Išvalyti
+                </button>
+              )}
             </div>
-          )}
+            {!loading && (
+              <p className="text-caption text-surface-400 shrink-0">
+                {total === 0 ? "Nerasta" : `${total} ${total === 1 ? "užklausa" : total < 10 ? "užklausos" : "užklausų"}`}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -245,26 +282,25 @@ function ProviderRequestsContent() {
             <LoadingSpinner />
           </div>
         ) : requests.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-12 sm:p-16 text-center dark:border-surface-700 dark:bg-surface-900">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
-              <FileText className="h-7 w-7 text-surface-400 dark:text-surface-500" />
+          <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-10 sm:p-14 text-center dark:border-surface-700 dark:bg-surface-900">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
+              {hasFilters ? <Search className="h-6 w-6 text-surface-400" /> : <FileText className="h-6 w-6 text-surface-400" />}
             </div>
-            <h3 className="text-lg font-semibold text-surface-900 dark:text-white">
+            <h3 className="text-body font-semibold text-surface-900 dark:text-white">
               {hasFilters
-                ? "Pagal jūsų filtrus užklausų nerasta"
+                ? "Pagal filtrus užklausų nerasta"
                 : "Aktyvių užklausų šiuo metu nėra"}
             </h3>
-            <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 max-w-sm mx-auto">
+            <p className="mt-1.5 text-body-sm text-surface-500 dark:text-surface-400 max-w-sm mx-auto">
               {hasFilters
-                ? "Pabandykite pakeisti arba pašalinti filtrus."
+                ? "Pabandykite pakeisti filtrus arba peržiūrėti visas užklausas."
                 : "Kai klientai pateiks naujas užklausas, jos atsiras čia."}
             </p>
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
               >
-                <X className="h-4 w-4" />
                 Išvalyti filtrus
               </button>
             )}
@@ -380,6 +416,67 @@ function ProviderRequestsContent() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─── Filter panel helpers ─── */
+
+const filterSelectClass =
+  "h-10 w-full rounded-xl border border-surface-200 bg-white px-3 text-body-sm text-surface-900 appearance-none transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_12px_center] bg-no-repeat pr-10";
+
+function FilterSelects({
+  category,
+  location,
+  onUpdate,
+}: {
+  category: string;
+  location: string;
+  onUpdate: (key: string, value: string) => void;
+}) {
+  return (
+    <>
+      <div className="flex-1 min-w-0">
+        <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Kategorija</label>
+        <select value={category} onChange={(e) => onUpdate("category", e.target.value)} className={filterSelectClass}>
+          <option value="">Visos</option>
+          {SERVICE_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex-1 min-w-0">
+        <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Miestas</label>
+        <select value={location} onChange={(e) => onUpdate("location", e.target.value)} className={filterSelectClass}>
+          <option value="">Visi</option>
+          {LITHUANIAN_CITIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+    </>
+  );
+}
+
+function FilterActions({
+  hasFilters,
+  onClear,
+  onApply,
+}: {
+  hasFilters: boolean;
+  onClear: () => void;
+  onApply: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 sm:flex-col sm:gap-1.5 pt-4 sm:pt-0">
+      {hasFilters && (
+        <button type="button" onClick={onClear} className="flex-1 sm:flex-none h-10 rounded-xl border border-surface-200 px-4 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 whitespace-nowrap">
+          Išvalyti
+        </button>
+      )}
+      <button type="button" onClick={onApply} className="flex-1 sm:flex-none h-10 rounded-xl bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors whitespace-nowrap">
+        Uždaryti
+      </button>
     </div>
   );
 }
