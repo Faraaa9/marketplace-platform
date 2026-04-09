@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description: "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
 };
+export const dynamic = "force-dynamic";
 import { Hammer, Droplets, Zap, Sparkles, Truck, Trees, Monitor, Palette, Scale, Calculator, GraduationCap, MoreHorizontal, ArrowRight, Users, FileText, Shield, Star, MapPin, Clock, MessageSquare, CheckCircle2 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -31,34 +32,74 @@ const iconMap: Record<string, React.ReactNode> = {
   MoreHorizontal: <MoreHorizontal className="h-6 w-6" />,
 };
 
+const HOME_PAGE_FALLBACK_DATA = {
+  recentRequests: [] as Array<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    location: string;
+    budget: string | null;
+    createdAt: Date;
+    _count: { responses: number };
+  }>,
+  providerCount: 0,
+  requestCount: 0,
+  responseCount: 0,
+  categoryCount: 0,
+};
+
+async function getHomePageData() {
+  try {
+    const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
+      prisma.serviceRequest.findMany({
+        where: { status: "OPEN" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          category: true,
+          location: true,
+          budget: true,
+          createdAt: true,
+          _count: { select: { responses: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+      prisma.user.count({
+        where: {
+          role: "PROVIDER",
+          emailVerified: { not: null },
+          providerProfile: { isActive: true },
+        },
+      }),
+      prisma.serviceRequest.count(),
+      prisma.response.count(),
+      prisma.serviceRequest.groupBy({ by: ["category"] }).then((g) => g.length),
+    ]);
+
+    return {
+      recentRequests,
+      providerCount,
+      requestCount,
+      responseCount,
+      categoryCount,
+    };
+  } catch (error) {
+    console.error("Home page data error:", error);
+    return HOME_PAGE_FALLBACK_DATA;
+  }
+}
+
 export default async function HomePage() {
-  const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
-    prisma.serviceRequest.findMany({
-      where: { status: "OPEN" },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        category: true,
-        location: true,
-        budget: true,
-        createdAt: true,
-        _count: { select: { responses: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-    prisma.user.count({
-      where: {
-        role: "PROVIDER",
-        emailVerified: { not: null },
-        providerProfile: { isActive: true },
-      },
-    }),
-    prisma.serviceRequest.count(),
-    prisma.response.count(),
-    prisma.serviceRequest.groupBy({ by: ["category"] }).then((g) => g.length),
-  ]);
+  const {
+    recentRequests,
+    providerCount,
+    requestCount,
+    responseCount,
+    categoryCount,
+  } = await getHomePageData();
 
   const categoryLabel = (val: string) =>
     SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
