@@ -1,9 +1,16 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+import fs from "fs";
+import path from "path";
 
 interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
+}
+
+export interface SendEmailResult {
+  success: boolean;
+  mock?: boolean;
+  error?: unknown;
 }
 
 // In-memory store for dev email preview (only used when RESEND_API_KEY is not set)
@@ -14,8 +21,56 @@ export function getDevEmailLog() {
   return devEmailLog;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams) {
-  if (!RESEND_API_KEY) {
+function maskToken(token: string) {
+  if (token.length <= 8) {
+    return token;
+  }
+
+  return `${token.slice(0, 5)}...${token.slice(-4)}`;
+}
+
+function readEnvFileValue(name: string) {
+  if (process.env.NODE_ENV === "production") {
+    return undefined;
+  }
+
+  try {
+    const envLocalPath = path.join(process.cwd(), ".env.local");
+    const raw = fs.readFileSync(envLocalPath, "utf8");
+    const line = raw
+      .split(/\r?\n/)
+      .find((entry) => entry.startsWith(`${name}=`));
+
+    if (!line) {
+      return undefined;
+    }
+
+    let value = line.slice(name.length + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    return value || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<SendEmailResult> {
+  const runtimeResendApiKey = process.env.RESEND_API_KEY?.trim();
+  const resendApiKey =
+    !runtimeResendApiKey || runtimeResendApiKey.includes("placeholder")
+      ? readEnvFileValue("RESEND_API_KEY")?.trim() || runtimeResendApiKey
+      : runtimeResendApiKey;
+  const runtimeEmailFrom = process.env.EMAIL_FROM?.trim();
+  const emailFrom =
+    runtimeEmailFrom || readEnvFileValue("EMAIL_FROM")?.trim() || "PaslaugųRinka <onboarding@resend.dev>";
+  const emailReplyTo = process.env.EMAIL_REPLY_TO?.trim() || readEnvFileValue("EMAIL_REPLY_TO")?.trim();
+
+  if (!resendApiKey) {
     console.warn("WARNING: RESEND_API_KEY not set — email will not be sent");
     console.log(`[Email Mock] To: ${to}, Subject: ${subject}`);
 
@@ -38,20 +93,34 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Accept: "application/json",
+        "User-Agent": "MarketplacePlatform/1.0",
+        Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "PaslaugųRinka <noreply@paslaugurinka.lt>",
+        from: emailFrom,
         to,
         subject,
         html,
+        ...(emailReplyTo ? { reply_to: emailReplyTo } : {}),
       }),
     });
 
     if (!res.ok) {
       const error = await res.text();
       console.error("Email send failed:", error);
-      return { success: false, error };
+      if (process.env.NODE_ENV !== "production" && res.status === 401) {
+        console.error("Resend auth debug:", {
+          key: resendApiKey ? maskToken(resendApiKey) : null,
+          keyLength: resendApiKey?.length ?? 0,
+          from: emailFrom,
+        });
+      }
+      let friendlyError: unknown = error;
+      if (res.status === 403 && error.includes("resend.dev")) {
+        friendlyError = "Resend test domenas gali siųsti tik į jūsų pačių el. paštą. Norint siųsti kitiems gavėjams, reikia patvirtinto domeno ir EMAIL_FROM adreso iš to domeno.";
+      }
+      return { success: false, error: friendlyError };
     }
 
     return { success: true };

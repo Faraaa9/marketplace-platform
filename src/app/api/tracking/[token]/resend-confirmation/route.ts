@@ -46,9 +46,19 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     });
 
     const emailData = requestVerificationEmail(request.clientName, verificationToken, params.token);
-    await sendEmail({ to: request.clientEmail, ...emailData });
+    const emailResult = await sendEmail({ to: request.clientEmail, ...emailData });
 
-    return NextResponse.json({ success: true });
+    if (!emailResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Užklausa sukurta, bet nepavyko išsiųsti patvirtinimo laiško. Bandykite dar kartą.",
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: { mock: !!emailResult.mock } });
   } catch (error) {
     console.error("Resend request confirmation error:", error);
     return NextResponse.json({ success: false, error: "Klaida siunčiant patvirtinimo laišką" }, { status: 500 });

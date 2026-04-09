@@ -54,9 +54,20 @@ export async function POST(req: NextRequest) {
     });
 
     const emailData = emailVerificationEmail(name || "Vartotojas", token);
-    await sendEmail({ to: email, ...emailData });
+    const emailResult = await sendEmail({ to: email, ...emailData });
 
-    return NextResponse.json({ success: true, data: { id: user.id, email: user.email } });
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: user.id,
+        email: user.email,
+        emailSent: emailResult.success,
+        emailMock: !!emailResult.mock,
+      },
+      warning: emailResult.success
+        ? null
+        : "Paskyra sukurta, bet nepavyko išsiųsti patvirtinimo laiško. Galite pabandyti dar kartą patvirtinimo puslapyje.",
+    });
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json({ success: false, error: "Registracija nepavyko" }, { status: 500 });

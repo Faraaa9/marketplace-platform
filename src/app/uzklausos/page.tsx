@@ -5,10 +5,10 @@ import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import {
   MapPin, Clock, MessageSquare, ArrowRight, Search,
-  SlidersHorizontal, Zap, FileText, Users, Wallet,
-  TrendingUp, ArrowUpDown, Sparkles, Briefcase,
+  Zap, FileText, Users, Wallet,
+  TrendingUp, Sparkles, Briefcase,
 } from "lucide-react";
-import SearchInput from "@/components/uzklausos/SearchInput";
+import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 
 export const metadata: Metadata = {
   title: "Viešos užklausos — PaslaugųRinka",
@@ -56,7 +56,11 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     orderBy = { createdAt: "desc" };
   }
 
-  const [requests, total] = await Promise.all([
+  // Run ALL queries in a single Promise.all to minimise concurrent DB connections
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const [requests, total, totalActive, newToday, totalProviderResponses] = await Promise.all([
     prisma.serviceRequest.findMany({
       where,
       select: {
@@ -74,6 +78,9 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
       take: perPage,
     }),
     prisma.serviceRequest.count({ where }),
+    prisma.serviceRequest.count({ where: { status: "OPEN" } }),
+    prisma.serviceRequest.count({ where: { status: "OPEN", createdAt: { gte: oneDayAgo } } }),
+    prisma.response.count(),
   ]);
 
   // Client-side sort for response count
@@ -90,6 +97,8 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
+
+  const hasFilters = category || location || search || budget;
 
   function buildUrl(overrides: Record<string, string>) {
     const p = new URLSearchParams();
@@ -108,18 +117,6 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     const qs = p.toString();
     return `/uzklausos${qs ? `?${qs}` : ""}`;
   }
-
-  const hasFilters = category || location || search || budget;
-  const activeFilterCount = [category, location, search, budget].filter(Boolean).length;
-
-  // Stats for social proof
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const [totalActive, newToday, totalProviderResponses] = await Promise.all([
-    prisma.serviceRequest.count({ where: { status: "OPEN" } }),
-    prisma.serviceRequest.count({ where: { status: "OPEN", createdAt: { gte: oneDayAgo } } }),
-    prisma.response.count(),
-  ]);
 
   function isNew(createdAt: Date) {
     return now.getTime() - createdAt.getTime() < 24 * 60 * 60 * 1000;
@@ -191,148 +188,19 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
         </div>
 
         {/* Search + Filters */}
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 mb-8 dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="mb-4">
-            <SearchInput defaultValue={search} />
-          </div>
-
-          <div className="flex items-center gap-2 mb-4">
-            <SlidersHorizontal className="h-4 w-4 text-surface-400" />
-            <span className="text-body-sm font-medium text-surface-600 dark:text-surface-300">Filtrai</span>
-            {activeFilterCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-            {hasFilters && (
-              <Link
-                href={buildUrl({ category: "", location: "", search: "", budget: "", page: "1" })}
-                className="ml-auto text-micro text-brand-600 hover:text-brand-700 font-medium"
-              >
-                Išvalyti filtrus
-              </Link>
-            )}
-          </div>
-
-          {/* Category filter */}
-          <div className="mb-4">
-            <span className="text-micro font-medium text-surface-400 uppercase tracking-wider mb-2 block">Kategorija</span>
-            <div className="flex flex-wrap gap-1.5">
-              <Link
-                href={buildUrl({ category: "", page: "1" })}
-                className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                  !category
-                    ? "bg-brand-600 text-white shadow-sm"
-                    : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                }`}
-              >
-                Visos
-              </Link>
-              {SERVICE_CATEGORIES.map((cat) => (
-                <Link
-                  key={cat.value}
-                  href={buildUrl({ category: cat.value, page: "1" })}
-                  className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                    category === cat.value
-                      ? "bg-brand-600 text-white shadow-sm"
-                      : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                  }`}
-                >
-                  {cat.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Location + Budget side by side on larger screens */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Location filter */}
-            <div>
-              <span className="text-micro font-medium text-surface-400 uppercase tracking-wider mb-2 block">Miestas</span>
-              <div className="flex flex-wrap gap-1.5">
-                <Link
-                  href={buildUrl({ location: "", page: "1" })}
-                  className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                    !location
-                      ? "bg-brand-600 text-white shadow-sm"
-                      : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                  }`}
-                >
-                  Visi
-                </Link>
-                {LITHUANIAN_CITIES.map((city) => (
-                  <Link
-                    key={city}
-                    href={buildUrl({ location: city, page: "1" })}
-                    className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                      location === city
-                        ? "bg-brand-600 text-white shadow-sm"
-                        : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                    }`}
-                  >
-                    {city}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Budget filter */}
-            <div>
-              <span className="text-micro font-medium text-surface-400 uppercase tracking-wider mb-2 block">Biudžetas</span>
-              <div className="flex flex-wrap gap-1.5">
-                <Link
-                  href={buildUrl({ budget: "", page: "1" })}
-                  className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                    !budget
-                      ? "bg-brand-600 text-white shadow-sm"
-                      : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                  }`}
-                >
-                  Visi
-                </Link>
-                {BUDGET_OPTIONS.map((b) => (
-                  <Link
-                    key={b.value}
-                    href={buildUrl({ budget: b.value, page: "1" })}
-                    className={`rounded-lg px-3 py-1.5 text-caption font-medium transition-all duration-200 ${
-                      budget === b.value
-                        ? "bg-brand-600 text-white shadow-sm"
-                        : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                    }`}
-                  >
-                    {b.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Results count + sort */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <p className="text-body-sm text-surface-500 dark:text-surface-400">
-            {total === 0
-              ? "Užklausų nerasta"
-              : `Rasta: ${total} ${total === 1 ? "užklausa" : total < 10 ? "užklausos" : "užklausų"}`}
-          </p>
-          <div className="flex items-center gap-1.5">
-            <ArrowUpDown className="h-3.5 w-3.5 text-surface-400 shrink-0" />
-            <div className="flex gap-1 flex-wrap">
-              {SORT_OPTIONS.map((opt) => (
-                <Link
-                  key={opt.value}
-                  href={buildUrl({ sort: opt.value, page: "1" })}
-                  className={`rounded-lg px-2.5 py-1.5 text-caption font-medium transition-all whitespace-nowrap ${
-                    sort === opt.value
-                      ? "bg-brand-600 text-white"
-                      : "text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800"
-                  }`}
-                >
-                  {opt.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div className="mb-6">
+          <RequestFilterBar
+            activeCategory={category}
+            activeLocation={location}
+            activeSearch={search}
+            activeBudget={budget}
+            activeSort={sort}
+            categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+            cities={[...LITHUANIAN_CITIES]}
+            budgets={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
+            sortOptions={SORT_OPTIONS}
+            totalResults={total}
+          />
         </div>
 
         {/* Request cards */}

@@ -167,6 +167,7 @@ export default function TrackRequestPage() {
   };
   const status = statusMap[request.status] || statusMap.OPEN;
   const verificationState = searchParams.get("verification");
+  const deliveryState = searchParams.get("delivery");
   const isPendingConfirmation = request.status === "PENDING_CONFIRMATION";
   const isOpen = request.status === "OPEN";
   const isClosed = request.status === "CLOSED";
@@ -207,6 +208,18 @@ export default function TrackRequestPage() {
       {verificationState === "expired" && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
           Patvirtinimo nuoroda nebegalioja. Išsiųskite naują patvirtinimo laišką.
+        </div>
+      )}
+
+      {deliveryState === "failed" && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-body-sm text-red-800 dark:border-red-700 dark:bg-red-500/10 dark:text-red-300">
+          Užklausa sukurta, bet patvirtinimo laiško išsiųsti nepavyko. Galite pabandyti dar kartą šiame puslapyje.
+        </div>
+      )}
+
+      {deliveryState === "mock" && (
+        <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-body-sm text-brand-800 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+          Veikiate development režime: vietoj tikro laiško naudokite dev email preview, kad atidarytumėte patvirtinimo nuorodą.
         </div>
       )}
 

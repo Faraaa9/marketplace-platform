@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -46,9 +46,14 @@ export default function RegisterPage() {
         return;
       }
 
-      // Auto-login
-      await signIn("credentials", { email: form.email, password: form.password, redirect: false });
-      router.push("/");
+      const params = new URLSearchParams({
+        email: form.email,
+        delivery: data.data?.emailSent ? "sent" : "failed",
+      });
+      if (data.data?.emailMock) {
+        params.set("mock", "1");
+      }
+      router.push(`/patvirtinti?${params.toString()}`);
       router.refresh();
     } catch {
       setError("Įvyko klaida. Bandykite dar kartą.");

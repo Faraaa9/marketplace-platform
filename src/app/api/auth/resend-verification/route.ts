@@ -63,10 +63,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const emailData = emailVerificationEmail(user.name || "Tiekėjau", token);
-    await sendEmail({ to: email, ...emailData });
+    const emailData = emailVerificationEmail(user.name || "Vartotojau", token);
+    const emailResult = await sendEmail({ to: email, ...emailData });
 
-    return NextResponse.json({ success: true });
+    if (!emailResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Nepavyko išsiųsti patvirtinimo laiško. Patikrinkite el. pašto nustatymus ir bandykite dar kartą.",
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: { mock: !!emailResult.mock } });
   } catch (error) {
     console.error("Resend verification error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });

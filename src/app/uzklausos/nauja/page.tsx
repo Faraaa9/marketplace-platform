@@ -73,7 +73,13 @@ function NewRequestForm() {
         if (!isLoggedIn) {
           saveGuestRequest(data.data.trackingToken, form.title);
         }
-        router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
+        const params = new URLSearchParams();
+        if (data.data?.emailSent === false) {
+          params.set("delivery", "failed");
+        } else if (data.data?.emailMock) {
+          params.set("delivery", "mock");
+        }
+        router.push(`/uzklausos/sekti/${data.data.trackingToken}${params.toString() ? `?${params.toString()}` : ""}`);
       } else {
         setError(data.error || "Klaida pateikiant užklausą");
         // Stay on step 2 for account-related errors so user can uncheck or fix

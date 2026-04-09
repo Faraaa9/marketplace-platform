@@ -15,15 +15,27 @@ export async function GET(req: NextRequest) {
 
     const verificationToken = await prisma.emailVerificationToken.findUnique({
       where: { token },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
     });
 
     if (!verificationToken || verificationToken.expiresAt < new Date()) {
       if (verificationToken) {
         await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
       }
-      return NextResponse.redirect(
-        new URL("/patvirtinti?status=expired", req.url)
-      );
+      const redirectUrl = new URL("/patvirtinti?status=expired", req.url);
+      if (verificationToken?.user.email) {
+        redirectUrl.searchParams.set("email", verificationToken.user.email);
+      }
+      return NextResponse.redirect(redirectUrl);
     }
 
     await prisma.$transaction([
@@ -34,9 +46,11 @@ export async function GET(req: NextRequest) {
       prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } }),
     ]);
 
-    return NextResponse.redirect(
-      new URL("/patvirtinti?status=success", req.url)
-    );
+    const successUrl = new URL("/patvirtinti?status=success", req.url);
+    if (verificationToken.user.email) {
+      successUrl.searchParams.set("email", verificationToken.user.email);
+    }
+    return NextResponse.redirect(successUrl);
   } catch (error) {
     console.error("Verify email error:", error);
     return NextResponse.redirect(

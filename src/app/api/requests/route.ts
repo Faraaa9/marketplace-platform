@@ -87,10 +87,20 @@ export async function POST(req: NextRequest) {
 
     // Send verification email; providers are notified only after confirmation.
     const emailData = requestVerificationEmail(clientName, verificationToken, request.trackingToken);
-    await sendEmail({ to: clientEmail, ...emailData });
+    const emailResult = await sendEmail({ to: clientEmail, ...emailData });
 
     // Return tracking token to redirect the user
-    return NextResponse.json({ success: true, data: { trackingToken: request.trackingToken } });
+    return NextResponse.json({
+      success: true,
+      data: {
+        trackingToken: request.trackingToken,
+        emailSent: emailResult.success,
+        emailMock: !!emailResult.mock,
+      },
+      warning: emailResult.success
+        ? null
+        : "Užklausa sukurta, bet patvirtinimo laiško išsiųsti nepavyko. Tracking puslapyje galėsite pabandyti dar kartą.",
+    });
   } catch (error) {
     console.error("Create request error:", error);
     return NextResponse.json({ success: false, error: "Nepavyko sukurti užklausos" }, { status: 500 });
