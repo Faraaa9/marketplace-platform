@@ -33,6 +33,7 @@ interface PageProps {
 
 export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
+  const currentUserId = session?.user?.id ?? null;
   const userRole = session?.user?.role;
 
   const params = await searchParams;
@@ -70,11 +71,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
       where,
       select: {
         id: true,
+        trackingToken: true,
         title: true,
         description: true,
         category: true,
         location: true,
         budget: true,
+        clientId: true,
         createdAt: true,
         _count: { select: { responses: true } },
       },
@@ -213,6 +216,19 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           <div className="grid gap-4">
             {requests.map((r) => {
               const competition = competitionLevel(r._count.responses);
+              const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
+              const ctaHref = isOwnRequest
+                ? `/uzklausos/sekti/${r.trackingToken}`
+                : userRole === "PROVIDER"
+                  ? `/tiekejas/uzklausos/${r.id}`
+                  : userRole
+                    ? `/tapti-tiekeju`
+                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`;
+              const ctaLabel = isOwnRequest ? "Jūsų užklausa" : "Pateikti pasiūlymą";
+              const ctaClassName = isOwnRequest
+                ? "inline-flex items-center gap-1 rounded-lg border border-surface-200 bg-surface-50 px-3 py-1.5 text-micro font-semibold text-surface-600 hover:bg-surface-100 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"
+                : "inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-micro font-semibold text-white hover:bg-brand-700 transition-colors shadow-sm";
+
               return (
                 <article
                   key={r.id}
@@ -272,16 +288,10 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       </span>
                     </div>
                     <Link
-                      href={
-                        userRole === "PROVIDER"
-                          ? `/tiekejas/uzklausos/${r.id}`
-                          : userRole
-                            ? `/tapti-tiekeju`
-                            : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`
-                      }
-                      className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-micro font-semibold text-white hover:bg-brand-700 transition-colors shadow-sm"
+                      href={ctaHref}
+                      className={ctaClassName}
                     >
-                      Pateikti pasiūlymą
+                      {ctaLabel}
                       <ArrowRight className="h-3 w-3" />
                     </Link>
                   </div>
