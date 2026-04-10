@@ -46,6 +46,12 @@ export async function GET(req: NextRequest) {
       prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } }),
     ]);
 
+    // Auto-activate provider profile if exists (removes onboarding friction)
+    await prisma.providerProfile.updateMany({
+      where: { userId: verificationToken.userId, isActive: false },
+      data: { isActive: true },
+    });
+
     const successUrl = new URL("/patvirtinti?status=success", req.url);
     if (verificationToken.user.email) {
       successUrl.searchParams.set("email", verificationToken.user.email);

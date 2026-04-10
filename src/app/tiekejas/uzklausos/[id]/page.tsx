@@ -12,7 +12,8 @@ import Textarea from "@/components/ui/Textarea";
 import Input from "@/components/ui/Input";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
-import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft } from "lucide-react";
+import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft, AlertTriangle, Settings } from "lucide-react";
+import Link from "next/link";
 
 interface MessageData {
   id: string;
@@ -47,6 +48,9 @@ interface RequestData {
   responses: ResponseData[];
   totalResponses?: number;
   planType?: string;
+  canRespond?: boolean;
+  eligibilityCode?: string;
+  eligibilityMessage?: string;
 }
 
 export default function ProviderRequestDetailPage() {
@@ -177,8 +181,8 @@ export default function ProviderRequestDetailPage() {
         )}
       </Card>
 
-      {/* Response form */}
-      {!hasResponded && request.status === "OPEN" && (
+      {/* Response form or eligibility warning */}
+      {!hasResponded && request.canRespond && (
         <Card className="mb-8">
           <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1">Pateikti pasiūlymą</h3>
           {request.totalResponses != null && (
@@ -228,6 +232,29 @@ export default function ProviderRequestDetailPage() {
             </Button>
           </div>
         </Card>
+      )}
+
+      {/* Eligibility warning — specialization mismatch or missing */}
+      {!hasResponded && request.canRespond === false && request.eligibilityCode && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-500/10">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-body-sm font-medium text-amber-800 dark:text-amber-300">
+                {request.eligibilityMessage}
+              </p>
+              {(request.eligibilityCode === "NO_SPECIALIZATIONS" || request.eligibilityCode === "SPECIALIZATION_MISMATCH") && (
+                <Link
+                  href="/tiekejas/profilis"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-caption font-semibold text-white hover:bg-amber-700 transition-colors"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Redaguoti profilį
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {isMyResponseAccepted && (

@@ -28,6 +28,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   reviewsGiven            Review[]    @relation("ReviewClient")
   reviewsReceived         Review[]    @relation("ReviewProvider")
+  directInquiriesSent     DirectInquiry[] @relation("InquirySender")
+  directInquiriesReceived DirectInquiry[] @relation("InquiryProvider")
 
   @@map("users")
 }
@@ -195,4 +197,48 @@ model Review {
   @@unique([requestId, responseId])
   @@index([providerId])
   @@map("reviews")
+}
+
+model DirectInquiry {
+  id           String   @id @default(cuid())
+  providerId   String
+  description  String   @db.Text
+  budget       String?
+  senderUserId String?
+  senderEmail  String
+  senderPhone  String?
+  senderName   String?
+  status       String   @default("NEW")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  provider User  @relation("InquiryProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  sender   User? @relation("InquirySender", fields: [senderUserId], references: [id], onDelete: SetNull)
+
+  @@index([providerId, status])
+  @@index([senderUserId])
+  @@index([senderEmail])
+  @@map("direct_inquiries")
+}
+
+model PendingDirectInquiry {
+  id            String   @id @default(cuid())
+  providerId    String
+  description   String   @db.Text
+  budget        String?
+  senderEmail   String
+  senderPhone   String?
+  senderName    String?
+  code          String
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(5)
+  resendCount   Int      @default(0)
+  lastSentAt    DateTime @default(now())
+  expiresAt     DateTime
+  verifiedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([senderEmail])
+  @@index([providerId, senderEmail])
+  @@map("pending_direct_inquiries")
 }

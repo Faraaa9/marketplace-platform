@@ -6,11 +6,11 @@ import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
+import { checkEligibility, parseSpecializations } from "@/lib/provider-eligibility";
 
 /**
  * Provider view of a request.
- * Only returns the current provider's own response + messages.
- * Requires verified email + active profile.
+ * Returns the request, provider's own response + messages, and eligibility info.
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         budget: true,
         status: true,
         acceptedResponseId: true,
+        clientId: true,
         clientName: true,
         clientEmail: true,
         clientPhone: true,
@@ -60,24 +61,49 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ success: false, error: "Nerasta" }, { status: 404 });
     }
 
-    const totalResponses = await prisma.response.count({
-      where: { requestId: params.id },
-    });
-
-    // Enforce contact visibility by effective plan (checks billing status)
-    const [profile, subscription] = await Promise.all([
-      prisma.providerProfile.findUnique({ where: { userId: guard.userId }, select: { planType: true } }),
-      prisma.subscription.findUnique({ where: { userId: guard.userId }, select: { status: true } }),
+    const [totalResponses, profile, subscription] = await Promise.all([
+      prisma.response.count({ where: { requestId: params.id } }),
+      prisma.providerProfile.findUnique({
+        where: { userId: guard.userId },
+        select: { planType: true, specializations: true },
+      }),
+      prisma.subscription.findUnique({
+        where: { userId: guard.userId },
+        select: { status: true },
+      }),
     ]);
+
+    // Plan-based contact visibility
     const planType = getEffectivePlanType(profile?.planType || "FREE", subscription?.status);
     const plan = PLAN_LIMITS[planType];
 
+    // Eligibility check
+    const specs = parseSpecializations(profile?.specializations);
+    const eligibility = checkEligibility(
+      guard.userId,
+      { category: request.category, status: request.status, clientId: request.clientId },
+      specs,
+    );
+
     const data = {
-      ...request,
+      id: request.id,
+      title: request.title,
+      description: request.description,
+      category: request.category,
+      location: request.location,
+      budget: request.budget,
+      status: request.status,
+      acceptedResponseId: request.acceptedResponseId,
+      clientName: request.clientName,
+      createdAt: request.createdAt,
+      responses: request.responses,
       totalResponses,
       clientEmail: plan.canSeeEmail ? request.clientEmail : null,
       clientPhone: plan.canSeePhone ? request.clientPhone : null,
       planType,
+      canRespond: eligibility.allowed,
+      eligibilityCode: eligibility.code,
+      eligibilityMessage: eligibility.message,
     };
 
     return NextResponse.json({ success: true, data });
@@ -104,11 +130,41 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ success: false, error: (parsed.error.issues?.[0]?.message || "Validacijos klaida") }, { status: 400 });
     }
 
+    const request = await prisma.serviceRequest.findUnique({
+      where: { id: params.id },
+      select: {
+        id: true, category: true, status: true, clientId: true,
+        clientName: true, clientEmail: true, title: true, trackingToken: true,
+      },
+    });
+    if (!request) {
+      return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
+    }
+
+    // Load provider specializations and check eligibility
+    const profile = await prisma.providerProfile.findUnique({
+      where: { userId: guard.userId },
+      select: { specializations: true, planType: true },
+    });
+    const specs = parseSpecializations(profile?.specializations);
+    const eligibility = checkEligibility(
+      guard.userId,
+      { category: request.category, status: request.status, clientId: request.clientId },
+      specs,
+    );
+
+    if (!eligibility.allowed) {
+      return NextResponse.json(
+        { success: false, error: eligibility.message, code: eligibility.code },
+        { status: 403 },
+      );
+    }
+
     // Check plan limits (billing-aware)
-    const [profile, subscription] = await Promise.all([
-      prisma.providerProfile.findUnique({ where: { userId: guard.userId } }),
-      prisma.subscription.findUnique({ where: { userId: guard.userId }, select: { status: true } }),
-    ]);
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: guard.userId },
+      select: { status: true },
+    });
     const effectivePlan = getEffectivePlanType(profile?.planType || "FREE", subscription?.status);
     const planLimit = PLAN_LIMITS[effectivePlan]?.responsesPerMonth ?? 3;
 
@@ -140,20 +196,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ success: false, error: "Jau atsakėte į šią užklausą" }, { status: 400 });
     }
 
-    const request = await prisma.serviceRequest.findUnique({ where: { id: params.id } });
-    if (!request) {
-      return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
-    }
-
-    // Block self-interaction: provider cannot respond to own request
-    if (request.clientId === guard.userId) {
-      return NextResponse.json({ success: false, error: "Negalite atsakyti į savo paties užklausą" }, { status: 403 });
-    }
-
-    if (request.status !== "OPEN") {
-      return NextResponse.json({ success: false, error: "Ši užklausa nebepriima naujų pasiūlymų" }, { status: 400 });
-    }
-
     const response = await prisma.response.create({
       data: {
         requestId: params.id,
@@ -163,7 +205,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       },
     });
 
-    // Send email to client (use tracking token, not internal ID)
+    // Send email to client
     const emailData = newResponseEmail(request.clientName, request.title, request.trackingToken);
     await sendEmail({ to: request.clientEmail, ...emailData });
 

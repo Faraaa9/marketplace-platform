@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
@@ -15,6 +16,7 @@ interface Notification {
 }
 
 export default function NotificationBell() {
+  const { status } = useSession();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +25,7 @@ export default function NotificationBell() {
   const prevUnreadRef = useRef(0);
 
   const fetchNotifications = useCallback(async () => {
+    if (status !== "authenticated") return;
     try {
       const res = await fetch("/api/notifications");
       if (res.ok) {
@@ -40,7 +43,7 @@ export default function NotificationBell() {
         }
       }
     } catch {}
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     fetchNotifications();

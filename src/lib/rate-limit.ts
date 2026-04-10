@@ -97,6 +97,9 @@ export const RATE_LIMITS = {
   messages: { maxRequests: 5, windowMs: 60 * 1000 },            // 5 per minute
   responses: { maxRequests: 10, windowMs: 10 * 60 * 1000 },     // 10 per 10 min
   guestMessages: { maxRequests: 3, windowMs: 60 * 1000 },       // 3 per minute
+  directInquiry: { maxRequests: 5, windowMs: 60 * 60 * 1000 },  // 5 per hour (sender)
+  directInquiryGuest: { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 per hour (guest)
+  directInquiryPerProvider: { maxRequests: 20, windowMs: 60 * 60 * 1000 }, // 20 per hour (per provider)
 } as const;
 
 export function getClientIp(request: Request): string {

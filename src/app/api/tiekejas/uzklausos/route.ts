@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
+import { parseSpecializations } from "@/lib/provider-eligibility";
 
 export const dynamic = "force-dynamic";
 
@@ -23,17 +24,27 @@ export async function GET(req: NextRequest) {
       select: { specializations: true, location: true },
     });
 
-    const providerSpecs: string[] = profile?.specializations
-      ? JSON.parse(profile.specializations)
-      : [];
+    const providerSpecs = parseSpecializations(profile?.specializations);
     const providerLocation = profile?.location || "";
 
-    // Build filter — exclude provider's own requests
+    // Build filter — only matching specializations, exclude own requests
     const where: Record<string, unknown> = {
       status: "OPEN",
       clientId: { not: guard.userId },
     };
-    if (category) where.category = category;
+    // Filter by provider specializations (only show requests they can respond to)
+    if (providerSpecs.length > 0) {
+      if (category) {
+        // If explicit category filter, use it (but only if it's in their specs)
+        where.category = category;
+      } else {
+        // Default: only show categories matching provider's specializations
+        where.category = { in: providerSpecs };
+      }
+    } else {
+      // No specializations — show nothing (they need to set up profile first)
+      where.category = { in: [] };
+    }
     if (location) where.location = location;
     if (search) {
       where.OR = [
@@ -100,7 +111,14 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { requests: paginated, total, pages, page },
+      data: {
+        requests: paginated,
+        total,
+        pages,
+        page,
+        hasSpecializations: providerSpecs.length > 0,
+        providerSpecs,
+      },
     });
   } catch (error) {
     console.error("Provider requests error:", error);

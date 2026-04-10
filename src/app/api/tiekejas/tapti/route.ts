@@ -36,6 +36,12 @@ export async function POST() {
       return NextResponse.json({ success: true, data: { alreadyProvider: true } });
     }
 
+    // Check if email already verified — auto-activate if so
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { emailVerified: true },
+    });
+
     // Create provider profile and update role in a transaction
     await prisma.$transaction([
       prisma.providerProfile.create({
@@ -43,6 +49,7 @@ export async function POST() {
           userId,
           specializations: "[]",
           images: "[]",
+          isActive: !!user?.emailVerified,
         },
       }),
       prisma.user.update({

@@ -25,19 +25,25 @@ export async function GET() {
       );
     }
 
-    const [totalRequests, myResponses, user, subscription] = await Promise.all([
+    let specs: string[] = [];
+    try { specs = JSON.parse(profile.specializations || "[]"); } catch {}
+
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+    const [totalRequests, matchingRequests, myResponses, thisMonthResponses, user, subscription] = await Promise.all([
       prisma.serviceRequest.count({ where: { status: "OPEN" } }),
+      specs.length > 0
+        ? prisma.serviceRequest.count({
+            where: { status: "OPEN", category: { in: specs }, clientId: { not: session.user.id } },
+          })
+        : Promise.resolve(0),
       prisma.response.count({ where: { providerId: session.user.id } }),
-      prisma.user.findUnique({ where: { id: session.user.id }, select: { emailVerified: true } }),
+      prisma.response.count({
+        where: { providerId: session.user.id, createdAt: { gte: startOfMonth } },
+      }),
+      prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, emailVerified: true } }),
       prisma.subscription.findUnique({ where: { userId: session.user.id }, select: { status: true } }),
     ]);
-
-    const thisMonthResponses = await prisma.response.count({
-      where: {
-        providerId: session.user.id,
-        createdAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
-      },
-    });
 
     const storedPlan = profile.planType || "FREE";
     const effectivePlan = getEffectivePlanType(storedPlan, subscription?.status);
@@ -50,9 +56,6 @@ export async function GET() {
       const parsed = JSON.parse(profile.images || "[]");
       images = Array.isArray(parsed) ? parsed : [];
     } catch {}
-    let specs: string[] = [];
-    try { specs = JSON.parse(profile.specializations || "[]"); } catch {}
-
     const completenessItems = [
       { key: "description", done: !!(profile.description && profile.description.length >= 20), label: "Aprašymas" },
       { key: "headline", done: !!profile.headline, label: "Antraštė" },
@@ -78,8 +81,12 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
+        userName: user?.name || null,
+        userEmail: user?.email || null,
         totalRequests,
+        matchingRequests,
         myResponses,
+        specializations: specs,
         thisMonthResponses,
         planType: effectivePlan,
         storedPlanType: storedPlan,

@@ -1,11 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { Particles } from "@/components/magicui/particles";
+import { getRoleHomePath } from "@/lib/redirects";
 
 export default function VerifyEmailPage() {
   return <Suspense fallback={<LoadingSpinner />}><VerifyEmailContent /></Suspense>;
@@ -76,6 +78,80 @@ function ResendButton({ email }: { email?: string }) {
   );
 }
 
+function VerifySuccessScreen({ maskedEmail }: { maskedEmail: string }) {
+  const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
+  const isAuthenticated = sessionStatus === "authenticated";
+  const role = session?.user?.role;
+  const redirectPath = getRoleHomePath(role);
+  const [countdown, setCountdown] = useState(4);
+
+  const ctaLabel = role === "PROVIDER"
+    ? "Tęsti į tiekėjo panelę"
+    : "Tęsti toliau";
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          router.push(redirectPath);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, redirectPath, router]);
+
+  const wrapper = "relative flex min-h-[85vh] items-center justify-center px-4";
+  const card = "rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90";
+
+  return (
+    <div className={wrapper}>
+      <div className="absolute inset-0 bg-radial-brand-subtle" />
+      <Particles className="opacity-10" quantity={20} color="#10b981" size={1} speed={0.1} />
+      <div className="relative w-full max-w-md text-center">
+        <div className={card}>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10">
+            <span className="text-display font-bold text-emerald-500">✓</span>
+          </div>
+          <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">El. paštas patvirtintas!</h1>
+          <p className="mt-2 text-body text-surface-500 dark:text-surface-400">
+            {maskedEmail
+              ? `El. paštas ${maskedEmail} sėkmingai patvirtintas.`
+              : "Jūsų el. pašto adresas sėkmingai patvirtintas."}
+            {isAuthenticated
+              ? " Tuoj būsite nukreipti automatiškai."
+              : " Dabar galite prisijungti ir tęsti darbą platformoje."}
+          </p>
+          {isAuthenticated ? (
+            <>
+              <Link
+                href={redirectPath}
+                className="mt-6 inline-flex rounded-2xl bg-brand-600 px-6 py-3 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
+              >
+                {ctaLabel}
+              </Link>
+              <p className="mt-3 text-micro text-surface-400">
+                Automatinis nukreipimas po {countdown} sek.
+              </p>
+            </>
+          ) : (
+            <Link
+              href="/prisijungti"
+              className="mt-6 inline-flex rounded-2xl bg-brand-600 px-6 py-3 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
+            >
+              Prisijungti
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
@@ -88,31 +164,7 @@ function VerifyEmailContent() {
   const card = "rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90";
 
   if (status === "success") {
-    return (
-      <div className={wrapper}>
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
-        <Particles className="opacity-10" quantity={20} color="#10b981" size={1} speed={0.1} />
-        <div className="relative w-full max-w-md text-center">
-          <div className={card}>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10">
-              <span className="text-display font-bold text-emerald-500">✓</span>
-            </div>
-            <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">El. paštas patvirtintas!</h1>
-            <p className="mt-2 text-body text-surface-500 dark:text-surface-400">
-              {maskedEmail
-                ? `El. paštas ${maskedEmail} sėkmingai patvirtintas.`
-                : "Jūsų el. pašto adresas sėkmingai patvirtintas."} Dabar galite prisijungti ir tęsti darbą platformoje.
-            </p>
-            <Link
-              href="/prisijungti"
-              className="mt-6 inline-flex rounded-2xl bg-brand-600 px-6 py-3 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
-            >
-              Prisijungti
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    return <VerifySuccessScreen maskedEmail={maskedEmail} />;
   }
 
   if (status === "expired") {

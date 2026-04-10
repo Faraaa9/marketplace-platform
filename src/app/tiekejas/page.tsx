@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Card, { CardTitle } from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2 } from "lucide-react";
+import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send } from "lucide-react";
 
 interface Stats {
+  userName: string | null;
+  userEmail: string | null;
   totalRequests: number;
+  matchingRequests: number;
   myResponses: number;
+  specializations: string[];
   thisMonthResponses: number;
   planType: string;
   storedPlanType: string;
@@ -76,7 +81,15 @@ function ResendVerificationBanner() {
 /** Determine the single most important next action for the provider */
 function getNextAction(stats: Stats): { label: string; description: string; href: string; priority: "high" | "medium" | "low" } | null {
   if (!stats.emailVerified) return null; // banner handles this
-  if (!stats.isActive) return null; // banner handles this
+  if (!stats.isActive) return null; // suspended banner handles this
+  if (stats.specializations.length === 0) {
+    return {
+      label: "Pasirinkite specializacijas",
+      description: "Be specializacijų nematysite jums tinkamų užklausų",
+      href: "/tiekejas/profilis",
+      priority: "high",
+    };
+  }
   if (stats.profileCompleteness < 100) {
     return {
       label: "Užpildykite profilį",
@@ -85,18 +98,18 @@ function getNextAction(stats: Stats): { label: string; description: string; href
       priority: stats.profileCompleteness < 50 ? "high" : "medium",
     };
   }
-  if (stats.totalRequests > 0 && stats.myResponses === 0) {
+  if (stats.matchingRequests > 0 && stats.myResponses === 0) {
     return {
       label: "Atsakykite į pirmą užklausą",
-      description: `${stats.totalRequests} aktyvios užklausos laukia jūsų pasiūlymo`,
+      description: `${stats.matchingRequests} užklausos atitinka jūsų specializaciją`,
       href: "/tiekejas/uzklausos",
       priority: "high",
     };
   }
-  if (stats.totalRequests > stats.myResponses) {
+  if (stats.matchingRequests > 0) {
     return {
       label: "Peržiūrėkite naujas užklausas",
-      description: `${stats.totalRequests - stats.myResponses} užklausos be jūsų atsakymo`,
+      description: `${stats.matchingRequests} tinkamos užklausos laukia jūsų pasiūlymo`,
       href: "/tiekejas/uzklausos",
       priority: "medium",
     };
@@ -105,14 +118,21 @@ function getNextAction(stats: Stats): { label: string; description: string; href
 }
 
 export default function ProviderDashboard() {
+  const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     fetch("/api/tiekejas/stats")
       .then((r) => r.json())
       .then((data) => { if (data.success) setStats(data.data); })
       .finally(() => setLoading(false));
+    // Fetch unread direct inquiry count
+    fetch("/api/tiekejas/zinutes?status=NEW&page=1")
+      .then((r) => r.json())
+      .then((data) => { if (data.success) setUnreadMessages(data.data.unreadCount); })
+      .catch(() => {});
   }, []);
 
   const handlePortal = useCallback(async () => {
@@ -127,41 +147,81 @@ export default function ProviderDashboard() {
 
   if (loading) return <LoadingSpinner />;
 
-  const canAccessRequests = stats?.emailVerified && stats?.isActive;
-  const nextAction = stats ? getNextAction(stats) : null;
+  if (!stats) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10 text-center">
+        <p className="text-body text-surface-500 dark:text-surface-400">
+          Nepavyko užkrauti duomenų. Pabandykite atnaujinti puslapį.
+        </p>
+      </div>
+    );
+  }
+
+  const canAccessRequests = stats.emailVerified && stats.isActive;
+  const nextAction = getNextAction(stats);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      {/* Header — contextual with plan badge */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Valdymo panelė</h1>
-          <p className="mt-0.5 text-body-sm text-surface-500 dark:text-surface-400">
-            {stats?.acceptedCount
-              ? `${stats.acceptedCount} priimti pasiūlymai`
-              : "Pradėkite atsakinėti į užklausas"}
-          </p>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Valdymo panelė</h1>
+        <p className="mt-0.5 text-body-sm text-surface-500 dark:text-surface-400">
+          {stats.acceptedCount
+            ? `${stats.acceptedCount} ${stats.acceptedCount === 1 ? "priimtas pasiūlymas" : "priimti pasiūlymai"}`
+            : "Pradėkite atsakinėti į užklausas"}
+        </p>
+      </div>
+
+      {/* Account info */}
+      <div className="mb-4 rounded-xl border border-surface-200/60 bg-white px-4 py-3.5 dark:border-surface-700/50 dark:bg-surface-900/50">
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-950">
+            <User className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-body-sm font-medium text-surface-900 dark:text-white truncate">
+              {stats.userName || "Tiekėjas"}
+            </p>
+            <p className="text-micro text-surface-400 truncate">{stats.userEmail}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {!stats.isActive && stats.emailVerified && (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-micro font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                <ShieldCheck className="h-3 w-3" />
+                Sustabdyta
+              </span>
+            )}
+            {stats.emailVerified ? (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-micro font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                <CheckCircle2 className="h-3 w-3" />
+                Patvirtintas
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                <Mail className="h-3 w-3" />
+                Nepatvirtintas
+              </span>
+            )}
+            <Badge variant={stats.planType === "PRO" ? "brand" : stats.planType === "BASIC" ? "success" : "default"}>
+              {stats.planType || "FREE"}
+            </Badge>
+          </div>
         </div>
-        {stats && (
-          <Badge variant={stats.planType === "PRO" ? "brand" : stats.planType === "BASIC" ? "success" : "default"}>
-            {stats.planType || "FREE"}
-          </Badge>
-        )}
       </div>
 
       {/* Compact alerts — email, activation, payment */}
-      {stats && !stats.emailVerified && <ResendVerificationBanner />}
+      {!stats.emailVerified && <ResendVerificationBanner />}
 
-      {stats && stats.emailVerified && !stats.isActive && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-500/10">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="text-body-sm text-amber-800 dark:text-amber-300">
-            Paskyra laukia aktyvacijos — kol kas galite redaguoti profilį ir pasirinkti planą.
+      {stats.emailVerified && !stats.isActive && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-red-200/60 bg-red-50 px-4 py-3 dark:border-red-800/40 dark:bg-red-500/10">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+          <p className="text-body-sm text-red-800 dark:text-red-300">
+            Jūsų paskyra sustabdyta administratoriaus. Susisiekite su mumis, jei manote, kad tai klaida.
           </p>
         </div>
       )}
 
-      {stats && stats.subscriptionStatus === "PAST_DUE" && stats.storedPlanType !== "FREE" && (
+      {stats.subscriptionStatus === "PAST_DUE" && stats.storedPlanType !== "FREE" && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-red-200/60 bg-red-50 px-4 py-3 dark:border-red-800/40 dark:bg-red-500/10">
           <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
           <p className="flex-1 text-body-sm text-red-800 dark:text-red-300">
@@ -173,7 +233,7 @@ export default function ProviderDashboard() {
         </div>
       )}
 
-      {stats && stats.subscriptionStatus === "CANCELED" && stats.storedPlanType !== "FREE" && (
+      {stats.subscriptionStatus === "CANCELED" && stats.storedPlanType !== "FREE" && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-500/10">
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <p className="flex-1 text-body-sm text-amber-800 dark:text-amber-300">
@@ -209,8 +269,8 @@ export default function ProviderDashboard() {
               <FileText className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             </div>
             <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats?.totalRequests || 0}</p>
-              <p className="text-micro text-surface-500">Aktyvios užklausos</p>
+              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.matchingRequests}</p>
+              <p className="text-micro text-surface-500">Tinkamos užklausos</p>
             </div>
           </div>
         </MagicCard>
@@ -220,7 +280,7 @@ export default function ProviderDashboard() {
               <MessageCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats?.myResponses || 0}</p>
+              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.myResponses}</p>
               <p className="text-micro text-surface-500">Mano atsakymai</p>
             </div>
           </div>
@@ -231,7 +291,7 @@ export default function ProviderDashboard() {
               <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats?.thisMonthResponses || 0}</p>
+              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.thisMonthResponses}</p>
               <p className="text-micro text-surface-500">Šį mėnesį</p>
             </div>
           </div>
@@ -242,7 +302,7 @@ export default function ProviderDashboard() {
               <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats?.acceptedCount || 0}</p>
+              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.acceptedCount}</p>
               <p className="text-micro text-surface-500">Priimti</p>
             </div>
           </div>
@@ -250,7 +310,7 @@ export default function ProviderDashboard() {
       </div>
 
       {/* Responses remaining + Profile completeness — compact combined row */}
-      {stats && canAccessRequests && (stats.responsesRemaining !== -1 || stats.profileCompleteness < 100) && (
+      {canAccessRequests && (stats.responsesRemaining !== -1 || stats.profileCompleteness < 100) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {stats.responsesRemaining !== -1 && (
             <div className="rounded-2xl border border-surface-200/60 bg-white p-4 dark:border-surface-700/50 dark:bg-surface-900/50">
@@ -298,7 +358,7 @@ export default function ProviderDashboard() {
       )}
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {canAccessRequests ? (
           <Link href="/tiekejas/uzklausos" className="group">
             <Card hover>
@@ -317,21 +377,50 @@ export default function ProviderDashboard() {
               <div>
                 <CardTitle>Užklausos</CardTitle>
                 <p className="text-body-sm text-surface-500 mt-1">
-                  {!stats?.emailVerified ? "Patvirtinkite el. paštą" : "Laukiama aktyvacijos"}
+                  {!stats.emailVerified ? "Patvirtinkite el. paštą" : "Paskyra sustabdyta"}
                 </p>
               </div>
               <AlertCircle className="h-4 w-4 text-surface-400" />
             </div>
           </Card>
         )}
+        <Link href="/tiekejas/zinutes" className="group">
+          <Card hover>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Žinutės</CardTitle>
+                  {unreadMessages > 0 && (
+                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
+                      {unreadMessages}
+                    </span>
+                  )}
+                </div>
+                <p className="text-body-sm text-surface-500 mt-1">Tiesioginės užklausos</p>
+              </div>
+              <Send className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+            </div>
+          </Card>
+        </Link>
         <Link href="/tiekejas/profilis" className="group">
           <Card hover>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Profilis</CardTitle>
+                <CardTitle>Redaguoti profilį</CardTitle>
                 <p className="text-body-sm text-surface-500 mt-1">Aprašymas ir nuotraukos</p>
               </div>
               <User className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+            </div>
+          </Card>
+        </Link>
+        <Link href={`/tiekejai/${session?.user?.id}`} className="group">
+          <Card hover>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Viešas profilis</CardTitle>
+                <p className="text-body-sm text-surface-500 mt-1">Kaip mato klientai</p>
+              </div>
+              <Eye className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
             </div>
           </Card>
         </Link>

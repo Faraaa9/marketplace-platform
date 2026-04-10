@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
@@ -30,6 +32,9 @@ interface PageProps {
 }
 
 export default async function PublicRequestsPage({ searchParams }: PageProps) {
+  const session = await getServerSession(authOptions);
+  const userRole = session?.user?.role;
+
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
   const category = params.category || "";
@@ -267,7 +272,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       </span>
                     </div>
                     <Link
-                      href="/prisijungti"
+                      href={
+                        userRole === "PROVIDER"
+                          ? `/tiekejas/uzklausos/${r.id}`
+                          : userRole
+                            ? `/tapti-tiekeju`
+                            : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`
+                      }
                       className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-micro font-semibold text-white hover:bg-brand-700 transition-colors shadow-sm"
                     >
                       Pateikti pasiūlymą

@@ -56,9 +56,19 @@ export const providerProfileSchema = z.object({
   website: z.string().url("Neteisingas URL formatas").optional().or(z.literal("")),
 });
 
+export const directInquirySchema = z.object({
+  providerId: z.string().min(1, "Trūksta tiekėjo ID"),
+  description: z.string().min(20, "Žinutė turi būti bent 20 simbolių").max(2000, "Žinutė per ilga (max 2000)"),
+  budget: z.string().max(100).optional().or(z.literal("")),
+  senderEmail: z.string().email("Neteisingas el. pašto formatas").optional().or(z.literal("")),
+  senderPhone: z.string().max(20).optional().or(z.literal("")),
+  senderName: z.string().max(100).optional().or(z.literal("")),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;
+export type DirectInquiryInput = z.infer<typeof directInquirySchema>;

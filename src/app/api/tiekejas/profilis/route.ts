@@ -14,9 +14,15 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const profile = await prisma.providerProfile.findUnique({
-      where: { userId: session.user.id },
-    });
+    const [profile, user] = await Promise.all([
+      prisma.providerProfile.findUnique({
+        where: { userId: session.user.id },
+      }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true, email: true, emailVerified: true },
+      }),
+    ]);
 
     // Parse JSON strings for client
     let parsedImages: { url: string; publicId: string }[] = [];
@@ -36,6 +42,9 @@ export async function GET() {
       ...profile,
       specializations: JSON.parse(profile.specializations || "[]"),
       images: parsedImages,
+      userName: user?.name || null,
+      userEmail: user?.email || null,
+      emailVerified: !!user?.emailVerified,
     } : null;
 
     return NextResponse.json({ success: true, data });

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -10,17 +10,32 @@ import { getRoleHomePath } from "@/lib/redirects";
 import { Particles } from "@/components/magicui/particles";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function getRedirectPath(role?: string) {
+    return callbackUrl || getRoleHomePath(role);
+  }
+
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace(getRoleHomePath(session?.user?.role));
+      router.replace(getRedirectPath(session?.user?.role));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, session?.user?.role, status]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -39,7 +54,7 @@ export default function LoginPage() {
         setError(result.error);
       } else {
         const refreshedSession = await getSession();
-        router.push(getRoleHomePath(refreshedSession?.user?.role));
+        router.push(getRedirectPath(refreshedSession?.user?.role));
         router.refresh();
       }
     } catch {

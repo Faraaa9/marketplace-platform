@@ -233,6 +233,22 @@ export function emailVerificationEmail(name: string, token: string) {
   };
 }
 
+export function directInquiryVerificationEmail(code: string) {
+  return {
+    subject: `${code} — jūsų patvirtinimo kodas — PaslaugųRinka`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Jūsų patvirtinimo kodas</h2>
+        <p>Naudokite šį kodą, kad patvirtintumėte savo žinutę tiekėjui:</p>
+        <div style="margin: 24px 0; text-align: center;">
+          <span style="display: inline-block; padding: 16px 32px; background: #f3f4f6; border-radius: 12px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827;">${code}</span>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">Kodas galioja 10 minučių. Jei neprašėte šio kodo, ignoruokite šį laišką.</p>
+      </div>
+    `,
+  };
+}
+
 export function subscriptionConfirmationEmail(name: string, plan: string) {
   return {
     subject: `${plan} planas aktyvuotas — PaslaugųRinka`,
