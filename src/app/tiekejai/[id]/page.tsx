@@ -33,7 +33,17 @@ import {
   Mail,
   RefreshCw,
   LogIn,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+interface StoryData {
+  id: string;
+  imageUrl: string;
+  text: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
 
 interface ReviewData {
   id: string;
@@ -105,6 +115,20 @@ export default function PublicProviderProfilePage() {
   const [verifyError, setVerifyError] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Story state
+  const [stories, setStories] = useState<StoryData[]>([]);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/tiekejai/${params.id}/stories`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setStories(data.data || []);
+      })
+      .catch(() => {});
+  }, [params.id]);
 
   useEffect(() => {
     fetch(`/api/tiekejai/${params.id}`)
@@ -372,15 +396,22 @@ export default function PublicProviderProfilePage() {
         <div className="rounded-2xl border border-surface-200/60 bg-white p-6 sm:p-8 dark:border-surface-700/50 dark:bg-surface-900/50 mb-6">
           <div className="flex items-start gap-4 sm:gap-5">
             {/* Avatar */}
-            <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden">
-              {provider.image ? (
-                <img src={provider.image} alt={provider.name} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-2xl sm:text-3xl font-bold text-brand-600 dark:text-brand-400">
-                  {provider.name[0].toUpperCase()}
-                </span>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => { if (stories.length > 0) { setStoryIndex(0); setStoryViewerOpen(true); } }}
+              className={`shrink-0 rounded-2xl p-[3px] transition-all ${stories.length > 0 ? "bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 cursor-pointer hover:scale-105" : "bg-transparent cursor-default"}`}
+              disabled={stories.length === 0}
+            >
+              <div className={`h-16 w-16 sm:h-20 sm:w-20 rounded-[13px] bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden ${stories.length > 0 ? "ring-2 ring-white dark:ring-surface-900" : ""}`}>
+                {provider.image ? (
+                  <img src={provider.image} alt={provider.name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold text-brand-600 dark:text-brand-400">
+                    {provider.name[0].toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </button>
 
             <div className="flex-1 min-w-0">
               {/* Name + badges */}
@@ -959,6 +990,165 @@ export default function PublicProviderProfilePage() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Story viewer modal */}
+      {storyViewerOpen && stories.length > 0 && (
+        <StoryViewer
+          stories={stories}
+          index={storyIndex}
+          providerName={provider.name}
+          providerImage={provider.image}
+          onClose={() => setStoryViewerOpen(false)}
+          onIndexChange={setStoryIndex}
+        />
+      )}
+    </div>
+  );
+}
+
+function StoryViewer({
+  stories,
+  index,
+  providerName,
+  providerImage,
+  onClose,
+  onIndexChange,
+}: {
+  stories: StoryData[];
+  index: number;
+  providerName: string;
+  providerImage: string | null;
+  onClose: () => void;
+  onIndexChange: (i: number) => void;
+}) {
+  const story = stories[index];
+  const hasNext = index < stories.length - 1;
+  const hasPrev = index > 0;
+  const touchStartX = useRef(0);
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  // Auto-advance timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (hasNext) onIndexChange(index + 1);
+      else onClose();
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [index, hasNext, onIndexChange, onClose]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight" && hasNext) onIndexChange(index + 1);
+      if (e.key === "ArrowLeft" && hasPrev) onIndexChange(index - 1);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [index, hasNext, hasPrev, onClose, onIndexChange]);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e: React.TouchEvent) {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && hasNext) onIndexChange(index + 1);
+      if (diff < 0 && hasPrev) onIndexChange(index - 1);
+    }
+  }
+
+  function timeAgo(dateStr: string) {
+    const ms = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return `${mins} min.`;
+    const hours = Math.floor(mins / 60);
+    return `${hours} val.`;
+  }
+
+  if (!story) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={onClose}>
+      <div
+        className="relative w-full max-w-md mx-4 flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Progress bars */}
+        <div className="flex gap-1 mb-3 px-1">
+          {stories.map((s, i) => (
+            <div key={s.id} className="flex-1 h-0.5 rounded-full bg-white/30 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-white"
+                style={
+                  i < index
+                    ? { width: "100%" }
+                    : i === index
+                      ? { animation: "story-progress 6s linear forwards" }
+                      : { width: "0%" }
+                }
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center gap-2.5 mb-3 px-1">
+          <div className="h-8 w-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden">
+            {providerImage ? (
+              <img src={providerImage} alt={providerName} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-xs font-bold text-brand-600">{providerName[0].toUpperCase()}</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">{providerName}</p>
+            <p className="text-xs text-white/60">{timeAgo(story.createdAt)}</p>
+          </div>
+          <button onClick={onClose} className="rounded-full p-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Story image */}
+        <div
+          className="relative aspect-[9/16] max-h-[70vh] rounded-2xl overflow-hidden bg-surface-900"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <img src={story.imageUrl} alt="" className="h-full w-full object-cover" />
+
+          {/* Text overlay */}
+          {story.text && (
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
+              <p className="text-sm text-white leading-relaxed">{story.text}</p>
+            </div>
+          )}
+
+          {/* Tap zones for navigation */}
+          {hasPrev && (
+            <button
+              onClick={() => onIndexChange(index - 1)}
+              className="absolute inset-y-0 left-0 w-1/3 flex items-center justify-start pl-2"
+            >
+              <ChevronLeft className="h-8 w-8 text-white/50 hover:text-white/90 transition-colors drop-shadow" />
+            </button>
+          )}
+          {hasNext && (
+            <button
+              onClick={() => onIndexChange(index + 1)}
+              className="absolute inset-y-0 right-0 w-1/3 flex items-center justify-end pr-2"
+            >
+              <ChevronRight className="h-8 w-8 text-white/50 hover:text-white/90 transition-colors drop-shadow" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

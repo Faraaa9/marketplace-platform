@@ -10,7 +10,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye } from "lucide-react";
+import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles } from "lucide-react";
 
 interface ProviderImage {
   url: string;
@@ -27,6 +27,11 @@ export default function ProviderProfilePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Story state (read-only — management moved to dashboard)
+  const [stories, setStories] = useState<{ id: string }[]>([]);
+  const [storyEnabled, setStoryEnabled] = useState(true);
+
   const [account, setAccount] = useState<{
     userName: string | null;
     userEmail: string | null;
@@ -49,31 +54,37 @@ export default function ProviderProfilePage() {
   });
 
   useEffect(() => {
-    fetch("/api/tiekejas/profilis")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.data) {
+    Promise.all([
+      fetch("/api/tiekejas/profilis").then((r) => r.json()),
+      fetch("/api/provider/stories").then((r) => r.json()),
+    ])
+      .then(([profileData, storiesData]) => {
+        if (profileData.success && profileData.data) {
           setForm({
-            description: data.data.description || "",
-            headline: data.data.headline || "",
-            services: data.data.services || "",
-            priceFrom: data.data.priceFrom ?? null,
-            experienceYears: data.data.experienceYears ?? null,
-            offersInvoices: data.data.offersInvoices ?? false,
-            availableForUrgent: data.data.availableForUrgent ?? false,
-            specializations: data.data.specializations || [],
-            location: data.data.location || "",
-            phone: data.data.phone || "",
-            website: data.data.website || "",
+            description: profileData.data.description || "",
+            headline: profileData.data.headline || "",
+            services: profileData.data.services || "",
+            priceFrom: profileData.data.priceFrom ?? null,
+            experienceYears: profileData.data.experienceYears ?? null,
+            offersInvoices: profileData.data.offersInvoices ?? false,
+            availableForUrgent: profileData.data.availableForUrgent ?? false,
+            specializations: profileData.data.specializations || [],
+            location: profileData.data.location || "",
+            phone: profileData.data.phone || "",
+            website: profileData.data.website || "",
           });
-          setImages(Array.isArray(data.data.images) ? data.data.images : []);
+          setImages(Array.isArray(profileData.data.images) ? profileData.data.images : []);
           setAccount({
-            userName: data.data.userName || null,
-            userEmail: data.data.userEmail || null,
-            emailVerified: data.data.emailVerified ?? false,
-            isActive: data.data.isActive ?? false,
-            userId: data.data.userId || null,
+            userName: profileData.data.userName || null,
+            userEmail: profileData.data.userEmail || null,
+            emailVerified: profileData.data.emailVerified ?? false,
+            isActive: profileData.data.isActive ?? false,
+            userId: profileData.data.userId || null,
           });
+        }
+        if (storiesData.success) {
+          setStories(storiesData.data || []);
+          if (storiesData.disabled) setStoryEnabled(false);
         }
       })
       .finally(() => setLoading(false));
@@ -305,7 +316,7 @@ export default function ProviderProfilePage() {
       <div className="space-y-5">
         {/* Section 1: Basic Info */}
         <Card>
-          <SectionHeader icon={<User className="h-4 w-4" />} title="Pagrindinė informacija" step={1} />
+          <SectionHeader icon={<User className="h-4 w-4" />} title="Pagrindinė informacija" step={1} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
           <div className="space-y-4">
             <div>
               <Input
@@ -370,7 +381,7 @@ export default function ProviderProfilePage() {
 
         {/* Section 2: Services & Experience */}
         <Card>
-          <SectionHeader icon={<Wrench className="h-4 w-4" />} title="Paslaugos ir patirtis" step={2} />
+          <SectionHeader icon={<Wrench className="h-4 w-4" />} title="Paslaugos ir patirtis" step={2} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
           <div className="space-y-4">
             <Textarea
               id="services"
@@ -447,7 +458,7 @@ export default function ProviderProfilePage() {
 
         {/* Section 3: Photos */}
         <Card>
-          <SectionHeader icon={<Camera className="h-4 w-4" />} title="Nuotraukos ir darbų pavyzdžiai" step={3} />
+          <SectionHeader icon={<Camera className="h-4 w-4" />} title="Nuotraukos ir darbų pavyzdžiai" step={3} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
 
           {/* Profile photo */}
           <div className="mb-4">
@@ -547,9 +558,35 @@ export default function ProviderProfilePage() {
           )}
         </Card>
 
-        {/* Section 4: Location & Contact */}
+        {/* Section 4: Stories — compact secondary, main entry point is in dashboard */}
+        {account.isActive && storyEnabled && (
+          <Card>
+            <SectionHeader icon={<Sparkles className="h-4 w-4" />} title="Story" />
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-body-sm text-surface-600 dark:text-surface-400">
+                  {stories.length > 0
+                    ? `${stories.length} ${stories.length === 1 ? "aktyvi story" : "aktyvios story"}`
+                    : "Neturite aktyvių story"
+                  }
+                </p>
+                <p className="text-micro text-surface-400 mt-0.5">
+                  Story galite greitai valdyti valdymo panelėje — paspaudę ant savo avataro.
+                </p>
+              </div>
+              <Link
+                href="/tiekejas"
+                className="shrink-0 rounded-xl bg-brand-50 px-3 py-2 text-body-sm font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20 transition-colors"
+              >
+                Valdyti →
+              </Link>
+            </div>
+          </Card>
+        )}
+
+        {/* Section 5: Location & Contact */}
         <Card>
-          <SectionHeader icon={<MapPin className="h-4 w-4" />} title="Kontaktai ir lokacija" step={4} />
+          <SectionHeader icon={<MapPin className="h-4 w-4" />} title="Kontaktai ir lokacija" step={account.isActive && storyEnabled ? 5 : 4} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
           <div className="space-y-4">
             <div>
               <Select
@@ -612,7 +649,7 @@ export default function ProviderProfilePage() {
   );
 }
 
-function SectionHeader({ icon, title, step }: { icon: React.ReactNode; title: string; step?: number }) {
+function SectionHeader({ icon, title, step, totalSteps }: { icon: React.ReactNode; title: string; step?: number; totalSteps?: number }) {
   return (
     <div className="flex items-center gap-2 mb-4">
       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950 dark:text-brand-400">
@@ -620,7 +657,7 @@ function SectionHeader({ icon, title, step }: { icon: React.ReactNode; title: st
       </div>
       <h3 className="text-body font-semibold text-surface-900 dark:text-white">{title}</h3>
       {step && (
-        <span className="ml-auto text-micro text-surface-300 dark:text-surface-600">{step}/4</span>
+        <span className="ml-auto text-micro text-surface-300 dark:text-surface-600">{step}/{totalSteps || 4}</span>
       )}
     </div>
   );

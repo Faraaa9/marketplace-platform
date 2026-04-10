@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
+import { isStoryEnabled } from "@/lib/platform-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,23 @@ export async function GET() {
     );
     const missingProfileItems = completenessItems.filter((i) => !i.done).map((i) => i.label);
 
+    // Profile image URL (first image)
+    let profileImageUrl: string | null = null;
+    try {
+      if (images.length > 0) {
+        const firstImg = images[0] as string | { url?: string };
+        profileImageUrl = typeof firstImg === "string" ? firstImg : firstImg?.url || null;
+      }
+    } catch {}
+
+    // Story feature flag + active count
+    const storyEnabled = await isStoryEnabled();
+    const activeStoryCount = storyEnabled
+      ? await prisma.providerStory.count({
+          where: { providerId: session.user.id, expiresAt: { gt: new Date() } },
+        })
+      : 0;
+
     // Accepted responses count
     const acceptedCount = await prisma.serviceRequest.count({
       where: {
@@ -98,6 +116,9 @@ export async function GET() {
         profileCompleteness,
         missingProfileItems,
         acceptedCount,
+        profileImageUrl,
+        activeStoryCount,
+        storyEnabled,
       },
     });
   } catch (error) {

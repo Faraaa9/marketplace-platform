@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, FileText, Home } from "lucide-react";
+import { Users, FileText, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", label: "Suvestinė", icon: Home, badgeKey: null },
   { href: "/admin/tiekejai", label: "Tiekėjai", icon: Users, badgeKey: "pendingActivation" as const },
   { href: "/admin/uzklausos", label: "Užklausos", icon: FileText, badgeKey: "pendingRequests" as const },
+  { href: "/admin/nustatymai", label: "Nustatymai", icon: Settings, badgeKey: null },
 ];
 
 interface NavBadges {

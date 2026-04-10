@@ -30,6 +30,7 @@ model User {
   reviewsReceived         Review[]    @relation("ReviewProvider")
   directInquiriesSent     DirectInquiry[] @relation("InquirySender")
   directInquiriesReceived DirectInquiry[] @relation("InquiryProvider")
+  stories                 ProviderStory[]
 
   @@map("users")
 }
@@ -241,4 +242,27 @@ model PendingDirectInquiry {
   @@index([senderEmail])
   @@index([providerId, senderEmail])
   @@map("pending_direct_inquiries")
+}
+
+model PlatformSettings {
+  id           String   @id @default("singleton")
+  storyEnabled Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model ProviderStory {
+  id            String   @id @default(cuid())
+  providerId    String
+  imageUrl      String
+  imagePublicId String?
+  text          String?  @db.VarChar(200)
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, expiresAt])
+  @@map("provider_stories")
 }

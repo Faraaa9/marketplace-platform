@@ -5,6 +5,7 @@ import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, getEffectivePlanType, PLAN_LIMIT
 import { buildProviderLocationFilter } from "@/lib/provider-filters";
 import { MapPin, Shield, MessageSquare, Search, Users, Clock, Award, Star, ArrowRight } from "lucide-react";
 import ProviderFilterBar from "@/components/tiekejai/ProviderFilterBar";
+import { isStoryEnabled } from "@/lib/platform-settings";
 
 export const metadata: Metadata = {
   title: "Paslaugų tiekėjai — PaslaugųRinka",
@@ -115,6 +116,20 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     acceptedByProvider.set(r.providerId, (acceptedByProvider.get(r.providerId) || 0) + 1);
   }
 
+  // Batch query: which providers have active stories (skip if feature disabled)
+  const storyFeatureOn = await isStoryEnabled();
+  const activeStories = storyFeatureOn && providerIds.length > 0
+    ? await prisma.providerStory.groupBy({
+        by: ["providerId"],
+        where: {
+          providerId: { in: providerIds },
+          expiresAt: { gt: new Date() },
+        },
+        _count: true,
+      })
+    : [];
+  const providersWithStories = new Set(activeStories.map((s) => s.providerId));
+
   // Process providers
   const mapped = providers.map((p) => {
     const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
@@ -160,6 +175,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       isRecentlyActive,
       avgRating,
       reviewCount: reviews.length,
+      hasActiveStory: providersWithStories.has(p.id),
     };
   });
 
@@ -227,14 +243,16 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
                 <article className="h-full rounded-2xl border border-surface-200/60 bg-white p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-brand-200/60 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700/50 flex flex-col">
                   {/* Avatar + name */}
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="h-12 w-12 shrink-0 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden">
-                      {p.profileImage ? (
-                        <img src={p.profileImage} alt={p.name || ""} className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
-                          {(p.name || "T")[0].toUpperCase()}
-                        </span>
-                      )}
+                    <div className={`shrink-0 rounded-full ${p.hasActiveStory ? "bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 p-[3px]" : ""}`}>
+                      <div className={`h-12 w-12 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden ${p.hasActiveStory ? "border-2 border-white dark:border-surface-900" : ""}`}>
+                        {p.profileImage ? (
+                          <img src={p.profileImage} alt={p.name || ""} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
+                            {(p.name || "T")[0].toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

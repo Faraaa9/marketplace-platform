@@ -7,7 +7,8 @@ import Card, { CardTitle } from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send } from "lucide-react";
+import Image from "next/image";
+import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send, Plus, X, Trash2, Sparkles, Clock, Camera } from "lucide-react";
 
 interface Stats {
   userName: string | null;
@@ -27,6 +28,278 @@ interface Stats {
   profileCompleteness: number;
   missingProfileItems: string[];
   acceptedCount: number;
+  profileImageUrl: string | null;
+  activeStoryCount: number;
+  storyEnabled: boolean;
+}
+
+interface StoryItem {
+  id: string;
+  imageUrl: string;
+  text: string | null;
+  expiresAt: string;
+  createdAt: string;
+}
+
+function storyTimeLeft(expiresAt: string): string {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Pasibaigė";
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const mins = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 0) return `${hours} val. ${mins} min.`;
+  return `${mins} min.`;
+}
+
+function StoryModal({
+  open,
+  onClose,
+  onStoryChange,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onStoryChange: (delta: number) => void;
+}) {
+  const [stories, setStories] = useState<StoryItem[]>([]);
+  const [loadingStories, setLoadingStories] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+
+  // Fetch stories when modal opens
+  useEffect(() => {
+    if (!open) return;
+    setLoadingStories(true);
+    setError("");
+    fetch("/api/provider/stories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setStories(data.data || []);
+      })
+      .catch(() => setError("Nepavyko užkrauti story"))
+      .finally(() => setLoadingStories(false));
+  }, [open]);
+
+  // Lock body scroll
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
+  async function handleUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setError("Leidžiami tik paveikslėliai");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Failas per didelis (max 5MB)");
+      return;
+    }
+    if (stories.length >= 3) {
+      setError("Maksimalus aktyvių story skaičius — 3");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("text", text.trim());
+      const res = await fetch("/api/provider/stories", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setStories((prev) => [data.data, ...prev]);
+        setText("");
+        onStoryChange(1);
+      } else {
+        setError(data.error || "Nepavyko įkelti story");
+      }
+    } catch {
+      setError("Nepavyko įkelti story");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeleting(id);
+    setError("");
+    try {
+      const res = await fetch(`/api/provider/stories/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setStories((prev) => prev.filter((s) => s.id !== id));
+        onStoryChange(-1);
+      } else {
+        setError(data.error || "Nepavyko pašalinti");
+      }
+    } catch {
+      setError("Nepavyko pašalinti story");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-label="Story valdymas">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+
+      {/* Sheet */}
+      <div className="relative w-full sm:max-w-md bg-white dark:bg-surface-900 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col">
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-3 pb-0 sm:hidden">
+          <div className="h-1 w-10 rounded-full bg-surface-300 dark:bg-surface-600" />
+        </div>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-4 sm:pt-5 pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+            <h2 className="text-body font-semibold text-surface-900 dark:text-white">Story</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+          >
+            <X className="h-4 w-4 text-surface-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
+          {error && (
+            <div className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-body-sm text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError("")} className="text-red-400 hover:text-red-600 ml-2 shrink-0">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {loadingStories ? (
+            <div className="py-8 text-center">
+              <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+            </div>
+          ) : (
+            <>
+              {/* Active stories */}
+              {stories.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  <p className="text-micro font-medium text-surface-500 uppercase tracking-wider">Aktyvios story</p>
+                  {stories.map((story) => (
+                    <div
+                      key={story.id}
+                      className={`flex items-center gap-3 rounded-xl border border-surface-200/60 bg-surface-50/50 p-2.5 dark:border-surface-700/50 dark:bg-surface-800/30 transition-opacity ${deleting === story.id ? "opacity-50 pointer-events-none" : ""}`}
+                    >
+                      <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700">
+                        <img src={story.imageUrl} alt="" className="h-full w-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-body-sm truncate ${story.text ? "text-surface-700 dark:text-surface-300" : "text-surface-400 italic"}`}>
+                          {story.text || "Be teksto"}
+                        </p>
+                        <p className="text-micro text-surface-400 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {storyTimeLeft(story.expiresAt)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(story.id)}
+                        disabled={deleting === story.id}
+                        className="shrink-0 rounded-lg p-2 text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        aria-label="Pašalinti story"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Create new story */}
+              {stories.length < 3 ? (
+                <div className="space-y-3">
+                  {stories.length > 0 ? (
+                    <div className="border-t border-surface-100 dark:border-surface-800 pt-3">
+                      <p className="text-micro font-medium text-surface-500 uppercase tracking-wider mb-2">Nauja story</p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-2 mb-1">
+                      <Sparkles className="h-8 w-8 text-surface-200 dark:text-surface-700 mx-auto mb-2" />
+                      <p className="text-body-sm text-surface-500">Parodykite klientams ką šiandien veikiate</p>
+                      <p className="text-micro text-surface-400 mt-0.5">Story matoma 24 valandas jūsų viešame profilyje</p>
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="text"
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, 200))}
+                      placeholder="Trumpas tekstas (nebūtinas)"
+                      maxLength={200}
+                      className="w-full rounded-xl border border-surface-300 bg-white px-3.5 py-2.5 text-body-sm text-surface-900 placeholder:text-surface-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
+                    />
+                    {text.length > 0 && (
+                      <p className="mt-1 text-right text-micro text-surface-300 tabular-nums">{text.length}/200</p>
+                    )}
+                  </div>
+                  <label className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-4 cursor-pointer transition-all ${
+                    uploading
+                      ? "border-brand-300 bg-brand-50/50 dark:bg-brand-500/10"
+                      : "border-surface-300 hover:border-brand-400 hover:bg-brand-50/30 dark:border-surface-600 dark:hover:border-brand-500"
+                  }`}>
+                    {uploading ? (
+                      <span className="flex items-center gap-2 text-body-sm text-brand-600 dark:text-brand-400">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+                        Įkeliama...
+                      </span>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4 text-brand-500" />
+                        <span className="text-body-sm font-medium text-surface-600 dark:text-surface-400">Pasirinkti nuotrauką</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUpload(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <p className="text-micro text-surface-300 dark:text-surface-600 text-center">
+                    {3 - stories.length} iš 3 liko · Galioja 24 val. · Max 5MB
+                  </p>
+                </div>
+              ) : (
+                <p className="text-body-sm text-surface-400 text-center py-3">
+                  Visos 3 story vietos užimtos. Pašalinkite seną arba palaukite.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ResendVerificationBanner() {
@@ -122,6 +395,7 @@ export default function ProviderDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [storyModalOpen, setStoryModalOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/tiekejas/stats")
@@ -133,6 +407,10 @@ export default function ProviderDashboard() {
       .then((r) => r.json())
       .then((data) => { if (data.success) setUnreadMessages(data.data.unreadCount); })
       .catch(() => {});
+  }, []);
+
+  const handleStoryChange = useCallback((delta: number) => {
+    setStats((prev) => prev ? { ...prev, activeStoryCount: Math.max(0, prev.activeStoryCount + delta) } : prev);
   }, []);
 
   const handlePortal = useCallback(async () => {
@@ -175,9 +453,63 @@ export default function ProviderDashboard() {
       {/* Account info */}
       <div className="mb-4 rounded-xl border border-surface-200/60 bg-white px-4 py-3.5 dark:border-surface-700/50 dark:bg-surface-900/50">
         <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-950">
-            <User className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-          </div>
+          {/* Avatar — with story entry point when enabled, plain when disabled */}
+          {stats.storyEnabled ? (
+            <button
+              onClick={() => setStoryModalOpen(true)}
+              disabled={!stats.isActive || !stats.emailVerified}
+              className="relative shrink-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-full disabled:cursor-default"
+              aria-label={stats.isActive && stats.emailVerified ? (stats.activeStoryCount > 0 ? "Tvarkyti story" : "Pridėti story") : "Profilio nuotrauka"}
+              title={stats.isActive && stats.emailVerified ? (stats.activeStoryCount > 0 ? "Tvarkyti story" : "Pridėti story") : undefined}
+            >
+              {/* Story ring */}
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                stats.activeStoryCount > 0
+                  ? "bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 p-[2.5px]"
+                  : stats.isActive && stats.emailVerified
+                    ? "bg-surface-200 dark:bg-surface-700 p-[2px] group-hover:bg-gradient-to-tr group-hover:from-brand-500/60 group-hover:via-violet-500/60 group-hover:to-amber-400/60 transition-all"
+                    : ""
+              }`}>
+                <div className={`flex h-full w-full items-center justify-center rounded-full overflow-hidden ${
+                  stats.activeStoryCount > 0 || (stats.isActive && stats.emailVerified)
+                    ? "bg-white dark:bg-surface-900 ring-0"
+                    : "bg-brand-50 dark:bg-brand-950"
+                }`}>
+                  {stats.profileImageUrl ? (
+                    <Image
+                      src={stats.profileImageUrl}
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                  )}
+                </div>
+              </div>
+              {/* "+" badge when no active stories */}
+              {stats.isActive && stats.emailVerified && stats.activeStoryCount === 0 && (
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-white dark:ring-surface-900 group-hover:bg-brand-700 transition-colors">
+                  <Plus className="h-2.5 w-2.5" strokeWidth={3} />
+                </span>
+              )}
+              {/* Active story count indicator */}
+              {stats.activeStoryCount > 0 && (
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-white dark:ring-surface-900 text-[9px] font-bold leading-none">
+                  {stats.activeStoryCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-950 overflow-hidden">
+              {stats.profileImageUrl ? (
+                <Image src={stats.profileImageUrl} alt="" width={36} height={36} className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              )}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-body-sm font-medium text-surface-900 dark:text-white truncate">
               {stats.userName || "Tiekėjas"}
@@ -436,6 +768,15 @@ export default function ProviderDashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* Story modal — only when feature enabled */}
+      {stats.storyEnabled && (
+        <StoryModal
+          open={storyModalOpen}
+          onClose={() => setStoryModalOpen(false)}
+          onStoryChange={handleStoryChange}
+        />
+      )}
     </div>
   );
 }
