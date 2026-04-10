@@ -11,8 +11,9 @@ import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
  * Only the provider who owns the response OR the client who owns the request can post.
  * params.id = response ID (the thread)
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ success: false, error: "Prisijunkite" }, { status: 401 });
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Fetch response with its parent request to check ownership
     const response = await prisma.response.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         providerId: true,
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Duplicate detection: block identical message within last 30 seconds
     const recentDuplicate = await prisma.message.findFirst({
       where: {
-        responseId: params.id,
+        responseId: id,
         senderId: session.user.id,
         content: sanitizeHtml(parsed.data.content),
         createdAt: { gte: new Date(Date.now() - 30 * 1000) },
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const message = await prisma.message.create({
       data: {
-        responseId: params.id,
+        responseId: id,
         senderId: session.user.id,
         senderName: session.user.name || null,
         content: sanitizeHtml(parsed.data.content),

@@ -6,10 +6,11 @@ import { sendEmail, requestVerificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
+    const { token } = await params;
     const ip = getClientIp(req);
-    const rl = await rateLimitAsync(`request-resend:${ip}:${params.token}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
+    const rl = await rateLimitAsync(`request-resend:${ip}:${token}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });
     if (!rl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     }
 
     const request = await prisma.serviceRequest.findUnique({
-      where: { trackingToken: params.token },
+      where: { trackingToken: token },
       select: {
         id: true,
         clientName: true,
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       },
     });
 
-    const emailData = requestVerificationEmail(request.clientName, verificationToken, params.token);
+    const emailData = requestVerificationEmail(request.clientName, verificationToken, token);
     const emailResult = await sendEmail({ to: request.clientEmail, ...emailData });
 
     if (!emailResult.success) {

@@ -17,8 +17,9 @@ import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
  * The responseId in the body must belong to the request identified by the token,
  * preventing cross-request message injection.
  */
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
+    const { token } = await params;
     const body = await req.json();
     const { responseId } = body;
 
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
     // Look up the request by tracking token
     const request = await prisma.serviceRequest.findUnique({
-      where: { trackingToken: params.token },
+      where: { trackingToken: token },
       select: { id: true, clientId: true, clientName: true, status: true },
     });
 

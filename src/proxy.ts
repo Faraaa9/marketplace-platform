@@ -14,7 +14,7 @@ function isLegacyProviderPath(path: string) {
 }
 
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 

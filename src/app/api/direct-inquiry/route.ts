@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { directInquirySchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
+import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -22,21 +23,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { providerId, description, budget, senderEmail, senderPhone, senderName } = parsed.data;
+    const { providerId, description, budget, senderPhone } = parsed.data;
 
-    // Determine sender identity
-    const senderUserId = session?.user?.id || null;
-    const email = senderUserId
-      ? (session?.user?.email || "")
-      : (senderEmail || "");
-
-    // Guest must provide email
-    if (!senderUserId && !email) {
+    // This endpoint is for authenticated users only.
+    // Guests must use /api/direct-inquiry/initiate + /verify flow.
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, error: "El. pašto adresas privalomas" },
-        { status: 400 }
+        { success: false, error: "Prisijunkite, kad galėtumėte siųsti žinutę." },
+        { status: 401 }
       );
     }
+
+    const senderUserId = session.user.id;
+    const email = session.user.email || "";
 
     // Verify provider exists and is active
     const provider = await prisma.user.findUnique({
@@ -68,11 +67,9 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.directInquiry.findFirst({
       where: {
         providerId,
+        senderUserId,
         status: { in: ["NEW", "READ"] },
         createdAt: { gte: oneDayAgo },
-        ...(senderUserId
-          ? { senderUserId }
-          : { senderEmail: email }),
       },
       select: { id: true },
     });
@@ -85,12 +82,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit — per sender (only counted for genuinely new inquiries)
-    const ip = getClientIp(req);
-    const senderKey = senderUserId
-      ? `direct-inquiry:user:${senderUserId}`
-      : `direct-inquiry:ip:${ip}`;
-    const senderLimit = senderUserId ? RATE_LIMITS.directInquiry : RATE_LIMITS.directInquiryGuest;
-    const senderRl = await rateLimitAsync(senderKey, senderLimit);
+    const senderRl = await rateLimitAsync(
+      `direct-inquiry:user:${senderUserId}`,
+      RATE_LIMITS.directInquiry
+    );
     if (!senderRl.success) {
       return NextResponse.json(
         { success: false, error: "Per daug užklausų. Pabandykite vėliau." },
@@ -111,18 +106,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Create inquiry
-    const inquiry = await prisma.directInquiry.create({
-      data: {
-        providerId,
-        description: sanitizeHtml(description.trim()),
-        budget: budget ? sanitizeHtml(budget.trim()) : null,
-        senderUserId,
-        senderEmail: email,
-        senderPhone: senderPhone ? sanitizeHtml(senderPhone.trim()) : null,
-        senderName: senderUserId
-          ? (session?.user?.name || null)
-          : (senderName ? sanitizeHtml(senderName.trim()) : null),
-      },
+    const inquiry = await prisma.$transaction(async (tx) => {
+      const createdInquiry = await tx.directInquiry.create({
+        data: {
+          providerId,
+          description: sanitizeHtml(description.trim()),
+          budget: budget ? sanitizeHtml(budget.trim()) : null,
+          senderUserId,
+          senderEmail: email,
+          senderPhone: senderPhone ? sanitizeHtml(senderPhone.trim()) : null,
+          senderName: session.user.name || null,
+        },
+      });
+
+      await tx.notification.create({
+        data: getDirectInquiryNotificationData({
+          providerId,
+          senderEmail: email,
+          senderName: createdInquiry.senderName,
+        }),
+      });
+
+      return createdInquiry;
     });
 
     return NextResponse.json({ success: true, data: { id: inquiry.id } }, { status: 201 });

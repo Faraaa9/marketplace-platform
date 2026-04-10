@@ -9,9 +9,10 @@ import { prisma } from "@/lib/prisma";
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const { token } = await params;
     const body = await req.json();
     const { responseId, rating, comment } = body;
 
@@ -31,7 +32,7 @@ export async function POST(
 
     // Find request by tracking token
     const request = await prisma.serviceRequest.findUnique({
-      where: { trackingToken: params.token },
+      where: { trackingToken: token },
       select: {
         id: true,
         clientId: true,

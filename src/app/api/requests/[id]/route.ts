@@ -7,10 +7,11 @@ import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
  * The URL param is named [id] for routing simplicity but contains the tracking token.
  * Never exposes internal IDs, PII, or data beyond what the request owner needs.
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const request = await prisma.serviceRequest.findUnique({
-      where: { trackingToken: params.id },
+      where: { trackingToken: id },
       select: {
         id: true,
         title: true,

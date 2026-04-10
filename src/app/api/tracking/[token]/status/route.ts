@@ -13,8 +13,9 @@ import { prisma } from "@/lib/prisma";
  * Auth: tracking token proves ownership. For logged-in clients, session.user.id
  * must match request.clientId if one exists.
  */
-export async function PATCH(req: NextRequest, { params }: { params: { token: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
+    const { token } = await params;
     const body = await req.json();
     const { action, responseId } = body;
 
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { token: str
     }
 
     const request = await prisma.serviceRequest.findUnique({
-      where: { trackingToken: params.token },
+      where: { trackingToken: token },
       select: { id: true, status: true, clientId: true },
     });
 

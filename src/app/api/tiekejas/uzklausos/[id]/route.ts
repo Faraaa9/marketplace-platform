@@ -12,13 +12,14 @@ import { checkEligibility, parseSpecializations } from "@/lib/provider-eligibili
  * Provider view of a request.
  * Returns the request, provider's own response + messages, and eligibility info.
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
     const request = await prisma.serviceRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         title: true,
@@ -62,7 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     const [totalResponses, profile, subscription] = await Promise.all([
-      prisma.response.count({ where: { requestId: params.id } }),
+      prisma.response.count({ where: { requestId: id } }),
       prisma.providerProfile.findUnique({
         where: { userId: guard.userId },
         select: { planType: true, specializations: true },
@@ -113,8 +114,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const request = await prisma.serviceRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true, category: true, status: true, clientId: true,
         clientName: true, clientEmail: true, title: true, trackingToken: true,
@@ -190,7 +192,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Check if already responded
     const existing = await prisma.response.findFirst({
-      where: { requestId: params.id, providerId: guard.userId },
+      where: { requestId: id, providerId: guard.userId },
     });
     if (existing) {
       return NextResponse.json({ success: false, error: "Jau atsakėte į šią užklausą" }, { status: 400 });
@@ -198,7 +200,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const response = await prisma.response.create({
       data: {
-        requestId: params.id,
+        requestId: id,
         providerId: guard.userId,
         message: sanitizeHtml(parsed.data.message),
         price: parsed.data.price || null,

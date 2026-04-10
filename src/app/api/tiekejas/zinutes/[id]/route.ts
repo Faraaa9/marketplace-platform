@@ -5,8 +5,9 @@ import { requireActiveProvider } from "@/lib/provider-guard";
 /**
  * PATCH — update inquiry status (READ, ARCHIVED)
  */
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
@@ -22,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     // Verify ownership
     const inquiry = await prisma.directInquiry.findFirst({
-      where: { id: params.id, providerId: guard.userId },
+      where: { id, providerId: guard.userId },
       select: { id: true },
     });
 
@@ -34,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const updated = await prisma.directInquiry.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: newStatus },
       select: { id: true, status: true },
     });

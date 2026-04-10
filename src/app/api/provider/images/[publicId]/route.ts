@@ -8,8 +8,9 @@ import {
   isCloudinaryConfigured,
 } from "@/lib/cloudinary";
 
-export async function DELETE(req: NextRequest, { params }: { params: { publicId: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
   try {
+    const { publicId } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { publicId:
     }
 
     const currentImages: unknown[] = JSON.parse(profile.images || "[]");
-    const decodedPublicId = decodeURIComponent(params.publicId);
+    const decodedPublicId = decodeURIComponent(publicId);
 
     // Normalize: parse double-encoded strings into objects
     const normalized = currentImages.map((img) => {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
+import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Trūksta duomenų" },
         { status: 400 }
+      );
+    }
+
+    // IP rate limit to prevent brute-force code guessing
+    const ip = getClientIp(req);
+    const ipRl = await rateLimitAsync(`di-verify:ip:${ip}`, { maxRequests: 15, windowMs: 10 * 60 * 1000 });
+    if (!ipRl.success) {
+      return NextResponse.json(
+        { success: false, error: "Per daug bandymų. Pabandykite vėliau.", expired: true },
+        { status: 429 }
       );
     }
 
@@ -89,12 +100,21 @@ export async function POST(req: NextRequest) {
 
     // Mark as verified and create real DirectInquiry in a transaction
     const inquiry = await prisma.$transaction(async (tx) => {
+      // Re-check verifiedAt inside transaction to prevent race condition double-submit
+      const fresh = await tx.pendingDirectInquiry.findUnique({
+        where: { id: pendingId },
+        select: { verifiedAt: true },
+      });
+      if (fresh?.verifiedAt) {
+        throw new Error("ALREADY_VERIFIED");
+      }
+
       await tx.pendingDirectInquiry.update({
         where: { id: pendingId },
         data: { verifiedAt: new Date() },
       });
 
-      return tx.directInquiry.create({
+      const createdInquiry = await tx.directInquiry.create({
         data: {
           providerId: pending.providerId,
           description: pending.description,
@@ -104,6 +124,16 @@ export async function POST(req: NextRequest) {
           senderName: pending.senderName,
         },
       });
+
+      await tx.notification.create({
+        data: getDirectInquiryNotificationData({
+          providerId: pending.providerId,
+          senderEmail: pending.senderEmail,
+          senderName: pending.senderName,
+        }),
+      });
+
+      return createdInquiry;
     });
 
     return NextResponse.json({
@@ -111,6 +141,12 @@ export async function POST(req: NextRequest) {
       data: { id: inquiry.id },
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "ALREADY_VERIFIED") {
+      return NextResponse.json(
+        { success: false, error: "Kodas jau panaudotas" },
+        { status: 400 }
+      );
+    }
     console.error("Direct inquiry verify error:", error);
     return NextResponse.json(
       { success: false, error: "Nepavyko patvirtinti kodo" },

@@ -7,10 +7,11 @@ import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
  * Only returns safe, public-facing data for active providers.
  * Includes trust signals: profile completeness, acceptance rate, avg response time.
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const provider = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
