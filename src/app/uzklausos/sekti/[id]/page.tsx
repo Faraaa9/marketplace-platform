@@ -11,6 +11,8 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
+import ThreadChat from "@/components/messaging/ThreadChat";
+import type { ThreadMessage } from "@/store/useConversationStore";
 import Link from "next/link";
 import { MapPin, Clock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star } from "lucide-react";
 
@@ -59,8 +61,6 @@ export default function TrackRequestPage() {
   const [request, setRequest] = useState<RequestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [threadMessage, setThreadMessage] = useState<Record<string, string>>({});
-  const [sendingThread, setSendingThread] = useState<Record<string, boolean>>({});
   const [actionLoading, setActionLoading] = useState("");
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
@@ -85,26 +85,23 @@ export default function TrackRequestPage() {
     fetchRequest();
   }, [fetchRequest]);
 
-  async function handleSendMessage(responseId: string) {
-    const content = threadMessage[responseId];
-    if (!content?.trim()) return;
-
-    setSendingThread((prev) => ({ ...prev, [responseId]: true }));
-    try {
-      const res = await fetch(`/api/tracking/${params.id}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ responseId, content }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setThreadMessage((prev) => ({ ...prev, [responseId]: "" }));
-        fetchRequest();
-      }
-    } catch {} finally {
-      setSendingThread((prev) => ({ ...prev, [responseId]: false }));
-    }
-  }
+  const sendTrackingMessage = useCallback(async (responseId: string, content: string): Promise<ThreadMessage> => {
+    const res = await fetch(`/api/tracking/${params.id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ responseId, content }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Klaida");
+    return {
+      id: data.data.id,
+      content: data.data.content,
+      createdAt: data.data.createdAt,
+      senderName: data.data.senderName,
+      sender: data.data.sender,
+      status: "sent",
+    };
+  }, [params.id]);
 
   async function handleStatusAction(action: "accept" | "close", responseId?: string) {
     setActionLoading(action === "accept" ? responseId || action : action);
@@ -413,43 +410,19 @@ export default function TrackRequestPage() {
                   </div>
                 )}
 
-                {/* Thread messages */}
-                {resp.messages.length > 0 && (
-                  <div className="mt-4 border-t border-surface-200/50 pt-4 dark:border-surface-700">
-                    <p className="text-body-sm font-medium text-surface-600 dark:text-surface-400 mb-2">Diskusija:</p>
-                    <div className="space-y-2">
-                      {resp.messages.map((msg) => (
-                        <div key={msg.id} className="rounded-xl bg-surface-50 p-3 dark:bg-surface-800">
-                          <p className="text-micro font-medium text-surface-500">
-                            {msg.sender?.name || msg.senderName || "Klientas"} &middot; {formatRelativeDate(msg.createdAt)}
-                          </p>
-                          <p className="text-body-sm text-surface-700 dark:text-surface-300">{msg.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Message composer */}
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Rašyti žinutę tiekėjui..."
-                    value={threadMessage[resp.id] || ""}
-                    onChange={(e) => setThreadMessage((prev) => ({ ...prev, [resp.id]: e.target.value }))}
-                    className="flex-1 rounded-xl border border-surface-300 bg-white px-3 py-2 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
-                    onKeyDown={(e) => e.key === "Enter" && !sendingThread[resp.id] && handleSendMessage(resp.id)}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => handleSendMessage(resp.id)}
-                    isLoading={sendingThread[resp.id]}
-                    disabled={!threadMessage[resp.id]?.trim()}
-                  >
-                    <Send className="h-3.5 w-3.5 mr-1" />
-                    Siųsti
-                  </Button>
-                </div>
+                {/* Thread with optimistic messaging */}
+                <ThreadChat
+                  responseId={resp.id}
+                  initialMessages={resp.messages.map((m) => ({
+                    ...m,
+                    senderName: m.senderName || m.sender?.name || null,
+                    status: "sent" as const,
+                  }))}
+                  currentSenderName={request.clientName || "Klientas"}
+                  sendMessage={sendTrackingMessage}
+                  placeholder="Rašyti žinutę tiekėjui..."
+                  disabled={isClosed}
+                />
               </Card>
             );
           })}

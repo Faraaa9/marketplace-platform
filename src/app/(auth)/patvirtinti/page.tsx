@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles } from "@/components/magicui/lazy";
 import { getRoleHomePath } from "@/lib/redirects";
 
 export default function VerifyEmailPage() {

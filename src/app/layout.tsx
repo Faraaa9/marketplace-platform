@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
 
 const inter = localFont({
   src: [
@@ -61,6 +63,9 @@ export default function RootLayout({
     <html lang="lt">
       <body className={`${inter.className} min-h-screen flex flex-col bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100`}>
         <Providers>
+          <Suspense fallback={null}>
+            <LoadingProgressBar />
+          </Suspense>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

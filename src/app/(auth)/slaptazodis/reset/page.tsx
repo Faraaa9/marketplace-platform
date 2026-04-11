@@ -6,7 +6,7 @@ import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
 export default function ResetPasswordPage() {
   return <Suspense fallback={<LoadingSpinner />}><ResetPasswordForm /></Suspense>;

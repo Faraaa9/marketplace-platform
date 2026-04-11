@@ -7,7 +7,7 @@ import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { getRoleHomePath } from "@/lib/redirects";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles } from "@/components/magicui/lazy";
 import { CheckCircle2 } from "lucide-react";
 
 export default function RegisterPage() {

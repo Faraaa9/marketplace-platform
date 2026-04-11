@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

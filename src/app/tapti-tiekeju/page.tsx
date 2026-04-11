@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles } from "@/components/magicui/lazy";
 import { ArrowRight, Shield, Users, TrendingUp } from "lucide-react";
 
 export default function BecomeProviderPage() {

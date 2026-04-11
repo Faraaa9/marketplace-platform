@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, X, Check } from "lucide-react";
+import { Search, SlidersHorizontal, X, Check, Loader2 } from "lucide-react";
+import { useProviderFilterStore } from "@/store/useProviderFilterStore";
 
 interface CategoryOption {
   value: string;
@@ -10,42 +11,52 @@ interface CategoryOption {
 }
 
 interface FilterBarProps {
-  activeCategory: string;
-  activeLocation: string;
   activeSearch: string;
-  categoryLabel?: string;
   categories: CategoryOption[];
   cities: string[];
-  totalResults: number;
+  serverTotal: number;
 }
 
 export default function ProviderFilterBar({
-  activeCategory,
-  activeLocation,
   activeSearch,
-  categoryLabel,
   categories,
   cities,
-  totalResults,
+  serverTotal,
 }: FilterBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const lastPushedSearch = useRef(activeSearch);
 
   const [searchValue, setSearchValue] = useState(activeSearch);
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingCategory, setPendingCategory] = useState(activeCategory);
-  const [pendingLocation, setPendingLocation] = useState(activeLocation);
+  const [isPending, startTransition] = useTransition();
 
-  const activeFilterCount = [activeCategory, activeLocation].filter(Boolean).length;
+  // Store selectors — client-side filters
+  const clientCategory = useProviderFilterStore((s) => s.clientCategory);
+  const clientLocation = useProviderFilterStore((s) => s.clientLocation);
+  const setClientCategory = useProviderFilterStore((s) => s.setClientCategory);
+  const setClientLocation = useProviderFilterStore((s) => s.setClientLocation);
+  const clearClientFilters = useProviderFilterStore((s) => s.clearClientFilters);
+  const getFilteredProviders = useProviderFilterStore((s) => s.getFilteredProviders);
 
-  // Sync pending state when URL params change
+  const activeFilterCount = [clientCategory, clientLocation].filter(Boolean).length;
+  const filteredCount = getFilteredProviders().length;
+
+  // Sync search input when URL param changes externally
   useEffect(() => {
-    setPendingCategory(activeCategory);
-    setPendingLocation(activeLocation);
-  }, [activeCategory, activeLocation]);
+    setSearchValue(activeSearch);
+    lastPushedSearch.current = activeSearch;
+  }, [activeSearch]);
+
+  // Clear debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   // Lock body scroll when mobile sheet is open
   useEffect(() => {
@@ -91,6 +102,9 @@ export default function ProviderFilterBar({
         if (v) p.set(k, v);
         else p.delete(k);
       }
+      // Category/location no longer in URL
+      p.delete("category");
+      p.delete("location");
       p.delete("page");
       const qs = p.toString();
       return `/tiekejai${qs ? `?${qs}` : ""}`;
@@ -102,38 +116,31 @@ export default function ProviderFilterBar({
     setSearchValue(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      router.push(buildUrl({ search: value }));
+      if (value === lastPushedSearch.current) return;
+      lastPushedSearch.current = value;
+      startTransition(() => {
+        router.push(buildUrl({ search: value }));
+      });
     }, 400);
   }
 
-  function removeFilter(key: string) {
-    router.push(buildUrl({ [key]: "" }));
-  }
-
   function clearAll() {
-    router.push("/tiekejai");
+    clearClientFilters();
+    if (activeSearch) {
+      startTransition(() => {
+        router.push("/tiekejai");
+      });
+    }
     setSearchValue("");
+    lastPushedSearch.current = "";
     setIsOpen(false);
   }
 
-  function applyFilters() {
-    router.push(
-      buildUrl({
-        category: pendingCategory,
-        location: pendingLocation,
-      })
-    );
-    setIsOpen(false);
-  }
+  const categoryLabelFor = (val: string) =>
+    categories.find((c) => c.value === val)?.label || val;
 
-  function clearPending() {
-    setPendingCategory("");
-    setPendingLocation("");
-  }
-
-  const pendingChanged =
-    pendingCategory !== activeCategory || pendingLocation !== activeLocation;
-  const pendingCount = [pendingCategory, pendingLocation].filter(Boolean).length;
+  // Show filtered count when client filters are active, otherwise server total
+  const displayCount = activeFilterCount > 0 ? filteredCount : serverTotal;
 
   return (
     <div className="space-y-2">
@@ -148,6 +155,9 @@ export default function ProviderFilterBar({
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full h-11 rounded-xl border border-surface-200 bg-surface-50 pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:focus:bg-surface-800"
           />
+          {isPending && (
+            <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-500 animate-spin" />
+          )}
         </div>
         <div className="relative">
           <button
@@ -180,14 +190,13 @@ export default function ProviderFilterBar({
               <FilterPanelContent
                 categories={categories}
                 cities={cities}
-                pendingCategory={pendingCategory}
-                pendingLocation={pendingLocation}
-                setPendingCategory={setPendingCategory}
-                setPendingLocation={setPendingLocation}
-                onApply={applyFilters}
-                onClear={clearPending}
-                pendingChanged={pendingChanged}
-                pendingCount={pendingCount}
+                selectedCategory={clientCategory}
+                selectedLocation={clientLocation}
+                onCategoryChange={setClientCategory}
+                onLocationChange={setClientLocation}
+                onClear={() => clearClientFilters()}
+                onClose={() => setIsOpen(false)}
+                filterCount={activeFilterCount}
               />
             </div>
           )}
@@ -221,14 +230,13 @@ export default function ProviderFilterBar({
               <FilterPanelContent
                 categories={categories}
                 cities={cities}
-                pendingCategory={pendingCategory}
-                pendingLocation={pendingLocation}
-                setPendingCategory={setPendingCategory}
-                setPendingLocation={setPendingLocation}
-                onApply={applyFilters}
-                onClear={clearPending}
-                pendingChanged={pendingChanged}
-                pendingCount={pendingCount}
+                selectedCategory={clientCategory}
+                selectedLocation={clientLocation}
+                onCategoryChange={setClientCategory}
+                onLocationChange={setClientLocation}
+                onClear={() => clearClientFilters()}
+                onClose={() => setIsOpen(false)}
+                filterCount={activeFilterCount}
               />
             </div>
           </div>
@@ -238,25 +246,25 @@ export default function ProviderFilterBar({
       {/* Active filter chips + result count row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          {activeCategory && (
+          {clientCategory && (
             <button
-              onClick={() => removeFilter("category")}
+              onClick={() => setClientCategory("")}
               className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 border border-brand-100 px-2.5 py-1 text-caption font-medium text-brand-700 hover:bg-brand-100 transition-colors dark:bg-brand-950 dark:border-brand-900 dark:text-brand-400 dark:hover:bg-brand-900"
             >
-              {categoryLabel || activeCategory}
+              {categoryLabelFor(clientCategory)}
               <X className="h-3 w-3" />
             </button>
           )}
-          {activeLocation && (
+          {clientLocation && (
             <button
-              onClick={() => removeFilter("location")}
+              onClick={() => setClientLocation("")}
               className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 border border-brand-100 px-2.5 py-1 text-caption font-medium text-brand-700 hover:bg-brand-100 transition-colors dark:bg-brand-950 dark:border-brand-900 dark:text-brand-400 dark:hover:bg-brand-900"
             >
-              {activeLocation}
+              {clientLocation}
               <X className="h-3 w-3" />
             </button>
           )}
-          {activeFilterCount > 0 && (
+          {(activeFilterCount > 0 || activeSearch) && (
             <button
               onClick={clearAll}
               className="text-caption text-surface-400 hover:text-surface-600 transition-colors dark:hover:text-surface-300"
@@ -265,11 +273,16 @@ export default function ProviderFilterBar({
             </button>
           )}
         </div>
-        <p className="text-caption text-surface-400 shrink-0">
-          {totalResults === 0
-            ? "Nerasta"
-            : `${totalResults} ${totalResults === 1 ? "tiekėjas" : totalResults < 10 ? "tiekėjai" : "tiekėjų"}`}
-        </p>
+        <div className="flex items-center gap-2">
+          {isPending && (
+            <Loader2 className="h-3.5 w-3.5 text-brand-500 animate-spin" />
+          )}
+          <p className="text-caption text-surface-400 shrink-0">
+            {displayCount === 0
+              ? "Nerasta"
+              : `${displayCount} ${displayCount === 1 ? "tiekėjas" : displayCount < 10 ? "tiekėjai" : "tiekėjų"}`}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -277,28 +290,31 @@ export default function ProviderFilterBar({
 
 /* ─── Filter panel content (shared between desktop dropdown and mobile sheet) ─── */
 
+interface CategoryOption {
+  value: string;
+  label: string;
+}
+
 function FilterPanelContent({
   categories,
   cities,
-  pendingCategory,
-  pendingLocation,
-  setPendingCategory,
-  setPendingLocation,
-  onApply,
+  selectedCategory,
+  selectedLocation,
+  onCategoryChange,
+  onLocationChange,
   onClear,
-  pendingChanged,
-  pendingCount,
+  onClose,
+  filterCount,
 }: {
   categories: CategoryOption[];
   cities: string[];
-  pendingCategory: string;
-  pendingLocation: string;
-  setPendingCategory: (v: string) => void;
-  setPendingLocation: (v: string) => void;
-  onApply: () => void;
+  selectedCategory: string;
+  selectedLocation: string;
+  onCategoryChange: (v: string) => void;
+  onLocationChange: (v: string) => void;
   onClear: () => void;
-  pendingChanged: boolean;
-  pendingCount: number;
+  onClose: () => void;
+  filterCount: number;
 }) {
   return (
     <div className="p-4 space-y-4">
@@ -309,14 +325,12 @@ function FilterPanelContent({
         </label>
         <div className="grid grid-cols-2 gap-1 max-h-52 overflow-y-auto overscroll-contain rounded-lg">
           {categories.map((cat) => {
-            const isSelected = pendingCategory === cat.value;
+            const isSelected = selectedCategory === cat.value;
             return (
               <button
                 key={cat.value}
                 type="button"
-                onClick={() =>
-                  setPendingCategory(isSelected ? "" : cat.value)
-                }
+                onClick={() => onCategoryChange(isSelected ? "" : cat.value)}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-caption font-medium text-left transition-colors ${
                   isSelected
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
@@ -349,14 +363,12 @@ function FilterPanelContent({
         </label>
         <div className="grid grid-cols-2 gap-1 max-h-52 overflow-y-auto overscroll-contain rounded-lg">
           {cities.map((city) => {
-            const isSelected = pendingLocation === city;
+            const isSelected = selectedLocation === city;
             return (
               <button
                 key={city}
                 type="button"
-                onClick={() =>
-                  setPendingLocation(isSelected ? "" : city)
-                }
+                onClick={() => onLocationChange(isSelected ? "" : city)}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-caption font-medium text-left transition-colors ${
                   isSelected
                     ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
@@ -381,7 +393,7 @@ function FilterPanelContent({
 
       {/* Actions */}
       <div className="flex items-center gap-2 pt-3 border-t border-surface-100 dark:border-surface-800">
-        {pendingCount > 0 && (
+        {filterCount > 0 && (
           <button
             type="button"
             onClick={onClear}
@@ -392,14 +404,10 @@ function FilterPanelContent({
         )}
         <button
           type="button"
-          onClick={onApply}
-          className={`flex-1 h-10 rounded-xl text-body-sm font-semibold transition-colors ${
-            pendingChanged
-              ? "bg-brand-600 text-white hover:bg-brand-700 shadow-sm"
-              : "bg-brand-600 text-white hover:bg-brand-700"
-          }`}
+          onClick={onClose}
+          className="flex-1 h-10 rounded-xl bg-brand-600 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
         >
-          {pendingChanged ? "Taikyti filtrus" : "Uždaryti"}
+          Uždaryti
         </button>
       </div>
     </div>

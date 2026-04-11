@@ -12,6 +12,8 @@ import Textarea from "@/components/ui/Textarea";
 import Input from "@/components/ui/Input";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
+import ThreadChat from "@/components/messaging/ThreadChat";
+import type { ThreadMessage } from "@/store/useConversationStore";
 import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft, AlertTriangle, Settings } from "lucide-react";
 import Link from "next/link";
 
@@ -63,8 +65,6 @@ export default function ProviderRequestDetailPage() {
   const [responsePrice, setResponsePrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [threadMessage, setThreadMessage] = useState<Record<string, string>>({});
-
   const fetchRequest = useCallback(async () => {
     try {
       const res = await fetch(`/api/tiekejas/uzklausos/${params.id}`);
@@ -103,22 +103,23 @@ export default function ProviderRequestDetailPage() {
     } catch { setError("Klaida"); } finally { setSubmitting(false); }
   }
 
-  async function handleSendThreadMessage(responseId: string) {
-    const content = threadMessage[responseId];
-    if (!content?.trim()) return;
-    try {
-      const res = await fetch(`/api/requests/${responseId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setThreadMessage((prev) => ({ ...prev, [responseId]: "" }));
-        fetchRequest();
-      }
-    } catch {}
-  }
+  const sendThreadMessage = useCallback(async (responseId: string, content: string): Promise<ThreadMessage> => {
+    const res = await fetch(`/api/requests/${responseId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Klaida");
+    return {
+      id: data.data.id,
+      content: data.data.content,
+      createdAt: data.data.createdAt,
+      senderName: data.data.senderName,
+      sender: data.data.sender,
+      status: "sent",
+    };
+  }, []);
 
   if (loading) return <LoadingSpinner />;
   if (!request) return <EmptyState title="Užklausa nerasta" />;
@@ -293,29 +294,19 @@ export default function ProviderRequestDetailPage() {
             <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap">{resp.message}</p>
             <p className="mt-2 text-micro text-surface-400">{formatRelativeDate(resp.createdAt)}</p>
 
-            {/* Thread */}
-            {resp.messages.length > 0 && (
-              <div className="mt-3 border-t border-surface-200/50 pt-3 space-y-2 dark:border-surface-700">
-                {resp.messages.map((msg) => (
-                  <div key={msg.id} className="rounded-xl bg-surface-50 p-3 dark:bg-surface-800">
-                    <p className="text-micro text-surface-500">{msg.sender?.name || msg.senderName || "Klientas"} &middot; {formatRelativeDate(msg.createdAt)}</p>
-                    <p className="text-body-sm text-surface-700 dark:text-surface-300">{msg.content}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-3 flex gap-2">
-              <input
-                type="text"
-                placeholder="Rašyti žinutę..."
-                value={threadMessage[resp.id] || ""}
-                onChange={(e) => setThreadMessage((prev) => ({ ...prev, [resp.id]: e.target.value }))}
-                className="flex-1 rounded-xl border border-surface-300 bg-white px-3 py-2 text-body-sm ring-1 ring-transparent focus:border-brand-500 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-600 dark:bg-surface-800 dark:text-white"
-                onKeyDown={(e) => e.key === "Enter" && handleSendThreadMessage(resp.id)}
-              />
-              <Button size="sm" onClick={() => handleSendThreadMessage(resp.id)}>Siųsti</Button>
-            </div>
+            {/* Thread with optimistic messaging */}
+            <ThreadChat
+              responseId={resp.id}
+              initialMessages={resp.messages.map((m) => ({
+                ...m,
+                senderName: m.senderName || m.sender?.name || null,
+                status: "sent" as const,
+              }))}
+              currentSenderName={session?.user?.name || "Tiekėjas"}
+              sendMessage={sendThreadMessage}
+              placeholder="Rašyti žinutę..."
+              disabled={request.status === "CLOSED"}
+            />
           </Card>
         ))}
       </div>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
-import { Particles } from "@/components/magicui/particles";
+import { LazyParticles as Particles, LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { BorderBeam } from "@/components/magicui/border-beam";
-import { NumberTicker } from "@/components/magicui/number-ticker";
 
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",

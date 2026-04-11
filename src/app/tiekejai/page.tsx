@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
-import { buildProviderLocationFilter } from "@/lib/provider-filters";
-import { MapPin, Shield, MessageSquare, Search, Users, Clock, Award, Star, ArrowRight } from "lucide-react";
+import { Users, ArrowRight } from "lucide-react";
 import ProviderFilterBar from "@/components/tiekejai/ProviderFilterBar";
+import ProviderListingClient from "@/components/tiekejai/ProviderListingClient";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
+import type { ProviderCardData } from "@/store/useProviderFilterStore";
 
 export const metadata: Metadata = {
   title: "Paslaugų tiekėjai — PaslaugųRinka",
@@ -15,36 +17,25 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; category?: string; location?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
+
+const DESC_PREVIEW_LENGTH = 160;
 
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
-  const category = params.category || "";
-  const location = params.location || "";
   const search = params.search || "";
   const perPage = 20;
 
   // Build filter — only active + verified
+  // Category/location filtering is now client-side (in-memory)
   const where: Record<string, unknown> = {
     role: "PROVIDER",
     emailVerified: { not: null },
     providerProfile: { isActive: true },
   };
 
-  if (category) {
-    where.providerProfile = {
-      ...(where.providerProfile as Record<string, unknown>),
-      specializations: { contains: category },
-    };
-  }
-  if (location) {
-    where.providerProfile = {
-      ...(where.providerProfile as Record<string, unknown>),
-      ...buildProviderLocationFilter(location),
-    };
-  }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -52,7 +43,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     ];
   }
 
-  const [providers, total] = await Promise.all([
+  const [providers, total, storyFeatureOn] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -67,105 +58,105 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             location: true,
             images: true,
             planType: true,
-            phone: true,
-            website: true,
           },
         },
         subscription: { select: { status: true } },
-        _count: { select: { responses: true } },
-        responses: {
-          select: { id: true, createdAt: true },
-          orderBy: { createdAt: "desc" as const },
-          take: 1,
-        },
-        reviewsReceived: {
-          select: { rating: true },
-        },
+        _count: { select: { responses: true, reviewsReceived: true } },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
     }),
     prisma.user.count({ where }),
+    isStoryEnabled(),
   ]);
 
   const pages = Math.ceil(total / perPage);
-  const hasFilters = category || location || search;
-
-  // Batch query: count accepted responses per provider
   const providerIds = providers.map((p) => p.id);
-  const acceptedCounts = providerIds.length > 0
-    ? await prisma.serviceRequest.groupBy({
-        by: ["acceptedResponseId"],
-        where: {
-          acceptedResponseId: { not: null },
-          responses: { some: { providerId: { in: providerIds } } },
-        },
-        _count: true,
-      })
-    : [];
-  const acceptedResponseIds = acceptedCounts.map((a) => a.acceptedResponseId).filter(Boolean) as string[];
-  const acceptedResponses = acceptedResponseIds.length > 0
-    ? await prisma.response.findMany({
-        where: { id: { in: acceptedResponseIds } },
-        select: { id: true, providerId: true },
-      })
-    : [];
-  const acceptedByProvider = new Map<string, number>();
-  for (const r of acceptedResponses) {
-    acceptedByProvider.set(r.providerId, (acceptedByProvider.get(r.providerId) || 0) + 1);
-  }
 
-  // Batch query: which providers have active stories (skip if feature disabled)
-  const storyFeatureOn = await isStoryEnabled();
-  const activeStories = storyFeatureOn && providerIds.length > 0
-    ? await prisma.providerStory.groupBy({
-        by: ["providerId"],
-        where: {
-          providerId: { in: providerIds },
-          expiresAt: { gt: new Date() },
-        },
-        _count: true,
-      })
-    : [];
+  // Batch queries — run in parallel
+  const [reviewAggs, acceptedRows, lastResponseRows, activeStories] = await Promise.all([
+    providerIds.length > 0
+      ? prisma.review.groupBy({
+          by: ["providerId"],
+          where: { providerId: { in: providerIds } },
+          _avg: { rating: true },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; count: bigint }>>`
+          SELECT r."providerId", COUNT(*)::bigint AS count
+          FROM service_requests sr
+          JOIN responses r ON sr."acceptedResponseId" = r.id
+          WHERE r."providerId" = ANY(${providerIds}::text[])
+          GROUP BY r."providerId"
+        `
+      : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; lastAt: Date }>>`
+          SELECT "providerId", MAX("createdAt") AS "lastAt"
+          FROM responses
+          WHERE "providerId" = ANY(${providerIds}::text[])
+          GROUP BY "providerId"
+        `
+      : Promise.resolve([]),
+    storyFeatureOn && providerIds.length > 0
+      ? prisma.providerStory.groupBy({
+          by: ["providerId"],
+          where: {
+            providerId: { in: providerIds },
+            expiresAt: { gt: new Date() },
+          },
+          _count: true,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  // Build lookup maps
+  const reviewMap = new Map(reviewAggs.map((r) => [r.providerId, { avg: r._avg.rating, count: r._count._all }]));
+  const acceptedMap = new Map(acceptedRows.map((r) => [r.providerId, Number(r.count)]));
+  const lastResponseMap = new Map(lastResponseRows.map((r) => [r.providerId, new Date(r.lastAt)]));
   const providersWithStories = new Set(activeStories.map((s) => s.providerId));
 
-  // Process providers
-  const mapped = providers.map((p) => {
+  // Process providers into serializable card data
+  const mapped: ProviderCardData[] = providers.map((p) => {
     const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
-    let images: string[] = [];
+    let firstImage: string | null = null;
     try {
       const parsed = JSON.parse(p.providerProfile?.images || "[]");
-      images = Array.isArray(parsed)
-        ? parsed.map((img: { url?: string } | string) => typeof img === "string" ? img : img.url || "").filter(Boolean)
-        : [];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const img = parsed[0];
+        firstImage = typeof img === "string" ? img : img?.url || null;
+      }
     } catch {}
 
     let specs: string[] = [];
     try { specs = JSON.parse(p.providerProfile?.specializations || "[]"); } catch {}
 
-    // Last active
-    const lastActiveAt = p.responses[0]?.createdAt || p.createdAt;
+    const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
       (Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
     );
     const isRecentlyActive = daysSinceActive <= 7;
 
-    const acceptedCount = acceptedByProvider.get(p.id) || 0;
+    const acceptedCount = acceptedMap.get(p.id) || 0;
+    const review = reviewMap.get(p.id);
+    const avgRating = review?.avg != null ? Math.round(review.avg * 10) / 10 : null;
+    const reviewCount = review?.count ?? 0;
 
-    // Reviews
-    const reviews = p.reviewsReceived || [];
-    const avgRating = reviews.length > 0
-      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
-      : null;
+    const rawDesc = p.providerProfile?.description || null;
+    const description = rawDesc && rawDesc.length > DESC_PREVIEW_LENGTH
+      ? rawDesc.slice(0, DESC_PREVIEW_LENGTH).trimEnd() + "…"
+      : rawDesc;
 
     return {
       id: p.id,
       name: p.name,
-      profileImage: images[0] || p.image || null,
-      description: p.providerProfile?.description || null,
+      profileImage: optimizeCloudinaryUrl(firstImage || p.image || "", { width: 96, crop: "fill" }) || null,
+      description,
       specializations: specs,
       location: p.providerProfile?.location || null,
       planType,
@@ -174,7 +165,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       acceptedCount,
       isRecentlyActive,
       avgRating,
-      reviewCount: reviews.length,
+      reviewCount,
       hasActiveStory: providersWithStories.has(p.id),
     };
   });
@@ -182,22 +173,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   // Sort PRO first
   const planOrder: Record<string, number> = { PRO: 0, BASIC: 1, FREE: 2 };
   mapped.sort((a, b) => (planOrder[a.planType] ?? 2) - (planOrder[b.planType] ?? 2));
-
-  const categoryLabel = (val: string) => SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
-
-  function buildUrl(overrides: Record<string, string>) {
-    const p = new URLSearchParams();
-    const nc = overrides.category ?? category;
-    const nl = overrides.location ?? location;
-    const ns = overrides.search ?? search;
-    const np = overrides.page ?? "1";
-    if (nc) p.set("category", nc);
-    if (nl) p.set("location", nl);
-    if (ns) p.set("search", ns);
-    if (np !== "1") p.set("page", np);
-    const qs = p.toString();
-    return `/tiekejai${qs ? `?${qs}` : ""}`;
-  }
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
@@ -225,201 +200,23 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         {/* Filter bar */}
         <div className="mb-6">
           <ProviderFilterBar
-            activeCategory={category}
-            activeLocation={location}
             activeSearch={search}
-            categoryLabel={category ? categoryLabel(category) : undefined}
             categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
             cities={[...LITHUANIAN_CITIES]}
-            totalResults={total}
+            serverTotal={total}
           />
         </div>
 
-        {/* Provider cards */}
-        {mapped.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mapped.map((p) => (
-              <Link key={p.id} href={`/tiekejai/${p.id}`} className="group block">
-                <article className="h-full rounded-2xl border border-surface-200/60 bg-white p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-brand-200/60 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700/50 flex flex-col">
-                  {/* Avatar + name */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className={`shrink-0 rounded-full ${p.hasActiveStory ? "bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 p-[3px]" : ""}`}>
-                      <div className={`h-12 w-12 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden ${p.hasActiveStory ? "border-2 border-white dark:border-surface-900" : ""}`}>
-                        {p.profileImage ? (
-                          <img src={p.profileImage} alt={p.name || ""} className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
-                            {(p.name || "T")[0].toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-body font-semibold text-surface-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                          {p.name}
-                        </h3>
-                        {p.badge && (
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium shrink-0 ${
-                            p.planType === "PRO"
-                              ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                              : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                          }`}>
-                            <Shield className="h-3 w-3" />
-                            {p.badge}
-                          </span>
-                        )}
-                      </div>
-                      {/* Rating row */}
-                      {p.avgRating !== null ? (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-3 w-3 ${
-                                  star <= Math.round(p.avgRating!)
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "text-surface-200 dark:text-surface-700"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-micro font-medium text-surface-600 dark:text-surface-300">
-                            {p.avgRating}
-                          </span>
-                          <span className="text-micro text-surface-400">
-                            ({p.reviewCount})
-                          </span>
-                        </div>
-                      ) : (
-                        p.location && (
-                          <p className="text-micro text-surface-400 flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3" />
-                            {p.location}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  </div>
+        {/* Client-rendered listing with local-first filtering */}
+        <ProviderListingClient
+          providers={mapped}
+          serverSearch={search}
+          serverPage={page}
+          serverTotalPages={pages}
+          serverTotal={total}
+        />
 
-                  {/* Location — show separately if rating exists */}
-                  {p.avgRating !== null && p.location && (
-                    <p className="text-micro text-surface-400 flex items-center gap-1 mb-2">
-                      <MapPin className="h-3 w-3" />
-                      {p.location}
-                    </p>
-                  )}
-
-                  {/* Description */}
-                  {p.description && (
-                    <p className="text-body-sm text-surface-500 dark:text-surface-400 line-clamp-2 mb-3 leading-relaxed">
-                      {p.description}
-                    </p>
-                  )}
-
-                  {/* Specializations */}
-                  {p.specializations.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {p.specializations.slice(0, 3).map((spec) => (
-                        <span key={spec} className="rounded-md bg-surface-100 px-2 py-0.5 text-micro text-surface-600 dark:bg-surface-800 dark:text-surface-400">
-                          {categoryLabel(spec)}
-                        </span>
-                      ))}
-                      {p.specializations.length > 3 && (
-                        <span className="text-micro text-surface-400">+{p.specializations.length - 3}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Spacer to push footer down */}
-                  <div className="flex-1" />
-
-                  {/* Trust footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-800">
-                    <div className="flex items-center gap-3 text-micro text-surface-400">
-                      <span className="inline-flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        {p.responseCount}
-                      </span>
-                      {p.acceptedCount > 0 && (
-                        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                          <Award className="h-3 w-3" />
-                          {p.acceptedCount} priimtų
-                        </span>
-                      )}
-                      {p.isRecentlyActive && (
-                        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                          <Clock className="h-3 w-3" />
-                          Aktyvus
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-micro font-medium text-brand-600 dark:text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-0.5">
-                      Profilis
-                      <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </article>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
-              <Search className="h-6 w-6 text-surface-400" />
-            </div>
-            <p className="text-body font-medium text-surface-600 dark:text-surface-300">
-              {hasFilters ? "Tiekėjų pagal pasirinktus filtrus nerasta" : "Tiekėjų kol kas nėra"}
-            </p>
-            <p className="mt-1 text-body-sm text-surface-400 max-w-md mx-auto">
-              {hasFilters
-                ? "Pabandykite pakeisti filtrus arba peržiūrėti visus tiekėjus"
-                : "Platforma dar tik auga. Paskelbkite užklausą — ji bus matoma visiems būsimiems tiekėjams."}
-            </p>
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-              {hasFilters && (
-                <Link
-                  href="/tiekejai"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
-                >
-                  Išvalyti filtrus
-                </Link>
-              )}
-              <Link
-                href="/uzklausos/nauja"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
-              >
-                Paskelbti užklausą
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
-            {page > 1 && (
-              <Link
-                href={buildUrl({ page: String(page - 1) })}
-                className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
-              >
-                Ankstesnis
-              </Link>
-            )}
-            <span className="flex items-center px-4 text-body-sm text-surface-500 font-medium">{page} / {pages}</span>
-            {page < pages && (
-              <Link
-                href={buildUrl({ page: String(page + 1) })}
-                className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
-              >
-                Kitas
-              </Link>
-            )}
-          </div>
-        )}
-        {/* Bottom CTA — for clients */}
+        {/* Bottom CTA */}
         <div className="mt-12 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
           <p className="text-body font-semibold text-surface-900 dark:text-white">
             Nerandate tinkamo specialisto?

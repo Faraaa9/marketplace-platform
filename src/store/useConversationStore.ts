@@ -1,0 +1,116 @@
+"use client";
+
+import { create } from "zustand";
+
+export interface ThreadMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  senderName: string | null;
+  sender?: { id?: string; name: string } | null;
+  /** Optimistic status */
+  status: "sent" | "sending" | "failed";
+}
+
+interface ConversationState {
+  /** Messages keyed by responseId */
+  threads: Record<string, ThreadMessage[]>;
+
+  /** Hydrate a thread with server data (replaces all messages for that thread) */
+  hydrateThread: (responseId: string, messages: ThreadMessage[]) => void;
+
+  /** Optimistically add a message (status: sending) and return the temp ID */
+  optimisticSend: (responseId: string, content: string, senderName: string) => string;
+
+  /** Mark an optimistic message as sent, replacing temp ID with real data */
+  confirmSend: (responseId: string, tempId: string, serverMessage: ThreadMessage) => void;
+
+  /** Mark an optimistic message as failed */
+  failSend: (responseId: string, tempId: string) => void;
+
+  /** Remove a failed message (user dismissed) */
+  removeFailed: (responseId: string, tempId: string) => void;
+
+  /** Get messages for a thread */
+  getThread: (responseId: string) => ThreadMessage[];
+}
+
+let tempCounter = 0;
+
+export const useConversationStore = create<ConversationState>((set, get) => ({
+  threads: {},
+
+  hydrateThread: (responseId, messages) =>
+    set((state) => {
+      // Keep any optimistic (sending/failed) messages that aren't in server data
+      const existing = state.threads[responseId] || [];
+      const serverIds = new Set(messages.map((m) => m.id));
+      const pendingMessages = existing.filter(
+        (m) => (m.status === "sending" || m.status === "failed") && !serverIds.has(m.id)
+      );
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: [...messages, ...pendingMessages],
+        },
+      };
+    }),
+
+  optimisticSend: (responseId, content, senderName) => {
+    const tempId = `temp-${++tempCounter}-${Date.now()}`;
+    const optimisticMsg: ThreadMessage = {
+      id: tempId,
+      content,
+      createdAt: new Date().toISOString(),
+      senderName,
+      sender: { name: senderName },
+      status: "sending",
+    };
+    set((state) => ({
+      threads: {
+        ...state.threads,
+        [responseId]: [...(state.threads[responseId] || []), optimisticMsg],
+      },
+    }));
+    return tempId;
+  },
+
+  confirmSend: (responseId, tempId, serverMessage) =>
+    set((state) => {
+      const thread = state.threads[responseId] || [];
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: thread.map((m) =>
+            m.id === tempId ? { ...serverMessage, status: "sent" as const } : m
+          ),
+        },
+      };
+    }),
+
+  failSend: (responseId, tempId) =>
+    set((state) => {
+      const thread = state.threads[responseId] || [];
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: thread.map((m) =>
+            m.id === tempId ? { ...m, status: "failed" as const } : m
+          ),
+        },
+      };
+    }),
+
+  removeFailed: (responseId, tempId) =>
+    set((state) => {
+      const thread = state.threads[responseId] || [];
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: thread.filter((m) => m.id !== tempId),
+        },
+      };
+    }),
+
+  getThread: (responseId) => get().threads[responseId] || [],
+}));

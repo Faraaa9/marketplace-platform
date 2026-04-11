@@ -206,7 +206,7 @@ function StoryModal({
                       className={`flex items-center gap-3 rounded-xl border border-surface-200/60 bg-surface-50/50 p-2.5 dark:border-surface-700/50 dark:bg-surface-800/30 transition-opacity ${deleting === story.id ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700">
-                        <img src={story.imageUrl} alt="" className="h-full w-full object-cover" />
+                        <Image src={story.imageUrl} alt="" width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-body-sm truncate ${story.text ? "text-surface-700 dark:text-surface-300" : "text-surface-400 italic"}`}>

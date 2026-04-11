@@ -21,12 +21,13 @@
     "@types/bcryptjs": "^2.4.6",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^1.7.0",
-    "next": "14.2.35",
+    "next": "^16.2.3",
     "next-auth": "^4.24.13",
     "prisma": "^6.19.3",
     "react": "^18",
@@ -35,14 +36,15 @@
     "resend": "^6.10.0",
     "stripe": "^22.0.0",
     "tailwind-merge": "^3.5.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.35",
+    "eslint-config-next": "^16.2.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

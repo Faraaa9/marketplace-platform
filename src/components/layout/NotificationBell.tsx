@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
+import { useUIStore } from "@/store/useUIStore";
 
 interface Notification {
   id: string;
@@ -15,10 +16,13 @@ interface Notification {
   createdAt: string;
 }
 
+const FALLBACK_INTERVAL_MS = 90_000; // 90s fallback instead of 30s
+
 export default function NotificationBell() {
   const { status } = useSession();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUIStore((s) => s.unreadNotificationCount);
+  const setUnreadCount = useUIStore((s) => s.setUnreadNotificationCount);
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewSinceLastOpen, setHasNewSinceLastOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +38,6 @@ export default function NotificationBell() {
           const all = data.data as Notification[];
           setNotifications(all.slice(0, 10));
           const newUnread = all.filter((n) => !n.isRead).length;
-          // Detect new unreads arriving between polls
           if (newUnread > prevUnreadRef.current) {
             setHasNewSinceLastOpen(true);
           }
@@ -43,12 +46,26 @@ export default function NotificationBell() {
         }
       }
     } catch {}
-  }, [status]);
+  }, [status, setUnreadCount]);
 
+  // Fetch on mount + re-fetch on window focus / visibility change + light fallback interval
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+
+    const handleFocus = () => fetchNotifications();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchNotifications();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const interval = setInterval(fetchNotifications, FALLBACK_INTERVAL_MS);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearInterval(interval);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {
@@ -76,7 +93,7 @@ export default function NotificationBell() {
         body: JSON.stringify({ id }),
       });
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadCount(Math.max(0, useUIStore.getState().unreadNotificationCount - 1));
     } catch {}
   }
 
@@ -94,7 +111,7 @@ export default function NotificationBell() {
         )
       );
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      useUIStore.getState().resetUnreadNotificationCount();
     } catch {}
   }
 
@@ -146,7 +163,6 @@ export default function NotificationBell() {
               notifications.map((n) => {
                 const content = (
                   <div className="flex gap-3">
-                    {/* Unread dot */}
                     <div className="pt-1.5 shrink-0">
                       <div className={`h-2 w-2 rounded-full transition-colors ${
                         n.isRead ? "bg-transparent" : "bg-brand-500"
