@@ -38,6 +38,15 @@ function LoginForm() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, session?.user?.role, status]);
 
+  async function getFreshSessionRole() {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const refreshedSession = await getSession();
+      if (refreshedSession?.user?.role) return refreshedSession.user.role;
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    return undefined;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -53,15 +62,36 @@ function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else {
-        const refreshedSession = await getSession();
-        router.push(getRedirectPath(refreshedSession?.user?.role));
+        const role = await getFreshSessionRole();
+        const redirectPath = getRedirectPath(role);
+        router.replace(redirectPath);
         router.refresh();
+        window.location.replace(redirectPath);
       }
     } catch {
       setError("Įvyko klaida. Bandykite dar kartą.");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (status === "authenticated") {
+    return (
+      <div className="relative flex min-h-[85vh] items-center justify-center px-4">
+        <div className="absolute inset-0 bg-radial-brand-subtle" />
+        <div className="relative rounded-2xl border border-surface-200/60 bg-white/90 p-8 text-center shadow-elevated backdrop-blur-sm dark:border-surface-700/50 dark:bg-surface-900/90">
+          <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20">
+            <span className="text-white font-bold text-lg">P</span>
+          </div>
+          <p className="text-body font-semibold text-surface-900 dark:text-white">
+            Prisijungta
+          </p>
+          <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
+            Nukreipiame jus į paskyrą...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

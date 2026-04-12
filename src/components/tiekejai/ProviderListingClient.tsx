@@ -1,14 +1,29 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Shield, MessageSquare, Search, Clock, Award, Star, ArrowRight } from "lucide-react";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import {
-  useProviderFilterStore,
-  type ProviderCardData,
-} from "@/store/useProviderFilterStore";
+  MapPin,
+  Search,
+  Star,
+  ArrowRight,
+  X,
+  Clock,
+  Euro,
+  CheckCircle,
+  MessageSquare,
+  ExternalLink,
+  Zap,
+  FileCheck,
+  Globe,
+} from "lucide-react";
+import { SERVICE_CATEGORIES } from "@/lib/constants";
+import type { ProviderCardData } from "@/store/useProviderFilterStore";
+
+/* ═══════════════════════════════════════════════════════
+   Types
+   ═══════════════════════════════════════════════════════ */
 
 interface ProviderListingClientProps {
   providers: ProviderCardData[];
@@ -16,186 +31,671 @@ interface ProviderListingClientProps {
   serverPage: number;
   serverTotalPages: number;
   serverTotal: number;
+  activeFilters: Record<string, string>;
 }
 
-const categoryLabel = (val: string) =>
+interface ProviderDetail {
+  id: string;
+  name: string;
+  image: string | null;
+  images: string[];
+  description: string | null;
+  headline: string | null;
+  services: string | null;
+  priceFrom: number | null;
+  experienceYears: number | null;
+  offersInvoices: boolean;
+  availableForUrgent: boolean;
+  specializations: string[];
+  location: string | null;
+  website: string | null;
+  planType: string;
+  badge: string | null;
+  responseCount: number;
+  acceptedCount: number;
+  avgResponseTimeHours: number | null;
+  profileCompleteness: number;
+  avgRating: number | null;
+  totalReviews: number;
+  reviews: Array<{
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    clientName: string;
+    requestTitle: string;
+    requestCategory: string;
+  }>;
+  lastActiveAt: string;
+  memberSince: string;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════════════ */
+
+const specLabel = (val: string) =>
   SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
+
+const GRADIENTS = [
+  "from-slate-600 to-slate-800",
+  "from-slate-700 to-blue-900",
+  "from-stone-600 to-stone-800",
+  "from-zinc-600 to-zinc-800",
+  "from-slate-600 to-emerald-900",
+  "from-neutral-600 to-neutral-800",
+];
+
+function pickGradient(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++)
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return GRADIENTS[Math.abs(hash) % GRADIENTS.length];
+}
+
+function pickBadge(
+  p: ProviderCardData
+): { label: string; cls: string } | null {
+  if (p.avgRating !== null && p.avgRating >= 4.5)
+    return { label: "Top", cls: "bg-amber-500/80 text-white" };
+  if (p.isRecentlyActive)
+    return { label: "Aktyvus", cls: "bg-emerald-500/80 text-white" };
+  if (p.availableForUrgent)
+    return { label: "Skubūs", cls: "bg-orange-500/80 text-white" };
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Prefetch cache — shared across renders
+   ═══════════════════════════════════════════════════════ */
+
+const prefetchCache = new Map<
+  string,
+  { data: ProviderDetail | null; promise: Promise<ProviderDetail | null> | null }
+>();
+
+function prefetchProvider(id: string) {
+  if (prefetchCache.has(id)) return prefetchCache.get(id)!;
+
+  const entry: {
+    data: ProviderDetail | null;
+    promise: Promise<ProviderDetail | null> | null;
+  } = { data: null, promise: null };
+
+  entry.promise = fetch(`/api/tiekejai/${id}`)
+    .then((r) => r.json())
+    .then((json) => {
+      const d = json.success ? (json.data as ProviderDetail) : null;
+      entry.data = d;
+      return d;
+    })
+    .catch(() => {
+      entry.data = null;
+      return null;
+    });
+
+  prefetchCache.set(id, entry);
+  return entry;
+}
+
+async function getProviderDetail(
+  id: string
+): Promise<ProviderDetail | null> {
+  const entry = prefetchCache.get(id);
+  if (entry?.data) return entry.data;
+  if (entry?.promise) return entry.promise;
+  return prefetchProvider(id).promise;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Sheet skeleton
+   ═══════════════════════════════════════════════════════ */
+
+function SheetSkeleton() {
+  return (
+    <div className="animate-pulse space-y-5 p-6">
+      {/* Cover */}
+      <div className="h-48 rounded-2xl bg-surface-200 dark:bg-surface-700" />
+      {/* Title */}
+      <div className="space-y-2">
+        <div className="h-6 w-3/4 rounded bg-surface-200 dark:bg-surface-700" />
+        <div className="h-4 w-1/2 rounded bg-surface-100 dark:bg-surface-800" />
+      </div>
+      {/* Stats row */}
+      <div className="flex gap-3">
+        <div className="h-10 w-20 rounded-xl bg-surface-100 dark:bg-surface-800" />
+        <div className="h-10 w-20 rounded-xl bg-surface-100 dark:bg-surface-800" />
+        <div className="h-10 w-20 rounded-xl bg-surface-100 dark:bg-surface-800" />
+      </div>
+      {/* Description */}
+      <div className="space-y-2">
+        <div className="h-3 w-full rounded bg-surface-100 dark:bg-surface-800" />
+        <div className="h-3 w-full rounded bg-surface-100 dark:bg-surface-800" />
+        <div className="h-3 w-2/3 rounded bg-surface-100 dark:bg-surface-800" />
+      </div>
+      {/* Reviews */}
+      <div className="h-20 rounded-xl bg-surface-100 dark:bg-surface-800" />
+      {/* CTA */}
+      <div className="h-12 rounded-2xl bg-surface-200 dark:bg-surface-700" />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Sheet content — provider details
+   ═══════════════════════════════════════════════════════ */
+
+function SheetContent({
+  detail,
+}: {
+  detail: ProviderDetail;
+}) {
+  const coverImg = detail.images[0] || detail.image;
+  const daysSince = Math.floor(
+    (Date.now() - new Date(detail.lastActiveAt).getTime()) / (86400000)
+  );
+  const isActive = daysSince <= 7;
+  const memberDate = new Date(detail.memberSince).toLocaleDateString("lt-LT", {
+    year: "numeric",
+    month: "long",
+  });
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        {/* Cover */}
+        <div className="relative aspect-[16/9] w-full overflow-hidden">
+          {coverImg ? (
+            <Image
+              src={coverImg}
+              alt={detail.name || ""}
+              fill
+              sizes="480px"
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${pickGradient(detail.id)}`}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-6xl font-semibold text-white/20">
+                  {(detail.name || "T")[0].toUpperCase()}
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
+            <h2 className="text-xl font-bold text-white drop-shadow-sm">
+              {detail.name}
+            </h2>
+            {detail.headline && (
+              <p className="mt-0.5 text-sm text-white/80 line-clamp-1">
+                {detail.headline}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-5 space-y-5">
+          {/* Quick stats row */}
+          <div className="flex flex-wrap gap-2">
+            {detail.avgRating !== null && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-500/10">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  {detail.avgRating}
+                </span>
+                <span className="text-xs text-amber-600/70 dark:text-amber-400/70">
+                  ({detail.totalReviews})
+                </span>
+              </div>
+            )}
+            {detail.location && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-surface-100 px-3 py-2 dark:bg-surface-800">
+                <MapPin className="h-3.5 w-3.5 text-surface-400" />
+                <span className="text-sm text-surface-600 dark:text-surface-300">
+                  {detail.location}
+                </span>
+              </div>
+            )}
+            {isActive && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 dark:bg-emerald-500/10">
+                <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                  Aktyvus
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Key info grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <InfoTile
+              label="Kaina nuo"
+              value={
+                detail.priceFrom
+                  ? `${detail.priceFrom} €`
+                  : "Derinama"
+              }
+              icon={<Euro className="h-4 w-4" />}
+            />
+            <InfoTile
+              label="Pasiūlymai"
+              value={String(detail.responseCount)}
+              icon={<MessageSquare className="h-4 w-4" />}
+            />
+            {detail.acceptedCount > 0 && (
+              <InfoTile
+                label="Priimta"
+                value={String(detail.acceptedCount)}
+                icon={<CheckCircle className="h-4 w-4" />}
+              />
+            )}
+            {detail.avgResponseTimeHours !== null && (
+              <InfoTile
+                label="Atsako per"
+                value={
+                  detail.avgResponseTimeHours < 1
+                    ? "<1 val."
+                    : `${detail.avgResponseTimeHours} val.`
+                }
+                icon={<Clock className="h-4 w-4" />}
+              />
+            )}
+          </div>
+
+          {/* Specializations */}
+          {detail.specializations.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">
+                Specializacijos
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {detail.specializations.map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-full bg-surface-100 px-3 py-1 text-xs text-surface-600 dark:bg-surface-800 dark:text-surface-300"
+                  >
+                    {specLabel(s)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap gap-2">
+            {detail.availableForUrgent && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
+                <Zap className="h-3 w-3" />
+                Atlieka skubius darbus
+              </span>
+            )}
+            {detail.offersInvoices && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                <FileCheck className="h-3 w-3" />
+                Išrašo sąskaitą
+              </span>
+            )}
+            {detail.website && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-xs font-medium text-surface-600 dark:bg-surface-800 dark:text-surface-300">
+                <Globe className="h-3 w-3" />
+                Svetainė
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
+          {detail.description && (
+            <div>
+              <h4 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">
+                Apie
+              </h4>
+              <p className="text-sm text-surface-600 dark:text-surface-300 leading-relaxed line-clamp-6">
+                {detail.description}
+              </p>
+            </div>
+          )}
+
+          {/* Top review */}
+          {detail.reviews.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">
+                Naujausia atsiliepimas
+              </h4>
+              <div className="rounded-2xl bg-surface-50 p-4 dark:bg-surface-800/50">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-3 w-3 ${
+                        i < detail.reviews[0].rating
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-surface-200 dark:text-surface-600"
+                      }`}
+                    />
+                  ))}
+                </div>
+                {detail.reviews[0].comment && (
+                  <p className="text-sm text-surface-600 dark:text-surface-300 line-clamp-3 leading-relaxed">
+                    &ldquo;{detail.reviews[0].comment}&rdquo;
+                  </p>
+                )}
+                <p className="mt-1.5 text-xs text-surface-400">
+                  — {detail.reviews[0].clientName}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Member since */}
+          <p className="text-xs text-surface-400">
+            Narys nuo {memberDate}
+          </p>
+        </div>
+      </div>
+
+      {/* Sticky CTA footer */}
+      <div className="shrink-0 border-t border-surface-200 bg-white px-6 py-4 dark:border-surface-700 dark:bg-surface-900">
+        <div className="flex gap-3">
+          <Link
+            href={`/tiekejai/${detail.id}`}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors active:scale-[0.98]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Visas profilis
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+          <Link
+            href={`/tiekejai/${detail.id}#zinute`}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-surface-200 bg-white px-5 py-3 text-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors active:scale-[0.98] dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Parašyti
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoTile({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl bg-surface-50 px-4 py-3 dark:bg-surface-800/50">
+      <div className="flex items-center gap-1.5 text-surface-400 mb-1">
+        {icon}
+        <span className="text-[11px] uppercase tracking-wider font-medium">
+          {label}
+        </span>
+      </div>
+      <p className="text-sm font-semibold text-surface-900 dark:text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Main component
+   ═══════════════════════════════════════════════════════ */
 
 export default function ProviderListingClient({
   providers,
-  serverSearch,
   serverPage,
   serverTotalPages,
-  serverTotal,
+  activeFilters,
 }: ProviderListingClientProps) {
-  const setServerProviders = useProviderFilterStore((s) => s.setServerProviders);
-  const clientCategory = useProviderFilterStore((s) => s.clientCategory);
-  const clientLocation = useProviderFilterStore((s) => s.clientLocation);
-  const getFilteredProviders = useProviderFilterStore((s) => s.getFilteredProviders);
+  const hasAnyFilters = Object.keys(activeFilters).length > 0;
 
-  // Hydrate store when server data changes
-  useEffect(() => {
-    setServerProviders(providers);
-  }, [providers, setServerProviders]);
+  /* ── Sheet state ── */
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetProviderId, setSheetProviderId] = useState<string | null>(null);
+  const [sheetDetail, setSheetDetail] = useState<ProviderDetail | null>(null);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
-  const filtered = useMemo(
-    () => getFilteredProviders(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [providers, clientCategory, clientLocation]
+  /* ── Open sheet ── */
+  const openSheet = useCallback(
+    async (id: string) => {
+      setSheetProviderId(id);
+      setSheetOpen(true);
+      setSheetLoading(true);
+      setSheetDetail(null);
+
+      // Shallow URL update
+      const url = new URL(window.location.href);
+      url.searchParams.set("provider", id);
+      window.history.pushState({}, "", url.toString());
+
+      const detail = await getProviderDetail(id);
+      setSheetDetail(detail);
+      setSheetLoading(false);
+    },
+    []
   );
 
-  const hasClientFilters = clientCategory || clientLocation;
-  const hasAnyFilters = hasClientFilters || serverSearch;
+  /* ── Close sheet ── */
+  const closeSheet = useCallback(() => {
+    setSheetOpen(false);
+    // Restore URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete("provider");
+    const qs = url.searchParams.toString();
+    window.history.pushState(
+      {},
+      "",
+      `${url.pathname}${qs ? `?${qs}` : ""}`
+    );
+    // Delay cleanup for exit animation
+    setTimeout(() => {
+      setSheetProviderId(null);
+      setSheetDetail(null);
+    }, 250);
+  }, []);
 
-  function buildUrl(overrides: Record<string, string>) {
-    const p = new URLSearchParams();
-    if (overrides.search ?? serverSearch) p.set("search", overrides.search ?? serverSearch);
-    const np = overrides.page ?? String(serverPage);
-    if (np !== "1") p.set("page", np);
+  /* ── Handle popstate (back button) ── */
+  useEffect(() => {
+    function handlePop() {
+      const url = new URL(window.location.href);
+      const pid = url.searchParams.get("provider");
+      if (!pid && sheetOpen) {
+        setSheetOpen(false);
+        setTimeout(() => {
+          setSheetProviderId(null);
+          setSheetDetail(null);
+        }, 250);
+      } else if (pid && !sheetOpen) {
+        openSheet(pid);
+      }
+    }
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, [sheetOpen, openSheet]);
+
+  /* ── Open from URL on mount ── */
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const pid = url.searchParams.get("provider");
+    if (pid) openSheet(pid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ── Lock body scroll when sheet is open ── */
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sheetOpen]);
+
+  /* ── Keyboard: Escape closes sheet ── */
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && sheetOpen) closeSheet();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [sheetOpen, closeSheet]);
+
+  /* ── Prefetch on hover ── */
+  const handleMouseEnter = useCallback((id: string) => {
+    prefetchProvider(id);
+  }, []);
+
+  /* ── Card click ── */
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      openSheet(id);
+    },
+    [openSheet]
+  );
+
+  function buildPageUrl(page: number) {
+    const p = new URLSearchParams(activeFilters);
+    if (page > 1) p.set("page", String(page));
     const qs = p.toString();
     return `/tiekejai${qs ? `?${qs}` : ""}`;
   }
 
   return (
     <>
-      {/* Provider cards */}
-      {filtered.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <Link key={p.id} href={`/tiekejai/${p.id}`} className="group block">
-              <article className="h-full rounded-2xl border border-surface-200/60 bg-white p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-brand-200/60 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700/50 flex flex-col">
-                {/* Avatar + name */}
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`shrink-0 rounded-full ${p.hasActiveStory ? "bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 p-[3px]" : ""}`}>
-                    <div className={`h-12 w-12 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center overflow-hidden ${p.hasActiveStory ? "border-2 border-white dark:border-surface-900" : ""}`}>
-                      {p.profileImage ? (
-                        <Image src={p.profileImage} alt={p.name || ""} width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
-                          {(p.name || "T")[0].toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-body font-semibold text-surface-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+      {providers.length > 0 ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {providers.map((p) => {
+            const badge = pickBadge(p);
+            const mainSpec =
+              p.specializations.length > 0
+                ? specLabel(p.specializations[0])
+                : "Paslaugų tiekėjas";
+            const priceText =
+              p.priceFrom !== null && p.priceFrom > 0
+                ? `Nuo ${p.priceFrom} €`
+                : "Kaina derinama";
+
+            return (
+              <a
+                key={p.id}
+                href={`/tiekejai/${p.id}`}
+                className="group block h-full cursor-pointer select-none"
+                onMouseEnter={() => handleMouseEnter(p.id)}
+                onClick={(e) => handleCardClick(e, p.id)}
+              >
+                <article
+                  className={`h-full overflow-hidden rounded-[28px] bg-white ring-1 ring-black/[0.06] transition-all duration-200 hover:bg-slate-50 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] dark:bg-surface-900 dark:ring-white/[0.08] dark:hover:bg-surface-800/80 flex flex-col ${
+                    sheetProviderId === p.id
+                      ? "ring-2 ring-brand-500 shadow-lg"
+                      : "shadow-sm"
+                  }`}
+                >
+                  {/* ── Cover image ── */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden">
+                    {p.coverImage ? (
+                      <Image
+                        src={p.coverImage}
+                        alt={p.name || ""}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${pickGradient(p.id)}`}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-5xl font-semibold text-white/25">
+                            {(p.name || "T")[0].toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                    <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
+                      <h3 className="text-lg font-bold text-white truncate leading-tight drop-shadow-sm">
                         {p.name}
                       </h3>
-                      {p.badge && (
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium shrink-0 ${
-                          p.planType === "PRO"
-                            ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                            : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                        }`}>
-                          <Shield className="h-3 w-3" />
-                          {p.badge}
+                      {p.location && (
+                        <p className="mt-0.5 text-[13px] text-white/75 flex items-center gap-1 drop-shadow-sm">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {p.location}
+                        </p>
+                      )}
+                    </div>
+
+                    {badge && (
+                      <span
+                        className={`absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm ${badge.cls}`}
+                      >
+                        {badge.label}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ── Bottom info ── */}
+                  <div className="flex flex-1 flex-col px-5 py-3.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-[13px] text-surface-500 dark:text-surface-400 truncate">
+                        {mainSpec}
+                      </span>
+                      <span className="text-[13px] font-semibold text-surface-900 dark:text-white whitespace-nowrap">
+                        {priceText}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex items-center gap-3 text-[12px] text-surface-400">
+                      {p.avgRating !== null && (
+                        <span className="inline-flex items-center gap-1 text-surface-600 dark:text-surface-300">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span className="font-medium">{p.avgRating}</span>
+                          <span className="text-surface-400">
+                            ({p.reviewCount})
+                          </span>
+                        </span>
+                      )}
+                      {p.responseCount > 0 && (
+                        <span>{p.responseCount} pasiūl.</span>
+                      )}
+                      {p.acceptedCount > 0 && (
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          {p.acceptedCount} priimta
                         </span>
                       )}
                     </div>
-                    {/* Rating row */}
-                    {p.avgRating !== null ? (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-3 w-3 ${
-                                star <= Math.round(p.avgRating!)
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "text-surface-200 dark:text-surface-700"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-micro font-medium text-surface-600 dark:text-surface-300">
-                          {p.avgRating}
-                        </span>
-                        <span className="text-micro text-surface-400">
-                          ({p.reviewCount})
-                        </span>
-                      </div>
-                    ) : (
-                      p.location && (
-                        <p className="text-micro text-surface-400 flex items-center gap-1 mt-0.5">
-                          <MapPin className="h-3 w-3" />
-                          {p.location}
-                        </p>
-                      )
-                    )}
                   </div>
-                </div>
-
-                {/* Location — show separately if rating exists */}
-                {p.avgRating !== null && p.location && (
-                  <p className="text-micro text-surface-400 flex items-center gap-1 mb-2">
-                    <MapPin className="h-3 w-3" />
-                    {p.location}
-                  </p>
-                )}
-
-                {/* Description */}
-                {p.description && (
-                  <p className="text-body-sm text-surface-500 dark:text-surface-400 line-clamp-2 mb-3 leading-relaxed">
-                    {p.description}
-                  </p>
-                )}
-
-                {/* Specializations */}
-                {p.specializations.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {p.specializations.slice(0, 3).map((spec) => (
-                      <span key={spec} className="rounded-md bg-surface-100 px-2 py-0.5 text-micro text-surface-600 dark:bg-surface-800 dark:text-surface-400">
-                        {categoryLabel(spec)}
-                      </span>
-                    ))}
-                    {p.specializations.length > 3 && (
-                      <span className="text-micro text-surface-400">+{p.specializations.length - 3}</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Spacer to push footer down */}
-                <div className="flex-1" />
-
-                {/* Trust footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-800">
-                  <div className="flex items-center gap-3 text-micro text-surface-400">
-                    <span className="inline-flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
-                      {p.responseCount}
-                    </span>
-                    {p.acceptedCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                        <Award className="h-3 w-3" />
-                        {p.acceptedCount} priimtų
-                      </span>
-                    )}
-                    {p.isRecentlyActive && (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                        <Clock className="h-3 w-3" />
-                        Aktyvus
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-micro font-medium text-brand-600 dark:text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-0.5">
-                    Profilis
-                    <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-              </article>
-            </Link>
-          ))}
+                </article>
+              </a>
+            );
+          })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
+        /* ── Empty state ── */
+        <div className="rounded-[28px] border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
             <Search className="h-6 w-6 text-surface-400" />
           </div>
-          <p className="text-body font-medium text-surface-600 dark:text-surface-300">
-            {hasAnyFilters ? "Tiekėjų pagal pasirinktus filtrus nerasta" : "Tiekėjų kol kas nėra"}
+          <p className="text-body font-semibold text-surface-700 dark:text-surface-300">
+            {hasAnyFilters
+              ? "Tiekėjų pagal pasirinktus filtrus nerasta"
+              : "Tiekėjų kol kas nėra"}
           </p>
-          <p className="mt-1 text-body-sm text-surface-400 max-w-md mx-auto">
+          <p className="mt-1.5 text-body-sm text-surface-400 max-w-md mx-auto">
             {hasAnyFilters
               ? "Pabandykite pakeisti filtrus arba peržiūrėti visus tiekėjus"
               : "Platforma dar tik auga. Paskelbkite užklausą — ji bus matoma visiems būsimiems tiekėjams."}
@@ -204,14 +704,14 @@ export default function ProviderListingClient({
             {hasAnyFilters && (
               <Link
                 href="/tiekejai"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
+                className="inline-flex items-center gap-1.5 rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
               >
                 Išvalyti filtrus
               </Link>
             )}
             <Link
               href="/uzklausos/nauja"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
             >
               Paskelbti užklausą
               <ArrowRight className="h-4 w-4" />
@@ -220,28 +720,74 @@ export default function ProviderListingClient({
         </div>
       )}
 
-      {/* Pagination — only for server-level paging */}
+      {/* ── Pagination ── */}
       {serverTotalPages > 1 && (
-        <div className="mt-8 flex justify-center gap-2">
+        <div className="mt-8 flex justify-center items-center gap-2">
           {serverPage > 1 && (
             <Link
-              href={buildUrl({ page: String(serverPage - 1) })}
-              className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
+              href={buildPageUrl(serverPage - 1)}
+              className="rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
             >
               Ankstesnis
             </Link>
           )}
-          <span className="flex items-center px-4 text-body-sm text-surface-500 font-medium">{serverPage} / {serverTotalPages}</span>
+          <span className="flex items-center px-4 text-body-sm text-surface-500 font-medium">
+            {serverPage} / {serverTotalPages}
+          </span>
           {serverPage < serverTotalPages && (
             <Link
-              href={buildUrl({ page: String(serverPage + 1) })}
-              className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
+              href={buildPageUrl(serverPage + 1)}
+              className="rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
             >
               Kitas
             </Link>
           )}
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════
+          Provider detail Sheet / Drawer
+          ═══════════════════════════════════════════ */}
+
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-opacity duration-250 ${
+          sheetOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeSheet}
+        aria-hidden="true"
+      />
+
+      {/* Sheet panel */}
+      <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal={sheetOpen}
+        aria-label="Tiekėjo peržiūra"
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white dark:bg-surface-900 shadow-2xl transition-transform duration-250 ease-out ${
+          sheetOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Close button */}
+        <button
+          onClick={closeSheet}
+          className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-sm hover:bg-black/40 transition-colors"
+          aria-label="Uždaryti"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Content */}
+        <div className="h-full flex flex-col">
+          {sheetLoading || !sheetDetail ? (
+            <SheetSkeleton />
+          ) : (
+            <SheetContent detail={sheetDetail} />
+          )}
+        </div>
+      </div>
     </>
   );
 }

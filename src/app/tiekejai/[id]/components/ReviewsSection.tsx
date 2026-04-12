@@ -2,6 +2,8 @@ import { Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
+import TestimonialMarquee from "./TestimonialMarquee";
+import type { TestimonialData } from "./TestimonialMarquee";
 
 interface ReviewsSectionProps {
   providerId: string;
@@ -31,9 +33,21 @@ export default async function ReviewsSection({
   const categoryLabel = (val: string) =>
     SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
 
+  // Build testimonials for marquee — only reviews with comments, sorted by rating desc
+  const testimonials: TestimonialData[] = reviews
+    .filter((r) => r.comment && r.comment.length >= 10)
+    .sort((a, b) => b.rating - a.rating)
+    .map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment!,
+      clientName: r.client?.name || "Klientas",
+      category: categoryLabel(r.request.category),
+    }));
+
   return (
-    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="text-heading-3 font-semibold text-surface-900 dark:text-white">
           Atsiliepimai {totalReviews > 0 && `(${totalReviews})`}
         </h2>
@@ -58,12 +72,20 @@ export default async function ReviewsSection({
         )}
       </div>
 
+      {/* Testimonial Marquee — best quotes as infinite scroll */}
+      {testimonials.length >= 2 && (
+        <div className="mb-6 -mx-6 sm:-mx-8">
+          <TestimonialMarquee testimonials={testimonials} />
+        </div>
+      )}
+
+      {/* Full review list below */}
       {reviews.length > 0 ? (
         <div className="space-y-4">
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="border-b border-surface-100 pb-4 last:border-0 last:pb-0 dark:border-surface-800"
+              className="pb-4 last:pb-0"
             >
               <div className="mb-1.5 flex items-center justify-between">
                 <div className="flex items-center gap-2">

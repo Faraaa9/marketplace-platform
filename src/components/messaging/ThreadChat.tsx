@@ -6,6 +6,8 @@ import { formatRelativeDate } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
 import Button from "@/components/ui/Button";
 
+const EMPTY_MESSAGES: ThreadMessage[] = [];
+
 interface ThreadChatProps {
   responseId: string;
   /** Initial messages from server (hydration) */
@@ -36,7 +38,7 @@ export default function ThreadChat({
   const confirmSend = useConversationStore((s) => s.confirmSend);
   const failSend = useConversationStore((s) => s.failSend);
   const removeFailed = useConversationStore((s) => s.removeFailed);
-  const messages = useConversationStore((s) => s.getThread(responseId));
+  const messages = useConversationStore((s) => s.threads[responseId]) ?? EMPTY_MESSAGES;
 
   // Hydrate on mount / when server data changes
   useEffect(() => {

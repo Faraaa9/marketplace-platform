@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { getEffectivePlanType } from "@/lib/constants";
 
 interface SimilarProvidersSectionProps {
@@ -70,7 +71,7 @@ export default async function SimilarProvidersSection({
     return {
       id: provider.id,
       name: provider.name || "Tiekėjas",
-      image: images[0] || provider.image || null,
+      image: getSafeProviderImageUrl(images[0] || provider.image),
       description: provider.providerProfile?.description || null,
       location: provider.providerProfile?.location || null,
       planType: getEffectivePlanType(
