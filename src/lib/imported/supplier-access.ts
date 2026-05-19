@@ -116,8 +116,8 @@ export async function attachIdentityToUserByEmail(email: string, userId: string)
         update: { isActive: true },
         create: {
           userId,
-          specializations: "[]",
-          images: "[]",
+          specializations: [],
+          images: [],
           isActive: true,
         },
         select: { id: true },

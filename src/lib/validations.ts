@@ -8,7 +8,7 @@ export const loginSchema = z.object({
 export const registerSchemaBase = z.object({
   name: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
   email: z.string().email("Neteisingas el. pašto formatas"),
-  password: z.string().min(6, "Slaptažodis turi būti bent 6 simbolių"),
+  password: z.string().min(8, "Slaptažodis turi būti bent 8 simbolių"),
   confirmPassword: z.string(),
 });
 
@@ -28,9 +28,10 @@ export const serviceRequestSchema = z.object({
   clientPhone: z.string().optional(),
   createAccount: z.boolean().optional(),
   password: z.string().optional(),
+  honeypot: z.string().optional(),
 }).refine(
-  (data) => !data.createAccount || (data.password && data.password.length >= 6),
-  { message: "Slaptažodis turi būti bent 6 simbolių", path: ["password"] }
+  (data) => !data.createAccount || (data.password && data.password.length >= 8),
+  { message: "Slaptažodis turi būti bent 8 simbolių", path: ["password"] }
 );
 
 export const responseSchema = z.object({

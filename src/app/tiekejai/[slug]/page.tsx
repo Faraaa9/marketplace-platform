@@ -3,14 +3,18 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { isCuid } from "@/lib/slug";
 import EmptyState from "@/components/ui/EmptyState";
+import { JsonLd } from "@/components/seo/JsonLd";
 import DirectInquiryWidget from "./components/DirectInquiryWidget";
+import MessengerCTA from "./components/MessengerCTA";
 import ReviewsSection from "./components/ReviewsSection";
 import SimilarProvidersSection from "./components/SimilarProvidersSection";
 import StoryAvatarButton from "./components/StoryAvatarButton";
@@ -61,15 +65,36 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default async function PublicProviderProfilePage({ params }: PageProps) {
-  const { id } = await params;
-  const [provider, stories, session] = await Promise.all([
-    getProviderProfile(id),
-    getActiveStories(id),
+  const { slug } = await params;
+  const lookup = await resolveProvider(slug);
+
+  // Legacy /tiekejai/[cuid] → redirect to slug version (preserves SEO juice).
+  if (lookup && "__redirectTo" in lookup) {
+    redirect(`/tiekejai/${lookup.__redirectTo}`);
+  }
+
+  if (!lookup) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <EmptyState
+          title="Tiekėjas nerastas"
+          description="Šis profilis neegzistuoja arba yra neaktyvus."
+        />
+      </div>
+    );
+  }
+
+  const { userId: providerUserId, slug: resolvedSlug } = lookup;
+
+  const [provider, stories, session, topReviews] = await Promise.all([
+    getProviderProfile(providerUserId),
+    getActiveStories(providerUserId),
     getServerSession(authOptions),
+    getTopReviewsForSeo(providerUserId),
   ]);
 
   if (!provider) {
@@ -82,6 +107,12 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       </div>
     );
   }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
+  const profileUrl = `${baseUrl}/tiekejai/${resolvedSlug}`;
+  const localBusinessSchema = buildLocalBusinessSchema(provider, profileUrl);
+  const breadcrumbSchema = buildBreadcrumbSchema(provider.name, profileUrl, baseUrl);
+  const reviewSchemas = buildReviewSchemas(provider.name, topReviews);
 
   const daysSinceActive = Math.floor(
     (Date.now() - new Date(provider.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
@@ -105,6 +136,9 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+      <JsonLd schema={localBusinessSchema} />
+      <JsonLd schema={breadcrumbSchema} />
+      {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/tiekejai"
@@ -427,10 +461,17 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                       )}
                     </div>
                     {!isSelf ? (
-                      <ContactButton className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-body-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-700 hover:shadow-md dark:bg-brand-500 dark:hover:bg-brand-600">
-                        <MessageSquare className="h-4 w-4" />
-                        Rašyti tiekėjui
-                      </ContactButton>
+                      <>
+                        <ContactButton className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-body-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-700 hover:shadow-md dark:bg-brand-500 dark:hover:bg-brand-600">
+                          <MessageSquare className="h-4 w-4" />
+                          Rašyti tiekėjui
+                        </ContactButton>
+                        <MessengerCTA
+                          phone={provider.phone}
+                          providerName={provider.name}
+                          canSeePhone={provider.canSeePhone}
+                        />
+                      </>
                     ) : (
                       <div className="flex h-11 w-full items-center justify-center rounded-xl bg-surface-100 text-body-sm font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
                         Tai jūsų profilis
@@ -470,6 +511,37 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       />
     </div>
   );
+}
+
+/**
+ * Resolves a path segment (slug or legacy cuid) to a provider's userId + slug.
+ * Returns `{ __redirectTo: slug }` when the input was a cuid that maps to an
+ * active provider — caller should `redirect()` to the canonical slug URL.
+ */
+async function resolveProvider(
+  slugOrId: string,
+): Promise<{ userId: string; slug: string } | { __redirectTo: string } | null> {
+  // Try slug lookup first (the hot path).
+  const bySlug = await prisma.providerProfile.findUnique({
+    where: { slug: slugOrId },
+    select: { userId: true, slug: true },
+  });
+  if (bySlug?.slug) {
+    return { userId: bySlug.userId, slug: bySlug.slug };
+  }
+
+  // Legacy URL: the segment looks like a cuid → user.id.
+  if (isCuid(slugOrId)) {
+    const byUserId = await prisma.providerProfile.findUnique({
+      where: { userId: slugOrId },
+      select: { slug: true },
+    });
+    if (byUserId?.slug) {
+      return { __redirectTo: byUserId.slug };
+    }
+  }
+
+  return null;
 }
 
 async function getProviderProfile(id: string): Promise<ProviderProfileData | null> {
@@ -535,8 +607,8 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
   const profile = provider.providerProfile;
   const planType = getEffectivePlanType(profile.planType || "FREE", provider.subscription?.status);
   const badge = PLAN_LIMITS[planType]?.badge || null;
-  const images = parseImages(profile.images);
-  const specializations = parseStringArray(profile.specializations);
+  const images = sanitizeImageUrls(profile.images);
+  const specializations = profile.specializations ?? [];
   const profileCompleteness = calculateProfileCompleteness(profile, images, specializations);
   const avgResponseTimeHours = calculateAvgResponseTimeHours(recentResponses);
   const avgRating =
@@ -560,6 +632,8 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
     specializations,
     location: profile.location,
     website: profile.website,
+    phone: profile.phone,
+    canSeePhone: PLAN_LIMITS[planType]?.canSeePhone ?? false,
     planType,
     badge,
     responseCount: provider._count.responses,
@@ -603,27 +677,172 @@ async function getActiveStories(providerId: string): Promise<StoryData[]> {
   }));
 }
 
-function parseImages(raw: string | null): string[] {
-  try {
-    const parsed = JSON.parse(raw || "[]");
-    return Array.isArray(parsed)
-      ? parsed
-          .map((img: { url?: string } | string) => (typeof img === "string" ? img : img.url || ""))
-          .map((url) => getSafeProviderImageUrl(url))
-          .filter((url): url is string => Boolean(url))
-      : [];
-  } catch {
-    return [];
-  }
+interface SeoReview {
+  rating: number;
+  comment: string;
+  createdAt: string;
+  authorName: string;
 }
 
-function parseStringArray(raw: string | null): string[] {
-  try {
-    const parsed = JSON.parse(raw || "[]");
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return [];
+async function getTopReviewsForSeo(providerId: string): Promise<SeoReview[]> {
+  const reviews = await prisma.review.findMany({
+    where: {
+      providerId,
+      comment: { not: null },
+    },
+    select: {
+      rating: true,
+      comment: true,
+      createdAt: true,
+      client: { select: { name: true } },
+    },
+    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    take: 3,
+  });
+
+  return reviews
+    .filter((review): review is typeof review & { comment: string } => Boolean(review.comment))
+    .map((review) => ({
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt.toISOString(),
+      authorName: review.client?.name?.trim() || "Klientas",
+    }));
+}
+
+function buildLocalBusinessSchema(
+  provider: ProviderProfileData,
+  profileUrl: string
+): Record<string, unknown> {
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: provider.name,
+    url: profileUrl,
+  };
+
+  if (provider.image) {
+    schema.image = provider.image;
   }
+
+  const description = provider.description
+    ? provider.description.length > 500
+      ? `${provider.description.slice(0, 497)}...`
+      : provider.description
+    : null;
+  if (description) {
+    schema.description = description;
+  }
+
+  schema.address = {
+    "@type": "PostalAddress",
+    addressLocality: provider.location || "Lietuva",
+    addressCountry: "LT",
+  };
+
+  schema.areaServed =
+    !provider.location || provider.location.toLowerCase().includes("visa lietuva")
+      ? "Lithuania"
+      : provider.location;
+
+  if (provider.totalReviews > 0 && provider.avgRating !== null) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: provider.avgRating,
+      reviewCount: provider.totalReviews,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  if (provider.priceFrom !== null && provider.priceFrom > 0) {
+    if (provider.priceFrom < 25) {
+      schema.priceRange = "€";
+    } else if (provider.priceFrom < 75) {
+      schema.priceRange = "€€";
+    } else if (provider.priceFrom < 200) {
+      schema.priceRange = "€€€";
+    } else {
+      schema.priceRange = "€€€€";
+    }
+  }
+
+  if (provider.website) {
+    const websiteUrl = provider.website.startsWith("http")
+      ? provider.website
+      : `https://${provider.website}`;
+    schema.sameAs = [websiteUrl];
+  }
+
+  if (provider.specializations.length > 0) {
+    schema.knowsAbout = provider.specializations.map((spec) => categoryLabel(spec));
+  }
+
+  return schema;
+}
+
+function buildBreadcrumbSchema(
+  providerName: string,
+  profileUrl: string,
+  baseUrl: string
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Pagrindinis",
+        item: `${baseUrl}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tiekėjai",
+        item: `${baseUrl}/tiekejai`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: providerName,
+        item: profileUrl,
+      },
+    ],
+  };
+}
+
+function buildReviewSchemas(
+  providerName: string,
+  reviews: SeoReview[]
+): Array<Record<string, unknown>> {
+  return reviews.map((review) => ({
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "LocalBusiness",
+      name: providerName,
+    },
+    author: {
+      "@type": "Person",
+      name: review.authorName,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: review.rating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody: review.comment,
+    datePublished: review.createdAt,
+  }));
+}
+
+function sanitizeImageUrls(raw: string[] | null | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .map((url) => getSafeProviderImageUrl(url))
+    .filter((url): url is string => Boolean(url));
 }
 
 function calculateProfileCompleteness(

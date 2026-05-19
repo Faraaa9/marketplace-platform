@@ -183,8 +183,8 @@ export async function approveClaimTransaction(
           update: { isActive: true },
           create: {
             userId: user.id,
-            specializations: "[]",
-            images: "[]",
+            specializations: [],
+            images: [],
             isActive: true,
           },
           select: { id: true },
@@ -295,8 +295,8 @@ export async function prepareUserForClaimProviderAccount(userId: string, isActiv
         update: isActive ? { isActive: true } : {},
         create: {
           userId: user.id,
-          specializations: "[]",
-          images: "[]",
+          specializations: [],
+          images: [],
           isActive,
         },
         select: { id: true },

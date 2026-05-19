@@ -632,12 +632,12 @@ async function main() {
           create: {
             description:
               "Patyręs santechnikas su 15 metų patirtimi. Atlieku visus santechnikos darbus kokybiškai ir greitai.",
-            specializations: JSON.stringify(["santechnika", "statyba"]),
+            specializations: ["santechnika", "statyba"],
             location: "Vilnius",
             phone: "+37061234567",
             isActive: true,
             planType: "PRO",
-            images: "[]",
+            images: [],
           },
         },
       },
@@ -654,12 +654,12 @@ async function main() {
           create: {
             description:
               "Elektros darbų meistras. Atliekame elektros instaliacijos, remonto ir priežiūros darbus.",
-            specializations: JSON.stringify(["elektra", "statyba"]),
+            specializations: ["elektra", "statyba"],
             location: "Kaunas",
             phone: "+37062345678",
             isActive: true,
             planType: "BASIC",
-            images: "[]",
+            images: [],
           },
         },
       },
@@ -676,12 +676,12 @@ async function main() {
           create: {
             description:
               "Profesionalios valymo paslaugos namams ir biurams. Naudojame ekologiškas priemones.",
-            specializations: JSON.stringify(["valymas"]),
+            specializations: ["valymas"],
             location: "Klaipėda",
             phone: "+37063456789",
             isActive: true,
             planType: "FREE",
-            images: "[]",
+            images: [],
           },
         },
       },
@@ -694,9 +694,7 @@ async function main() {
   const demoUsers: Array<{ id: string; category: string; name: string }> = [];
 
   for (const p of DEMO_PROVIDERS) {
-    const imagesJson = JSON.stringify(
-      p.images.map((url) => ({ url, publicId: "" }))
-    );
+    const imagesArr: string[] = p.images;
 
     const user = await prisma.user.upsert({
       where: { email: p.email },
@@ -718,7 +716,7 @@ async function main() {
             description: p.description,
             headline: p.headline,
             services: p.services,
-            specializations: JSON.stringify(p.specializations),
+            specializations: p.specializations,
             location: p.location,
             phone: p.phone,
             priceFrom: p.priceFrom,
@@ -728,7 +726,7 @@ async function main() {
             planType: p.planType,
             website: p.website,
             isActive: true,
-            images: imagesJson,
+            images: imagesArr,
           },
         },
       },
@@ -741,7 +739,7 @@ async function main() {
         description: p.description,
         headline: p.headline,
         services: p.services,
-        specializations: JSON.stringify(p.specializations),
+        specializations: p.specializations,
         location: p.location,
         phone: p.phone,
         priceFrom: p.priceFrom,
@@ -751,14 +749,14 @@ async function main() {
         planType: p.planType,
         website: p.website,
         isActive: true,
-        images: imagesJson,
+        images: imagesArr,
       },
       create: {
         userId: user.id,
         description: p.description,
         headline: p.headline,
         services: p.services,
-        specializations: JSON.stringify(p.specializations),
+        specializations: p.specializations,
         location: p.location,
         phone: p.phone,
         priceFrom: p.priceFrom,
@@ -768,7 +766,7 @@ async function main() {
         planType: p.planType,
         website: p.website,
         isActive: true,
-        images: imagesJson,
+        images: imagesArr,
       },
     });
 

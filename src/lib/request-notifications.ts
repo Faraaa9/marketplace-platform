@@ -23,15 +23,7 @@ export async function notifyRelevantProviders(title: string, category: string, l
     // Skip the request creator (prevent self-notification)
     if (excludeUserId && provider.id === excludeUserId) continue;
 
-    let specs: string[] = [];
-    try {
-      specs = typeof provider.providerProfile?.specializations === "string"
-        ? JSON.parse(provider.providerProfile.specializations)
-        : provider.providerProfile?.specializations || [];
-    } catch {
-      specs = [];
-    }
-
+    const specs: string[] = provider.providerProfile?.specializations ?? [];
     const providerLocation = provider.providerProfile?.location || "";
     const specMatch = specs.includes(category);
     if (!specMatch) continue;

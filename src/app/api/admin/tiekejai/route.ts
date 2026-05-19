@@ -47,10 +47,7 @@ export async function GET(req: NextRequest) {
 
     const data = providers.map((p) => ({
       ...p,
-      providerProfile: p.providerProfile ? {
-        ...p.providerProfile,
-        specializations: JSON.parse(p.providerProfile.specializations || "[]"),
-      } : null,
+      providerProfile: p.providerProfile ?? null,
     }));
 
     return NextResponse.json({

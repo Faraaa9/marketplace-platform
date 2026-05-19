@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -6,6 +6,8 @@ import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
+import RegisterSW from "@/components/pwa/RegisterSW";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 
 const inter = localFont({
   src: [
@@ -41,6 +43,12 @@ export const metadata: Metadata = {
   },
   description: "Patikima platforma, jungianti paslaugų tiekėjus su klientais visoje Lietuvoje. Raskite geriausius specialistus arba pritraukite naujų klientų.",
   keywords: ["paslaugos", "marketplace", "Lietuva", "tiekėjai", "klientai", "remontas", "valymas", "statyba"],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PaslaugųRinka",
+  },
   openGraph: {
     type: "website",
     locale: "lt_LT",
@@ -52,6 +60,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6366f1",
 };
 
 export default function RootLayout({
@@ -69,6 +81,8 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <RegisterSW />
+          <InstallPrompt />
         </Providers>
       </body>
     </html>

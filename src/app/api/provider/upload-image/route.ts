@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const currentImages: unknown[] = JSON.parse(profile.images || "[]");
+    const currentImages: string[] = profile.images ?? [];
     if (currentImages.length >= 5) {
       return NextResponse.json({ success: false, error: "Maksimalus nuotraukų skaičius — 5" }, { status: 400 });
     }
@@ -78,19 +78,10 @@ export async function POST(req: NextRequest) {
       ).end(buffer);
     });
 
-    // Parse existing images (handle both object and double-encoded string formats)
-    const parsedImages = currentImages.map((img: unknown) => {
-      if (typeof img === "string") {
-        try { return JSON.parse(img); } catch { return null; }
-      }
-      return img;
-    }).filter(Boolean);
-
-    // Store as array of objects (not double-encoded strings)
-    const updatedImages = [...parsedImages, { url: result.secure_url, publicId: result.public_id }];
+    const updatedImages: string[] = [...currentImages, result.secure_url];
     await prisma.providerProfile.update({
       where: { userId: session.user.id },
-      data: { images: JSON.stringify(updatedImages) },
+      data: { images: updatedImages },
     });
 
     return NextResponse.json({

@@ -6,6 +6,7 @@ import {
   getCloudinaryErrorDetails,
   getConfiguredCloudinary,
   isCloudinaryConfigured,
+  publicIdFromCloudinaryUrl,
 } from "@/lib/cloudinary";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
@@ -28,20 +29,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
       );
     }
 
-    const currentImages: unknown[] = JSON.parse(profile.images || "[]");
+    const currentImages: string[] = profile.images ?? [];
     const decodedPublicId = decodeURIComponent(publicId);
 
-    // Normalize: parse double-encoded strings into objects
-    const normalized = currentImages.map((img) => {
-      if (typeof img === "string") {
-        try { return JSON.parse(img); } catch { return null; }
-      }
-      return img;
-    }).filter(Boolean) as { url: string; publicId: string }[];
+    const filteredImages = currentImages.filter(
+      (url) => publicIdFromCloudinaryUrl(url) !== decodedPublicId
+    );
 
-    const filteredImages = normalized.filter((img) => img.publicId !== decodedPublicId);
-
-    if (filteredImages.length === normalized.length) {
+    if (filteredImages.length === currentImages.length) {
       return NextResponse.json({ success: false, error: "Nuotrauka nerasta" }, { status: 404 });
     }
 
@@ -59,7 +54,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
     await prisma.providerProfile.update({
       where: { userId: session.user.id },
-      data: { images: JSON.stringify(filteredImages) },
+      data: { images: filteredImages },
     });
 
     return NextResponse.json({ success: true });

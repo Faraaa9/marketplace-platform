@@ -30,6 +30,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: (parsed.error.issues?.[0]?.message || "Validacijos klaida") }, { status: 400 });
     }
 
+    // Honeypot anti-spam check — humans never see/fill this field, bots do.
+    // Respond 200 OK with a plausible-looking fake payload so the bot does not learn.
+    if (parsed.data.honeypot && parsed.data.honeypot.trim().length > 0) {
+      console.warn("Honeypot triggered from IP:", ip);
+      return NextResponse.json({
+        success: true,
+        data: {
+          trackingToken: "fake-" + crypto.randomBytes(16).toString("hex"),
+          emailSent: false,
+          emailMock: false,
+        },
+      });
+    }
+
     const data = parsed.data;
     const title = sanitizeHtml(data.title);
     const description = sanitizeHtml(data.description);

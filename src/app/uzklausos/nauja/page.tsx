@@ -36,6 +36,7 @@ function NewRequestForm() {
     clientPhone: "",
     createAccount: false,
     password: "",
+    honeypot: "",
   });
 
   function updateForm(field: string, value: string | boolean) {
@@ -53,7 +54,7 @@ function NewRequestForm() {
     if (step === 1) return !!(form.category && form.title.trim().length >= 5 && trimmedDescriptionLength >= descriptionMinLength && form.location);
     if (step === 2) {
       const baseValid = form.clientName.length >= 2 && form.clientEmail.includes("@");
-      if (form.createAccount) return baseValid && form.password.length >= 6;
+      if (form.createAccount) return baseValid && form.password.length >= 8;
       return baseValid;
     }
     return true;
@@ -197,6 +198,17 @@ function NewRequestForm() {
             value={form.clientEmail}
             onChange={(e) => updateForm("clientEmail", e.target.value)}
           />
+          {/* Honeypot: hidden from humans, attractive bait for bots */}
+          <input
+            type="text"
+            name="website_url"
+            value={form.honeypot}
+            onChange={(e) => updateForm("honeypot", e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="absolute -left-[9999px] -top-[9999px] h-0 w-0 opacity-0 pointer-events-none"
+          />
           <Input
             id="clientPhone"
             label="Telefonas (neprivaloma)"
@@ -231,7 +243,7 @@ function NewRequestForm() {
                   id="password"
                   label="Slaptažodis"
                   type="password"
-                  placeholder="Bent 6 simboliai"
+                  placeholder="Bent 8 simboliai"
                   value={form.password}
                   onChange={(e) => updateForm("password", e.target.value)}
                 />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { Building2, MapPin, ArrowLeft, ArrowRight, Star, Shield } from "lucide-react";
 import * as supplierService from "@/lib/imported/supplier-service";
 import * as categoryService from "@/lib/imported/category-service";
@@ -9,8 +10,6 @@ export const metadata: Metadata = {
   title: "Importuotas katalogas — PaslaugosRinka",
   description: "Importuoti tiekėjų profiliai iš paslaugos.lt katalogo. Perimkite savo profilį.",
 };
-
-export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{
@@ -22,6 +21,19 @@ interface PageProps {
 
 const PER_PAGE = 50;
 
+const getCatalogPageData = unstable_cache(
+  async (limit: number, offset: number, city: string | undefined, categorySlug: string | undefined) => {
+    const [result, stats, roots] = await Promise.all([
+      supplierService.list({ limit, offset, city, categorySlug }),
+      supplierService.getStats(),
+      categoryService.getRoots(),
+    ]);
+    return { result, stats, roots };
+  },
+  ["imported-catalog-page"],
+  { revalidate: 600, tags: ["suppliers", "categories"] }
+);
+
 export default async function ImportedCatalogPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
@@ -29,11 +41,7 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
   const categorySlug = params.category || undefined;
   const offset = (page - 1) * PER_PAGE;
 
-  const [result, stats, roots] = await Promise.all([
-    supplierService.list({ limit: PER_PAGE, offset, city, categorySlug }),
-    supplierService.getStats(),
-    categoryService.getRoots(),
-  ]);
+  const { result, stats, roots } = await getCatalogPageData(PER_PAGE, offset, city, categorySlug);
 
   const totalPages = Math.ceil(result.total / PER_PAGE);
 

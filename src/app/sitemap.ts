@@ -1,50 +1,147 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
+import { prisma } from "@/lib/prisma";
+import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+// Google sitemap limit per file is 50k URLs. If we ever cross that, we should
+// switch to a sitemap index. Keep a safety budget so we fail loudly before then.
+const SITEMAP_URL_LIMIT = 50_000;
+
+// Refresh hourly so newly verified providers / new supplier slugs appear quickly
+// without re-running expensive DB queries on every Googlebot hit.
+export const revalidate = 3600;
+
+type SitemapEntry = MetadataRoute.Sitemap[number];
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+
+  const staticEntries: SitemapEntry[] = [
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 1,
     },
     {
+      url: `${BASE_URL}/tiekejai`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/tiekejai/katalogas`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/uzklausos`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/uzklausos/nauja`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/tiekejams`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/kontaktai`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/privatumas`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
       url: `${BASE_URL}/prisijungti`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
       url: `${BASE_URL}/registruotis`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.4,
     },
   ];
+
+  // Pull the minimum surface area from DB: slug + updatedAt only.
+  // Parallelize to keep total sitemap response under ~3s.
+  const [activeProviderProfiles, supplierSlugs] = await Promise.all([
+    prisma.providerProfile.findMany({
+      where: {
+        isActive: true,
+        user: { role: "PROVIDER", emailVerified: { not: null } },
+      },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.supplierRecord.findMany({
+      where: { status: { in: ["unclaimed", "claimed"] } },
+      select: { slug: true, updatedAt: true },
+    }),
+  ]);
+
+  const providerEntries: SitemapEntry[] = activeProviderProfiles
+    .filter((p): p is typeof p & { slug: string } => Boolean(p.slug))
+    .map((p) => ({
+      url: `${BASE_URL}/tiekejai/${p.slug}`,
+      lastModified: p.updatedAt,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
+
+  const supplierEntries: SitemapEntry[] = supplierSlugs.map((s) => ({
+    url: `${BASE_URL}/tiekejai/katalogas/${s.slug}`,
+    lastModified: s.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.6,
+  }));
+
+  // Category × city combo URLs targeting the public requests listing
+  // (where category + location are real, indexable query params).
+  // SERVICE_CATEGORIES × LITHUANIAN_CITIES = 12 × 20 = 240 combos.
+  const comboEntries: SitemapEntry[] = [];
+  for (const category of SERVICE_CATEGORIES) {
+    for (const city of LITHUANIAN_CITIES) {
+      const qs = new URLSearchParams({ category: category.value, location: city }).toString();
+      comboEntries.push({
+        url: `${BASE_URL}/uzklausos?${qs}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.5,
+      });
+    }
+  }
+
+  const all: SitemapEntry[] = [
+    ...staticEntries,
+    ...providerEntries,
+    ...supplierEntries,
+    ...comboEntries,
+  ];
+
+  if (all.length > SITEMAP_URL_LIMIT) {
+    // Loud warning surfaces in Vercel logs so we know to split into a sitemap index.
+    console.warn(
+      `[sitemap] ${all.length} URLs exceeds Google's 50k limit; switch to sitemap index.`,
+    );
+    return all.slice(0, SITEMAP_URL_LIMIT);
+  }
+
+  return all;
 }

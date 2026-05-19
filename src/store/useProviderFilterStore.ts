@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 export interface ProviderCardData {
   id: string;
+  slug: string | null;
   name: string | null;
   profileImage: string | null;
   coverImage: string | null;
@@ -20,6 +21,7 @@ export interface ProviderCardData {
   hasActiveStory: boolean;
   availableForUrgent: boolean;
   priceFrom: number | null;
+  avgResponseTimeHours: number | null;
 }
 
 /** Minimal store — filtering is now URL/server-driven */

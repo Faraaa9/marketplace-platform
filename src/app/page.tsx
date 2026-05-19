@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate, truncate } from "@/lib/utils";
@@ -19,7 +20,6 @@ export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description: "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
 };
-export const dynamic = "force-dynamic";
 import { Hammer, Droplets, Zap, Sparkles, Truck, Trees, Monitor, Palette, Scale, Calculator, GraduationCap, MoreHorizontal, ArrowRight, Users, FileText, Shield, Star, MapPin, Clock, MessageSquare, CheckCircle2 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -93,48 +93,52 @@ const FAQ_ITEMS = [
   },
 ];
 
-async function getHomePageData() {
-  try {
-    const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
-      prisma.serviceRequest.findMany({
-        where: { status: "OPEN" },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          category: true,
-          location: true,
-          budget: true,
-          createdAt: true,
-          _count: { select: { responses: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-      }),
-      prisma.user.count({
-        where: {
-          role: "PROVIDER",
-          emailVerified: { not: null },
-          providerProfile: { isActive: true },
-        },
-      }),
-      prisma.serviceRequest.count(),
-      prisma.response.count(),
-      prisma.serviceRequest.groupBy({ by: ["category"] }).then((g) => g.length),
-    ]);
+const getHomePageData = unstable_cache(
+  async () => {
+    try {
+      const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
+        prisma.serviceRequest.findMany({
+          where: { status: "OPEN" },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            category: true,
+            location: true,
+            budget: true,
+            createdAt: true,
+            _count: { select: { responses: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+        }),
+        prisma.user.count({
+          where: {
+            role: "PROVIDER",
+            emailVerified: { not: null },
+            providerProfile: { isActive: true },
+          },
+        }),
+        prisma.serviceRequest.count(),
+        prisma.response.count(),
+        prisma.serviceRequest.groupBy({ by: ["category"] }).then((g) => g.length),
+      ]);
 
-    return {
-      recentRequests,
-      providerCount,
-      requestCount,
-      responseCount,
-      categoryCount,
-    };
-  } catch (error) {
-    console.error("Home page data error:", error);
-    return HOME_PAGE_FALLBACK_DATA;
-  }
-}
+      return {
+        recentRequests,
+        providerCount,
+        requestCount,
+        responseCount,
+        categoryCount,
+      };
+    } catch (error) {
+      console.error("Home page data error:", error);
+      return HOME_PAGE_FALLBACK_DATA;
+    }
+  },
+  ["home-page-data"],
+  { revalidate: 60, tags: ["home-data", "providers", "requests"] }
+);
 
 export default async function HomePage() {
   const {
@@ -207,7 +211,7 @@ export default async function HomePage() {
               {[
                 "Nemokama registracija",
                 "Be įsipareigojimų",
-                `${providerCount > 0 ? providerCount : ""}${providerCount > 0 ? " " : ""}tiekėjų`,
+                ...(providerCount > 0 ? [`${providerCount} tiekėjų`] : []),
               ].map((text) => (
                 <div key={text} className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />

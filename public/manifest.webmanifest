@@ -1,0 +1,33 @@
+{
+  "name": "PaslaugųRinka",
+  "short_name": "PaslaugųRinka",
+  "description": "Patikima platforma paslaugų paieškai Lietuvoje. Pateikite užklausą ir gaukite pasiūlymus per minutes.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "lang": "lt",
+  "categories": ["business", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pateikti užklausą",
+      "short_name": "Užklausa",
+      "url": "/uzklausos/nauja",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Rasti tiekėjus",
+      "short_name": "Tiekėjai",
+      "url": "/tiekejai",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

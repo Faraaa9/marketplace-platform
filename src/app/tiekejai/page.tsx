@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LITHUANIAN_CITIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { LITHUANIAN_CITIES, SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { Users, ArrowRight, Database } from "lucide-react";
 import ProviderFilterBar from "@/components/tiekejai/ProviderFilterBar";
 import ProviderListingClient from "@/components/tiekejai/ProviderListingClient";
@@ -22,6 +22,7 @@ interface PageProps {
     page?: string;
     search?: string;
     location?: string;
+    category?: string;
     active?: string;
     urgent?: string;
     top?: string;
@@ -29,23 +30,32 @@ interface PageProps {
 }
 
 const DESC_PREVIEW_LENGTH = 160;
-const MAX_FETCH = 500;
 const PER_PAGE = 20;
+// When the user enables computed filters (active/top) we still filter client-side
+// on a page-sized window. To keep pagination accurate we widen the SQL fetch.
+// TODO: denormalize ProviderProfile.lastActiveAt + avgRating/reviewCount to push
+// these filters into SQL ORDER BY/WHERE for true unbounded pagination.
+const COMPUTED_FILTER_MULTIPLIER = 3;
 
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
   const search = params.search || "";
   const location = params.location || "";
+  const category = params.category || "";
   const filterActive = params.active === "1";
   const filterUrgent = params.urgent === "1";
   const filterTop = params.top === "1";
+
+  const validCategory = SERVICE_CATEGORIES.some((c) => c.value === category) ? category : "";
 
   // ── Build Prisma where ──
   const profileWhere: Record<string, unknown> = { isActive: true };
   const locationFilter = buildProviderLocationFilter(location);
   if (locationFilter) Object.assign(profileWhere, locationFilter);
   if (filterUrgent) profileWhere.availableForUrgent = true;
+  // SQL-side category filter — uses GIN index on specializations
+  if (validCategory) profileWhere.specializations = { has: validCategory };
 
   const where: Record<string, unknown> = {
     role: "PROVIDER",
@@ -60,8 +70,16 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     ];
   }
 
-  // Fetch up to MAX_FETCH so we can score/sort/filter properly
-  const [providers, storyFeatureOn] = await Promise.all([
+  // When computed filters (active/top) are active we overfetch a small window
+  // and trim after the in-memory filter. Otherwise we paginate purely in SQL.
+  const needsComputedFilter = filterActive || filterTop;
+  const sqlSkip = needsComputedFilter ? 0 : (page - 1) * PER_PAGE;
+  const sqlTake = needsComputedFilter
+    ? page * PER_PAGE * COMPUTED_FILTER_MULTIPLIER
+    : PER_PAGE;
+
+  const [totalCount, providers, storyFeatureOn] = await Promise.all([
+    prisma.user.count({ where }),
     prisma.user.findMany({
       where,
       select: {
@@ -71,6 +89,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         createdAt: true,
         providerProfile: {
           select: {
+            slug: true,
             description: true,
             specializations: true,
             location: true,
@@ -84,7 +103,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         _count: { select: { responses: true, reviewsReceived: true } },
       },
       orderBy: { createdAt: "desc" },
-      take: MAX_FETCH,
+      skip: sqlSkip,
+      take: sqlTake,
     }),
     isStoryEnabled(),
   ]);
@@ -92,7 +112,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   const providerIds = providers.map((p) => p.id);
 
   // ── Batch queries ──
-  const [reviewAggs, acceptedRows, lastResponseRows, activeStories] = await Promise.all([
+  const [reviewAggs, acceptedRows, lastResponseRows, avgResponseRows, activeStories] = await Promise.all([
     providerIds.length > 0
       ? prisma.review.groupBy({
           by: ["providerId"],
@@ -118,6 +138,17 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           GROUP BY "providerId"
         `
       : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; avgHours: number | null }>>`
+          SELECT r."providerId",
+                 AVG(EXTRACT(EPOCH FROM (r."createdAt" - sr."createdAt")) / 3600) AS "avgHours"
+          FROM responses r
+          JOIN service_requests sr ON r."requestId" = sr.id
+          WHERE r."providerId" = ANY(${providerIds}::text[])
+            AND r."createdAt" > sr."createdAt"
+          GROUP BY r."providerId"
+        `
+      : Promise.resolve([]),
     storyFeatureOn && providerIds.length > 0
       ? prisma.providerStory.groupBy({
           by: ["providerId"],
@@ -134,6 +165,12 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   const reviewMap = new Map(reviewAggs.map((r) => [r.providerId, { avg: r._avg.rating, count: r._count._all }]));
   const acceptedMap = new Map(acceptedRows.map((r) => [r.providerId, Number(r.count)]));
   const lastResponseMap = new Map(lastResponseRows.map((r) => [r.providerId, new Date(r.lastAt)]));
+  const avgResponseMap = new Map(
+    avgResponseRows.map((r) => {
+      const hours = r.avgHours !== null ? Math.round(Number(r.avgHours)) : null;
+      return [r.providerId, hours];
+    })
+  );
   const providersWithStories = new Set(activeStories.map((s) => s.providerId));
 
   // ── Map to card data ──
@@ -141,17 +178,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
-    let firstImage: string | null = null;
-    try {
-      const parsed = JSON.parse(p.providerProfile?.images || "[]");
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const img = parsed[0];
-        firstImage = typeof img === "string" ? img : img?.url || null;
-      }
-    } catch {}
-
-    let specs: string[] = [];
-    try { specs = JSON.parse(p.providerProfile?.specializations || "[]"); } catch {}
+    const firstImage: string | null = p.providerProfile?.images?.[0] ?? null;
+    const specs: string[] = p.providerProfile?.specializations ?? [];
 
     const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
@@ -171,6 +199,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
 
     return {
       id: p.id,
+      slug: p.providerProfile?.slug ?? null,
       name: p.name,
       profileImage: getSafeProviderImageUrl(firstImage || p.image, { width: 96, crop: "fill" }),
       coverImage: getSafeProviderImageUrl(firstImage || p.image, { width: 600, height: 400, crop: "fill" }),
@@ -187,10 +216,13 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       hasActiveStory: providersWithStories.has(p.id),
       availableForUrgent: p.providerProfile?.availableForUrgent ?? false,
       priceFrom: p.providerProfile?.priceFrom ?? null,
+      avgResponseTimeHours: avgResponseMap.get(p.id) ?? null,
     };
   });
 
-  // ── Post-fetch filters (need computed fields) ──
+  // ── Post-fetch filters (need computed fields not in DB yet) ──
+  // TODO: denormalize ProviderProfile.lastActiveAt + avgRating/reviewCount
+  // so these can be pushed into SQL WHERE clauses.
   if (filterActive) {
     mapped = mapped.filter((p) => p.isRecentlyActive);
   }
@@ -198,18 +230,24 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     mapped = mapped.filter((p) => p.avgRating !== null && p.avgRating >= 4.5);
   }
 
-  // ── Sort by quality score ──
+  // ── Sort by quality score (page-sized array — fine to sort in-memory) ──
   mapped.sort((a, b) => computeProviderScore(b) - computeProviderScore(a));
 
   // ── Paginate ──
-  const total = mapped.length;
-  const pages = Math.ceil(total / PER_PAGE);
-  const pageProviders = mapped.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  // total reflects the SQL-side filtered count; when computed filters trim
+  // the result client-side the displayed count may be slightly higher than
+  // what is rendered. Acceptable trade-off until denormalization lands.
+  const total = totalCount;
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const pageProviders = needsComputedFilter
+    ? mapped.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+    : mapped;
 
   // ── Active filter params for URL persistence ──
   const activeFilters: Record<string, string> = {};
   if (search) activeFilters.search = search;
   if (location) activeFilters.location = location;
+  if (validCategory) activeFilters.category = validCategory;
   if (filterActive) activeFilters.active = "1";
   if (filterUrgent) activeFilters.urgent = "1";
   if (filterTop) activeFilters.top = "1";
@@ -242,10 +280,12 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           <ProviderFilterBar
             activeSearch={search}
             activeLocation={location}
+            activeCategory={validCategory}
             activeNow={filterActive}
             urgentWork={filterUrgent}
             topRated={filterTop}
             cities={[...LITHUANIAN_CITIES]}
+            categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
             serverTotal={total}
           />
         </div>

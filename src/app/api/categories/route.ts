@@ -1,7 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import * as categoryService from "@/lib/imported/category-service";
 
-export const dynamic = "force-dynamic";
+const CACHE_TTL = 3600;
+const CACHE_TAGS = ["categories"];
+
+const getStatsCached = unstable_cache(
+  async () => categoryService.getStats(),
+  ["categories-stats"],
+  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
+);
+
+const getBySlugCached = unstable_cache(
+  async (slug: string) => categoryService.getBySlug(slug),
+  ["categories-by-slug"],
+  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
+);
+
+const getChildrenCached = unstable_cache(
+  async (slug: string) => categoryService.getChildren(slug),
+  ["categories-children"],
+  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
+);
+
+const getSubtreeCached = unstable_cache(
+  async (slug: string) => categoryService.getSubtree(slug),
+  ["categories-subtree"],
+  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
+);
+
+const getRootsCached = unstable_cache(
+  async () => categoryService.getRoots(),
+  ["categories-roots"],
+  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
+);
 
 /**
  * GET /api/categories — list root categories or query by slug.
@@ -18,13 +50,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     if (searchParams.get("stats") === "1") {
-      const stats = await categoryService.getStats();
+      const stats = await getStatsCached();
       return NextResponse.json({ success: true, data: stats });
     }
 
     const slug = searchParams.get("slug");
     if (slug) {
-      const result = await categoryService.getBySlug(slug);
+      const result = await getBySlugCached(slug);
       if (!result) {
         return NextResponse.json({ success: false, error: "Category not found" }, { status: 404 });
       }
@@ -33,7 +65,7 @@ export async function GET(req: NextRequest) {
 
     const childrenSlug = searchParams.get("children");
     if (childrenSlug) {
-      const result = await categoryService.getChildren(childrenSlug);
+      const result = await getChildrenCached(childrenSlug);
       if (!result) {
         return NextResponse.json({ success: false, error: "Parent category not found" }, { status: 404 });
       }
@@ -42,7 +74,7 @@ export async function GET(req: NextRequest) {
 
     const subtreeSlug = searchParams.get("subtree");
     if (subtreeSlug) {
-      const result = await categoryService.getSubtree(subtreeSlug);
+      const result = await getSubtreeCached(subtreeSlug);
       if (!result) {
         return NextResponse.json({ success: false, error: "Category not found" }, { status: 404 });
       }
@@ -50,7 +82,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Default: return roots
-    const roots = await categoryService.getRoots();
+    const roots = await getRootsCached();
     return NextResponse.json({ success: true, data: roots });
   } catch (error) {
     console.error("GET /api/categories error:", error);

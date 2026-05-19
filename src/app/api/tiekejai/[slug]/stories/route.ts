@@ -1,27 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { isCuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET — public endpoint: active stories for a provider
+ * GET — public endpoint: active stories for a provider.
+ * Accepts either slug or legacy cuid in the `[slug]` segment.
  */
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
 
     // If stories are globally disabled, return empty
     if (!(await isStoryEnabled())) {
       return NextResponse.json({ success: true, data: [] });
     }
 
+    let providerId: string | null = null;
+
+    const bySlug = await prisma.providerProfile.findUnique({
+      where: { slug },
+      select: { userId: true },
+    });
+    if (bySlug) {
+      providerId = bySlug.userId;
+    } else if (isCuid(slug)) {
+      providerId = slug;
+    }
+
+    if (!providerId) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
     const stories = await prisma.providerStory.findMany({
       where: {
-        providerId: id,
+        providerId,
         expiresAt: { gt: new Date() },
       },
       select: {

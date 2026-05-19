@@ -175,7 +175,7 @@ export default function ClaimAccountStep({
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Bent 6 simboliai"
+          placeholder="Bent 8 simboliai"
           required
         />
         <Input

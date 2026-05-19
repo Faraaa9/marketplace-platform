@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
 
     const { token, password } = await req.json();
 
-    if (!token || !password || typeof password !== "string" || password.length < 6) {
+    if (!token || !password || typeof password !== "string" || password.length < 8) {
       return NextResponse.json(
-        { success: false, error: "Slaptažodis turi būti bent 6 simbolių" },
+        { success: false, error: "Slaptažodis turi būti bent 8 simbolių" },
         { status: 400 }
       );
     }

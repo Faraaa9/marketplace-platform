@@ -1,17 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { isCuid } from "@/lib/slug";
 
 /**
- * GET /api/tiekejai/[id] — Public provider profile.
- * Only returns safe, public-facing data for active providers.
- * Includes trust signals: profile completeness, acceptance rate, avg response time.
+ * GET /api/tiekejai/[slug] — Public provider profile.
+ * Accepts either the provider's slug (preferred) or, for backwards
+ * compatibility, their user cuid. Returns safe, public-facing data for
+ * active providers along with trust signals.
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
+
+    let userId: string | null = null;
+
+    // Slug-first lookup.
+    const bySlug = await prisma.providerProfile.findUnique({
+      where: { slug },
+      select: { userId: true },
+    });
+    if (bySlug) {
+      userId = bySlug.userId;
+    } else if (isCuid(slug)) {
+      // Legacy URL: treat the path segment as a user cuid.
+      userId = slug;
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Tiekėjas nerastas" },
+        { status: 404 }
+      );
+    }
+
     const provider = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -67,23 +91,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     );
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
-    let images: string[] = [];
-    try {
-      const raw = provider.providerProfile.images || "[]";
-      const parsed = JSON.parse(raw);
-      images = Array.isArray(parsed)
-        ? parsed
-            .map((img: { url?: string } | string) =>
-              typeof img === "string" ? img : img.url || ""
-            )
-            .filter(Boolean)
-        : [];
-    } catch {}
-
-    let specializations: string[] = [];
-    try {
-      specializations = JSON.parse(provider.providerProfile.specializations || "[]");
-    } catch {}
+    const images: string[] = provider.providerProfile.images ?? [];
+    const specializations: string[] = provider.providerProfile.specializations ?? [];
 
     // --- Trust signals ---
 

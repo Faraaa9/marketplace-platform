@@ -4,7 +4,18 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Send, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import Button from "@/components/ui/Button";
+
+/** Shape of a row from the `messages` table delivered by Supabase Realtime. */
+interface MessageRow {
+  id: string;
+  responseId: string;
+  senderId: string | null;
+  senderName: string | null;
+  content: string;
+  createdAt: string;
+}
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
 
@@ -38,6 +49,7 @@ export default function ThreadChat({
   const confirmSend = useConversationStore((s) => s.confirmSend);
   const failSend = useConversationStore((s) => s.failSend);
   const removeFailed = useConversationStore((s) => s.removeFailed);
+  const appendMessageIfNew = useConversationStore((s) => s.appendMessageIfNew);
   const messages = useConversationStore((s) => s.threads[responseId]) ?? EMPTY_MESSAGES;
 
   // Hydrate on mount / when server data changes
@@ -48,6 +60,45 @@ export default function ThreadChat({
     }));
     hydrateThread(responseId, serverMessages);
   }, [responseId, initialMessages, hydrateThread]);
+
+  // Subscribe to Realtime inserts for this thread. Falls back gracefully
+  // (no live updates) when Supabase env vars are missing — initial hydration
+  // from the server still works.
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel(`messages-${responseId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `responseId=eq.${responseId}`,
+        },
+        (payload) => {
+          const row = payload.new as MessageRow;
+          appendMessageIfNew(responseId, {
+            id: row.id,
+            content: row.content,
+            createdAt:
+              typeof row.createdAt === "string"
+                ? row.createdAt
+                : new Date(row.createdAt).toISOString(),
+            senderName: row.senderName,
+            sender: row.senderName ? { name: row.senderName } : null,
+            status: "sent",
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [responseId, appendMessageIfNew]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

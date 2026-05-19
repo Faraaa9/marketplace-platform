@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     if (category) {
       where.providerProfile = {
         ...(where.providerProfile as Record<string, unknown>),
-        specializations: { contains: category },
+        specializations: { has: category },
       };
     }
 
@@ -82,21 +82,8 @@ export async function GET(req: NextRequest) {
         p.providerProfile?.planType || "FREE",
         p.subscription?.status
       );
-      let images: string[] = [];
-      try {
-        const raw = p.providerProfile?.images || "[]";
-        const parsed = JSON.parse(raw);
-        images = Array.isArray(parsed)
-          ? parsed.map((img: { url?: string } | string) =>
-              typeof img === "string" ? img : img.url || ""
-            ).filter(Boolean)
-          : [];
-      } catch {}
-
-      let specializations: string[] = [];
-      try {
-        specializations = JSON.parse(p.providerProfile?.specializations || "[]");
-      } catch {}
+      const images: string[] = p.providerProfile?.images ?? [];
+      const specializations: string[] = p.providerProfile?.specializations ?? [];
 
       return {
         id: p.id,

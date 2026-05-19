@@ -26,7 +26,7 @@ export default async function SimilarProvidersSection({
       emailVerified: { not: null },
       providerProfile: {
         isActive: true,
-        specializations: { contains: primarySpecialization },
+        specializations: { has: primarySpecialization },
         ...(location ? { location } : {}),
       },
     },
@@ -52,15 +52,7 @@ export default async function SimilarProvidersSection({
   if (providers.length === 0) return null;
 
   const mapped = providers.map((provider) => {
-    let images: string[] = [];
-    try {
-      const parsed = JSON.parse(provider.providerProfile?.images || "[]");
-      images = Array.isArray(parsed)
-        ? parsed
-            .map((img: { url?: string } | string) => (typeof img === "string" ? img : img.url || ""))
-            .filter(Boolean)
-        : [];
-    } catch {}
+    const images: string[] = provider.providerProfile?.images ?? [];
 
     const reviews = provider.reviewsReceived || [];
     const avgRating =

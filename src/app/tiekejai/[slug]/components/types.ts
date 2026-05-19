@@ -21,6 +21,8 @@ export interface ProviderProfileData {
   specializations: string[];
   location: string | null;
   website: string | null;
+  phone: string | null;
+  canSeePhone: boolean;
   planType: string;
   badge: string | null;
   responseCount: number;

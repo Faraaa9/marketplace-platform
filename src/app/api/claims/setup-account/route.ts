@@ -98,8 +98,8 @@ export async function POST(req: NextRequest) {
             update: isApproved ? { isActive: true } : {},
             create: {
               userId: existingUser.id,
-              specializations: "[]",
-              images: "[]",
+              specializations: [],
+              images: [],
               isActive: isApproved,
             },
             select: { id: true },
@@ -146,8 +146,8 @@ export async function POST(req: NextRequest) {
       await tx.providerProfile.create({
         data: {
           userId: created.id,
-          specializations: "[]",
-          images: "[]",
+          specializations: [],
+          images: [],
           isActive: isApproved,
         },
         select: { id: true },

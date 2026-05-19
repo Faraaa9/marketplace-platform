@@ -36,6 +36,7 @@ interface ProviderListingClientProps {
 
 interface ProviderDetail {
   id: string;
+  slug: string | null;
   name: string;
   image: string | null;
   images: string[];
@@ -98,11 +99,19 @@ function pickBadge(
 ): { label: string; cls: string } | null {
   if (p.avgRating !== null && p.avgRating >= 4.5)
     return { label: "Top", cls: "bg-amber-500/80 text-white" };
+  if (p.avgResponseTimeHours !== null && p.avgResponseTimeHours < 4)
+    return { label: "Greitai atsako", cls: "bg-blue-500/80 text-white" };
   if (p.isRecentlyActive)
     return { label: "Aktyvus", cls: "bg-emerald-500/80 text-white" };
   if (p.availableForUrgent)
     return { label: "Skubūs", cls: "bg-orange-500/80 text-white" };
   return null;
+}
+
+function formatResponseTime(hours: number): string {
+  if (hours < 1) return "<1 val.";
+  if (hours < 24) return `${hours} val.`;
+  return `${Math.round(hours / 24)} d.`;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -363,7 +372,7 @@ function SheetContent({
           {detail.reviews.length > 0 && (
             <div>
               <h4 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">
-                Naujausia atsiliepimas
+                Naujausias atsiliepimas
               </h4>
               <div className="rounded-2xl bg-surface-50 p-4 dark:bg-surface-800/50">
                 <div className="flex items-center gap-1.5 mb-1.5">
@@ -667,6 +676,12 @@ export default function ProviderListingClient({
                           <span className="text-surface-400">
                             ({p.reviewCount})
                           </span>
+                        </span>
+                      )}
+                      {p.avgResponseTimeHours !== null && (
+                        <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                          <Clock className="h-3 w-3" />
+                          Atsako per {formatResponseTime(p.avgResponseTimeHours)}
                         </span>
                       )}
                       {p.responseCount > 0 && (

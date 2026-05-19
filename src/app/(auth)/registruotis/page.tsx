@@ -120,7 +120,7 @@ function RegisterForm() {
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
-              placeholder="Bent 6 simboliai"
+              placeholder="Bent 8 simboliai"
             />
             <Input
               id="confirmPassword"

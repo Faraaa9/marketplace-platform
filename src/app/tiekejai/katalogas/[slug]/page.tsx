@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
@@ -26,16 +27,20 @@ export const metadata: Metadata = {
   description: "Importuoto tiekejo profilis is paslaugos.lt katalogo.",
 };
 
-export const dynamic = "force-dynamic";
-
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+const getSupplierBySlugCached = unstable_cache(
+  async (slug: string) => supplierService.getBySlug(slug),
+  ["imported-supplier-detail"],
+  { revalidate: 300, tags: ["suppliers"] }
+);
+
 export default async function ImportedSupplierDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const [supplier, session] = await Promise.all([
-    supplierService.getBySlug(slug),
+    getSupplierBySlugCached(slug),
     getServerSession(authOptions),
   ]);
 

@@ -30,8 +30,8 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Slaptažodis turi būti bent 6 simbolių");
+    if (password.length < 8) {
+      setError("Slaptažodis turi būti bent 8 simbolių");
       return;
     }
 
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Bent 6 simboliai"
+                  placeholder="Bent 8 simboliai"
                 />
                 <Input
                   id="confirmPassword"

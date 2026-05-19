@@ -8,7 +8,13 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/tiekejas/", "/tiekėjas/", "/paskyra/"],
+        disallow: [
+          "/admin/",
+          "/api/",
+          "/tiekejas/",
+          "/paskyra/",
+          "/uzklausos/sekti/",
+        ],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { providerProfileSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -52,23 +53,15 @@ export async function GET() {
       }),
     ]);
 
-    // Parse JSON strings for client
-    let parsedImages: { url: string; publicId: string }[] = [];
-    if (profile) {
-      try {
-        const rawImages: unknown[] = JSON.parse(profile.images || "[]");
-        parsedImages = rawImages.map((img) => {
-          if (typeof img === "string") {
-            try { return JSON.parse(img); } catch { return null; }
-          }
-          return img;
-        }).filter(Boolean);
-      } catch { /* empty */ }
-    }
+    const parsedImages: { url: string; publicId: string }[] = profile
+      ? profile.images.map((url) => ({
+          url,
+          publicId: publicIdFromCloudinaryUrl(url) ?? "",
+        }))
+      : [];
 
     const data = profile ? {
       ...profile,
-      specializations: JSON.parse(profile.specializations || "[]"),
       images: parsedImages,
       userName: user?.name || null,
       userEmail: user?.email || null,
@@ -112,7 +105,7 @@ export async function PUT(req: NextRequest) {
         experienceYears: parsed.data.experienceYears ?? null,
         offersInvoices: parsed.data.offersInvoices ?? false,
         availableForUrgent: parsed.data.availableForUrgent ?? false,
-        specializations: JSON.stringify(parsed.data.specializations),
+        specializations: parsed.data.specializations,
         location: parsed.data.location,
         phone: parsed.data.phone || null,
         website: parsed.data.website || null,

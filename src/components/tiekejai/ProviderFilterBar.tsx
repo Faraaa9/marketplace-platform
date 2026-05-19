@@ -13,25 +13,35 @@ import {
   Clock,
   Star,
   ChevronDown,
+  Tag,
 } from "lucide-react";
+
+interface CategoryOption {
+  value: string;
+  label: string;
+}
 
 interface FilterBarProps {
   activeSearch: string;
   activeLocation: string;
+  activeCategory: string;
   activeNow: boolean;
   urgentWork: boolean;
   topRated: boolean;
   cities: string[];
+  categories: CategoryOption[];
   serverTotal: number;
 }
 
 export default function ProviderFilterBar({
   activeSearch,
   activeLocation,
+  activeCategory,
   activeNow,
   urgentWork,
   topRated,
   cities,
+  categories,
   serverTotal,
 }: FilterBarProps) {
   const router = useRouter();
@@ -43,14 +53,18 @@ export default function ProviderFilterBar({
   const [isPending, startTransition] = useTransition();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
   const locationRef = useRef<HTMLDivElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
 
   const [mobileLocation, setMobileLocation] = useState(activeLocation);
+  const [mobileCategory, setMobileCategory] = useState(activeCategory);
   const [mobileActive, setMobileActive] = useState(activeNow);
   const [mobileUrgent, setMobileUrgent] = useState(urgentWork);
   const [mobileTop, setMobileTop] = useState(topRated);
 
-  const activeFilterCount = [activeLocation, activeNow, urgentWork, topRated].filter(Boolean).length;
+  const activeFilterCount = [activeLocation, activeCategory, activeNow, urgentWork, topRated].filter(Boolean).length;
+  const activeCategoryLabel = categories.find((c) => c.value === activeCategory)?.label ?? "";
 
   useEffect(() => {
     setSearchValue(activeSearch);
@@ -59,10 +73,11 @@ export default function ProviderFilterBar({
 
   useEffect(() => {
     setMobileLocation(activeLocation);
+    setMobileCategory(activeCategory);
     setMobileActive(activeNow);
     setMobileUrgent(urgentWork);
     setMobileTop(topRated);
-  }, [activeLocation, activeNow, urgentWork, topRated]);
+  }, [activeLocation, activeCategory, activeNow, urgentWork, topRated]);
 
   useEffect(() => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
@@ -85,6 +100,17 @@ export default function ProviderFilterBar({
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [locationOpen]);
+
+  useEffect(() => {
+    if (!categoryOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [categoryOpen]);
 
   const buildUrl = useCallback(
     (overrides: Record<string, string>) => {
@@ -131,6 +157,11 @@ export default function ProviderFilterBar({
     setLocationOpen(false);
   }
 
+  function setCategory(value: string) {
+    navigate({ category: activeCategory === value ? "" : value });
+    setCategoryOpen(false);
+  }
+
   function clearAll() {
     setSearchValue("");
     lastPushedSearch.current = "";
@@ -142,6 +173,7 @@ export default function ProviderFilterBar({
     const p = new URLSearchParams();
     if (searchValue) p.set("search", searchValue);
     if (mobileLocation) p.set("location", mobileLocation);
+    if (mobileCategory) p.set("category", mobileCategory);
     if (mobileActive) p.set("active", "1");
     if (mobileUrgent) p.set("urgent", "1");
     if (mobileTop) p.set("top", "1");
@@ -152,6 +184,7 @@ export default function ProviderFilterBar({
 
   function clearMobileFilters() {
     setMobileLocation("");
+    setMobileCategory("");
     setMobileActive(false);
     setMobileUrgent(false);
     setMobileTop(false);
@@ -236,6 +269,50 @@ export default function ProviderFilterBar({
             )}
           </div>
 
+          {/* Category chip / dropdown */}
+          <div className="relative" ref={categoryRef}>
+            <button
+              onClick={() => setCategoryOpen(!categoryOpen)}
+              className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
+                activeCategory
+                  ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
+                  : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+              }`}
+            >
+              <Tag className="h-3.5 w-3.5" />
+              {activeCategoryLabel || "Kategorija"}
+              {activeCategory ? (
+                <span
+                  onClick={(e) => { e.stopPropagation(); navigate({ category: "" }); }}
+                  className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              ) : (
+                <ChevronDown className={`h-3.5 w-3.5 text-surface-400 transition-transform ${categoryOpen ? "rotate-180" : ""}`} />
+              )}
+            </button>
+
+            {categoryOpen && (
+              <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setCategory(cat.value)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
+                      activeCategory === cat.value
+                        ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
+                        : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
+                    }`}
+                  >
+                    {activeCategory === cat.value && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="h-5 w-px bg-surface-200 dark:bg-surface-700" />
 
           {/* Toggle chips */}
@@ -313,6 +390,7 @@ export default function ProviderFilterBar({
             <>
               <div className="h-3.5 w-px bg-surface-200 dark:bg-surface-700" />
               {activeLocation && <ActiveChip label={activeLocation} onRemove={() => navigate({ location: "" })} />}
+              {activeCategory && <ActiveChip label={activeCategoryLabel} onRemove={() => navigate({ category: "" })} />}
               {activeNow && <ActiveChip label="Aktyvus" onRemove={() => toggleFilter("active", true)} />}
               {urgentWork && <ActiveChip label="Skubūs" onRemove={() => toggleFilter("urgent", true)} />}
               {topRated && <ActiveChip label="Top" onRemove={() => toggleFilter("top", true)} />}
@@ -375,6 +453,32 @@ export default function ProviderFilterBar({
                 </div>
               </div>
 
+              {/* Category */}
+              <div>
+                <label className="text-body-sm font-semibold text-surface-700 dark:text-surface-200 mb-3 block">
+                  Kategorija
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((cat) => {
+                    const isActive = mobileCategory === cat.value;
+                    return (
+                      <button
+                        key={cat.value}
+                        onClick={() => setMobileCategory(isActive ? "" : cat.value)}
+                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-all ${
+                          isActive
+                            ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
+                            : "bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300"
+                        }`}
+                      >
+                        <Tag className="h-3.5 w-3.5" />
+                        <span className="truncate">{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Toggle filters */}
               <div>
                 <label className="text-body-sm font-semibold text-surface-700 dark:text-surface-200 mb-3 block">
@@ -416,6 +520,7 @@ export default function ProviderFilterBar({
         <div className="hidden md:flex items-center gap-2 flex-wrap">
           {activeSearch && <ActiveChip label={`"${activeSearch}"`} onRemove={() => { clearSearch(); navigate({ search: "" }); }} />}
           {activeLocation && <ActiveChip label={activeLocation} onRemove={() => navigate({ location: "" })} />}
+          {activeCategory && <ActiveChip label={activeCategoryLabel} onRemove={() => navigate({ category: "" })} />}
           {activeNow && <ActiveChip label="Aktyvus" onRemove={() => toggleFilter("active", true)} />}
           {urgentWork && <ActiveChip label="Skubūs" onRemove={() => toggleFilter("urgent", true)} />}
           {topRated && <ActiveChip label="Top reitingas" onRemove={() => toggleFilter("top", true)} />}

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canManageSupplier } from "@/lib/imported/supplier-access";
 import { supplierEditSchema, updateSupplierFields } from "@/lib/imported/supplier-update";
 import * as supplierService from "@/lib/imported/supplier-service";
 
-export const dynamic = "force-dynamic";
+const getSupplierBySlugCached = unstable_cache(
+  async (slug: string) => supplierService.getBySlug(slug),
+  ["supplier-detail-by-slug"],
+  { revalidate: 300, tags: ["suppliers"] }
+);
 
 /**
  * GET /api/suppliers/[slug] — get supplier by slug (public).
@@ -13,7 +18,7 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const supplier = await supplierService.getBySlug(slug);
+    const supplier = await getSupplierBySlugCached(slug);
     if (!supplier) {
       return NextResponse.json({ success: false, error: "Supplier not found" }, { status: 404 });
     }

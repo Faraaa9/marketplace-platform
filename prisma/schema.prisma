@@ -26,63 +26,65 @@ model User {
   notifications           Notification[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
-  reviewsGiven            Review[]    @relation("ReviewClient")
-  reviewsReceived         Review[]    @relation("ReviewProvider")
-  directInquiriesSent     DirectInquiry[] @relation("InquirySender")
-  directInquiriesReceived DirectInquiry[] @relation("InquiryProvider")
+  reviewsGiven            Review[]                 @relation("ReviewClient")
+  reviewsReceived         Review[]                 @relation("ReviewProvider")
+  directInquiriesSent     DirectInquiry[]          @relation("InquirySender")
+  directInquiriesReceived DirectInquiry[]          @relation("InquiryProvider")
   stories                 ProviderStory[]
   supplierIdentities      SupplierIdentity[]
-  claimRequests           ClaimRequest[]     @relation("ClaimRequestUser")
-  claimReviews            ClaimRequest[]     @relation("ClaimReviewedBy")
+  claimRequests           ClaimRequest[]           @relation("ClaimRequestUser")
+  claimReviews            ClaimRequest[]           @relation("ClaimReviewedBy")
 
   @@map("users")
 }
 
 model ProviderProfile {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
-  description           String?   @db.Text
-  headline              String?
-  services              String?   @db.Text
-  priceFrom             Int?
-  experienceYears       Int?
-  offersInvoices        Boolean   @default(false)
-  availableForUrgent    Boolean   @default(false)
-  specializations       String    @default("[]")
-  location              String?
-  phone                 String?
-  website               String?
-  isActive              Boolean   @default(false)
-  planType              String    @default("FREE")
-  planExpiresAt         DateTime?
-  images                String    @default("[]")
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  slug               String?   @unique
+  description        String?   @db.Text
+  headline           String?
+  services           String?   @db.Text
+  priceFrom          Int?
+  experienceYears    Int?
+  offersInvoices     Boolean   @default(false)
+  availableForUrgent Boolean   @default(false)
+  specializations    String[]  @default([])
+  location           String?
+  phone              String?
+  website            String?
+  isActive           Boolean   @default(false)
+  planType           String    @default("FREE")
+  planExpiresAt      DateTime?
+  images             String[]  @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([specializations], type: Gin)
   @@map("provider_profiles")
 }
 
 model ServiceRequest {
-  id                 String   @id @default(cuid())
-  trackingToken      String   @unique @default(cuid())
-  requestVerificationToken String?  @unique
+  id                           String    @id @default(cuid())
+  trackingToken                String    @unique @default(cuid())
+  requestVerificationToken     String?   @unique
   requestVerificationExpiresAt DateTime?
-  contactVerifiedAt  DateTime?
-  title              String
-  description        String   @db.Text
-  category           String
-  location           String
-  budget             String?
-  status             String   @default("OPEN")
-  acceptedResponseId String?
-  clientId           String?
-  clientEmail        String
-  clientName         String
-  clientPhone        String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  contactVerifiedAt            DateTime?
+  title                        String
+  description                  String    @db.Text
+  category                     String
+  location                     String
+  budget                       String?
+  status                       String    @default("OPEN")
+  acceptedResponseId           String?
+  clientId                     String?
+  clientEmail                  String
+  clientName                   String
+  clientPhone                  String?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
 
   client    User?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   responses Response[]
@@ -127,15 +129,15 @@ model Message {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
+  id                   String    @id @default(cuid())
+  userId               String    @unique
   stripeCustomerId     String?
   stripeSubscriptionId String?
-  planType             String   @default("BASIC")
-  status               String   @default("ACTIVE")
+  planType             String    @default("BASIC")
+  status               String    @default("ACTIVE")
   currentPeriodEnd     DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -193,8 +195,8 @@ model Review {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  client   User? @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
-  provider User  @relation("ReviewProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  client   User?          @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
+  provider User           @relation("ReviewProvider", fields: [providerId], references: [id], onDelete: Cascade)
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   response Response       @relation(fields: [responseId], references: [id], onDelete: Cascade)
 
@@ -226,21 +228,21 @@ model DirectInquiry {
 }
 
 model PendingDirectInquiry {
-  id            String   @id @default(cuid())
-  providerId    String
-  description   String   @db.Text
-  budget        String?
-  senderEmail   String
-  senderPhone   String?
-  senderName    String?
-  code          String
-  attempts      Int      @default(0)
-  maxAttempts   Int      @default(5)
-  resendCount   Int      @default(0)
-  lastSentAt    DateTime @default(now())
-  expiresAt     DateTime
-  verifiedAt    DateTime?
-  createdAt     DateTime @default(now())
+  id          String    @id @default(cuid())
+  providerId  String
+  description String    @db.Text
+  budget      String?
+  senderEmail String
+  senderPhone String?
+  senderName  String?
+  code        String
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  resendCount Int       @default(0)
+  lastSentAt  DateTime  @default(now())
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([senderEmail])
   @@index([providerId, senderEmail])
@@ -291,10 +293,10 @@ model Category {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children        Category[] @relation("CategoryTree")
-  root            Category?  @relation("CategoryRoot", fields: [rootId], references: [id])
-  rootDescendants Category[] @relation("CategoryRoot")
+  parent          Category?              @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[]             @relation("CategoryTree")
+  root            Category?              @relation("CategoryRoot", fields: [rootId], references: [id])
+  rootDescendants Category[]             @relation("CategoryRoot")
   aliases         CategoryAlias[]
   supplierLinks   SupplierCategoryLink[]
 
@@ -321,34 +323,34 @@ model CategoryAlias {
 }
 
 model SupplierRecord {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   displayName       String
-  slug              String   @unique
-  status            String   @default("unclaimed")
-  sourceType        String   @default("imported")
+  slug              String    @unique
+  status            String    @default("unclaimed")
+  sourceType        String    @default("imported")
   shortSummary      String?
-  description       String?  @db.Text
+  description       String?   @db.Text
   phonePublic       String?
   emailPublic       String?
   websiteUrl        String?
   city              String?
   companyCode       String?
-  isVerified        Boolean  @default(false)
+  isVerified        Boolean   @default(false)
   heroImageUrl      String?
-  galleryUrls       String?  @db.Text
+  galleryUrls       String?   @db.Text
   rating            Float?
-  reviewCount       Int      @default(0)
+  reviewCount       Int       @default(0)
   enrichedAt        DateTime?
   externalSource    String?
   externalSourceUrl String?
   metadataJson      String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  categoryLinks  SupplierCategoryLink[]
-  snapshots      SupplierSourceSnapshot[]
-  claimRequests  ClaimRequest[]
-  identities     SupplierIdentity[]
+  categoryLinks SupplierCategoryLink[]
+  snapshots     SupplierSourceSnapshot[]
+  claimRequests ClaimRequest[]
+  identities    SupplierIdentity[]
 
   @@index([status])
   @@index([city])
@@ -431,7 +433,7 @@ model SupplierIdentity {
   updatedAt          DateTime  @updatedAt
 
   supplier SupplierRecord @relation(fields: [supplierRecordId], references: [id])
-  user     User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user     User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([supplierRecordId])
   @@index([userId])

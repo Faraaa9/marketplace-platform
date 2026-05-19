@@ -31,6 +31,9 @@ interface ConversationState {
   /** Remove a failed message (user dismissed) */
   removeFailed: (responseId: string, tempId: string) => void;
 
+  /** Append a message from a Realtime payload if not already in the thread. */
+  appendMessageIfNew: (responseId: string, message: ThreadMessage) => void;
+
   /** Get messages for a thread */
   getThread: (responseId: string) => ThreadMessage[];
 }
@@ -109,6 +112,40 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         threads: {
           ...state.threads,
           [responseId]: thread.filter((m) => m.id !== tempId),
+        },
+      };
+    }),
+
+  appendMessageIfNew: (responseId, message) =>
+    set((state) => {
+      const thread = state.threads[responseId] || [];
+      // Skip if we already have this server id (either hydrated or confirmed
+      // from our own optimistic send).
+      if (thread.some((m) => m.id === message.id)) {
+        return state;
+      }
+      // Also collapse against pending optimistic messages with identical
+      // content from the same sender within the last 30s — Realtime will
+      // beat the POST response on a fast Postgres write.
+      const realtimeCreatedAt = Date.parse(message.createdAt);
+      const dedupIdx = thread.findIndex(
+        (m) =>
+          m.status === "sending" &&
+          m.content === message.content &&
+          (m.senderName ?? m.sender?.name ?? null) ===
+            (message.senderName ?? message.sender?.name ?? null) &&
+          Math.abs(Date.parse(m.createdAt) - realtimeCreatedAt) < 30_000,
+      );
+      const next = [...thread];
+      if (dedupIdx >= 0) {
+        next[dedupIdx] = { ...message, status: "sent" as const };
+      } else {
+        next.push({ ...message, status: "sent" as const });
+      }
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: next,
         },
       };
     }),

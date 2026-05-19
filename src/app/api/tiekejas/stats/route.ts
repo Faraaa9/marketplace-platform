@@ -44,8 +44,7 @@ export async function GET() {
       );
     }
 
-    let specs: string[] = [];
-    try { specs = JSON.parse(profile.specializations || "[]"); } catch {}
+    const specs: string[] = profile.specializations ?? [];
 
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
@@ -70,11 +69,7 @@ export async function GET() {
     const responsesRemaining = limit === -1 ? -1 : Math.max(0, limit - thisMonthResponses);
 
     // Profile completeness
-    let images: string[] = [];
-    try {
-      const parsed = JSON.parse(profile.images || "[]");
-      images = Array.isArray(parsed) ? parsed : [];
-    } catch {}
+    const images: string[] = profile.images ?? [];
     const completenessItems = [
       { key: "description", done: !!(profile.description && profile.description.length >= 20), label: "Aprašymas" },
       { key: "headline", done: !!profile.headline, label: "Antraštė" },
@@ -90,13 +85,7 @@ export async function GET() {
     const missingProfileItems = completenessItems.filter((i) => !i.done).map((i) => i.label);
 
     // Profile image URL (first image)
-    let profileImageUrl: string | null = null;
-    try {
-      if (images.length > 0) {
-        const firstImg = images[0] as string | { url?: string };
-        profileImageUrl = typeof firstImg === "string" ? firstImg : firstImg?.url || null;
-      }
-    } catch {}
+    const profileImageUrl: string | null = images[0] ?? null;
 
     // Story feature flag + active count
     const storyEnabled = await isStoryEnabled();

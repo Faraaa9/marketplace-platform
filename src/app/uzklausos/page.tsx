@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
@@ -18,8 +19,6 @@ export const metadata: Metadata = {
     "Peržiūrėkite aktyvias paslaugų užklausas Lietuvoje. Raskite darbus ir pateikite pasiūlymus.",
 };
 
-export const dynamic = "force-dynamic";
-
 interface PageProps {
   searchParams: Promise<{
     page?: string;
@@ -30,6 +29,58 @@ interface PageProps {
     sort?: string;
   }>;
 }
+
+const getOpenRequests = unstable_cache(
+  async (
+    page: number,
+    perPage: number,
+    filters: { category: string; location: string; search: string; budget: string; sort: string }
+  ) => {
+    const where: Record<string, unknown> = { status: "OPEN" };
+    if (filters.category) where.category = filters.category;
+    if (filters.location) where.location = filters.location;
+    if (filters.budget) where.budget = filters.budget;
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
+      ];
+    }
+
+    const orderBy: Record<string, string> = { createdAt: "desc" };
+
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const [requests, total, totalActive, newToday, totalProviderResponses] = await Promise.all([
+      prisma.serviceRequest.findMany({
+        where,
+        select: {
+          id: true,
+          trackingToken: true,
+          title: true,
+          description: true,
+          category: true,
+          location: true,
+          budget: true,
+          clientId: true,
+          createdAt: true,
+          _count: { select: { responses: true } },
+        },
+        orderBy,
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+      prisma.serviceRequest.count({ where }),
+      prisma.serviceRequest.count({ where: { status: "OPEN" } }),
+      prisma.serviceRequest.count({ where: { status: "OPEN", createdAt: { gte: oneDayAgo } } }),
+      prisma.response.count(),
+    ]);
+
+    return { requests, total, totalActive, newToday, totalProviderResponses };
+  },
+  ["open-requests-list"],
+  { revalidate: 30, tags: ["requests"] }
+);
 
 export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
@@ -45,53 +96,15 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const sort = params.sort || "newest";
   const perPage = 20;
 
-  const where: Record<string, unknown> = { status: "OPEN" };
-  if (category) where.category = category;
-  if (location) where.location = location;
-  if (budget) where.budget = budget;
-  if (search) {
-    where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-    ];
-  }
-
-  // Sort options
-  let orderBy: Record<string, string> = { createdAt: "desc" };
-  if (sort === "responses-asc" || sort === "responses-desc") {
-    orderBy = { createdAt: "desc" };
-  }
-
-  // Run ALL queries in a single Promise.all to minimise concurrent DB connections
   const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const [requests, total, totalActive, newToday, totalProviderResponses] = await Promise.all([
-    prisma.serviceRequest.findMany({
-      where,
-      select: {
-        id: true,
-        trackingToken: true,
-        title: true,
-        description: true,
-        category: true,
-        location: true,
-        budget: true,
-        clientId: true,
-        createdAt: true,
-        _count: { select: { responses: true } },
-      },
-      orderBy,
-      skip: (page - 1) * perPage,
-      take: perPage,
-    }),
-    prisma.serviceRequest.count({ where }),
-    prisma.serviceRequest.count({ where: { status: "OPEN" } }),
-    prisma.serviceRequest.count({ where: { status: "OPEN", createdAt: { gte: oneDayAgo } } }),
-    prisma.response.count(),
-  ]);
+  const { requests, total, totalActive, newToday, totalProviderResponses } = await getOpenRequests(
+    page,
+    perPage,
+    { category, location, search, budget, sort }
+  );
 
-  // Client-side sort for response count
+  // Client-side sort for response count (kept post-cache so it doesn't bloat the key surface)
   if (sort === "responses-asc") {
     requests.sort((a, b) => a._count.responses - b._count.responses);
   } else if (sort === "responses-desc") {
