@@ -76,7 +76,14 @@ const getOpenRequests = unstable_cache(
       prisma.response.count(),
     ]);
 
-    return { requests, total, totalActive, newToday, totalProviderResponses };
+    // unstable_cache serializes via JSON, so Dates round-trip as strings.
+    // Coerce here so consumers get real Date objects.
+    const serialized = requests.map((r) => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+    }));
+
+    return { requests: serialized, total, totalActive, newToday, totalProviderResponses };
   },
   ["open-requests-list"],
   { revalidate: 30, tags: ["requests"] }
@@ -139,8 +146,8 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     return `/uzklausos${qs ? `?${qs}` : ""}`;
   }
 
-  function isNew(createdAt: Date) {
-    return now.getTime() - createdAt.getTime() < 24 * 60 * 60 * 1000;
+  function isNew(createdAt: Date | string) {
+    return now.getTime() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000;
   }
 
   function competitionLevel(responseCount: number) {
