@@ -27,11 +27,17 @@ export function optimizeCloudinaryUrl(
   return `${before}${transforms.join(",")}/${after}`;
 }
 
+const ALLOWED_REMOTE_HOSTS = [
+  "res.cloudinary.com",
+  "images.unsplash.com",
+  "paslaugos-img.dgn.lt",
+];
+
 /**
  * Provider/user images in production should come from Cloudinary uploads.
- * Seeded demo URLs from external photo sites can expire or 404, which makes
- * next/image spam the dev server. Return null for unsupported remote hosts and
- * let the UI show its avatar/gradient fallback instead.
+ * External hosts (Unsplash, paslaugos-img) are allowed so demo/seed and
+ * imported-catalog photos render. Anything else returns null so next/image
+ * does not spam the dev server with broken-host errors.
  */
 export function getSafeProviderImageUrl(
   url: string | null | undefined,
@@ -43,6 +49,9 @@ export function getSafeProviderImageUrl(
   if (trimmed.startsWith("/")) return trimmed;
   if (trimmed.includes("res.cloudinary.com")) {
     return optimizeCloudinaryUrl(trimmed, options);
+  }
+  if (ALLOWED_REMOTE_HOSTS.some((host) => trimmed.includes(host))) {
+    return trimmed;
   }
 
   return null;
