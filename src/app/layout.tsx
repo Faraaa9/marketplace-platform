@@ -6,6 +6,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = localFont({
   src: [
@@ -70,6 +71,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   );
