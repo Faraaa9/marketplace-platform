@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import EmptyState from "@/components/ui/EmptyState";
@@ -13,22 +14,40 @@ import DirectInquiryWidget from "./components/DirectInquiryWidget";
 import ReviewsSection from "./components/ReviewsSection";
 import SimilarProvidersSection from "./components/SimilarProvidersSection";
 import StoryAvatarButton from "./components/StoryAvatarButton";
+import WorkHighlightsStrip from "./components/WorkHighlightsStrip";
+import StickyBottomBar from "./components/StickyBottomBar";
+import ContactButton from "./components/ContactButton";
+import HeroInfoCard from "./components/HeroInfoCard";
+import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import type { ProviderProfileData, StoryData } from "./components/types";
 import {
   ArrowLeft,
-  ArrowRight,
   Award,
+  BadgeCheck,
+  Calculator,
   Calendar,
   CheckCircle,
   Clock,
+  Droplets,
   Euro,
   FileCheck,
   Globe,
+  GraduationCap,
+  Hammer,
   MapPin,
   MessageSquare,
-  Send,
+  Monitor,
+  MoreHorizontal,
+  Package,
+  Palette,
+  Scale,
+  Search,
   Shield,
+  ShieldCheck,
+  Sparkles,
   Star,
+  Trees,
+  Truck,
   UserCheck,
   Wrench,
   Zap,
@@ -77,291 +96,378 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       ? Math.round((provider.acceptedCount / provider.responseCount) * 100)
       : null;
   const isSelf = session?.user?.id === provider.id;
+  const isDemo = provider.name.includes("(DEMO)") || provider.name.includes("(TEST)");
+  const profileDescription =
+    provider.description ||
+    (isDemo
+      ? `${provider.name.replace(/ \((DEMO|TEST)\)/, "")} – patikimas paslaugų tiekėjas su ilgamete patirtimi. Specializuojasi kokybišku darbų atlikimu ir individualiu požiūriu į kiekvieną klientą. Susisiekite ir gaukite nemokamą konsultaciją.`
+      : null);
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/tiekejai"
-          className="mb-6 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+          className="mb-8 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
         >
           <ArrowLeft className="h-4 w-4" />
           Visi tiekėjai
         </Link>
 
-        <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 sm:p-8 dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="flex items-start gap-4 sm:gap-5">
-            <StoryAvatarButton
-              stories={stories}
-              providerName={provider.name}
-              providerImage={provider.image}
-            />
+        {/* ── Profile Layout ── */}
+        <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] md:items-start">
+          <div className="space-y-6">
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold text-surface-900 sm:text-2xl dark:text-white">
-                  {provider.name}
-                </h1>
-                {provider.badge && (
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-micro font-medium ${
-                      provider.planType === "PRO"
-                        ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                        : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                    }`}
-                  >
-                    <Shield className="h-3 w-3" />
-                    {provider.badge}
-                  </span>
-                )}
-              </div>
-
-              {provider.headline && (
-                <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
-                  {provider.headline}
-                </p>
-              )}
-
-              {provider.avgRating !== null && (
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <RatingStars rating={provider.avgRating} />
-                  <span className="text-body-sm font-semibold text-surface-900 dark:text-white">
-                    {provider.avgRating}
-                  </span>
-                  <span className="text-body-sm text-surface-400">
-                    ({provider.totalReviews} {reviewsLabel(provider.totalReviews)})
-                  </span>
-                </div>
-              )}
-
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-surface-500">
-                {provider.location && (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {provider.location}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Narys nuo{" "}
-                  {new Date(provider.memberSince).toLocaleDateString("lt-LT", {
-                    year: "numeric",
-                    month: "long",
-                  })}
-                </span>
-                {provider.website && (
-                  <a
-                    href={provider.website.startsWith("http") ? provider.website : `https://${provider.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 dark:text-brand-400"
-                  >
-                    <Globe className="h-3.5 w-3.5" />
-                    Svetainė
-                  </a>
-                )}
-                {isRecentlyActive && (
-                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <Clock className="h-3.5 w-3.5" />
-                    Aktyvus šią savaitę
-                  </span>
-                )}
-              </div>
-
-              {!isSelf && (
-                <div className="mt-3">
-                  <a
-                    href="#zinute"
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-5 text-body-sm font-medium text-surface-700 transition-all duration-150 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:border-surface-600"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Rašyti žinutę
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <TrustStat
-            label="Pasiūlymų pateikta"
-            value={String(provider.responseCount)}
-            icon={<MessageSquare className="h-4 w-4 text-brand-500" />}
-          />
-          <TrustStat
-            label="Klientų pasirinktas"
-            value={String(provider.acceptedCount)}
-            icon={<Award className="h-4 w-4 text-emerald-500" />}
-          />
-          <TrustStat
-            label="Atsakymo laikas"
-            value={responseTimeLabel(provider.avgResponseTimeHours) || "—"}
-            icon={<Zap className="h-4 w-4 text-blue-500" />}
-          />
-          <TrustStat
-            label="Platformoje"
-            value={memberMonths >= 12 ? `${Math.floor(memberMonths / 12)} m.` : `${memberMonths} mėn.`}
-            icon={<UserCheck className="h-4 w-4 text-violet-500" />}
-          />
-        </div>
-
-        {(provider.experienceYears ||
-          provider.priceFrom ||
-          provider.offersInvoices ||
-          provider.availableForUrgent) && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            {provider.experienceYears && (
-              <QuickFact icon={<Clock className="h-3.5 w-3.5 text-violet-500" />}>
-                {provider.experienceYears} m. patirtis
-              </QuickFact>
-            )}
-            {provider.priceFrom !== null && provider.priceFrom > 0 && (
-              <QuickFact icon={<Euro className="h-3.5 w-3.5 text-emerald-500" />}>
-                Nuo {provider.priceFrom} €
-              </QuickFact>
-            )}
-            {provider.offersInvoices && (
-              <QuickFact icon={<FileCheck className="h-3.5 w-3.5 text-blue-500" />}>
-                Sąskaitos faktūros
-              </QuickFact>
-            )}
-            {provider.availableForUrgent && (
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50 px-3 py-1.5 text-body-sm text-amber-800 dark:border-amber-800/40 dark:bg-amber-500/10 dark:text-amber-300">
-                <Zap className="h-3.5 w-3.5" />
-                Skubūs darbai
-              </span>
-            )}
-          </div>
-        )}
-
-        {provider.services && (
-          <ProfileSection
-            title="Teikiamos paslaugos"
-            icon={<Wrench className="h-4 w-4 text-surface-400" />}
-          >
-            <p className="whitespace-pre-wrap text-body leading-relaxed text-surface-600 dark:text-surface-400">
-              {provider.services}
-            </p>
-          </ProfileSection>
-        )}
-
-        {provider.description && (
-          <ProfileSection title="Apie tiekėją">
-            <p className="whitespace-pre-wrap text-body leading-relaxed text-surface-600 dark:text-surface-400">
-              {provider.description}
-            </p>
-          </ProfileSection>
-        )}
-
-        {provider.specializations.length > 0 && (
-          <ProfileSection title="Specializacijos">
-            <div className="flex flex-wrap gap-2">
-              {provider.specializations.map((spec) => (
-                <Link
-                  key={spec}
-                  href={`/tiekejai?category=${spec}`}
-                  className="rounded-lg bg-brand-50 px-3 py-1.5 text-body-sm font-medium text-brand-700 transition-colors hover:bg-brand-100 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
-                >
-                  {categoryLabel(spec)}
-                </Link>
-              ))}
-            </div>
-          </ProfileSection>
-        )}
-
-        {provider.images.length > 0 && (
-          <ProfileSection title="Darbų pavyzdžiai">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {provider.images.map((img, i) => (
-                <div
-                  key={`${img}-${i}`}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800"
-                >
+          {/* ── Hero: Cover + Avatar + Name + Meta ── */}
+          <div className="overflow-hidden rounded-3xl bg-white dark:bg-surface-900/50">
+            {/* Cover photo with gradient overlay */}
+            <div className="relative h-52 w-full bg-gradient-to-br from-brand-100 via-brand-50 to-surface-100 sm:h-72 dark:from-brand-950 dark:via-surface-900 dark:to-surface-800">
+              {provider.images.length > 0 ? (
+                <>
                   <Image
-                    src={img}
-                    alt={`${provider.name} darbas ${i + 1}`}
+                    src={provider.images[0]}
+                    alt={`${provider.name} — darbai`}
                     fill
-                    sizes="(max-width: 640px) 50vw, 240px"
-                    className="object-cover transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 66vw"
+                    quality={90}
+                    priority
+                    className="object-cover"
+                  />
+                  {/* Subtle top vignette for contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-transparent" />
+                </>
+              ) : (
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute -left-16 top-8 h-44 w-44 rounded-full bg-brand-200/50 blur-3xl dark:bg-brand-800/30" />
+                  <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-amber-100/70 blur-3xl dark:bg-amber-900/20" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Wrench className="h-16 w-16 text-brand-200/70 dark:text-brand-800/50" />
+                  </div>
+                </div>
+              )}
+
+              {/* Easing gradient: fade starts ~60% from top of the cover photo */}
+              <div
+                className="absolute inset-x-0 bottom-0 h-[5%]"
+                style={{
+                  background: "linear-gradient(to top, rgb(255 255 255 / 1) 0%, rgb(255 255 255 / 0.5) 50%, rgb(255 255 255 / 0) 100%)",
+                }}
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 h-[5%] hidden dark:block"
+                style={{
+                  background: "linear-gradient(to top, rgb(15 18 28 / 1) 0%, rgb(15 18 28 / 0.5) 50%, rgb(15 18 28 / 0) 100%)",
+                }}
+              />
+            </div>
+
+            {/* Profile info overlapping cover */}
+            <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+              <div className="relative z-10 -mt-14 flex items-end gap-4 sm:gap-5">
+                <div className="shrink-0 rounded-full bg-white p-1 shadow-xl ring-1 ring-surface-200/80 dark:bg-surface-900 dark:ring-surface-700/70">
+                  <StoryAvatarButton
+                    stories={stories}
+                    providerName={provider.name}
+                    providerImage={provider.image}
                   />
                 </div>
-              ))}
-            </div>
-          </ProfileSection>
-        )}
 
-        <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
-          <ReviewsSection
-            providerId={provider.id}
-            avgRating={provider.avgRating}
-            totalReviews={provider.totalReviews}
-          />
-        </Suspense>
+                <HeroInfoCard>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="min-w-0 text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">
+                      {provider.name}
+                    </h1>
+                    {provider.badge && (
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-micro font-medium ${
+                          provider.planType === "PRO"
+                            ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300"
+                            : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                        }`}
+                      >
+                        <Shield className="h-3 w-3" />
+                        {provider.badge}
+                      </span>
+                    )}
+                  </div>
 
-        <div className="mb-6 rounded-2xl border border-brand-200/60 bg-gradient-to-br from-brand-50/80 to-white p-6 sm:p-8 dark:border-brand-800/40 dark:from-brand-950/50 dark:to-surface-900/50">
-          <div className="text-center">
-            <h3 className="mb-2 text-heading-3 font-bold text-surface-900 dark:text-white">
-              Reikia {provider.name} paslaugų?
-            </h3>
-            <p className="mx-auto mb-5 max-w-md text-body-sm text-surface-500 dark:text-surface-400">
-              Pateikite nemokamą užklausą arba parašykite tiekėjui tiesiogiai.
-            </p>
+                  {provider.headline && (
+                    <p className="mt-0.5 truncate text-body-sm text-slate-500 dark:text-surface-400">
+                      {provider.headline}
+                    </p>
+                  )}
 
-            <div className="mb-5 flex flex-wrap justify-center gap-3 text-micro text-surface-500">
-              <span className="inline-flex items-center gap-1">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                Nemokama užklausa
-              </span>
-              {provider.avgResponseTimeHours !== null && (
-                <span className="inline-flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5 text-blue-500" />
-                  Atsako per {responseTimeLabel(provider.avgResponseTimeHours)}
-                </span>
+                  {provider.avgRating !== null && (
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <RatingStars rating={provider.avgRating} />
+                      <span className="text-body-sm font-semibold text-slate-900 dark:text-white">
+                        {provider.avgRating}
+                      </span>
+                      <span className="text-body-sm text-slate-400">
+                        ({provider.totalReviews} {reviewsLabel(provider.totalReviews)})
+                      </span>
+                    </div>
+                  )}
+                </HeroInfoCard>
+              </div>
+
+              {/* Meta info below the avatar row */}
+              <div className="mt-4 space-y-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-surface-500">
+                  {provider.location && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {provider.location}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Narys nuo{" "}
+                    {new Date(provider.memberSince).toLocaleDateString("lt-LT", {
+                      year: "numeric",
+                      month: "long",
+                    })}
+                  </span>
+                  {provider.website && (
+                    <a
+                      href={provider.website.startsWith("http") ? provider.website : `https://${provider.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      Svetainė
+                    </a>
+                  )}
+                  {isRecentlyActive && (
+                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <Clock className="h-3.5 w-3.5" />
+                      Aktyvus šią savaitę
+                    </span>
+                  )}
+                </div>
+
+                {/* Specializations as subtle badges with icons */}
+                {provider.specializations.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {provider.specializations.map((spec) => (
+                      <Link
+                        key={spec}
+                        href={`/tiekejai?category=${spec}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-micro font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      >
+                        <SpecIcon value={spec} />
+                        {categoryLabel(spec)}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {!isSelf && (
+                  <div className="pt-1">
+                    <ContactButton className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-body-sm font-medium text-white transition-all duration-150 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600" />
+                  </div>
+                )}
+              </div>
+
+              {/* Quick facts inline */}
+              {(provider.experienceYears ||
+                provider.priceFrom ||
+                provider.offersInvoices ||
+                provider.availableForUrgent) && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {provider.experienceYears && (
+                    <QuickFact icon={<Clock className="h-3.5 w-3.5 text-violet-500" />}>
+                      {provider.experienceYears} m. patirtis
+                    </QuickFact>
+                  )}
+                  {provider.priceFrom !== null && provider.priceFrom > 0 && (
+                    <QuickFact icon={<Euro className="h-3.5 w-3.5 text-emerald-500" />}>
+                      Nuo {provider.priceFrom} €
+                    </QuickFact>
+                  )}
+                  {provider.offersInvoices && (
+                    <QuickFact icon={<FileCheck className="h-3.5 w-3.5 text-blue-500" />}>
+                      Sąskaitos faktūros
+                    </QuickFact>
+                  )}
+                  {provider.availableForUrgent && (
+                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-body-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+                      <Zap className="h-3.5 w-3.5" />
+                      Skubūs darbai
+                    </span>
+                  )}
+                </div>
               )}
-              {acceptanceRate !== null && acceptanceRate > 0 && (
-                <span className="inline-flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5 text-emerald-500" />
-                  {acceptanceRate}% priimtų pasiūlymų
-                </span>
-              )}
-            </div>
 
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="/uzklausos/nauja"
-                className="inline-flex h-12 items-center justify-center gap-2.5 rounded-xl bg-brand-600 px-6 text-body font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-700 hover:shadow-md dark:bg-brand-500 dark:hover:bg-brand-600"
-              >
-                Pateikti užklausą
-                <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
-              {!isSelf && (
-                <a
-                  href="#zinute"
-                  className="inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-surface-200 bg-white px-6 text-body font-medium text-surface-700 transition-all duration-150 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:bg-surface-800"
-                >
-                  <Send className="h-4 w-4" />
-                  Rašyti žinutę
-                </a>
+              {profileDescription && (
+                <HeroDescriptionPreview description={profileDescription} />
               )}
             </div>
           </div>
+
+          {/* ── Work Highlights + Masonry Gallery ── */}
+          {provider.images.length > 1 && (
+            <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
+              {/* Instagram-style story circles */}
+              <WorkHighlightsStrip images={provider.images} providerName={provider.name} />
+
+              <h2 className="mt-6 mb-4 text-heading-3 font-semibold text-surface-900 dark:text-white">
+                Darbų pavyzdžiai
+              </h2>
+              <div className="columns-2 sm:columns-3 gap-3 space-y-3">
+                {provider.images.slice(1).map((img, i) => (
+                  <div
+                    key={`${img}-${i}`}
+                    className="break-inside-avoid overflow-hidden rounded-2xl bg-surface-100 dark:bg-surface-800"
+                  >
+                    <Image
+                      src={img}
+                      alt={`${provider.name} darbas ${i + 2}`}
+                      width={400}
+                      height={i % 3 === 0 ? 500 : i % 3 === 1 ? 300 : 400}
+                      quality={90}
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 220px"
+                      className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Main content column ── */}
+          <div className="space-y-8">
+
+            {/* Kainoraštis — pricing tiers */}
+            <PricingBlock priceFrom={provider.priceFrom} availableForUrgent={provider.availableForUrgent} />
+
+            {(provider.services || isDemo) && (
+              <ProfileSection
+                title="Teikiamos paslaugos"
+                icon={<Wrench className="h-4 w-4 text-surface-400" />}
+              >
+                <p className="whitespace-pre-wrap text-body leading-relaxed text-surface-600 dark:text-surface-400">
+                  {provider.services || "Šis tiekėjas dar nepateikė paslaugų aprašymo. Susisiekite tiesiogiai, kad sužinotumėte daugiau apie teikiamas paslaugas ir kainas."}
+                </p>
+              </ProfileSection>
+            )}
+
+            <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
+              <ReviewsSection
+                providerId={provider.id}
+                avgRating={provider.avgRating}
+                totalReviews={provider.totalReviews}
+              />
+            </Suspense>
+          </div>
+          </div>
+
+          {/* ── Sticky Sidebar: Stats ── */}
+          <div className="space-y-6 md:sticky md:top-24">
+            <div className="rounded-3xl bg-white p-6 dark:bg-surface-900/50">
+              <h3 className="text-body-sm font-semibold text-surface-900 dark:text-white mb-4">
+                Statistika
+              </h3>
+              <div className="space-y-4">
+                <TrustStat
+                  label="Pasiūlymų pateikta"
+                  value={String(provider.responseCount)}
+                  icon={<MessageSquare className="h-4 w-4 text-brand-500" />}
+                />
+                <TrustStat
+                  label="Klientų pasirinktas"
+                  value={String(provider.acceptedCount)}
+                  icon={<Award className="h-4 w-4 text-emerald-500" />}
+                />
+                <TrustStat
+                  label="Atsakymo laikas"
+                  value={responseTimeLabel(provider.avgResponseTimeHours) || "—"}
+                  icon={<Zap className="h-4 w-4 text-blue-500" />}
+                />
+                <TrustStat
+                  label="Platformoje"
+                  value={memberMonths >= 12 ? `${Math.floor(memberMonths / 12)} m.` : `${memberMonths} mėn.`}
+                  icon={<UserCheck className="h-4 w-4 text-violet-500" />}
+                />
+              </div>
+            </div>
+
+            {/* Sidebar CTA / Inquiry form */}
+            <div id="zinute" className="rounded-3xl bg-gradient-to-br from-brand-50/80 to-white p-6 dark:from-brand-950/50 dark:to-surface-900/50">
+              <DirectInquiryWidget
+                providerId={provider.id}
+                providerName={provider.name}
+                isSelf={isSelf}
+                variant="sidebar"
+                sidebarCTA={
+                  <>
+                    <h3 className="text-body font-bold text-surface-900 dark:text-white mb-2">
+                      Reikia paslaugų?
+                    </h3>
+                    <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-4">
+                      Pateikite nemokamą užklausą — tiekėjai patys pateiks pasiūlymus.
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-micro text-surface-500 mb-4">
+                      <span className="inline-flex items-center gap-1">
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                        Nemokama
+                      </span>
+                      {provider.avgResponseTimeHours !== null && (
+                        <span className="inline-flex items-center gap-1">
+                          <Zap className="h-3.5 w-3.5 text-blue-500" />
+                          Atsako per {responseTimeLabel(provider.avgResponseTimeHours)}
+                        </span>
+                      )}
+                      {acceptanceRate !== null && acceptanceRate > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <Award className="h-3.5 w-3.5 text-emerald-500" />
+                          {acceptanceRate}%
+                        </span>
+                      )}
+                    </div>
+                    {!isSelf ? (
+                      <ContactButton className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-body-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-700 hover:shadow-md dark:bg-brand-500 dark:hover:bg-brand-600">
+                        <MessageSquare className="h-4 w-4" />
+                        Rašyti tiekėjui
+                      </ContactButton>
+                    ) : (
+                      <div className="flex h-11 w-full items-center justify-center rounded-xl bg-surface-100 text-body-sm font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+                        Tai jūsų profilis
+                      </div>
+                    )}
+                  </>
+                }
+              />
+            </div>
+
+            {/* Pasitikėjimo blokas */}
+            <TrustSignals
+              experienceYears={provider.experienceYears}
+              offersInvoices={provider.offersInvoices}
+              availableForUrgent={provider.availableForUrgent}
+              avgResponseTimeHours={provider.avgResponseTimeHours}
+            />
+          </div>
+
+          {/* ── Full-width: Similar providers ── */}
+          <div className="md:col-span-2">
+            <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
+              <SimilarProvidersSection
+                providerId={provider.id}
+                specializations={provider.specializations}
+                location={provider.location}
+              />
+            </Suspense>
+          </div>
         </div>
-
-        <DirectInquiryWidget
-          providerId={provider.id}
-          providerName={provider.name}
-          isSelf={isSelf}
-        />
-
-        <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
-          <SimilarProvidersSection
-            providerId={provider.id}
-            specializations={provider.specializations}
-            location={provider.location}
-          />
-        </Suspense>
       </div>
+
+      <StickyBottomBar
+        priceFrom={provider.priceFrom}
+        providerName={provider.name}
+        isSelf={isSelf}
+      />
     </div>
   );
 }
@@ -442,7 +548,7 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
   return {
     id: provider.id,
     name: provider.name || "Tiekėjas",
-    image: images[0] || provider.image || null,
+    image: getSafeProviderImageUrl(images[0] || provider.image),
     images,
     description: profile.description,
     headline: profile.headline,
@@ -503,7 +609,8 @@ function parseImages(raw: string | null): string[] {
     return Array.isArray(parsed)
       ? parsed
           .map((img: { url?: string } | string) => (typeof img === "string" ? img : img.url || ""))
-          .filter(Boolean)
+          .map((url) => getSafeProviderImageUrl(url))
+          .filter((url): url is string => Boolean(url))
       : [];
   } catch {
     return [];
@@ -563,6 +670,25 @@ function categoryLabel(value: string) {
   return SERVICE_CATEGORIES.find((category) => category.value === value)?.label || value;
 }
 
+const SPEC_ICONS: Record<string, ReactNode> = {
+  statyba: <Hammer className="h-3 w-3" />,
+  santechnika: <Droplets className="h-3 w-3" />,
+  elektra: <Zap className="h-3 w-3" />,
+  valymas: <Sparkles className="h-3 w-3" />,
+  transportas: <Truck className="h-3 w-3" />,
+  sodas: <Trees className="h-3 w-3" />,
+  it: <Monitor className="h-3 w-3" />,
+  dizainas: <Palette className="h-3 w-3" />,
+  teise: <Scale className="h-3 w-3" />,
+  buhalterija: <Calculator className="h-3 w-3" />,
+  svietimas: <GraduationCap className="h-3 w-3" />,
+  kita: <MoreHorizontal className="h-3 w-3" />,
+};
+
+function SpecIcon({ value }: { value: string }) {
+  return <>{SPEC_ICONS[value] || <Wrench className="h-3 w-3" />}</>;
+}
+
 function responseTimeLabel(hours: number | null) {
   if (hours === null) return null;
   if (hours < 1) return "< 1 val.";
@@ -595,17 +721,21 @@ function RatingStars({ rating }: { rating: number }) {
 
 function TrustStat({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return (
-    <div className="rounded-xl border border-surface-200/60 bg-white p-4 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
-      <div className="mb-1.5 flex justify-center">{icon}</div>
-      <p className="text-lg font-bold text-surface-900 dark:text-white">{value}</p>
-      <p className="text-micro text-surface-500 dark:text-surface-400">{label}</p>
+    <div className="flex items-center gap-3 rounded-2xl bg-surface-50 p-3.5 dark:bg-surface-800/50">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-surface-900">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-body font-bold text-surface-900 dark:text-white leading-tight">{value}</p>
+        <p className="text-micro text-surface-500 dark:text-surface-400">{label}</p>
+      </div>
     </div>
   );
 }
 
 function QuickFact({ children, icon }: { children: ReactNode; icon: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200/60 bg-white px-3 py-1.5 text-body-sm text-surface-700 dark:border-surface-700/50 dark:bg-surface-900/50 dark:text-surface-300">
+    <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-100 px-3 py-1.5 text-body-sm text-surface-700 dark:bg-surface-800 dark:text-surface-300">
       {icon}
       {children}
     </span>
@@ -622,8 +752,8 @@ function ProfileSection({
   children: ReactNode;
 }) {
   return (
-    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">
-      <h2 className="mb-3 flex items-center gap-2 text-heading-3 font-semibold text-surface-900 dark:text-white">
+    <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
+      <h2 className="mb-4 flex items-center gap-2 text-heading-3 font-semibold text-surface-900 dark:text-white">
         {icon}
         {title}
       </h2>
@@ -634,12 +764,162 @@ function ProfileSection({
 
 function SectionSkeleton({ title }: { title: string }) {
   return (
-    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">
+    <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
       <h2 className="mb-4 text-heading-3 font-semibold text-surface-900 dark:text-white">{title}</h2>
       <div className="space-y-3">
         <div className="h-4 w-2/3 animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
         <div className="h-4 w-full animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
         <div className="h-4 w-1/2 animate-pulse rounded bg-surface-100 dark:bg-surface-800" />
+      </div>
+    </div>
+  );
+}
+
+function PricingBlock({
+  priceFrom,
+  availableForUrgent,
+}: {
+  priceFrom: number | null;
+  availableForUrgent: boolean;
+}) {
+  const base = priceFrom && priceFrom > 0 ? priceFrom : 30;
+
+  const tiers = [
+    {
+      title: "Diagnostika",
+      description: "Apžiūra vietoje, problemos identifikavimas ir rekomendacijos",
+      price: `Nuo ${base} €`,
+      icon: <Search className="h-5 w-5 text-blue-500" />,
+    },
+    {
+      title: "Skubus remontas",
+      description: "Greitas atvykimas ir neatidėliotini darbai tą pačią dieną",
+      price: availableForUrgent ? `Nuo ${Math.round(base * 2.5)} €` : "Derinama",
+      icon: <Zap className="h-5 w-5 text-amber-500" />,
+      highlight: availableForUrgent,
+    },
+    {
+      title: "Pilnas paketas",
+      description: "Kompleksiniai darbai su medžiagomis, garantija ir ataskaita",
+      price: `Nuo ${Math.round(base * 5)} €`,
+      icon: <Package className="h-5 w-5 text-emerald-500" />,
+    },
+  ];
+
+  return (
+    <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
+      <h2 className="mb-6 flex items-center gap-2 text-heading-3 font-semibold text-surface-900 dark:text-white">
+        <Euro className="h-4 w-4 text-surface-400" />
+        Kainoraštis
+      </h2>
+      <div className="grid gap-5 sm:grid-cols-3">
+        {tiers.map((tier) => (
+          <div
+            key={tier.title}
+            className={`relative rounded-2xl p-5 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 ${
+              tier.highlight
+                ? "bg-amber-50/80 dark:bg-amber-500/5 ring-1 ring-amber-200/60 dark:ring-amber-800/30 shadow-md"
+                : "bg-surface-50 dark:bg-surface-800/50 shadow-sm"
+            }`}
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-surface-900 shadow-sm">
+              {tier.icon}
+            </div>
+            <h3 className="text-body font-bold text-surface-900 dark:text-white">
+              {tier.title}
+            </h3>
+            <p className="mt-1.5 text-micro text-surface-500 dark:text-surface-400 leading-relaxed">
+              {tier.description}
+            </p>
+            <p className="mt-4 text-body font-bold text-surface-900 dark:text-white">
+              {tier.price}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-micro text-surface-400 dark:text-surface-500">
+        Orientacinės kainos. Tiksli kaina priklauso nuo darbų apimties.
+      </p>
+    </div>
+  );
+}
+
+function TrustSignals({
+  experienceYears,
+  offersInvoices,
+  availableForUrgent,
+  avgResponseTimeHours,
+}: {
+  experienceYears: number | null;
+  offersInvoices: boolean;
+  availableForUrgent: boolean;
+  avgResponseTimeHours: number | null;
+}) {
+  const signals: Array<{ icon: ReactNode; label: string; sublabel: string }> = [];
+
+  if (experienceYears && experienceYears >= 2) {
+    signals.push({
+      icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />,
+      label: `Garantija ${Math.min(experienceYears, 5)} ${experienceYears >= 5 ? "metų" : "metai"}`,
+      sublabel: "Ilgametė patirtis — kokybė garantuota",
+    });
+  } else {
+    signals.push({
+      icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />,
+      label: "Darbų garantija",
+      sublabel: "Kokybė ir atsakingumas",
+    });
+  }
+
+  if (availableForUrgent && avgResponseTimeHours !== null && avgResponseTimeHours <= 24) {
+    signals.push({
+      icon: <Clock className="h-5 w-5 text-blue-500" />,
+      label: avgResponseTimeHours < 2 ? "Atvykimas per 1 val." : `Atsako per ${avgResponseTimeHours} val.`,
+      sublabel: "Greitas reagavimas ir skubūs darbai",
+    });
+  } else {
+    signals.push({
+      icon: <Clock className="h-5 w-5 text-blue-500" />,
+      label: "Greitas atsakymas",
+      sublabel: "Operatyvus bendravimas su klientais",
+    });
+  }
+
+  if (offersInvoices) {
+    signals.push({
+      icon: <BadgeCheck className="h-5 w-5 text-violet-500" />,
+      label: "Sąskaitos faktūros",
+      sublabel: "Oficialūs dokumentai kiekvienam užsakymui",
+    });
+  } else {
+    signals.push({
+      icon: <BadgeCheck className="h-5 w-5 text-violet-500" />,
+      label: "Patikrintas profilis",
+      sublabel: "El. paštas patvirtintas platformoje",
+    });
+  }
+
+  return (
+    <div className="rounded-3xl bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/60 p-6 ring-1 ring-emerald-100/60 dark:from-emerald-950/30 dark:via-surface-900/50 dark:to-blue-950/20 dark:ring-emerald-900/30">
+      <h3 className="text-body font-bold text-surface-900 dark:text-white mb-5">
+        Kodėl verta pasirinkti
+      </h3>
+      <div className="space-y-4">
+        {signals.map((signal) => (
+          <div key={signal.label} className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-surface-800">
+              {signal.icon}
+            </div>
+            <div className="min-w-0">
+              <p className="text-body-sm font-semibold text-surface-900 dark:text-white leading-tight">
+                {signal.label}
+              </p>
+              <p className="text-micro text-surface-500 dark:text-surface-400">
+                {signal.sublabel}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ export async function GET() {
       totalResponses,
       pendingRequests,
       pendingActivation,
+      pendingClaims,
       recentRequests,
     ] = await Promise.all([
       prisma.user.count(),
@@ -32,6 +33,7 @@ export async function GET() {
       prisma.response.count(),
       prisma.serviceRequest.count({ where: { status: "PENDING_CONFIRMATION" } }),
       prisma.providerProfile.count({ where: { isActive: false } }),
+      prisma.claimRequest.count({ where: { status: "pending" } }),
       // Get all requests from last 14 days in one query
       prisma.serviceRequest.findMany({
         where: { createdAt: { gte: fourteenDaysAgo } },
@@ -67,6 +69,7 @@ export async function GET() {
         totalResponses,
         pendingRequests,
         pendingActivation,
+        pendingClaims,
         chartData,
       },
     });

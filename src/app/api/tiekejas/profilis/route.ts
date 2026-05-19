@@ -14,9 +14,37 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.role !== "PROVIDER") {
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo rolės", code: "NOT_PROVIDER" },
+        { status: 403 }
+      );
+    }
+
     const [profile, user] = await Promise.all([
       prisma.providerProfile.findUnique({
         where: { userId: session.user.id },
+        select: {
+          id: true,
+          userId: true,
+          description: true,
+          headline: true,
+          services: true,
+          priceFrom: true,
+          experienceYears: true,
+          offersInvoices: true,
+          availableForUrgent: true,
+          specializations: true,
+          location: true,
+          phone: true,
+          website: true,
+          isActive: true,
+          planType: true,
+          planExpiresAt: true,
+          images: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
@@ -61,6 +89,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.role !== "PROVIDER") {
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo rolės", code: "NOT_PROVIDER" },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const parsed = providerProfileSchema.safeParse(body);
     if (!parsed.success) {
@@ -81,6 +116,27 @@ export async function PUT(req: NextRequest) {
         location: parsed.data.location,
         phone: parsed.data.phone || null,
         website: parsed.data.website || null,
+      },
+      select: {
+        id: true,
+        userId: true,
+        description: true,
+        headline: true,
+        services: true,
+        priceFrom: true,
+        experienceYears: true,
+        offersInvoices: true,
+        availableForUrgent: true,
+        specializations: true,
+        location: true,
+        phone: true,
+        website: true,
+        isActive: true,
+        planType: true,
+        planExpiresAt: true,
+        images: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 

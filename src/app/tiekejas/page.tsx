@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import { MagicCard } from "@/components/magicui/magic-card";
 import Image from "next/image";
-import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send, Plus, X, Trash2, Sparkles, Clock, Camera } from "lucide-react";
+import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
 
 interface Stats {
   userName: string | null;
@@ -31,6 +31,11 @@ interface Stats {
   profileImageUrl: string | null;
   activeStoryCount: number;
   storyEnabled: boolean;
+  pendingClaim: {
+    id: string;
+    status: string;
+    supplier: { displayName: string; slug: string } | null;
+  } | null;
 }
 
 interface StoryItem {
@@ -400,13 +405,21 @@ export default function ProviderDashboard() {
   useEffect(() => {
     fetch("/api/tiekejas/stats")
       .then((r) => r.json())
-      .then((data) => { if (data.success) setStats(data.data); })
+      .then((data) => {
+        if (data.success) {
+          setStats(data.data);
+
+          if (data.data.emailVerified && data.data.isActive) {
+            fetch("/api/tiekejas/zinutes?status=NEW&page=1")
+              .then((r) => r.json())
+              .then((messagesData) => {
+                if (messagesData.success) setUnreadMessages(messagesData.data.unreadCount);
+              })
+              .catch(() => {});
+          }
+        }
+      })
       .finally(() => setLoading(false));
-    // Fetch unread direct inquiry count
-    fetch("/api/tiekejas/zinutes?status=NEW&page=1")
-      .then((r) => r.json())
-      .then((data) => { if (data.success) setUnreadMessages(data.data.unreadCount); })
-      .catch(() => {});
   }, []);
 
   const handleStoryChange = useCallback((delta: number) => {
@@ -544,7 +557,29 @@ export default function ProviderDashboard() {
       {/* Compact alerts — email, activation, payment */}
       {!stats.emailVerified && <ResendVerificationBanner />}
 
-      {stats.emailVerified && !stats.isActive && (
+      {stats.emailVerified && !stats.isActive && stats.pendingClaim && (
+        <div className="mb-4 rounded-2xl border border-amber-200/60 bg-amber-50 p-5 dark:border-amber-800/40 dark:bg-amber-500/10">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/20">
+              <Building2 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-body font-semibold text-amber-900 dark:text-amber-200">
+                Laukiama profilio perėmimo patvirtinimo
+              </h2>
+              <p className="mt-1 text-body-sm text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                Patvirtinote el. paštą ir paskyra jau paruošta.
+                {stats.pendingClaim.supplier?.displayName
+                  ? ` Administratorius peržiūrės „${stats.pendingClaim.supplier.displayName}" perėmimo prašymą.`
+                  : " Administratorius peržiūrės jūsų prašymą."}
+                {" "}Po patvirtinimo galėsite redaguoti perimtą profilį ir gauti užklausas.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stats.emailVerified && !stats.isActive && !stats.pendingClaim && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-red-200/60 bg-red-50 px-4 py-3 dark:border-red-800/40 dark:bg-red-500/10">
           <ShieldCheck className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
           <p className="text-body-sm text-red-800 dark:text-red-300">
@@ -716,24 +751,38 @@ export default function ProviderDashboard() {
             </div>
           </Card>
         )}
-        <Link href="/tiekejas/zinutes" className="group">
-          <Card hover>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <CardTitle>Žinutės</CardTitle>
-                  {unreadMessages > 0 && (
-                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
-                      {unreadMessages}
-                    </span>
-                  )}
+        {canAccessRequests ? (
+          <Link href="/tiekejas/zinutes" className="group">
+            <Card hover>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CardTitle>Žinutės</CardTitle>
+                    {unreadMessages > 0 && (
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
+                        {unreadMessages}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-body-sm text-surface-500 mt-1">Tiesioginės užklausos</p>
                 </div>
-                <p className="text-body-sm text-surface-500 mt-1">Tiesioginės užklausos</p>
+                <Send className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
               </div>
-              <Send className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+            </Card>
+          </Link>
+        ) : (
+          <Card>
+            <div className="flex items-center justify-between opacity-50">
+              <div>
+                <CardTitle>Žinutės</CardTitle>
+                <p className="text-body-sm text-surface-500 mt-1">
+                  {!stats.emailVerified ? "Patvirtinkite el. paštą" : "Paskyra sustabdyta"}
+                </p>
+              </div>
+              <AlertCircle className="h-4 w-4 text-surface-400" />
             </div>
           </Card>
-        </Link>
+        )}
         <Link href="/tiekejas/profilis" className="group">
           <Card hover>
             <div className="flex items-center justify-between">
@@ -764,6 +813,17 @@ export default function ProviderDashboard() {
                 <p className="text-body-sm text-surface-500 mt-1">Prenumerata ir limitai</p>
               </div>
               <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
+            </div>
+          </Card>
+        </Link>
+        <Link href="/tiekejas/katalogas" className="group">
+          <Card hover>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Katalogo profiliai</CardTitle>
+                <p className="text-body-sm text-surface-500 mt-1">Perimti profiliai</p>
+              </div>
+              <Database className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
             </div>
           </Card>
         </Link>

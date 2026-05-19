@@ -27,13 +27,23 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
   const [user, profile] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { emailVerified: true },
+      select: { emailVerified: true, role: true },
     }),
     prisma.providerProfile.findUnique({
       where: { userId: session.user.id },
       select: { isActive: true },
     }),
   ]);
+
+  if (user?.role !== "PROVIDER") {
+    return {
+      authorized: false,
+      response: NextResponse.json(
+        { success: false, error: "Neturite tiekėjo rolės", code: "NOT_PROVIDER" },
+        { status: 403 }
+      ),
+    };
+  }
 
   if (!profile) {
     return {

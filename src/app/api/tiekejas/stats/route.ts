@@ -14,9 +14,27 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.role !== "PROVIDER") {
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo rolės", code: "NOT_PROVIDER" },
+        { status: 403 }
+      );
+    }
+
     // Check for provider profile existence (not just role)
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: session.user.id },
+      select: {
+        description: true,
+        headline: true,
+        services: true,
+        specializations: true,
+        location: true,
+        phone: true,
+        images: true,
+        isActive: true,
+        planType: true,
+      },
     });
 
     if (!profile) {
@@ -96,6 +114,21 @@ export async function GET() {
       },
     });
 
+    // Pending claim for this user (show pending state on dashboard)
+    const pendingClaim = await prisma.claimRequest.findFirst({
+      where: {
+        requestedByUserId: session.user.id,
+        status: "pending",
+        expiresAt: { gt: new Date() },
+      },
+      select: {
+        id: true,
+        status: true,
+        supplier: { select: { displayName: true, slug: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -119,6 +152,7 @@ export async function GET() {
         profileImageUrl,
         activeStoryCount,
         storyEnabled,
+        pendingClaim: pendingClaim || null,
       },
     });
   } catch (error) {

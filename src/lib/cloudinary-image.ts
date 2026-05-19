@@ -26,3 +26,24 @@ export function optimizeCloudinaryUrl(
 
   return `${before}${transforms.join(",")}/${after}`;
 }
+
+/**
+ * Provider/user images in production should come from Cloudinary uploads.
+ * Seeded demo URLs from external photo sites can expire or 404, which makes
+ * next/image spam the dev server. Return null for unsupported remote hosts and
+ * let the UI show its avatar/gradient fallback instead.
+ */
+export function getSafeProviderImageUrl(
+  url: string | null | undefined,
+  options?: { width?: number; height?: number; crop?: string }
+): string | null {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("/")) return trimmed;
+  if (trimmed.includes("res.cloudinary.com")) {
+    return optimizeCloudinaryUrl(trimmed, options);
+  }
+
+  return null;
+}

@@ -31,6 +31,9 @@ model User {
   directInquiriesSent     DirectInquiry[] @relation("InquirySender")
   directInquiriesReceived DirectInquiry[] @relation("InquiryProvider")
   stories                 ProviderStory[]
+  supplierIdentities      SupplierIdentity[]
+  claimRequests           ClaimRequest[]     @relation("ClaimRequestUser")
+  claimReviews            ClaimRequest[]     @relation("ClaimReviewedBy")
 
   @@map("users")
 }
@@ -265,4 +268,173 @@ model ProviderStory {
 
   @@index([providerId, expiresAt])
   @@map("provider_stories")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Imported taxonomy + supplier foundation (from paslaugos-crawler)
+// ═══════════════════════════════════════════════════════════════════════
+
+model Category {
+  id             String   @id
+  name           String
+  slug           String   @unique
+  parentId       String?
+  rootId         String?
+  depth          Int      @default(0)
+  path           String   @default("")
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  pageType       String?
+  externalSource String?
+  externalSlug   String?
+  metadataJson   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryTree")
+  root            Category?  @relation("CategoryRoot", fields: [rootId], references: [id])
+  rootDescendants Category[] @relation("CategoryRoot")
+  aliases         CategoryAlias[]
+  supplierLinks   SupplierCategoryLink[]
+
+  @@index([parentId])
+  @@index([rootId])
+  @@index([depth])
+  @@index([path])
+  @@map("categories")
+}
+
+model CategoryAlias {
+  id         String   @id @default(cuid())
+  categoryId String
+  aliasName  String
+  aliasSlug  String?
+  source     String?
+  createdAt  DateTime @default(now())
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([aliasSlug])
+  @@map("category_aliases")
+}
+
+model SupplierRecord {
+  id                String   @id @default(cuid())
+  displayName       String
+  slug              String   @unique
+  status            String   @default("unclaimed")
+  sourceType        String   @default("imported")
+  shortSummary      String?
+  description       String?  @db.Text
+  phonePublic       String?
+  emailPublic       String?
+  websiteUrl        String?
+  city              String?
+  companyCode       String?
+  isVerified        Boolean  @default(false)
+  heroImageUrl      String?
+  galleryUrls       String?  @db.Text
+  rating            Float?
+  reviewCount       Int      @default(0)
+  enrichedAt        DateTime?
+  externalSource    String?
+  externalSourceUrl String?
+  metadataJson      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  categoryLinks  SupplierCategoryLink[]
+  snapshots      SupplierSourceSnapshot[]
+  claimRequests  ClaimRequest[]
+  identities     SupplierIdentity[]
+
+  @@index([status])
+  @@index([city])
+  @@index([externalSourceUrl])
+  @@map("supplier_records")
+}
+
+model SupplierCategoryLink {
+  id               String  @id @default(cuid())
+  supplierRecordId String
+  categoryId       String
+  isPrimary        Boolean @default(false)
+  confidenceScore  Float   @default(1.0)
+
+  supplier SupplierRecord @relation(fields: [supplierRecordId], references: [id])
+  category Category       @relation(fields: [categoryId], references: [id])
+
+  @@unique([supplierRecordId, categoryId])
+  @@index([supplierRecordId])
+  @@index([categoryId])
+  @@map("supplier_category_links")
+}
+
+model SupplierSourceSnapshot {
+  id               String   @id @default(cuid())
+  supplierRecordId String
+  sourceName       String
+  sourceUrl        String?
+  rawTitle         String?
+  rawText          String?  @db.Text
+  rawMetadataJson  String?
+  hash             String?
+  capturedAt       DateTime @default(now())
+
+  supplier SupplierRecord @relation(fields: [supplierRecordId], references: [id])
+
+  @@index([supplierRecordId])
+  @@index([sourceUrl])
+  @@index([hash])
+  @@map("supplier_source_snapshots")
+}
+
+model ClaimRequest {
+  id                    String    @id @default(cuid())
+  supplierRecordId      String
+  requestedByEmail      String
+  requestedByUserId     String?
+  verificationMethod    String
+  status                String    @default("pending")
+  tokenHash             String    @unique
+  expiresAt             DateTime
+  emailVerifiedAt       DateTime?
+  reviewedAt            DateTime?
+  reviewedByUserId      String?
+  submittedEvidenceJson String?
+  reviewNotes           String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  supplier    SupplierRecord @relation(fields: [supplierRecordId], references: [id])
+  requestedBy User?          @relation("ClaimRequestUser", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  reviewedBy  User?          @relation("ClaimReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([supplierRecordId])
+  @@index([status])
+  @@index([requestedByEmail])
+  @@index([expiresAt])
+  @@map("claim_requests")
+}
+
+model SupplierIdentity {
+  id                 String    @id @default(cuid())
+  supplierRecordId   String
+  userId             String?
+  contactEmail       String
+  ownershipStatus    String    @default("pending")
+  verificationMethod String
+  verifiedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  supplier SupplierRecord @relation(fields: [supplierRecordId], references: [id])
+  user     User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([supplierRecordId])
+  @@index([userId])
+  @@index([ownershipStatus])
+  @@map("supplier_identities")
 }

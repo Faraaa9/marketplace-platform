@@ -36,6 +36,7 @@ interface ConversationState {
 }
 
 let tempCounter = 0;
+const EMPTY_THREAD: ThreadMessage[] = [];
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
   threads: {},
@@ -112,5 +113,5 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       };
     }),
 
-  getThread: (responseId) => get().threads[responseId] || [],
+  getThread: (responseId) => get().threads[responseId] || EMPTY_THREAD,
 }));

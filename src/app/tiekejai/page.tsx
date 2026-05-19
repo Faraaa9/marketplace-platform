@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
-import { Users, ArrowRight } from "lucide-react";
+import { LITHUANIAN_CITIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { Users, ArrowRight, Database } from "lucide-react";
 import ProviderFilterBar from "@/components/tiekejai/ProviderFilterBar";
 import ProviderListingClient from "@/components/tiekejai/ProviderListingClient";
 import { isStoryEnabled } from "@/lib/platform-settings";
-import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
+import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
+import { buildProviderLocationFilter, computeProviderScore } from "@/lib/provider-filters";
 import type { ProviderCardData } from "@/store/useProviderFilterStore";
 
 export const metadata: Metadata = {
@@ -17,23 +18,39 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    location?: string;
+    active?: string;
+    urgent?: string;
+    top?: string;
+  }>;
 }
 
 const DESC_PREVIEW_LENGTH = 160;
+const MAX_FETCH = 500;
+const PER_PAGE = 20;
 
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
   const search = params.search || "";
-  const perPage = 20;
+  const location = params.location || "";
+  const filterActive = params.active === "1";
+  const filterUrgent = params.urgent === "1";
+  const filterTop = params.top === "1";
 
-  // Build filter — only active + verified
-  // Category/location filtering is now client-side (in-memory)
+  // ── Build Prisma where ──
+  const profileWhere: Record<string, unknown> = { isActive: true };
+  const locationFilter = buildProviderLocationFilter(location);
+  if (locationFilter) Object.assign(profileWhere, locationFilter);
+  if (filterUrgent) profileWhere.availableForUrgent = true;
+
   const where: Record<string, unknown> = {
     role: "PROVIDER",
     emailVerified: { not: null },
-    providerProfile: { isActive: true },
+    providerProfile: profileWhere,
   };
 
   if (search) {
@@ -43,7 +60,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     ];
   }
 
-  const [providers, total, storyFeatureOn] = await Promise.all([
+  // Fetch up to MAX_FETCH so we can score/sort/filter properly
+  const [providers, storyFeatureOn] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -58,23 +76,22 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             location: true,
             images: true,
             planType: true,
+            availableForUrgent: true,
+            priceFrom: true,
           },
         },
         subscription: { select: { status: true } },
         _count: { select: { responses: true, reviewsReceived: true } },
       },
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * perPage,
-      take: perPage,
+      take: MAX_FETCH,
     }),
-    prisma.user.count({ where }),
     isStoryEnabled(),
   ]);
 
-  const pages = Math.ceil(total / perPage);
   const providerIds = providers.map((p) => p.id);
 
-  // Batch queries — run in parallel
+  // ── Batch queries ──
   const [reviewAggs, acceptedRows, lastResponseRows, activeStories] = await Promise.all([
     providerIds.length > 0
       ? prisma.review.groupBy({
@@ -113,14 +130,14 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       : Promise.resolve([]),
   ]);
 
-  // Build lookup maps
+  // ── Build lookup maps ──
   const reviewMap = new Map(reviewAggs.map((r) => [r.providerId, { avg: r._avg.rating, count: r._count._all }]));
   const acceptedMap = new Map(acceptedRows.map((r) => [r.providerId, Number(r.count)]));
   const lastResponseMap = new Map(lastResponseRows.map((r) => [r.providerId, new Date(r.lastAt)]));
   const providersWithStories = new Set(activeStories.map((s) => s.providerId));
 
-  // Process providers into serializable card data
-  const mapped: ProviderCardData[] = providers.map((p) => {
+  // ── Map to card data ──
+  let mapped: ProviderCardData[] = providers.map((p) => {
     const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
@@ -155,7 +172,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     return {
       id: p.id,
       name: p.name,
-      profileImage: optimizeCloudinaryUrl(firstImage || p.image || "", { width: 96, crop: "fill" }) || null,
+      profileImage: getSafeProviderImageUrl(firstImage || p.image, { width: 96, crop: "fill" }),
+      coverImage: getSafeProviderImageUrl(firstImage || p.image, { width: 600, height: 400, crop: "fill" }),
       description,
       specializations: specs,
       location: p.providerProfile?.location || null,
@@ -167,12 +185,34 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       avgRating,
       reviewCount,
       hasActiveStory: providersWithStories.has(p.id),
+      availableForUrgent: p.providerProfile?.availableForUrgent ?? false,
+      priceFrom: p.providerProfile?.priceFrom ?? null,
     };
   });
 
-  // Sort PRO first
-  const planOrder: Record<string, number> = { PRO: 0, BASIC: 1, FREE: 2 };
-  mapped.sort((a, b) => (planOrder[a.planType] ?? 2) - (planOrder[b.planType] ?? 2));
+  // ── Post-fetch filters (need computed fields) ──
+  if (filterActive) {
+    mapped = mapped.filter((p) => p.isRecentlyActive);
+  }
+  if (filterTop) {
+    mapped = mapped.filter((p) => p.avgRating !== null && p.avgRating >= 4.5);
+  }
+
+  // ── Sort by quality score ──
+  mapped.sort((a, b) => computeProviderScore(b) - computeProviderScore(a));
+
+  // ── Paginate ──
+  const total = mapped.length;
+  const pages = Math.ceil(total / PER_PAGE);
+  const pageProviders = mapped.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  // ── Active filter params for URL persistence ──
+  const activeFilters: Record<string, string> = {};
+  if (search) activeFilters.search = search;
+  if (location) activeFilters.location = location;
+  if (filterActive) activeFilters.active = "1";
+  if (filterUrgent) activeFilters.urgent = "1";
+  if (filterTop) activeFilters.top = "1";
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
@@ -201,23 +241,51 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         <div className="mb-6">
           <ProviderFilterBar
             activeSearch={search}
-            categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+            activeLocation={location}
+            activeNow={filterActive}
+            urgentWork={filterUrgent}
+            topRated={filterTop}
             cities={[...LITHUANIAN_CITIES]}
             serverTotal={total}
           />
         </div>
 
-        {/* Client-rendered listing with local-first filtering */}
+        {/* Server-rendered listing */}
         <ProviderListingClient
-          providers={mapped}
+          providers={pageProviders}
           serverSearch={search}
           serverPage={page}
           serverTotalPages={pages}
           serverTotal={total}
+          activeFilters={activeFilters}
         />
 
+        {/* Imported catalog CTA */}
+        <div className="mt-8 rounded-2xl border border-amber-200/60 bg-amber-50/50 p-6 dark:border-amber-800/30 dark:bg-amber-950/20">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50">
+              <Database className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-body font-semibold text-surface-900 dark:text-white">
+                Importuotas katalogas
+              </p>
+              <p className="text-body-sm text-surface-500 dark:text-surface-400">
+                Peržiūrėkite tiekėjų profilius iš paslaugos.lt katalogo
+              </p>
+            </div>
+            <Link
+              href="/tiekejai/katalogas"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-body-sm font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
+            >
+              Katalogas
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
         {/* Bottom CTA */}
-        <div className="mt-12 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
+        <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
           <p className="text-body font-semibold text-surface-900 dark:text-white">
             Nerandate tinkamo specialisto?
           </p>

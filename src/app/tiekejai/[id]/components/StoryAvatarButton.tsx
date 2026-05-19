@@ -32,7 +32,7 @@ export default function StoryAvatarButton({
           setStoryIndex(0);
           openStory(stories[0]?.id ?? null);
         }}
-        className={`shrink-0 rounded-2xl p-[3px] transition-all ${
+        className={`shrink-0 rounded-full p-[3px] transition-all ${
           hasStories
             ? "cursor-pointer bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 hover:scale-105"
             : "cursor-default bg-transparent"
@@ -41,7 +41,7 @@ export default function StoryAvatarButton({
         aria-label={hasStories ? "Peržiūrėti tiekėjo story" : providerName}
       >
         <div
-          className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-[13px] bg-brand-100 sm:h-20 sm:w-20 dark:bg-brand-900/50 ${
+          className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 sm:h-20 sm:w-20 dark:from-brand-950 dark:to-surface-800 ${
             hasStories ? "ring-2 ring-white dark:ring-surface-900" : ""
           }`}
         >
@@ -56,7 +56,7 @@ export default function StoryAvatarButton({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-2xl font-bold text-brand-600 sm:text-3xl dark:text-brand-400">
+            <span className="text-2xl font-bold text-brand-700 sm:text-3xl dark:text-brand-300">
               {providerName[0].toUpperCase()}
             </span>
           )}
