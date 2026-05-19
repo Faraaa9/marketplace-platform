@@ -249,6 +249,60 @@ export function directInquiryVerificationEmail(code: string) {
   };
 }
 
+// ── Claim emails (Lithuanian) ────────────────────────────────────────
+
+export function claimVerificationEmail(supplierName: string, verifyUrl: string) {
+  return {
+    subject: `Patvirtinkite savo prašymą perimti „${supplierName}" — PaslaugųRinka`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Tiekėjo perėmimo užklausa</h2>
+        <p>Gavome jūsų prašymą perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą.</p>
+        <p>Patvirtinkite savo el. pašto adresą spausdami žemiau esantį mygtuką:</p>
+        <p><a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti el. paštą</a></p>
+        <p style="color: #6b7280; font-size: 14px;">Nuoroda galioja 7 dienas. Po paspaudimo galėsite susikurti prisijungimą su slaptažodžiu. Administratorius atskirai peržiūrės patį profilio perėmimą.</p>
+        <p style="color: #6b7280; font-size: 14px;">Jei šio prašymo nepateikėte, ignoruokite šį laišką.</p>
+      </div>
+    `,
+  };
+}
+
+export function claimApprovedEmail(supplierName: string, dashboardUrl: string, registerUrl?: string) {
+  const accountHelp = registerUrl
+    ? `<p style="color: #6b7280; font-size: 14px;">Jei dar neturite paskyros, susikurkite ją tuo pačiu el. paštu: <a href="${registerUrl}">sukurti paskyrą</a>.</p>`
+    : "";
+
+  return {
+    subject: `Jūsų prašymas patvirtintas — „${supplierName}" — PaslaugųRinka`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #16a34a;">Prašymas patvirtintas!</h2>
+        <p>Jūsų prašymas perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą buvo patvirtintas.</p>
+        <p>Prisijunkite tuo pačiu el. paštu ir galėsite valdyti savo tiekėjo profilį:</p>
+        <p><a href="${dashboardUrl}" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
+        ${accountHelp}
+      </div>
+    `,
+  };
+}
+
+export function claimRejectedEmail(supplierName: string, reason?: string) {
+  const reasonBlock = reason
+    ? `<p><strong>Priežastis:</strong> ${reason}</p>`
+    : `<p>Jei turite klausimų, susisiekite su mumis.</p>`;
+  return {
+    subject: `Jūsų prašymas atmestas — „${supplierName}" — PaslaugųRinka`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #dc2626;">Prašymas atmestas</h2>
+        <p>Deja, jūsų prašymas perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą buvo atmestas.</p>
+        ${reasonBlock}
+        <p style="color: #6b7280; font-size: 14px;">Jei manote, kad tai klaida, galite pateikti naują prašymą arba susisiekti su mumis el. paštu.</p>
+      </div>
+    `,
+  };
+}
+
 export function subscriptionConfirmationEmail(name: string, plan: string) {
   return {
     subject: `${plan} planas aktyvuotas — PaslaugųRinka`,

@@ -1,4 +1,10 @@
+import { config } from "dotenv";
+import { resolve } from "path";
 import { defineConfig } from "prisma/config";
+
+// Load .env.local first (has DATABASE_URL), then .env as fallback
+config({ path: resolve(__dirname, ".env.local") });
+config({ path: resolve(__dirname, ".env") });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

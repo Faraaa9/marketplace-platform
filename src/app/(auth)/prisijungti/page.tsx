@@ -9,6 +9,18 @@ import Button from "@/components/ui/Button";
 import { getRoleHomePath } from "@/lib/redirects";
 import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
+function getSafeCallbackPath(callbackUrl: string | null) {
+  if (!callbackUrl) return null;
+
+  try {
+    const parsed = new URL(callbackUrl, window.location.origin);
+    if (parsed.origin !== window.location.origin) return null;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export default function LoginPage() {
   return (
     <Suspense>
@@ -21,14 +33,36 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const emailParam = searchParams.get("email") || "";
   const { data: session, status } = useSession();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function getRedirectPath(role?: string) {
-    return callbackUrl || getRoleHomePath(role);
+    const homePath = getRoleHomePath(role);
+    const safeCallbackPath = getSafeCallbackPath(callbackUrl);
+
+    if (!safeCallbackPath) return homePath;
+
+    if (role === "ADMIN") {
+      return safeCallbackPath.startsWith("/admin") ? safeCallbackPath : homePath;
+    }
+
+    if (role === "PROVIDER") {
+      return safeCallbackPath.startsWith("/admin") ? homePath : safeCallbackPath;
+    }
+
+    if (
+      safeCallbackPath.startsWith("/admin") ||
+      safeCallbackPath.startsWith("/tiekejas") ||
+      safeCallbackPath.startsWith("/tiekėjas")
+    ) {
+      return homePath;
+    }
+
+    return safeCallbackPath;
   }
 
   useEffect(() => {

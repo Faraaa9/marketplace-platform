@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { attachIdentityToUserByEmail } from "./imported/supplier-access";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,6 +19,14 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+            image: true,
+          },
         });
 
         if (!user) {
@@ -39,14 +48,32 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  events: {
+    async signIn({ user }) {
+      // Auto-bind any unbound SupplierIdentity records that match this user's email
+      if (user.id && user.email) {
+        try {
+          await attachIdentityToUserByEmail(user.email, user.id);
+        } catch (err) {
+          console.error("Failed to auto-bind supplier identities:", err);
+        }
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: string }).role;
       }
-      // Refresh role from DB when session is updated (e.g. after becoming provider)
-      if (trigger === "update" && token.id) {
+
+      const lastRoleSync = typeof token.roleSyncedAt === "number" ? token.roleSyncedAt : 0;
+      const shouldSyncRole =
+        !!token.id &&
+        (trigger === "update" || lastRoleSync === 0 || Date.now() - lastRoleSync > 60_000);
+
+      // Keep authorization decisions aligned with the current database role.
+      if (shouldSyncRole) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: { role: true },
@@ -54,6 +81,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.role = dbUser.role;
         }
+        token.roleSyncedAt = Date.now();
       }
       return token;
     },

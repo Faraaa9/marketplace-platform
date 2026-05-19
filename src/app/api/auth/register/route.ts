@@ -25,9 +25,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: issues[0]?.message || "Validacijos klaida" }, { status: 400 });
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, password } = parsed.data;
+    const email = parsed.data.email.trim().toLowerCase();
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
     if (existing) {
       return NextResponse.json({ success: false, error: "Šis el. paštas jau registruotas" }, { status: 400 });
     }
@@ -41,6 +45,7 @@ export async function POST(req: NextRequest) {
         role: "CLIENT",
         emailVerified: null,
       },
+      select: { id: true, email: true },
     });
 
     // Send verification email

@@ -16,7 +16,17 @@ export default function ProviderCtaLink({
   providerLabel,
 }: ProviderCtaLinkProps) {
   const { data: session } = useSession();
-  const isProvider = session?.user?.role === "PROVIDER";
+  const role = session?.user?.role;
+  const isProvider = role === "PROVIDER";
+  const isAdmin = role === "ADMIN";
+
+  if (isAdmin) {
+    return (
+      <Link href="/admin" className={className}>
+        Admin panelė
+      </Link>
+    );
+  }
 
   if (isProvider) {
     return (

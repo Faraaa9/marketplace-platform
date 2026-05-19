@@ -22,9 +22,29 @@ export async function POST() {
 
     const userId = session.user.id;
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, emailVerified: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Vartotojas nerastas" },
+        { status: 404 }
+      );
+    }
+
+    if (user.role === "ADMIN") {
+      return NextResponse.json(
+        { success: false, error: "Administratorius negali būti perjungtas į tiekėjo rolę" },
+        { status: 403 }
+      );
+    }
+
     // Check if already has provider profile
     const existing = await prisma.providerProfile.findUnique({
       where: { userId },
+      select: { id: true },
     });
 
     if (existing) {
@@ -35,12 +55,6 @@ export async function POST() {
       });
       return NextResponse.json({ success: true, data: { alreadyProvider: true } });
     }
-
-    // Check if email already verified — auto-activate if so
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { emailVerified: true },
-    });
 
     // Create provider profile and update role in a transaction
     await prisma.$transaction([
