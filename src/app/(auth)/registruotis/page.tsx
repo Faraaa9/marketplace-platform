@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { getRoleHomePath } from "@/lib/redirects";
 import { LazyParticles as Particles } from "@/components/magicui/lazy";
 import { CheckCircle2 } from "lucide-react";
@@ -94,6 +95,16 @@ function RegisterForm() {
               {error}
             </div>
           )}
+
+          <div className="mb-5 space-y-3">
+            <GoogleSignInButton label="Registruotis su Google" />
+          </div>
+
+          <div className="relative mb-5 flex items-center">
+            <div className="flex-1 border-t border-surface-200 dark:border-surface-700" />
+            <span className="px-3 text-micro uppercase tracking-wider text-surface-400">arba</span>
+            <div className="flex-1 border-t border-surface-200 dark:border-surface-700" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
