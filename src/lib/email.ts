@@ -68,6 +68,13 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
   const runtimeEmailFrom = process.env.EMAIL_FROM?.trim();
   const emailFrom =
     runtimeEmailFrom || readEnvFileValue("EMAIL_FROM")?.trim() || "PaslaugųRinka <onboarding@resend.dev>";
+  if (process.env.NODE_ENV === "production" && emailFrom.includes("resend.dev")) {
+    console.warn(
+      "[email] EMAIL_FROM not set — using the Resend test domain, which only " +
+        "delivers to the Resend account owner. Set EMAIL_FROM to an address on " +
+        "a verified domain.",
+    );
+  }
   const emailReplyTo = process.env.EMAIL_REPLY_TO?.trim() || readEnvFileValue("EMAIL_REPLY_TO")?.trim();
 
   if (!resendApiKey) {
