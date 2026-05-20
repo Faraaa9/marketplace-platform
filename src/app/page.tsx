@@ -1,26 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
+import HeroSearch from "@/components/marketing/HeroSearch";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
+import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { SERVICE_CATEGORIES, BUDGET_OPTIONS } from "@/lib/constants";
-import { LazyParticles as Particles, LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
-import { MagicCard } from "@/components/magicui/magic-card";
-import { BorderBeam } from "@/components/magicui/border-beam";
-import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Hammer, Droplets, Zap, Sparkles, Truck, Trees, Monitor, Palette, Scale,
+  Calculator, GraduationCap, MoreHorizontal, ArrowRight, MapPin, Clock,
+  MessageSquare, FileText, Users, ShieldCheck, Check, Package, Maximize2, Search,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
-  description: "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
+  description:
+    "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
 };
-import { Hammer, Droplets, Zap, Sparkles, Truck, Trees, Monitor, Palette, Scale, Calculator, GraduationCap, MoreHorizontal, ArrowRight, Users, FileText, Shield, Star, MapPin, Clock, MessageSquare, CheckCircle2 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
   Hammer: <Hammer className="h-6 w-6" />,
@@ -36,6 +39,33 @@ const iconMap: Record<string, React.ReactNode> = {
   GraduationCap: <GraduationCap className="h-6 w-6" />,
   MoreHorizontal: <MoreHorizontal className="h-6 w-6" />,
 };
+
+const AVATARS = [
+  { initials: "JK", color: "#C25E3A" },
+  { initials: "RM", color: "#5E8C50" },
+  { initials: "AB", color: "#5A79A4" },
+  { initials: "GT", color: "#7C6AA6" },
+  { initials: "VL", color: "#B08A2E" },
+  { initials: "DP", color: "#9A6440" },
+];
+
+const HOW_IT_WORKS = [
+  {
+    title: "Aprašyk užduotį",
+    desc: "Užpildyk trumpą formą — ką reikia padaryti, kur ir kada.",
+    icon: <FileText className="h-7 w-7" />,
+  },
+  {
+    title: "Gauk pasiūlymus",
+    desc: "Patikrinti specialistai peržiūri tavo užklausą ir atsiunčia pasiūlymus.",
+    icon: <Users className="h-7 w-7" />,
+  },
+  {
+    title: "Pasirink geriausią",
+    desc: "Palygink kainas bei atsiliepimus ir susisiek tiesiogiai.",
+    icon: <ShieldCheck className="h-7 w-7" />,
+  },
+];
 
 const HOME_PAGE_FALLBACK_DATA = {
   recentRequests: [] as Array<{
@@ -154,230 +184,308 @@ export default async function HomePage() {
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
+  const trustCount = Math.max(providerCount, requestCount);
+  const trustText =
+    trustCount >= 25
+      ? `Mumis pasitiki ${Math.floor(trustCount / 10) * 10}+ žmonių visoje Lietuvoje`
+      : "Patikrinti specialistai iš visos Lietuvos";
+
+  const stats = [
+    { value: providerCount || 1, label: "Specialistų" },
+    { value: requestCount || 1, label: "Pateiktų užklausų" },
+    { value: responseCount || 1, label: "Pateiktų pasiūlymų" },
+    { value: categoryCount || SERVICE_CATEGORIES.length, label: "Kategorijų" },
+  ];
+
   return (
     <div>
-      {/* Hero — Magic UI style */}
-      <section className="relative overflow-hidden bg-surface-0 dark:bg-surface-950 min-h-[85vh] flex items-center">
-        {/* Ambient background layers */}
-        <div className="absolute inset-0 bg-radial-brand" />
-        <div className="absolute inset-0 bg-noise opacity-60" />
-        <Particles className="opacity-30" quantity={50} color="#6366f1" size={1.2} speed={0.2} />
+      {/* ───────────────────────── Hero ───────────────────────── */}
+      <section className="relative flex min-h-[calc(100svh-72px)] flex-col overflow-hidden">
+        {/* Warm glow behind the headline */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F6F1E6]/75 blur-3xl"
+        />
 
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-1/4 -left-32 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-brand-400/20 to-purple-400/10 blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 h-[400px] w-[400px] rounded-full bg-gradient-to-tl from-brand-500/15 to-cyan-400/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-white/80 backdrop-blur-sm px-4 py-1.5 text-micro font-medium text-brand-700 mb-8 shadow-xs dark:border-brand-800/60 dark:bg-surface-900/80 dark:text-brand-300">
-              <Star className="h-3.5 w-3.5 fill-brand-500 text-brand-500" />
-              Patikima platforma Lietuvoje
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse-slow" />
+        {/* Floating decorations (wide screens only) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-[5] hidden xl:block">
+          {/* Left — dashed journey path with nodes */}
+          <div className="absolute left-[1.5%] top-[15%] h-[70%] w-[360px]">
+            <svg viewBox="0 0 360 600" className="h-full w-full" fill="none">
+              <path
+                d="M250,28 C200,140 108,180 106,308 C104,438 168,500 212,576"
+                stroke="#C6BFB0"
+                strokeWidth="2"
+                strokeDasharray="5 7"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute" style={{ left: "69%", top: "5%", transform: "translate(-50%,-50%)" }}>
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#E1DAEC] ring-1 ring-[#CABFE0]">
+                <Package className="h-6 w-6 text-[#7C6AA6]" />
+              </div>
             </div>
-
-            {/* Headline with gradient */}
-            <h1 className="text-[2.75rem] sm:text-[3.5rem] lg:text-[4.25rem] font-bold tracking-tight leading-[1.05] text-surface-900 dark:text-white">
-              Raskite geriausią
-              <br />
-              <span className="bg-gradient-to-r from-brand-600 via-brand-500 to-purple-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                specialistą per minutes
-              </span>
-            </h1>
-
-            <p className="mt-6 text-lg sm:text-xl text-surface-500 dark:text-surface-400 max-w-2xl mx-auto leading-relaxed">
-              Aprašykite ko jums reikia — gausite pasiūlymus iš patikimų tiekėjų visoje Lietuvoje. Be registracijos, be įsipareigojimų.
-            </p>
-
-            {/* CTA buttons */}
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/uzklausos/nauja"
-                className="group relative inline-flex items-center justify-center rounded-2xl bg-brand-600 px-8 py-4 text-body font-semibold text-white shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:shadow-xl hover:shadow-brand-600/30 transition-all duration-300 hover:-translate-y-0.5"
-              >
-                Pateikti užklausą nemokamai
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/tiekejams"
-                className="inline-flex items-center justify-center rounded-2xl border border-surface-200 bg-white/80 backdrop-blur-sm px-8 py-4 text-body font-semibold text-surface-700 hover:bg-white hover:border-surface-300 hover:shadow-soft transition-all duration-300 dark:border-surface-700 dark:bg-surface-900/80 dark:text-surface-300 dark:hover:bg-surface-800"
-              >
-                Esu tiekėjas
-              </Link>
+            <div className="absolute" style={{ left: "30%", top: "52%", transform: "translate(-50%,-50%)" }}>
+              <div className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D4E5CD] ring-1 ring-[#BBD3B0]">
+                <Search className="h-6 w-6 text-[#5E8C50]" />
+                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 translate-y-full rounded-md bg-[#4A463F] px-2 py-[3px] text-[11px] font-medium text-white">
+                  Tu
+                </span>
+              </div>
             </div>
+            <div className="absolute" style={{ left: "58%", top: "96%", transform: "translate(-50%,-50%)" }}>
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D5E0EC] ring-1 ring-[#BCCCDF]">
+                <Check className="h-6 w-6 text-[#5A79A4]" />
+              </div>
+            </div>
+          </div>
 
-            {/* Trust indicators */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-body-sm text-surface-400">
-              {[
-                "Nemokama registracija",
-                "Be įsipareigojimų",
-                ...(providerCount > 0 ? [`${providerCount} tiekėjų`] : []),
-              ].map((text) => (
-                <div key={text} className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span>{text}</span>
+          {/* Right — sample request card */}
+          <div className="absolute right-[2.5%] top-[16%] w-[256px] rotate-[2.5deg]">
+            <div className="rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-4 shadow-[0_20px_44px_-20px_rgba(40,35,30,0.32)]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[#8C877D]">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span className="text-[11px] font-medium">Nauja užklausa</span>
                 </div>
+                <Maximize2 className="h-3 w-3 text-[#B5AFA2]" />
+              </div>
+              <p className="mt-2.5 text-[13px] font-semibold leading-snug text-[#26231F]">
+                Vonios kambario remontas — Vilnius
+              </p>
+              <div className="mt-3 space-y-1.5">
+                <div className="h-1.5 w-full rounded-full bg-[#E8E3D8]" />
+                <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8]" />
+              </div>
+              <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5">
+                <span className="text-[11px] text-[#8C877D]">6 specialistai atsakė</span>
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C25E3A] text-[9px] font-bold text-white">
+                  P
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — sticky note tip + hand-drawn arrow pointing at the AI button */}
+          <div className="absolute right-[4%] top-[45%] w-[242px] -rotate-[5deg]">
+            <div className="rounded-xl bg-[#F4E6A8] p-4 shadow-[0_18px_36px_-18px_rgba(40,35,30,0.4)]">
+              <p className="text-[12.5px] leading-relaxed text-[#7C6B2E]">
+                <span className="font-bold">Patarimas:</span> nežinai, kaip
+                aprašyti? Spausk{" "}
+                <span className="font-semibold">„Sutvarkyti aprašymą"</span> —
+                dirbtinis intelektas sutvarkys tekstą ir patars, ką dar pridėti.
+              </p>
+            </div>
+          </div>
+
+          {/* Hand-drawn arrow from the tip down to the AI button */}
+          <div className="absolute left-[62%] top-[58%] h-[185px] w-[300px]">
+            <svg
+              viewBox="0 0 300 185"
+              className="h-full w-full"
+              fill="none"
+              stroke="#C25E3A"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M256,28 C240,82 214,110 122,128" />
+              <path d="M137,132 L122,128 L135,118" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Centered content */}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-12 pb-10">
+          <span className="mb-7 inline-flex items-center rounded-full bg-[#2A2723] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#ECE9E2]">
+            Paslaugų rinka
+          </span>
+          <h1 className="text-center text-[2.75rem] font-bold leading-[1.05] tracking-tight text-[#26231F] sm:text-[3.5rem] lg:text-[4.25rem]">
+            Rask specialistą,
+            <br />
+            kurio tikrai reikia
+          </h1>
+          <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760]">
+            Aprašyk, ko tau reikia, ir gauk pasiūlymų iš patikrintų specialistų
+            visoje Lietuvoje.
+          </p>
+          <div className="mt-9 flex w-full justify-center">
+            <HeroSearch />
+          </div>
+        </div>
+
+        {/* Social proof */}
+        <div className="relative z-10 flex justify-center px-6 pb-12">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {AVATARS.map((a) => (
+                <span
+                  key={a.initials}
+                  className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2]"
+                  style={{ backgroundColor: a.color }}
+                >
+                  {a.initials}
+                </span>
               ))}
             </div>
-
-            {/* Guest request recovery */}
-            <div className="mt-8 max-w-md mx-auto">
-              <RecentRequestBanner />
-            </div>
+            <span className="text-sm text-[#6B6760]">{trustText}</span>
           </div>
         </div>
       </section>
 
-      {/* Recent requests — Magic Card style */}
+      {/* Guest request recovery */}
+      <div className="mx-auto max-w-2xl px-6 [&:not(:empty)]:py-8">
+        <RecentRequestBanner />
+      </div>
+
+      {/* ──────────────────── Recent requests ──────────────────── */}
       {recentRequests.length > 0 && (
-        <section className="relative py-24 bg-surface-50 dark:bg-surface-900">
-          <div className="absolute inset-0 bg-radial-brand-subtle" />
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
+        <section className="py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="mb-12 text-center">
+              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
                 Naujausi darbai
-              </div>
-              <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Ką ieško klientai</h2>
-              <p className="mt-3 text-body text-surface-500 dark:text-surface-400 max-w-lg mx-auto">
-                Peržiūrėkite naujausias užklausas ir pateikite savo pasiūlymą
+              </span>
+              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+                Ką šiuo metu ieško klientai
+              </h2>
+              <p className="mt-3 text-[#6B6760]">
+                Peržiūrėk naujausias užklausas ir pateik savo pasiūlymą
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {recentRequests.map((r) => (
-                <MagicCard key={r.id} className="p-0">
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-body font-semibold text-surface-900 dark:text-white line-clamp-1">
-                        {r.title}
-                      </h3>
-                      {r.budget && (
-                        <span className="shrink-0 text-caption font-semibold text-brand-600 dark:text-brand-400">
-                          {budgetLabel(r.budget)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 line-clamp-2">
-                      {truncate(r.description, 100)}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                        {categoryLabel(r.category)}
+                <Link
+                  key={r.id}
+                  href="/uzklausos"
+                  className="group rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-5 transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="line-clamp-1 font-semibold text-[#26231F]">
+                      {r.title}
+                    </h3>
+                    {r.budget && (
+                      <span className="shrink-0 text-sm font-semibold text-[#C25E3A]">
+                        {budgetLabel(r.budget)}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-micro text-surface-400">
-                        <MapPin className="h-3 w-3" />
-                        {r.location}
-                      </span>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-surface-100 dark:border-surface-700/50 flex items-center justify-between text-micro text-surface-400">
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatRelativeDate(r.createdAt)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3" />
-                          {r._count.responses} pasiūl.
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                </MagicCard>
+                  <p className="mt-2 line-clamp-2 text-sm text-[#6B6760]">
+                    {truncate(r.description, 100)}
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="rounded-lg bg-[#EFE0D6] px-2.5 py-1 text-xs font-medium text-[#A84E2E]">
+                      {categoryLabel(r.category)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-[#8C877D]">
+                      <MapPin className="h-3 w-3" />
+                      {r.location}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3 border-t border-[#EAE5DA] pt-3 text-xs text-[#8C877D]">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatRelativeDate(r.createdAt)}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      {r._count.responses} pasiūl.
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
             <div className="mt-10 text-center">
               <Link
                 href="/uzklausos"
-                className="group inline-flex items-center gap-2 rounded-xl bg-white border border-surface-200 px-5 py-2.5 text-body-sm font-semibold text-brand-600 hover:bg-brand-50 hover:border-brand-200 transition-all dark:bg-surface-800 dark:border-surface-700 dark:hover:bg-surface-700"
+                className="group inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#FBFAF6] px-5 py-2.5 text-sm font-semibold text-[#26231F] transition-colors hover:bg-white"
               >
                 Visos užklausos
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
           </div>
         </section>
       )}
 
-      {/* How it works — Redesigned with Magic Cards + Border Beam */}
-      <section className="py-24 bg-white dark:bg-surface-950">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
+      {/* ───────────────────── How it works ───────────────────── */}
+      <section id="kaip-veikia" className="scroll-mt-24 py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 text-center">
+            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
               Kaip tai veikia
-            </div>
-            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Trys paprasti žingsniai</h2>
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+              Trys paprasti žingsniai
+            </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {[
-              { step: "1", title: "Aprašykite užduotį", desc: "Užpildykite trumpą formą — ką reikia padaryti, kur ir kada.", icon: <FileText className="h-7 w-7" />, color: "from-brand-500 to-brand-600" },
-              { step: "2", title: "Gaukite pasiūlymus", desc: "Patikimi tiekėjai peržiūrės jūsų užklausą ir atsiųs savo pasiūlymus.", icon: <Users className="h-7 w-7" />, color: "from-purple-500 to-brand-600" },
-              { step: "3", title: "Pasirinkite geriausią", desc: "Palyginkite kainas ir atsiliepimus, susisiekite tiesiogiai.", icon: <Shield className="h-7 w-7" />, color: "from-brand-600 to-emerald-500" },
-            ].map((item) => (
-              <div key={item.step} className="relative group">
-                <div className="relative overflow-hidden rounded-2xl border border-surface-200/60 bg-white p-8 transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 dark:border-surface-700/50 dark:bg-surface-900">
-                  <BorderBeam size={120} duration={8} delay={Number(item.step) * 2} />
-
-                  {/* Step number */}
-                  <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.color} text-white font-bold text-lg shadow-lg shadow-brand-500/20`}>
-                    {item.step}
-                  </div>
-
-                  {/* Icon floating */}
-                  <div className="absolute top-6 right-6 text-surface-200 dark:text-surface-700 transition-colors group-hover:text-brand-200 dark:group-hover:text-brand-800">
-                    {item.icon}
-                  </div>
-
-                  <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{item.title}</h3>
-                  <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 leading-relaxed">{item.desc}</p>
+          <div className="grid gap-6 md:grid-cols-3">
+            {HOW_IT_WORKS.map((item, idx) => (
+              <div
+                key={item.title}
+                className="relative rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-8"
+              >
+                <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-[#C25E3A] text-lg font-bold text-white">
+                  {idx + 1}
                 </div>
+                <div className="absolute right-6 top-6 text-[#E0DACB]">
+                  {item.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-[#26231F]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#6B6760]">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Categories — Grid with Magic Card hover */}
-      <section className="py-24 bg-surface-50 dark:bg-surface-900">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
+      {/* ────────────────────── Categories ────────────────────── */}
+      <section id="kategorijos" className="scroll-mt-24 py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 text-center">
+            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
               Kategorijos
-            </div>
-            <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">Paslaugų kategorijos</h2>
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+              Paslaugų kategorijos
+            </h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {SERVICE_CATEGORIES.map((cat) => (
               <Link
                 key={cat.value}
                 href={`/uzklausos/nauja?category=${cat.value}`}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-surface-200/60 bg-white p-6 text-center transition-all duration-300 hover:shadow-elevated hover:border-brand-200 hover:-translate-y-1 dark:border-surface-700/50 dark:bg-surface-800/50 dark:hover:border-brand-700"
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)]"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-all group-hover:bg-brand-100 group-hover:scale-110 dark:bg-brand-950 dark:text-brand-400">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] transition-transform group-hover:scale-110">
                   {iconMap[cat.icon]}
                 </div>
-                <span className="text-body-sm font-medium text-surface-900 dark:text-white">{cat.label}</span>
+                <span className="text-sm font-medium text-[#26231F]">
+                  {cat.label}
+                </span>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Stats — Number Ticker */}
-      <section className="relative py-24 bg-white dark:bg-surface-950 overflow-hidden">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-surface-200/60 bg-surface-50/80 backdrop-blur-sm p-12 dark:border-surface-700/50 dark:bg-surface-900/50">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { value: providerCount || 1, suffix: "", label: "Tiekėjų" },
-                { value: requestCount || 1, suffix: "", label: "Pateiktų užklausų" },
-                { value: responseCount || 1, suffix: "", label: "Pateiktų pasiūlymų" },
-                { value: categoryCount || SERVICE_CATEGORIES.length, suffix: "", label: "Kategorijų" },
-              ].map((stat) => (
+      {/* ──────────────────────── Stats ───────────────────────── */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-10">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+              {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className="text-[2.5rem] sm:text-display-xl font-bold bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
-                    <NumberTicker value={stat.value} suffix={stat.suffix} />
+                  <div className="text-4xl font-bold text-[#C25E3A] sm:text-[2.75rem]">
+                    {stat.value}
                   </div>
-                  <div className="mt-2 text-body-sm text-surface-500 dark:text-surface-400 font-medium">{stat.label}</div>
+                  <div className="mt-2 text-sm font-medium text-[#6B6760]">
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>
@@ -385,34 +493,33 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Q&A */}
-      <section className="py-24 bg-surface-50 dark:bg-surface-900">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 items-start">
+      {/* ─────────────────────────  FAQ  ──────────────────────── */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
+              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
                 Klausimai ir atsakymai
-              </div>
-              <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">
+              </span>
+              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
                 Ką verta žinoti prieš pradedant
               </h2>
-              <p className="mt-4 max-w-md text-body text-surface-500 dark:text-surface-400 leading-relaxed">
-                Trumpi atsakymai į dažniausius klausimus naujiems klientams ir tiekėjams.
-                Jei vis tiek lieka neaišku, visada galite pradėti nuo pirmos užklausos ir išbandyti platformą praktiškai.
+              <p className="mt-4 max-w-md leading-relaxed text-[#6B6760]">
+                Trumpi atsakymai į dažniausius klausimus. Jei vis tiek lieka
+                neaišku, gali pradėti nuo pirmos užklausos ir išbandyti platformą
+                praktiškai.
               </p>
             </div>
-
-            <div className="rounded-3xl border border-surface-200/60 bg-white p-6 shadow-soft dark:border-surface-700/50 dark:bg-surface-950/70">
-              <Accordion
-                type="single"
-                collapsible
-                defaultValue="free"
-                className="w-full"
-              >
+            <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-6">
+              <Accordion type="single" collapsible defaultValue="free" className="w-full">
                 {FAQ_ITEMS.map((item) => (
-                  <AccordionItem key={item.value} value={item.value}>
-                    <AccordionTrigger>{item.question}</AccordionTrigger>
-                    <AccordionContent>{item.answer}</AccordionContent>
+                  <AccordionItem key={item.value} value={item.value} className="border-[#EAE5DA]">
+                    <AccordionTrigger className="text-[#26231F] hover:text-[#C25E3A]">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-[#6B6760]">
+                      {item.answer}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
@@ -421,22 +528,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA for providers — Enhanced with particles */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900" />
-        <div className="absolute inset-0 bg-noise opacity-30" />
-        <Particles className="opacity-20" quantity={30} color="#ffffff" size={1} speed={0.15} />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-1.5 text-micro font-medium text-white/90 mb-6">
+      {/* ─────────────────── CTA for providers ────────────────── */}
+      <section className="px-6 py-20">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#2A2723] px-6 py-16 text-center">
+          <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-[#E8E3D8]">
             <Sparkles className="h-3.5 w-3.5" />
-            Pradėkite nemokamai
-          </div>
-          <h2 className="text-heading-1 sm:text-display font-bold text-white">Esate paslaugų tiekėjas?</h2>
-          <p className="mt-4 text-body-lg text-brand-100/90 max-w-2xl mx-auto">
-            Prisijunkite prie platformos ir gaukite naujų klientų kiekvieną dieną. Pradėkite nemokamai.
+            Pradėk nemokamai
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight text-[#F4F1EA] sm:text-4xl">
+            Esi paslaugų tiekėjas?
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-[#B3AEA3]">
+            Prisijunk prie platformos ir gauk naujų klientų kiekvieną dieną.
+            Pradėti nieko nekainuoja.
           </p>
           <ProviderCtaLink
-            className="mt-8 group inline-flex items-center rounded-2xl bg-white px-8 py-4 text-body font-semibold text-brand-600 shadow-lg shadow-brand-900/30 hover:bg-brand-50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+            className="group mt-8 inline-flex items-center rounded-full bg-[#ECE9E2] px-7 py-3.5 font-semibold text-[#26231F] transition-all hover:-translate-y-0.5 hover:bg-white"
             providerLabel={
               <>
                 Eiti į valdymo panelę

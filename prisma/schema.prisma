@@ -22,6 +22,7 @@ model User {
   providerProfile         ProviderProfile?
   serviceRequests         ServiceRequest[]
   responses               Response[]
+  requestViews            RequestView[]
   messages                Message[]
   subscription            Subscription?
   notifications           Notification[]
@@ -107,14 +108,29 @@ model ServiceRequest {
   createdAt                    DateTime  @default(now())
   updatedAt                    DateTime  @updatedAt
 
-  client    User?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  client    User?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
   responses Response[]
   reviews   Review[]
+  views     RequestView[]
 
   @@index([status])
   @@index([category])
   @@index([location])
   @@map("service_requests")
+}
+
+model RequestView {
+  id         String   @id @default(cuid())
+  requestId  String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, providerId])
+  @@index([requestId])
+  @@map("request_views")
 }
 
 model Response {

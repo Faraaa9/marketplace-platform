@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -38,9 +37,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative flex min-h-[85vh] items-center justify-center px-4">
-      <div className="absolute inset-0 bg-radial-brand-subtle" />
-      <Particles className="opacity-15" quantity={20} color="#6366f1" size={1} speed={0.1} />
-
       <div className="relative w-full max-w-md">
         <div className="rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90">
           <div className="text-center mb-8">

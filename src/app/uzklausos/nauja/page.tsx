@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SERVICE_CATEGORIES, BUDGET_OPTIONS, LITHUANIAN_CITIES } from "@/lib/constants";
+import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
 import { saveGuestRequest } from "@/lib/guest-request";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
@@ -11,6 +11,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
+import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 
 export default function NewRequestPage() {
   return <Suspense fallback={<LoadingSpinner />}><NewRequestForm /></Suspense>;
@@ -28,7 +29,7 @@ function NewRequestForm() {
   const [form, setForm] = useState({
     category: searchParams.get("category") || "",
     title: "",
-    description: "",
+    description: searchParams.get("description") || "",
     location: "",
     budget: "",
     clientName: session?.user?.name || "",
@@ -94,7 +95,6 @@ function NewRequestForm() {
   }
 
   const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === form.category)?.label;
-  const budgetLabel = BUDGET_OPTIONS.find((b) => b.value === form.budget)?.label;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -158,6 +158,22 @@ function NewRequestForm() {
               {trimmedDescriptionLength}/{descriptionMinLength}
             </span>
           </div>
+          <ImproveDescriptionButton
+            value={form.description}
+            onChange={(value) => updateForm("description", value)}
+            onMeta={(meta) =>
+              setForm((prev) => ({
+                ...prev,
+                category: prev.category || meta.category,
+                title: prev.title || meta.title,
+                location: prev.location || meta.location,
+              }))
+            }
+            targetId="description"
+            category={categoryLabel}
+            title={form.title}
+            tone="form"
+          />
           <Select
             id="location"
             label="Miestas"
@@ -166,11 +182,10 @@ function NewRequestForm() {
             value={form.location}
             onChange={(e) => updateForm("location", e.target.value)}
           />
-          <Select
+          <Input
             id="budget"
             label="Biudžetas (neprivaloma)"
-            options={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
-            placeholder="Pasirinkite biudžetą"
+            placeholder="Pvz. 500 €, derinama arba nemokamai"
             value={form.budget}
             onChange={(e) => updateForm("budget", e.target.value)}
           />
@@ -282,7 +297,7 @@ function NewRequestForm() {
               {form.budget && (
                 <div className="flex justify-between">
                   <dt className="text-surface-500">Biudžetas:</dt>
-                  <dd className="font-medium text-surface-900 dark:text-white">{budgetLabel}</dd>
+                  <dd className="font-medium text-surface-900 dark:text-white">{form.budget}</dd>
                 </div>
               )}
               <hr className="border-surface-200/50 dark:border-surface-700" />

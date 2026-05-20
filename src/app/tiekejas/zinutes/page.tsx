@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -16,6 +16,8 @@ import {
   User,
   ChevronDown,
   ChevronUp,
+  Send,
+  Reply,
 } from "lucide-react";
 
 interface Inquiry {
@@ -33,6 +35,15 @@ interface Inquiry {
 
 type FilterStatus = "" | "NEW" | "READ" | "ARCHIVED";
 
+function buildReplyMailto(inq: Inquiry, body: string): string {
+  const subject = "Re: Užklausa per paslaugurinka.lt";
+  const trimmed = body.trim();
+  const params = new URLSearchParams();
+  params.set("subject", subject);
+  if (trimmed) params.set("body", trimmed);
+  return `mailto:${inq.senderEmail}?${params.toString().replace(/\+/g, "%20")}`;
+}
+
 export default function ProviderInboxPage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +52,8 @@ export default function ProviderInboxPage() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const fetchInquiries = useCallback(async (statusFilter: FilterStatus, pageNum: number) => {
     setLoading(true);
@@ -92,15 +105,26 @@ export default function ProviderInboxPage() {
     }
   }
 
-  function handleExpand(inq: Inquiry) {
+  function handleExpand(inq: Inquiry, focusReply = false) {
     if (expandedId === inq.id) {
+      if (focusReply) {
+        textareaRefs.current[inq.id]?.focus();
+        return;
+      }
       setExpandedId(null);
       return;
     }
     setExpandedId(inq.id);
-    // Auto-mark as read
     if (inq.status === "NEW") {
       updateStatus(inq.id, "READ");
+    }
+    if (focusReply) {
+      requestAnimationFrame(() => {
+        const ta = textareaRefs.current[inq.id];
+        if (!ta) return;
+        ta.focus();
+        ta.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
     }
   }
 
@@ -184,53 +208,115 @@ export default function ProviderInboxPage() {
                     : "border-surface-200/60 dark:border-surface-700/50"
                 }`}
               >
-                {/* Header — clickable */}
-                <button
-                  onClick={() => handleExpand(inq)}
-                  className="w-full px-5 py-4 text-left"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 shrink-0 ${isNew ? "text-brand-500" : "text-surface-300 dark:text-surface-600"}`}>
-                      {isNew ? <Mail className="h-5 w-5" /> : <MailOpen className="h-5 w-5" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-body-sm font-medium truncate ${isNew ? "text-surface-900 dark:text-white" : "text-surface-700 dark:text-surface-300"}`}>
-                          {senderDisplayName(inq)}
-                        </span>
-                        {isNew && (
-                          <span className="shrink-0 h-2 w-2 rounded-full bg-brand-500" />
-                        )}
+                {/* Header — row with quick Reply button */}
+                <div className="flex items-stretch">
+                  <button
+                    onClick={() => handleExpand(inq)}
+                    className="flex-1 min-w-0 px-4 py-4 text-left sm:px-5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 shrink-0 ${isNew ? "text-brand-500" : "text-surface-300 dark:text-surface-600"}`}>
+                        {isNew ? <Mail className="h-5 w-5" /> : <MailOpen className="h-5 w-5" />}
                       </div>
-                      <p className="text-body-sm text-surface-500 dark:text-surface-400 mt-0.5 line-clamp-2">
-                        {inq.description}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1.5 text-micro text-surface-400">
-                        <span>{formatRelativeDate(inq.createdAt)}</span>
-                        {inq.budget && (
-                          <span className="inline-flex items-center gap-1">
-                            <Euro className="h-3 w-3" />
-                            {inq.budget}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-body-sm font-medium truncate ${isNew ? "text-surface-900 dark:text-white" : "text-surface-700 dark:text-surface-300"}`}>
+                            {senderDisplayName(inq)}
                           </span>
-                        )}
+                          {isNew && (
+                            <span className="shrink-0 h-2 w-2 rounded-full bg-brand-500" />
+                          )}
+                        </div>
+                        <p className="text-body-sm text-surface-500 dark:text-surface-400 mt-0.5 line-clamp-2">
+                          {inq.description}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1.5 text-micro text-surface-400">
+                          <span>{formatRelativeDate(inq.createdAt)}</span>
+                          {inq.budget && (
+                            <span className="inline-flex items-center gap-1">
+                              <Euro className="h-3 w-3" />
+                              {inq.budget}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-surface-400 self-center">
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </div>
                     </div>
-                    <div className="shrink-0 text-surface-400">
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  {!isExpanded && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExpand(inq, true);
+                      }}
+                      aria-label="Atsakyti"
+                      className="shrink-0 flex items-center gap-1.5 px-3 sm:px-4 border-l border-surface-100 text-brand-600 hover:bg-brand-50 active:bg-brand-100 transition-colors dark:border-surface-800 dark:text-brand-400 dark:hover:bg-surface-800"
+                    >
+                      <Reply className="h-4 w-4" />
+                      <span className="hidden sm:inline text-body-sm font-medium">Atsakyti</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Expanded detail */}
                 {isExpanded && (
-                  <div className="border-t border-surface-100 px-5 py-4 dark:border-surface-800">
+                  <div className="border-t border-surface-100 px-4 py-4 sm:px-5 dark:border-surface-800">
                     {/* Full message */}
                     <p className="text-body-sm text-surface-700 dark:text-surface-300 whitespace-pre-wrap leading-relaxed mb-4">
                       {inq.description}
                     </p>
 
+                    {/* Inline reply composer — primary action, appears first */}
+                    <div className="mb-4">
+                      <label
+                        htmlFor={`reply-${inq.id}`}
+                        className="mb-1.5 block text-micro font-medium text-surface-500"
+                      >
+                        Atsakymas
+                      </label>
+                      <textarea
+                        id={`reply-${inq.id}`}
+                        ref={(el) => {
+                          textareaRefs.current[inq.id] = el;
+                        }}
+                        value={replyDrafts[inq.id] ?? ""}
+                        onChange={(e) =>
+                          setReplyDrafts((d) => ({ ...d, [inq.id]: e.target.value }))
+                        }
+                        rows={5}
+                        placeholder={`Sveiki, ${senderDisplayName(inq).split(" ")[0] || ""},\nDėkoju už žinutę. `}
+                        className="w-full resize-y rounded-xl border border-surface-200 bg-white px-3 py-3 text-body text-surface-900 placeholder:text-surface-300 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-white"
+                      />
+                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <a
+                          href={buildReplyMailto(inq, replyDrafts[inq.id] ?? "")}
+                          className="w-full sm:w-auto"
+                          onClick={() => {
+                            if (inq.status === "NEW") updateStatus(inq.id, "READ");
+                          }}
+                        >
+                          <Button className="w-full sm:w-auto">
+                            <Send className="h-4 w-4" />
+                            Siųsti atsakymą
+                          </Button>
+                        </a>
+                        {inq.status !== "ARCHIVED" && (
+                          <Button
+                            variant="ghost"
+                            className="w-full sm:w-auto"
+                            onClick={() => updateStatus(inq.id, "ARCHIVED")}
+                          >
+                            <Archive className="h-4 w-4" />
+                            Archyvuoti
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Contact info */}
-                    <div className="rounded-xl bg-surface-50 px-4 py-3 dark:bg-surface-800/50 mb-4">
+                    <div className="rounded-xl bg-surface-50 px-4 py-3 dark:bg-surface-800/50 mb-3">
                       <p className="text-micro font-medium text-surface-500 mb-2">Kontaktai</p>
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-body-sm text-surface-700 dark:text-surface-300">
@@ -256,31 +342,11 @@ export default function ProviderInboxPage() {
 
                     {/* Budget */}
                     {inq.budget && (
-                      <div className="flex items-center gap-2 text-body-sm text-surface-600 dark:text-surface-400 mb-4">
+                      <div className="flex items-center gap-2 text-body-sm text-surface-600 dark:text-surface-400">
                         <Euro className="h-4 w-4 text-emerald-500" />
                         Biudžetas: <span className="font-medium">{inq.budget}</span>
                       </div>
                     )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <a href={`mailto:${inq.senderEmail}`}>
-                        <Button size="sm">
-                          <Mail className="h-3.5 w-3.5" />
-                          Atsakyti el. paštu
-                        </Button>
-                      </a>
-                      {inq.status !== "ARCHIVED" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => updateStatus(inq.id, "ARCHIVED")}
-                        >
-                          <Archive className="h-3.5 w-3.5" />
-                          Archyvuoti
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>

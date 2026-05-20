@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { SERVICE_CATEGORIES, BUDGET_OPTIONS } from "@/lib/constants";
+import { useSession, signIn } from "next-auth/react";
+import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { clearGuestRequest } from "@/lib/guest-request";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -52,12 +52,14 @@ interface RequestData {
   clientId?: string | null;
   clientName: string;
   createdAt: string;
+  viewCount?: number;
   responses: ResponseData[];
 }
 
 export default function TrackRequestPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const [request, setRequest] = useState<RequestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -155,7 +157,6 @@ export default function TrackRequestPage() {
   if (!request) return null;
 
   const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label || request.category;
-  const budgetLabel = BUDGET_OPTIONS.find((b) => b.value === request.budget)?.label;
   const statusMap: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
     PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
     OPEN: { label: "Atidaryta", variant: "success" },
@@ -180,7 +181,13 @@ export default function TrackRequestPage() {
         <div className="mt-3 flex flex-wrap gap-4 text-body-sm text-surface-500">
           <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{request.location}</span>
           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatRelativeDate(request.createdAt)}</span>
-          {budgetLabel && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{budgetLabel}</span>}
+          {request.budget && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{request.budget}</span>}
+          {session && (
+            <span className="flex items-center gap-1.5" title="Kiek tiekėjų peržiūrėjo užklausą">
+              <Eye className="h-4 w-4" />
+              {request.viewCount ?? 0} perž.
+            </span>
+          )}
         </div>
       </div>
 
@@ -437,9 +444,48 @@ function AccountValueBox({ clientId, trackingToken, onClaimed }: { clientId?: st
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [claimError, setClaimError] = useState("");
+  const [password, setPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [accountExists, setAccountExists] = useState(false);
 
   // Already attached to an account — nothing to show
   if (clientId) return null;
+
+  async function handleCreateAccount() {
+    if (password.length < 8) {
+      setCreateError("Slaptažodis turi būti bent 8 simbolių");
+      return;
+    }
+    setCreating(true);
+    setCreateError("");
+    setAccountExists(false);
+    try {
+      const res = await fetch("/api/requests/create-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingToken, password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        clearGuestRequest();
+        await signIn("credentials", {
+          email: data.data.email,
+          password,
+          callbackUrl: "/paskyra/uzklausos",
+        });
+      } else if (data.code === "ACCOUNT_EXISTS") {
+        setAccountExists(true);
+        setCreateError(data.error || "Su šiuo el. paštu paskyra jau yra.");
+      } else {
+        setCreateError(data.error || "Nepavyko sukurti paskyros");
+      }
+    } catch {
+      setCreateError("Klaida");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function handleClaim() {
     setClaiming(true);
@@ -495,18 +541,18 @@ function AccountValueBox({ clientId, trackingToken, onClaimed }: { clientId?: st
     );
   }
 
-  // Anonymous user → show value prop + register CTA
+  // Anonymous user → value prop + inline, pre-verified account creation
   return (
     <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
       <div className="flex items-center gap-2 mb-3">
         <UserPlus className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-        <h3 className="text-body font-semibold text-surface-900 dark:text-white">Nori patogiau?</h3>
+        <h3 className="text-body font-semibold text-surface-900 dark:text-white">Sukurti nemokamą paskyrą</h3>
       </div>
       <ul className="space-y-2 mb-4">
         {[
           { icon: <Eye className="h-3.5 w-3.5" />, text: "Visos užklausos vienoje vietoje" },
           { icon: <Bell className="h-3.5 w-3.5" />, text: "Pranešimai apie naujus pasiūlymus" },
-          { icon: <Zap className="h-3.5 w-3.5" />, text: "Greičiau pateiksite būsimas užklausas" },
+          { icon: <Zap className="h-3.5 w-3.5" />, text: "Matysite, kiek tiekėjų peržiūrėjo užklausą" },
         ].map((item) => (
           <li key={item.text} className="flex items-center gap-2.5 text-body-sm text-surface-600 dark:text-surface-400">
             <span className="text-brand-500">{item.icon}</span>
@@ -514,13 +560,34 @@ function AccountValueBox({ clientId, trackingToken, onClaimed }: { clientId?: st
           </li>
         ))}
       </ul>
-      <Link
-        href="/registruotis"
-        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm"
-      >
-        <UserPlus className="h-3.5 w-3.5" />
-        Sukurti nemokamą paskyrą
-      </Link>
+      <p className="mb-2 text-micro text-surface-500 dark:text-surface-400">
+        Paskyra bus sukurta el. paštui, kurį nurodėte užklausoje — pakartotinai jo tvirtinti nereikės.
+      </p>
+      <div className="space-y-2.5">
+        <input
+          type="password"
+          placeholder="Slaptažodis (bent 8 simboliai)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleCreateAccount(); }}
+          className="h-10 w-full rounded-xl border border-surface-200 bg-white px-3.5 text-body-sm text-surface-900 placeholder:text-surface-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100"
+        />
+        <Button size="sm" onClick={handleCreateAccount} isLoading={creating}>
+          <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+          Sukurti paskyrą
+        </Button>
+      </div>
+      {createError && (
+        <p className="mt-2 text-body-sm text-red-600 dark:text-red-400">
+          {createError}
+          {accountExists && (
+            <>
+              {" "}
+              <Link href="/prisijungti" className="font-medium underline">Prisijungti</Link>
+            </>
+          )}
+        </p>
+      )}
     </div>
   );
 }

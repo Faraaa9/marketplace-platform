@@ -133,7 +133,7 @@ function VerifyLayout({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <div className="mx-auto mb-4">{icon}</div>
         <h1 className="text-xl font-bold text-surface-900 dark:text-white">

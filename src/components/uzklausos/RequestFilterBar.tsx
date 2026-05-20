@@ -170,7 +170,7 @@ export default function RequestFilterBar({
             placeholder="Ieškoti užklausos..."
             value={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full h-11 rounded-xl border border-surface-200 bg-surface-50 pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:focus:bg-surface-800"
+            className="w-full h-11 rounded-lg border border-[#cdc09f] bg-[#fbfaf6] pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/25 focus:border-brand-500 focus:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
           />
         </div>
         <div className="relative">
@@ -180,10 +180,10 @@ export default function RequestFilterBar({
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
             aria-label={`Filtrai${activeFilterCount > 0 ? ` (${activeFilterCount} aktyvūs)` : ""}`}
-            className={`relative flex items-center gap-2 h-11 rounded-xl border px-4 text-body-sm font-medium transition-all duration-150 shrink-0 ${
+            className={`relative flex items-center gap-2 h-11 rounded-lg border px-4 text-body-sm font-medium transition-all duration-150 shrink-0 ${
               isOpen || activeFilterCount > 0
-                ? "border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
-                : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                ? "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
+                : "border-[#cdc09f] bg-[#fbfaf6] text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
             }`}
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -199,7 +199,7 @@ export default function RequestFilterBar({
           {isOpen && (
             <div
               ref={panelRef}
-              className="hidden sm:block absolute right-0 top-full mt-2 w-96 rounded-xl border border-surface-200 bg-white shadow-lg z-50 dark:border-surface-700 dark:bg-surface-900"
+              className="hidden sm:block absolute right-0 top-full mt-2 w-96 rounded-xl border border-[#d2c5a1] bg-[#fbfaf6] shadow-lg z-50 dark:border-surface-700 dark:bg-surface-900"
             >
               <FilterPanelContent
                 categories={categories}
@@ -228,7 +228,7 @@ export default function RequestFilterBar({
             className="sm:hidden fixed inset-0 bg-black/40 z-40 animate-in fade-in duration-150"
             onClick={() => setIsOpen(false)}
           />
-          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-surface-200 bg-white shadow-2xl dark:border-surface-700 dark:bg-surface-900 animate-in slide-in-from-bottom duration-200 max-h-[80vh] flex flex-col">
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-[#d2c5a1] bg-[#fbfaf6] shadow-2xl dark:border-surface-700 dark:bg-surface-900 animate-in slide-in-from-bottom duration-200 max-h-[80vh] flex flex-col">
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="h-1 w-10 rounded-full bg-surface-200 dark:bg-surface-700" />
@@ -314,10 +314,10 @@ export default function RequestFilterBar({
                 <button
                   key={opt.value}
                   onClick={() => handleSort(opt.value)}
-                  className={`rounded-lg px-2.5 py-1.5 text-caption font-medium transition-all whitespace-nowrap ${
+                  className={`rounded-lg px-3 py-1.5 font-serif text-caption transition-all whitespace-nowrap ${
                     activeSort === opt.value
-                      ? "bg-brand-600 text-white"
-                      : "text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800"
+                      ? "bg-[#fbfaf6] font-semibold text-surface-900 shadow-sm ring-1 ring-inset ring-[#cdc09f] dark:bg-surface-800 dark:text-white dark:ring-surface-600"
+                      : "font-medium text-surface-500 hover:bg-surface-50/70 hover:text-surface-800 dark:hover:bg-surface-800"
                   }`}
                 >
                   {opt.label}
@@ -488,7 +488,7 @@ function FilterPanelContent({
           <button
             type="button"
             onClick={onClear}
-            className="flex-1 h-10 rounded-xl border border-surface-200 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
+            className="flex-1 h-10 rounded-xl border border-[#d2c5a1] text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
           >
             Išvalyti
           </button>

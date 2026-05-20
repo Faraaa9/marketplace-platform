@@ -96,6 +96,7 @@ export const RATE_LIMITS = {
   api: { maxRequests: 60, windowMs: 60 * 1000 },                // 60 per minute
   messages: { maxRequests: 5, windowMs: 60 * 1000 },            // 5 per minute
   responses: { maxRequests: 10, windowMs: 10 * 60 * 1000 },     // 10 per 10 min
+  aiImprove: { maxRequests: 15, windowMs: 60 * 60 * 1000 },     // 15 per hour (AI aprašymo tvarkymas)
   guestMessages: { maxRequests: 3, windowMs: 60 * 1000 },       // 3 per minute
   directInquiry: { maxRequests: 5, windowMs: 60 * 60 * 1000 },  // 5 per hour (sender)
   directInquiryGuest: { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 per hour (guest)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
 
@@ -51,6 +52,10 @@ export async function GET(req: NextRequest) {
         requestVerificationExpiresAt: null,
       },
     });
+
+    // The request just became OPEN — expire the public request-list caches now
+    // so it shows up on the next visit (not after the timed revalidation).
+    revalidateTag("requests", { expire: 0 });
 
     // Notify client (only if request is attached to an account)
     if (request.clientId) {

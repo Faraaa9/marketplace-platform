@@ -56,6 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
           orderBy: { createdAt: "desc" as const },
         },
+        _count: { select: { views: true } },
       },
     });
 
@@ -94,11 +95,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { reviews: _reviews, ...requestWithoutReviews } = request;
+    const { reviews: _reviews, _count, ...requestWithoutReviews } = request;
 
     return NextResponse.json({
       success: true,
-      data: { ...requestWithoutReviews, responses: responsesWithBadge },
+      data: {
+        ...requestWithoutReviews,
+        responses: responsesWithBadge,
+        viewCount: _count.views,
+      },
     });
   } catch (error) {
     console.error("Get request error:", error);

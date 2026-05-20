@@ -135,7 +135,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       : null);
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+    <div className="min-h-screen">
       <JsonLd schema={localBusinessSchema} />
       <JsonLd schema={breadcrumbSchema} />
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
@@ -150,7 +150,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
 
         {/* ── Profile Layout ── */}
         <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] md:items-start">
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
 
           {/* ── Hero: Cover + Avatar + Name + Meta ── */}
           <div className="overflow-hidden rounded-3xl bg-white dark:bg-surface-900/50">
@@ -398,7 +398,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
           </div>
 
           {/* ── Sticky Sidebar: Stats ── */}
-          <div className="space-y-6 md:sticky md:top-24">
+          <div className="min-w-0 space-y-6 md:sticky md:top-24">
             <div className="rounded-3xl bg-white p-6 dark:bg-surface-900/50">
               <h3 className="text-body-sm font-semibold text-surface-900 dark:text-white mb-4">
                 Statistika
@@ -492,7 +492,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
           </div>
 
           {/* ── Full-width: Similar providers ── */}
-          <div className="md:col-span-2">
+          <div className="min-w-0 md:col-span-2">
             <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
               <SimilarProvidersSection
                 providerId={provider.id}

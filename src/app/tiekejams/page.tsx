@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
-import { LazyParticles as Particles, LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
+import { LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { BorderBeam } from "@/components/magicui/border-beam";
 
@@ -15,12 +15,7 @@ export default function ForProvidersPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-surface-0 dark:bg-surface-950 min-h-[70vh] flex items-center">
-        <div className="absolute inset-0 bg-radial-brand" />
-        <div className="absolute inset-0 bg-noise opacity-60" />
-        <Particles className="opacity-25" quantity={35} color="#6366f1" size={1} speed={0.15} />
-        <div className="absolute top-1/3 -right-32 h-[400px] w-[400px] rounded-full bg-gradient-to-tl from-brand-400/20 to-purple-400/10 blur-3xl" />
-
+      <section className="relative overflow-hidden min-h-[70vh] flex items-center">
         <div className="relative mx-auto max-w-4xl px-4 py-24 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-white/80 backdrop-blur-sm px-4 py-1.5 text-micro font-medium text-brand-700 mb-8 shadow-xs dark:border-brand-800/60 dark:bg-surface-900/80 dark:text-brand-300">
             <Sparkles className="h-3.5 w-3.5 fill-brand-500 text-brand-500" />
@@ -68,7 +63,7 @@ export default function ForProvidersPage() {
       </section>
 
       {/* Benefits */}
-      <section className="py-24 bg-white dark:bg-surface-900">
+      <section className="py-24">
         <div className="mx-auto max-w-5xl px-4">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
@@ -97,8 +92,7 @@ export default function ForProvidersPage() {
       </section>
 
       {/* Plans */}
-      <section className="relative py-24 bg-surface-50 dark:bg-surface-950 overflow-hidden">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
+      <section className="relative py-24 overflow-hidden">
         <div className="relative mx-auto max-w-4xl px-4 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
             Kainos

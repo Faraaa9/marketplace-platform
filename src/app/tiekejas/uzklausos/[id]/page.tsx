@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SERVICE_CATEGORIES, BUDGET_OPTIONS } from "@/lib/constants";
+import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -125,7 +125,6 @@ export default function ProviderRequestDetailPage() {
   if (!request) return <EmptyState title="Užklausa nerasta" />;
 
   const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label;
-  const budgetLabel = BUDGET_OPTIONS.find((b) => b.value === request.budget)?.label;
   const hasResponded = request.responses.some((r) => r.provider.id === session?.user?.id);
   const myResponse = request.responses.find((r) => r.provider.id === session?.user?.id);
   const isMyResponseAccepted = myResponse && request.acceptedResponseId === myResponse.id;
@@ -155,7 +154,7 @@ export default function ProviderRequestDetailPage() {
         <div className="mt-3 flex flex-wrap gap-4 text-body-sm text-surface-500">
           <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{request.location}</span>
           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatRelativeDate(request.createdAt)}</span>
-          {budgetLabel && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{budgetLabel}</span>}
+          {request.budget && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{request.budget}</span>}
         </div>
       </div>
 

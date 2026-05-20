@@ -253,10 +253,9 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   if (filterTop) activeFilters.top = "1";
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="relative overflow-hidden bg-white dark:bg-surface-900 border-b border-surface-200/50 dark:border-surface-800/50">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
+      <div className="relative overflow-hidden border-b border-surface-200/50 dark:border-surface-800/50">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">

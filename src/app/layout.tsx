@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
+import { Lora } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
@@ -34,6 +35,12 @@ const inter = localFont({
   ],
   display: "swap",
   fallback: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+});
+
+const lora = Lora({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
@@ -73,7 +80,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="lt">
-      <body className={`${inter.className} min-h-screen flex flex-col bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100`}>
+      <body className={`${inter.className} ${lora.variable} min-h-screen flex flex-col text-surface-900 dark:text-surface-100`}>
+        {/* Site-wide fixed grid background — identical on every page, constant on scroll */}
+        <div
+          aria-hidden
+          className="fixed inset-0 -z-10"
+          style={{
+            backgroundColor: "#ece9e2",
+            backgroundImage:
+              "linear-gradient(to right, rgba(42,39,35,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(42,39,35,0.05) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+          }}
+        />
         <Providers>
           <Suspense fallback={null}>
             <LoadingProgressBar />

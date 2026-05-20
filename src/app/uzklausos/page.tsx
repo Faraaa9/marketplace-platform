@@ -6,11 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
-import {
-  MapPin, Clock, MessageSquare, ArrowRight, Search,
-  Zap, FileText, Users, Wallet,
-  TrendingUp, Sparkles, Briefcase,
-} from "lucide-react";
+import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 
 export const metadata: Metadata = {
@@ -150,11 +146,38 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     return now.getTime() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000;
   }
 
+  function offerNoun(n: number) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 0 || (mod100 >= 11 && mod100 <= 19)) return "pasiūlymų";
+    if (mod10 === 1) return "pasiūlymas";
+    return "pasiūlymai";
+  }
+
   function competitionLevel(responseCount: number) {
-    if (responseCount === 0) return { label: "Galimybė!", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10" };
-    if (responseCount <= 2) return { label: "Maža konkurencija", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10" };
-    if (responseCount <= 5) return { label: "Vidutinė", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10" };
-    return { label: "Didelė konkurencija", color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10" };
+    if (responseCount === 0)
+      return {
+        label: "Galimybė",
+        opportunity: true,
+        chip: "bg-[#e6ecd9] text-[#5c6d3b] ring-[#c4d0a6] dark:bg-[#37422a]/50 dark:text-[#bccb9c] dark:ring-[#4c5a36]",
+      };
+    if (responseCount <= 2)
+      return {
+        label: "Maža konkurencija",
+        opportunity: false,
+        chip: "bg-[#e3e8ec] text-[#516678] ring-[#c4cfd6] dark:bg-[#33414c]/50 dark:text-[#aebfca] dark:ring-[#44525d]",
+      };
+    if (responseCount <= 5)
+      return {
+        label: "Vidutinė",
+        opportunity: false,
+        chip: "bg-[#f2e7c9] text-[#896224] ring-[#ddca9c] dark:bg-[#473919]/60 dark:text-[#d8bd80] dark:ring-[#5b4a26]",
+      };
+    return {
+      label: "Didelė konkurencija",
+      opportunity: false,
+      chip: "bg-[#f0ddd3] text-[#9a4427] ring-[#e0c0b0] dark:bg-[#43271c]/60 dark:text-[#dcab93] dark:ring-[#5c3525]",
+    };
   }
 
   const SORT_OPTIONS = [
@@ -163,78 +186,69 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     { value: "responses-desc", label: "Populiariausios" },
   ];
 
+  const CTA_TONES = [
+    "bg-brand-600 hover:bg-brand-700 shadow-[0_2.5px_0_#793821]",
+    "bg-[#6f7d4d] hover:bg-[#616d43] shadow-[0_2.5px_0_#4a5430]",
+    "bg-[#a17b44] hover:bg-[#8c6a3b] shadow-[0_2.5px_0_#6b5028]",
+  ];
+
+  const stats = [
+    { value: totalActive, label: "aktyvios užklausos" },
+    { value: newToday, label: "naujos šiandien" },
+    { value: totalProviderResponses, label: "pateikti pasiūlymai" },
+  ];
+
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      {/* Header */}
-      <div className="relative overflow-hidden bg-white dark:bg-surface-900 border-b border-surface-200/50 dark:border-surface-800/50">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
-              <Briefcase className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-            </div>
-            <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Aktyvios užklausos
-            </h1>
-          </div>
-          <p className="text-body text-surface-500 dark:text-surface-400 ml-[52px]">
-            Raskite darbus ir pateikite savo pasiūlymą
-          </p>
+    <div className="min-h-screen">
+      {/* ── Board header ── */}
+      <header className="mx-auto max-w-5xl px-4 pb-6 pt-12 text-center sm:px-6 sm:pt-16">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brand-600 dark:text-brand-400">
+          PaslaugųRinka
+        </p>
+        <h1 className="mt-2.5 font-serif text-[2.35rem] font-semibold leading-[1.08] tracking-tight text-surface-900 dark:text-white sm:text-[3rem]">
+          Užklausų lenta
+        </h1>
+        <p className="mx-auto mt-3 max-w-md font-serif text-[1.05rem] italic text-surface-500 dark:text-surface-300">
+          Raskite darbus ir prisekite savo pasiūlymą prie lentos
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+          {stats.map((s) => (
+            <span
+              key={s.label}
+              className="inline-flex items-baseline gap-1.5 rounded-md bg-[#efe8d3]/90 px-3 py-1.5 ring-1 ring-inset ring-[#d2c5a1]/70 dark:bg-surface-800/70 dark:ring-surface-700"
+            >
+              <span className="font-serif text-[1.05rem] font-semibold text-surface-900 dark:text-white">
+                {s.value}
+              </span>
+              <span className="text-[0.72rem] font-medium text-surface-600 dark:text-surface-400">
+                {s.label}
+              </span>
+            </span>
+          ))}
         </div>
+      </header>
+
+      {/* ── Search + filters ── */}
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <RequestFilterBar
+          activeCategory={category}
+          activeLocation={location}
+          activeSearch={search}
+          activeBudget={budget}
+          activeSort={sort}
+          categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+          cities={[...LITHUANIAN_CITIES]}
+          budgets={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
+          sortOptions={SORT_OPTIONS}
+          totalResults={total}
+        />
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats bar — responsive: stack on small, row on sm+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <div className="flex items-center gap-3 rounded-xl border border-surface-200/60 bg-white px-4 py-3.5 dark:border-surface-700/50 dark:bg-surface-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950">
-              <FileText className="h-4 w-4 text-brand-500" />
-            </div>
-            <div>
-              <p className="text-heading-3 font-bold text-surface-900 dark:text-white">{totalActive}</p>
-              <p className="text-micro text-surface-400">Aktyvios užklausos</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl border border-surface-200/60 bg-white px-4 py-3.5 dark:border-surface-700/50 dark:bg-surface-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-              <Zap className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-heading-3 font-bold text-surface-900 dark:text-white">{newToday}</p>
-              <p className="text-micro text-surface-400">Naujos šiandien</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl border border-surface-200/60 bg-white px-4 py-3.5 dark:border-surface-700/50 dark:bg-surface-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-500/10">
-              <Users className="h-4 w-4 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-heading-3 font-bold text-surface-900 dark:text-white">{totalProviderResponses}</p>
-              <p className="text-micro text-surface-400">Pateikti pasiūlymai</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Search + Filters */}
-        <div className="mb-6">
-          <RequestFilterBar
-            activeCategory={category}
-            activeLocation={location}
-            activeSearch={search}
-            activeBudget={budget}
-            activeSort={sort}
-            categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
-            cities={[...LITHUANIAN_CITIES]}
-            budgets={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
-            sortOptions={SORT_OPTIONS}
-            totalResults={total}
-          />
-        </div>
-
-        {/* Request cards */}
+      {/* ── Pinned notes ── */}
+      <div className="mx-auto max-w-5xl px-4 pb-16 pt-7 sm:px-6">
         {requests.length > 0 ? (
-          <div className="grid gap-4">
-            {requests.map((r) => {
+          <div className="grid gap-7 sm:gap-8">
+            {requests.map((r, i) => {
               const competition = competitionLevel(r._count.responses);
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const ctaHref = isOwnRequest
@@ -245,129 +259,147 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                     ? `/tapti-tiekeju`
                     : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`;
               const ctaLabel = isOwnRequest ? "Jūsų užklausa" : "Pateikti pasiūlymą";
-              const ctaClassName = isOwnRequest
-                ? "inline-flex items-center gap-1 rounded-lg border border-surface-200 bg-surface-50 px-3 py-1.5 text-micro font-semibold text-surface-600 hover:bg-surface-100 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"
-                : "inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-micro font-semibold text-white hover:bg-brand-700 transition-colors shadow-sm";
+              const ctaTone = isOwnRequest
+                ? "bg-[#ebe3cc] text-[#6c5d3c] hover:bg-[#e1d8bd] shadow-[0_2.5px_0_#c7ba92]"
+                : `text-white ${CTA_TONES[i % CTA_TONES.length]}`;
 
               return (
-                <article
-                  key={r.id}
-                  className="group rounded-2xl border border-surface-200/60 bg-white p-5 sm:p-6 transition-all duration-200 hover:shadow-lg hover:border-brand-200/60 dark:border-surface-700/50 dark:bg-surface-900/50 dark:hover:border-brand-700/50"
-                >
-                  {/* Top row: category chip + competition badge */}
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                      {categoryLabel(r.category)}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-micro font-medium ${competition.bg} ${competition.color}`}>
-                      {r._count.responses === 0 ? (
-                        <Sparkles className="h-3 w-3" />
-                      ) : (
-                        <TrendingUp className="h-3 w-3" />
-                      )}
-                      {competition.label}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1.5 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {r.title}
-                    {isNew(r.createdAt) && (
-                      <span className="ml-2 inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-micro font-semibold text-emerald-700 align-middle dark:bg-emerald-500/10 dark:text-emerald-400">
-                        <Zap className="h-2.5 w-2.5" />
-                        Nauja
-                      </span>
-                    )}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-body-sm text-surface-500 dark:text-surface-400 leading-relaxed mb-3">
-                    {truncate(r.description, 150)}
-                  </p>
-
-                  {/* Meta row + CTA */}
-                  <div className="flex items-center justify-between flex-wrap gap-2 pt-3 border-t border-surface-100 dark:border-surface-800">
-                    <div className="flex flex-wrap items-center gap-2.5 text-micro text-surface-400">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {r.location}
-                      </span>
-                      {r.budget && (
-                        <span className="inline-flex items-center gap-1">
-                          <Wallet className="h-3.5 w-3.5" />
-                          {budgetLabel(r.budget)}
+                <article key={r.id} className="paper-note">
+                  <div className="paper-note__shadow">
+                    <div className="paper-note__sheet px-6 pb-8 pt-11 sm:px-9">
+                      {/* category + competition */}
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
+                          {categoryLabel(r.category)}
                         </span>
-                      )}
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatRelativeDate(r.createdAt)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {r._count.responses} {r._count.responses === 1 ? "pasiūlymas" : r._count.responses < 10 ? "pasiūlymai" : "pasiūlymų"}
-                      </span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
+                        >
+                          {competition.opportunity ? (
+                            <Sparkles className="h-3 w-3" />
+                          ) : (
+                            <TrendingUp className="h-3 w-3" />
+                          )}
+                          {competition.label}
+                        </span>
+                      </div>
+
+                      {/* title */}
+                      <h3 className="mt-3.5 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]">
+                        {r.title}
+                        {isNew(r.createdAt) && (
+                          <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
+                            Nauja
+                          </span>
+                        )}
+                      </h3>
+
+                      {/* description */}
+                      <p className="mt-2 text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
+                        {truncate(r.description, 150)}
+                      </p>
+
+                      {/* divider */}
+                      <div className="mt-5 border-t border-[#d8cda6] dark:border-surface-700/70" />
+
+                      {/* meta + cta */}
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.8rem] text-surface-600 dark:text-surface-300">
+                          <span className="inline-flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-surface-400" />
+                            {r.location}
+                          </span>
+                          {r.budget && (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Wallet className="h-3.5 w-3.5 text-surface-400" />
+                              {budgetLabel(r.budget)}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-surface-400" />
+                            {formatRelativeDate(r.createdAt)}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <MessageSquare className="h-3.5 w-3.5 text-surface-400" />
+                            {r._count.responses} {offerNoun(r._count.responses)}
+                          </span>
+                        </div>
+
+                        <Link
+                          href={ctaHref}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 font-serif text-[0.9rem] font-medium transition-all active:translate-y-[2px] active:shadow-none ${ctaTone}`}
+                        >
+                          {ctaLabel}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
                     </div>
-                    <Link
-                      href={ctaHref}
-                      className={ctaClassName}
-                    >
-                      {ctaLabel}
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
                   </div>
+
+                  <span aria-hidden className="pin absolute left-5 top-3.5" />
+                  <span aria-hidden className="pin absolute right-5 top-3.5" />
                 </article>
               );
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-12 sm:p-16 text-center dark:border-surface-700 dark:bg-surface-900">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
-              <Search className="h-6 w-6 text-surface-400" />
+          <article className="paper-note mx-auto max-w-xl">
+            <div className="paper-note__shadow">
+              <div className="paper-note__sheet px-8 pb-10 pt-12 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#ebe2cb] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:ring-surface-700">
+                  <Search className="h-5 w-5 text-surface-400" />
+                </div>
+                <p className="mt-4 font-serif text-[1.25rem] font-semibold text-surface-900 dark:text-white">
+                  {hasFilters ? "Pagal pasirinktus filtrus nieko nerasta" : "Šiuo metu lenta tuščia"}
+                </p>
+                <p className="mt-1.5 text-[0.9rem] text-surface-600 dark:text-surface-300">
+                  {hasFilters
+                    ? "Pabandykite pakeisti filtrus"
+                    : "Grįžkite netrukus — naujos užklausos prisegamos kasdien"}
+                </p>
+                <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                  {hasFilters && (
+                    <Link
+                      href="/uzklausos"
+                      className="inline-flex items-center justify-center rounded-lg bg-[#ebe3cc] px-5 py-2.5 font-serif text-[0.9rem] font-medium text-[#6c5d3c] shadow-[0_2.5px_0_#c7ba92] transition-all hover:bg-[#e1d8bd] active:translate-y-[2px] active:shadow-none"
+                    >
+                      Išvalyti filtrus
+                    </Link>
+                  )}
+                  <Link
+                    href="/tapti-tiekeju"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-5 py-2.5 font-serif text-[0.9rem] font-medium text-white shadow-[0_2.5px_0_#793821] transition-all hover:bg-brand-700 active:translate-y-[2px] active:shadow-none"
+                  >
+                    Tapti tiekėju
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
             </div>
-            <p className="text-body font-medium text-surface-600 dark:text-surface-300">
-              {hasFilters ? "Užklausų pagal pasirinktus filtrus nerasta" : "Šiuo metu aktyvių užklausų nėra"}
-            </p>
-            <p className="mt-1 text-body-sm text-surface-400">
-              {hasFilters ? "Pabandykite pakeisti filtrus" : "Grįžkite netrukus — naujos užklausos pateikiamos kiekvieną dieną"}
-            </p>
-            <div className="mt-5 flex flex-col sm:flex-row justify-center gap-3">
-              {hasFilters && (
-                <Link
-                  href="/uzklausos"
-                  className="inline-flex items-center justify-center rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
-                >
-                  Išvalyti filtrus
-                </Link>
-              )}
-              <Link
-                href="/tapti-tiekeju"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-all"
-              >
-                Tapti tiekėju
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
+
+            <span aria-hidden className="pin absolute left-5 top-3.5" />
+            <span aria-hidden className="pin absolute right-5 top-3.5" />
+          </article>
         )}
 
-        {/* Pagination */}
+        {/* pagination */}
         {pages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
+          <div className="mt-10 flex items-center justify-center gap-2">
             {page > 1 && (
               <Link
                 href={buildUrl({ page: String(page - 1) })}
-                className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 hover:border-surface-300 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
+                className="rounded-lg bg-[#efe8d3]/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-[#d2c5a1]/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
               >
                 Ankstesnis
               </Link>
             )}
-            <span className="flex items-center px-4 text-body-sm text-surface-500 font-medium">
+            <span className="px-3 font-serif text-[0.9rem] text-surface-600 dark:text-surface-300">
               {page} / {pages}
             </span>
             {page < pages && (
               <Link
                 href={buildUrl({ page: String(page + 1) })}
-                className="rounded-xl border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 hover:border-surface-300 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
+                className="rounded-lg bg-[#efe8d3]/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-[#d2c5a1]/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
               >
                 Kitas
               </Link>
@@ -375,24 +407,30 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           </div>
         )}
 
-        {/* Bottom CTA — provider-facing */}
-        <div className="mt-12 rounded-2xl border border-brand-200/60 bg-gradient-to-br from-brand-50/80 to-white p-8 sm:p-10 dark:border-brand-800/40 dark:from-brand-950/50 dark:to-surface-900/50">
-          <div className="text-center max-w-lg mx-auto">
-            <h3 className="text-heading-3 font-bold text-surface-900 dark:text-white mb-2">
-              Ieškote daugiau darbų?
-            </h3>
-            <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-5">
-              Tapkite tiekėju ir gaukite užklausas tiesiai į savo paskyrą. Pasiūlymus pateiksite vienu paspaudimu.
-            </p>
-            <Link
-              href="/tapti-tiekeju"
-              className="group inline-flex items-center rounded-2xl bg-brand-600 px-6 py-3 text-body font-semibold text-white shadow-sm hover:bg-brand-700 hover:shadow-md transition-all"
-            >
-              Tapti tiekėju
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
+        {/* bottom CTA — pinned note */}
+        <article className="paper-note mx-auto mt-12 max-w-xl">
+          <div className="paper-note__shadow">
+            <div className="paper-note__sheet px-8 pb-9 pt-11 text-center">
+              <h3 className="font-serif text-[1.4rem] font-semibold text-surface-900 dark:text-white">
+                Ieškote daugiau darbų?
+              </h3>
+              <p className="mx-auto mt-2 max-w-sm text-[0.9rem] text-surface-600 dark:text-surface-300">
+                Tapkite tiekėju ir gaukite užklausas tiesiai į savo paskyrą — pasiūlymus pateiksite
+                vienu paspaudimu.
+              </p>
+              <Link
+                href="/tapti-tiekeju"
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-2.5 font-serif text-[0.95rem] font-medium text-white shadow-[0_2.5px_0_#793821] transition-all hover:bg-brand-700 active:translate-y-[2px] active:shadow-none"
+              >
+                Tapti tiekėju
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
-        </div>
+
+          <span aria-hidden className="pin absolute left-5 top-3.5" />
+          <span aria-hidden className="pin absolute right-5 top-3.5" />
+        </article>
       </div>
     </div>
   );

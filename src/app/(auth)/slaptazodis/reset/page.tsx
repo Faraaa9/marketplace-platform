@@ -6,7 +6,6 @@ import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
 export default function ResetPasswordPage() {
   return <Suspense fallback={<LoadingSpinner />}><ResetPasswordForm /></Suspense>;
@@ -58,7 +57,6 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="relative flex min-h-[85vh] items-center justify-center px-4">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
         <div className="relative text-center">
           <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Neteisinga nuoroda</h1>
           <p className="mt-2 text-body text-surface-500">Ši nuoroda negalioja arba pasibaigė.</p>
@@ -72,9 +70,6 @@ function ResetPasswordForm() {
 
   return (
     <div className="relative flex min-h-[85vh] items-center justify-center px-4">
-      <div className="absolute inset-0 bg-radial-brand-subtle" />
-      <Particles className="opacity-15" quantity={20} color="#6366f1" size={1} speed={0.1} />
-
       <div className="relative w-full max-w-md">
         <div className="rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90">
           <div className="text-center mb-8">

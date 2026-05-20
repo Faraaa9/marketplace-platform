@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
-import { LazyParticles as Particles } from "@/components/magicui/lazy";
 import { getRoleHomePath } from "@/lib/redirects";
 
 export default function VerifyEmailPage() {
@@ -110,8 +109,6 @@ function VerifySuccessScreen({ maskedEmail }: { maskedEmail: string }) {
 
   return (
     <div className={wrapper}>
-      <div className="absolute inset-0 bg-radial-brand-subtle" />
-      <Particles className="opacity-10" quantity={20} color="#10b981" size={1} speed={0.1} />
       <div className="relative w-full max-w-md text-center">
         <div className={card}>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10">
@@ -170,7 +167,6 @@ function VerifyEmailContent() {
   if (status === "expired") {
     return (
       <div className={wrapper}>
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
         <div className="relative w-full max-w-md text-center">
           <div className={card}>
             <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Nuoroda nebegalioja</h1>
@@ -189,7 +185,6 @@ function VerifyEmailContent() {
   if (status === "error") {
     return (
       <div className={wrapper}>
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
         <div className="relative w-full max-w-md text-center">
           <div className={card}>
             <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Įvyko klaida</h1>
@@ -206,8 +201,6 @@ function VerifyEmailContent() {
   // Default: check your email message (shown after registration)
   return (
     <div className={wrapper}>
-      <div className="absolute inset-0 bg-radial-brand-subtle" />
-      <Particles className="opacity-10" quantity={20} color="#6366f1" size={1} speed={0.1} />
       <div className="relative w-full max-w-md text-center">
         <div className={card}>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-500/10">

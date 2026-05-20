@@ -59,3 +59,4 @@ vercel-env-import.txt
 .agents/
 skills-lock.json
 vercel-env-import.txt
+.gstack/

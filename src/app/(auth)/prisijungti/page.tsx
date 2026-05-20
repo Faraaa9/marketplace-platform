@@ -8,7 +8,6 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import { getRoleHomePath } from "@/lib/redirects";
-import { LazyParticles as Particles } from "@/components/magicui/lazy";
 
 function getSafeCallbackPath(callbackUrl: string | null) {
   if (!callbackUrl) return null;
@@ -113,7 +112,6 @@ function LoginForm() {
   if (status === "authenticated") {
     return (
       <div className="relative flex min-h-[85vh] items-center justify-center px-4">
-        <div className="absolute inset-0 bg-radial-brand-subtle" />
         <div className="relative rounded-2xl border border-surface-200/60 bg-white/90 p-8 text-center shadow-elevated backdrop-blur-sm dark:border-surface-700/50 dark:bg-surface-900/90">
           <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20">
             <span className="text-white font-bold text-lg">P</span>
@@ -131,9 +129,6 @@ function LoginForm() {
 
   return (
     <div className="relative flex min-h-[85vh] items-center justify-center px-4">
-      <div className="absolute inset-0 bg-radial-brand-subtle" />
-      <Particles className="opacity-15" quantity={25} color="#6366f1" size={1} speed={0.1} />
-
       <div className="relative w-full max-w-md">
         <div className="rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90">
           <div className="text-center mb-8">

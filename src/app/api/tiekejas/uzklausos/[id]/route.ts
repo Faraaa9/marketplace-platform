@@ -62,6 +62,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Nerasta" }, { status: 404 });
     }
 
+    // Record this provider's view of the request (deduped per provider, best-effort).
+    if (request.clientId !== guard.userId) {
+      try {
+        await prisma.requestView.upsert({
+          where: { requestId_providerId: { requestId: id, providerId: guard.userId } },
+          create: { requestId: id, providerId: guard.userId },
+          update: {},
+        });
+      } catch {
+        // view tracking must never break the page
+      }
+    }
+
     const [totalResponses, profile, subscription] = await Promise.all([
       prisma.response.count({ where: { requestId: id } }),
       prisma.providerProfile.findUnique({

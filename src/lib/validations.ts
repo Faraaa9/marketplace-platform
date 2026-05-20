@@ -22,7 +22,7 @@ export const serviceRequestSchema = z.object({
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
   category: z.string().min(1, "Pasirinkite kategoriją"),
   location: z.string().min(1, "Pasirinkite miestą"),
-  budget: z.string().optional(),
+  budget: z.string().max(100).optional(),
   clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
   clientEmail: z.string().email("Neteisingas el. pašto formatas"),
   clientPhone: z.string().optional(),
@@ -33,6 +33,15 @@ export const serviceRequestSchema = z.object({
   (data) => !data.createAccount || (data.password && data.password.length >= 8),
   { message: "Slaptažodis turi būti bent 8 simbolių", path: ["password"] }
 );
+
+export const improveDescriptionSchema = z.object({
+  description: z
+    .string()
+    .min(15, "Parašykite bent kelis žodžius")
+    .max(2000, "Tekstas per ilgas (daugiausia 2000 simbolių)"),
+  category: z.string().max(100).optional(),
+  title: z.string().max(150).optional(),
+});
 
 export const responseSchema = z.object({
   message: z.string().min(10, "Žinutė turi būti bent 10 simbolių").max(2000),
@@ -69,6 +78,7 @@ export const directInquirySchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
+export type ImproveDescriptionInput = z.infer<typeof improveDescriptionSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;
