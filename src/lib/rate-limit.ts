@@ -4,7 +4,22 @@ import { Ratelimit } from "@upstash/ratelimit";
 // ─── Upstash Redis rate limiter (production) ───
 // Falls back to in-memory when UPSTASH env vars are not set (local dev)
 
-const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+// Marketplace integrations inject Redis REST credentials under different
+// names (Upstash's own vs. Vercel KV-style) — accept whichever is present.
+const REDIS_REST_URL =
+  process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const REDIS_REST_TOKEN =
+  process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+
+const hasUpstash = !!(REDIS_REST_URL && REDIS_REST_TOKEN);
+
+if (!hasUpstash && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[rate-limit] Upstash Redis not configured — rate limiting falls back to " +
+      "per-instance memory and is ineffective on serverless. Provision Upstash " +
+      "via the Vercel Marketplace (`vercel install upstash`).",
+  );
+}
 
 // Upstash rate limiters (created lazily)
 let upstashLimiters: Map<string, Ratelimit> | null = null;
@@ -16,8 +31,8 @@ function getUpstashLimiter(config: RateLimitConfig): Ratelimit {
   let limiter = upstashLimiters.get(configKey);
   if (!limiter) {
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      url: REDIS_REST_URL!,
+      token: REDIS_REST_TOKEN!,
     });
     limiter = new Ratelimit({
       redis,
