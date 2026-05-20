@@ -43,6 +43,13 @@ export const improveDescriptionSchema = z.object({
   title: z.string().max(150).optional(),
 });
 
+export const transcribeAudioSchema = z.object({
+  audio: z
+    .string()
+    .min(1, "Trūksta garso įrašo")
+    .max(4_000_000, "Garso įrašas per didelis"),
+});
+
 export const responseSchema = z.object({
   message: z.string().min(10, "Žinutė turi būti bent 10 simbolių").max(2000),
   price: z.number().positive("Kaina turi būti teigiama").optional(),

@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, LayoutGrid, Mic } from "lucide-react";
+import { ArrowUp, LayoutGrid, Mic, Loader2 } from "lucide-react";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
-import { useSpeechRecognition } from "@/lib/use-speech-recognition";
+import { useVoiceRecorder } from "@/lib/use-voice-recorder";
 
 // The box starts ~3 rows tall, grows with the text, and only starts
 // scrolling once it reaches the cap (safety limit so it can't grow forever).
@@ -38,11 +38,15 @@ export default function HeroSearch() {
   }, [autoResize]);
 
   const handleTranscript = useCallback((text: string) => {
-    setValue(text.slice(0, MAX_LENGTH));
+    setValue((prev) => {
+      const base = prev.trimEnd();
+      return (base ? `${base} ${text}` : text).slice(0, MAX_LENGTH);
+    });
   }, []);
 
-  const { isSupported, isRecording, micError, toggle } =
-    useSpeechRecognition({ onTranscript: handleTranscript });
+  const { isSupported, status, error, toggle } = useVoiceRecorder({
+    onTranscript: handleTranscript,
+  });
 
   function submit() {
     const text = value.trim();
@@ -72,33 +76,44 @@ export default function HeroSearch() {
           rows={3}
           maxLength={MAX_LENGTH}
           placeholder={
-            isRecording
+            status === "recording"
               ? "Klausau, kalbėkite..."
-              : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje..."
+              : status === "transcribing"
+                ? "Atpažįstu, ką pasakei..."
+                : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje..."
           }
           className="w-full resize-none rounded-[1.75rem] bg-transparent px-6 pt-5 pb-16 text-[1.0625rem] leading-relaxed text-[#26231F] outline-none placeholder:text-[#9A958B]"
         />
         {isSupported && (
           <button
             type="button"
-            onClick={() => toggle(value)}
+            onClick={toggle}
+            disabled={status === "transcribing"}
             aria-label={
-              isRecording ? "Stabdyti diktavimą" : "Diktuoti aprašymą balsu"
+              status === "recording"
+                ? "Stabdyti diktavimą"
+                : status === "transcribing"
+                  ? "Atpažįstama kalba"
+                  : "Diktuoti aprašymą balsu"
             }
-            aria-pressed={isRecording}
-            className={`absolute bottom-4 left-4 grid h-10 w-10 place-items-center rounded-full transition-all hover:scale-105 active:scale-95 ${
-              isRecording
+            aria-pressed={status === "recording"}
+            className={`absolute bottom-4 left-4 grid h-10 w-10 place-items-center rounded-full transition-all hover:scale-105 active:scale-95 disabled:cursor-default disabled:hover:scale-100 ${
+              status === "recording"
                 ? "bg-[#DC2626] text-white shadow-sm"
                 : "border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] hover:bg-[#E9E4D9]"
             }`}
           >
-            {isRecording && (
+            {status === "recording" && (
               <span
                 aria-hidden
                 className="absolute inset-0 rounded-full bg-[#DC2626]/40 motion-safe:animate-ping"
               />
             )}
-            <Mic className="relative h-5 w-5" />
+            {status === "transcribing" ? (
+              <Loader2 className="relative h-5 w-5 animate-spin" />
+            ) : (
+              <Mic className="relative h-5 w-5" />
+            )}
           </button>
         )}
 
@@ -112,11 +127,13 @@ export default function HeroSearch() {
         </button>
       </div>
 
-      {micError && (
+      {error && (
         <p role="alert" className="mt-2 px-1 text-sm text-[#B4451F]">
-          {micError === "unavailable"
-            ? "Mikrofonas nepasiekiamas. Patikrinkite, ar jis prijungtas ir nenaudojamas kitos programos."
-            : "Nepavyko gauti leidimo mikrofonui. Patikrinkite leidimus naršyklėje ir kompiuterio nustatymuose."}
+          {error === "denied"
+            ? "Mikrofonas užblokuotas. Leiskite jį naršyklės nustatymuose ir bandykite dar kartą."
+            : error === "unavailable"
+              ? "Mikrofonas nepasiekiamas. Patikrinkite, ar jis prijungtas."
+              : "Nepavyko atpažinti kalbos. Bandykite dar kartą."}
         </p>
       )}
 
