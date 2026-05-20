@@ -15,6 +15,7 @@ const MAX_LENGTH = 2000;
 export default function HeroSearch() {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const autoResize = useCallback(() => {
@@ -48,13 +49,44 @@ export default function HeroSearch() {
     onTranscript: handleTranscript,
   });
 
-  function submit() {
+  async function submit() {
+    if (submitting) return;
     const text = value.trim();
-    router.push(
-      text
-        ? `/uzklausos/nauja?description=${encodeURIComponent(text)}`
-        : "/uzklausos/nauja",
-    );
+    if (!text) {
+      router.push("/uzklausos/nauja");
+      return;
+    }
+    const params = new URLSearchParams({ description: text });
+    // Pre-fill category / title / city / budget on the form from the
+    // description so the user doesn't re-enter what they already said.
+    if (text.length >= 15) {
+      setSubmitting(true);
+      try {
+        const res = await fetch("/api/requests/improve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: text }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          success?: boolean;
+          data?: {
+            category?: string;
+            title?: string;
+            location?: string;
+            budget?: string;
+          };
+        } | null;
+        if (res.ok && data?.success && data.data) {
+          if (data.data.category) params.set("category", data.data.category);
+          if (data.data.title) params.set("title", data.data.title);
+          if (data.data.location) params.set("location", data.data.location);
+          if (data.data.budget) params.set("budget", data.data.budget);
+        }
+      } catch {
+        // Navigate with just the description if the AI call fails.
+      }
+    }
+    router.push(`/uzklausos/nauja?${params.toString()}`);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -120,10 +152,15 @@ export default function HeroSearch() {
         <button
           type="button"
           onClick={submit}
+          disabled={submitting}
           aria-label="Tęsti"
-          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95"
+          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95 disabled:hover:scale-100"
         >
-          <ArrowUp className="h-5 w-5" />
+          {submitting ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <ArrowUp className="h-5 w-5" />
+          )}
         </button>
       </div>
 

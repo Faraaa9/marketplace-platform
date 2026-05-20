@@ -28,10 +28,10 @@ function NewRequestForm() {
 
   const [form, setForm] = useState({
     category: searchParams.get("category") || "",
-    title: "",
+    title: searchParams.get("title") || "",
     description: searchParams.get("description") || "",
-    location: "",
-    budget: "",
+    location: searchParams.get("location") || "",
+    budget: searchParams.get("budget") || "",
     clientName: session?.user?.name || "",
     clientEmail: session?.user?.email || "",
     clientPhone: "",
@@ -149,6 +149,7 @@ function NewRequestForm() {
             value={form.description}
             onChange={(e) => updateForm("description", e.target.value)}
             error={descriptionError || undefined}
+            autoResize
           />
           <div className="flex items-center justify-between text-micro">
             <span className={descriptionError ? "text-red-500 dark:text-red-400" : "text-surface-400"}>

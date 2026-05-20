@@ -18,7 +18,7 @@ const CITY_LIST = LITHUANIAN_CITIES.join(", ");
 const SYSTEM_PROMPT = `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Klientas rašo užklausą — aprašo, kokios paslaugos jam reikia. Tavo tikslas, kad paslaugų tiekėjas iškart suprastų užduotį ir galėtų ją tiksliai įkainoti.
 
 Grąžink TIK galiojantį JSON objektą su laukais:
-{"improvedDescription": "...", "title": "...", "category": "...", "location": "...", "recommendations": [{"prompt": "...", "field": "..."}]}
+{"improvedDescription": "...", "title": "...", "category": "...", "location": "...", "budget": "...", "recommendations": [{"prompt": "...", "field": "..."}]}
 
 "improvedDescription" — sutvarkytas kliento aprašymas:
 - Ištaisyk rašybos ir gramatikos klaidas, rašyk taisyklinga, natūralia lietuvių kalba.
@@ -32,6 +32,8 @@ Grąžink TIK galiojantį JSON objektą su laukais:
 "category" — TIKSLIAI vienas kodas iš šio sąrašo (grąžink tik kodą, ne pavadinimą skliausteliuose): ${CATEGORY_LIST}. Parink tinkamiausią pagal aprašymą.
 
 "location" — miestas. Jei aprašyme paminėtas Lietuvos miestas, grąžink jį TIKSLIAI taip parašytą: ${CITY_LIST}. Jei miestas aprašyme nepaminėtas — grąžink tuščią eilutę "".
+
+"budget" — biudžetas. Jei aprašyme klientas paminėjo sumą, kainų ribas ar norą derėtis — grąžink trumpai (pvz. „500 €", „300–500 €", „derinama"). Jei apie biudžetą ar pinigus nieko nepasakyta — grąžink tuščią eilutę "".
 
 "recommendations" — 2–4 dalykai, kurių aprašyme TRŪKSTA, kad tiekėjas galėtų tiksliai įkainoti darbą. Kiekvienas objektas:
 - "prompt": trumpas, draugiškas raginimas klientui, ką nurodyti (pvz. „Nurodykite kiemo plotą kvadratiniais metrais").
@@ -52,6 +54,7 @@ export interface ImproveDescriptionResult {
   title: string;
   category: string;
   location: string;
+  budget: string;
   recommendations: ImproveRecommendation[];
 }
 
@@ -83,6 +86,9 @@ function parseResult(raw: string): ImproveDescriptionResult | null {
   const rawLocation = typeof record.location === "string" ? record.location.trim() : "";
   const location = CITY_BY_LOWER.get(rawLocation.toLowerCase()) ?? "";
 
+  const budget =
+    typeof record.budget === "string" ? record.budget.trim().slice(0, 100) : "";
+
   const recommendations: ImproveRecommendation[] = Array.isArray(record.recommendations)
     ? record.recommendations
         .map((item): ImproveRecommendation | null => {
@@ -96,7 +102,7 @@ function parseResult(raw: string): ImproveDescriptionResult | null {
         .slice(0, 5)
     : [];
 
-  return { improvedDescription, title, category, location, recommendations };
+  return { improvedDescription, title, category, location, budget, recommendations };
 }
 
 export async function improveDescription(
