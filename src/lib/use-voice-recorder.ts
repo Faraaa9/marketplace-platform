@@ -22,6 +22,7 @@ interface UseVoiceRecorderResult {
 const MAX_RECORDING_MS = 60_000;
 // 16 kHz mono is plenty for speech and keeps the payload small.
 const TARGET_SAMPLE_RATE = 16_000;
+const LOG = "[Diktavimas]";
 
 function getAudioContextCtor(): typeof AudioContext | undefined {
   const w = window as unknown as {
@@ -31,22 +32,39 @@ function getAudioContextCtor(): typeof AudioContext | undefined {
   return w.AudioContext ?? w.webkitAudioContext;
 }
 
-function getOfflineAudioContextCtor(): typeof OfflineAudioContext | undefined {
-  const w = window as unknown as {
-    OfflineAudioContext?: typeof OfflineAudioContext;
-    webkitOfflineAudioContext?: typeof OfflineAudioContext;
-  };
-  return w.OfflineAudioContext ?? w.webkitOfflineAudioContext;
-}
-
 function detectSupport(): boolean {
   return (
     typeof navigator !== "undefined" &&
     !!navigator.mediaDevices?.getUserMedia &&
     typeof MediaRecorder !== "undefined" &&
-    !!getAudioContextCtor() &&
-    !!getOfflineAudioContextCtor()
+    !!getAudioContextCtor()
   );
+}
+
+/** Downmixes an AudioBuffer to mono and resamples to targetRate (pure JS). */
+function downmixAndResample(
+  buffer: AudioBuffer,
+  targetRate: number,
+): Float32Array {
+  const { numberOfChannels, length, sampleRate } = buffer;
+  const mono = new Float32Array(length);
+  for (let c = 0; c < numberOfChannels; c++) {
+    const data = buffer.getChannelData(c);
+    for (let i = 0; i < length; i++) mono[i] += data[i] / numberOfChannels;
+  }
+  if (sampleRate === targetRate) return mono;
+
+  const ratio = sampleRate / targetRate;
+  const outLength = Math.max(1, Math.floor(length / ratio));
+  const out = new Float32Array(outLength);
+  for (let i = 0; i < outLength; i++) {
+    const pos = i * ratio;
+    const i0 = Math.floor(pos);
+    const i1 = Math.min(i0 + 1, length - 1);
+    const frac = pos - i0;
+    out[i] = mono[i0] * (1 - frac) + mono[i1] * frac;
+  }
+  return out;
 }
 
 /** Encodes mono Float32 PCM samples as a base64 16-bit WAV string. */
@@ -63,7 +81,7 @@ function encodeWavBase64(samples: Float32Array, sampleRate: number): string {
   view.setUint32(4, 36 + samples.length * 2, true);
   writeText(8, "WAVE");
   writeText(12, "fmt ");
-  view.setUint32(16, 16, true); // fmt chunk size
+  view.setUint32(16, 16, true);
   view.setUint16(20, 1, true); // PCM
   view.setUint16(22, 1, true); // mono
   view.setUint32(24, sampleRate, true);
@@ -88,31 +106,23 @@ function encodeWavBase64(samples: Float32Array, sampleRate: number): string {
   return btoa(binary);
 }
 
-/** Decodes a recording, downmixes to 16 kHz mono, returns it as base64 WAV. */
+/** Decodes a recording and returns it as a base64 16 kHz mono WAV. */
 async function recordingToWavBase64(blob: Blob): Promise<string | null> {
   const AudioCtx = getAudioContextCtor();
-  const OfflineCtx = getOfflineAudioContextCtor();
-  if (!AudioCtx || !OfflineCtx) return null;
+  if (!AudioCtx) return null;
 
   const arrayBuffer = await blob.arrayBuffer();
-  const decodeCtx = new AudioCtx();
+  const ctx = new AudioCtx();
   let decoded: AudioBuffer;
   try {
-    decoded = await decodeCtx.decodeAudioData(arrayBuffer);
+    decoded = await ctx.decodeAudioData(arrayBuffer);
   } finally {
-    void decodeCtx.close();
+    void ctx.close();
   }
   if (decoded.length === 0) return null;
 
-  const frames = Math.max(1, Math.ceil(decoded.duration * TARGET_SAMPLE_RATE));
-  const offline = new OfflineCtx(1, frames, TARGET_SAMPLE_RATE);
-  const source = offline.createBufferSource();
-  source.buffer = decoded;
-  source.connect(offline.destination);
-  source.start();
-  const rendered = await offline.startRendering();
-
-  return encodeWavBase64(rendered.getChannelData(0), TARGET_SAMPLE_RATE);
+  const pcm = downmixAndResample(decoded, TARGET_SAMPLE_RATE);
+  return encodeWavBase64(pcm, TARGET_SAMPLE_RATE);
 }
 
 export function useVoiceRecorder({
@@ -170,35 +180,44 @@ export function useVoiceRecorder({
       chunksRef.current = [];
       try {
         const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+        console.info(`${LOG} įrašas: ${blob.size} baitų, tipas "${blob.type}"`);
         if (blob.size < 1200) {
-          // Too short to hold speech — quietly return to idle.
+          console.warn(`${LOG} įrašas per trumpas — praleidžiu`);
           setPhase("idle");
           return;
         }
         const audio = await recordingToWavBase64(blob);
         if (!audio) {
+          console.error(`${LOG} nepavyko konvertuoti įrašo į WAV`);
           setError("failed");
           setPhase("idle");
           return;
         }
+        console.info(`${LOG} WAV paruoštas (${audio.length} base64 simbolių), siunčiu`);
         const res = await fetch("/api/requests/transcribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ audio }),
         });
         const data = (await res.json().catch(() => null)) as
-          | { success?: boolean; data?: { text?: string } }
+          | { success?: boolean; error?: string; data?: { text?: string } }
           | null;
         const text = data?.data?.text;
         if (!res.ok || data?.success !== true || typeof text !== "string") {
+          console.error(
+            `${LOG} serverio klaida: HTTP ${res.status} —`,
+            data?.error ?? "(be detalių)",
+          );
           setError("failed");
           setPhase("idle");
           return;
         }
         const trimmed = text.trim();
+        console.info(`${LOG} transkribuota: "${trimmed}"`);
         if (trimmed) onTranscriptRef.current(trimmed);
         setPhase("idle");
-      } catch {
+      } catch (err) {
+        console.error(`${LOG} transkripcijos klaida:`, err);
         setError("failed");
         setPhase("idle");
       }
@@ -213,7 +232,8 @@ export function useVoiceRecorder({
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
-      const name = err instanceof DOMException ? err.name : "";
+      const name = err instanceof DOMException ? err.name : String(err);
+      console.error(`${LOG} mikrofono prieiga nepavyko:`, name);
       setError(
         name === "NotAllowedError" || name === "SecurityError"
           ? "denied"
@@ -252,7 +272,8 @@ export function useVoiceRecorder({
         const active = recorderRef.current;
         if (active && active.state !== "inactive") active.stop();
       }, MAX_RECORDING_MS);
-    } catch {
+    } catch (err) {
+      console.error(`${LOG} MediaRecorder nepavyko paleisti:`, err);
       releaseStream();
       setError("unavailable");
     }
