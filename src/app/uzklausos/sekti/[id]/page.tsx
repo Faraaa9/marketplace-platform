@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { clearGuestRequest } from "@/lib/guest-request";
-import { formatRelativeDate } from "@/lib/utils";
+import { formatRelativeDate, cn } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import Link from "next/link";
-import { MapPin, Clock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star } from "lucide-react";
+import RequestPhotos from "@/components/requests/RequestPhotos";
+import { ChevronDown, MapPin, Clock, CalendarClock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star, Pencil, Trash2 } from "lucide-react";
 
 interface MessageData {
   id: string;
   content: string;
   createdAt: string;
+  senderId?: string | null;
   senderName?: string;
   sender?: { name: string };
 }
@@ -47,6 +50,8 @@ interface RequestData {
   category: string;
   location: string;
   budget?: string;
+  deadline?: string;
+  attachmentUrls?: string[];
   status: string;
   acceptedResponseId?: string;
   clientId?: string | null;
@@ -56,16 +61,49 @@ interface RequestData {
   responses: ResponseData[];
 }
 
+type SortMode = "newest" | "price-asc" | "price-desc" | "active";
+type FilterMode = "all" | "awaiting";
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "newest", label: "Naujausi" },
+  { value: "price-asc", label: "Kaina: nuo pigiausių" },
+  { value: "price-desc", label: "Kaina: nuo brangiausių" },
+  { value: "active", label: "Pagal aktyvumą" },
+];
+
+const EMPTY_MESSAGES: ThreadMessage[] = [];
+
+function lastMessageOf(resp: ResponseData): MessageData | undefined {
+  return resp.messages[resp.messages.length - 1];
+}
+
+/** True when the provider sent the last word — the client still owes a reply. */
+function isAwaitingClientReply(resp: ResponseData): boolean {
+  const last = lastMessageOf(resp);
+  const lastSenderId = last ? last.senderId ?? null : resp.providerId;
+  return lastSenderId === resp.providerId;
+}
+
+function lastActivityAt(resp: ResponseData): string {
+  return lastMessageOf(resp)?.createdAt ?? resp.createdAt;
+}
+
+function comparePrice(a: ResponseData, b: ResponseData, dir: "asc" | "desc"): number {
+  if (a.price == null && b.price == null) return 0;
+  if (a.price == null) return 1;
+  if (b.price == null) return -1;
+  return dir === "asc" ? a.price - b.price : b.price - a.price;
+}
+
 export default function TrackRequestPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const [request, setRequest] = useState<RequestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState("");
-  const [resendingConfirmation, setResendingConfirmation] = useState(false);
-  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const fetchRequest = useCallback(async () => {
     try {
@@ -99,11 +137,86 @@ export default function TrackRequestPage() {
       id: data.data.id,
       content: data.data.content,
       createdAt: data.data.createdAt,
+      senderId: data.data.senderId ?? null,
       senderName: data.data.senderName,
       sender: data.data.sender,
       status: "sent",
     };
   }, [params.id]);
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [mountedThreads, setMountedThreads] = useState<Set<string>>(() => new Set());
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const didInitExpand = useRef(false);
+
+  // Transform server messages once per fetch so ThreadChat hydration stays
+  // referentially stable: a fresh array every render would re-trigger
+  // hydration and drop messages sent during the session.
+  const messagesByResponse = useMemo(() => {
+    const map: Record<string, ThreadMessage[]> = {};
+    for (const resp of request?.responses ?? []) {
+      map[resp.id] = resp.messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        createdAt: m.createdAt,
+        senderId: m.senderId ?? null,
+        senderName: m.senderName || m.sender?.name || null,
+        sender: m.sender ?? null,
+        status: "sent" as const,
+      }));
+    }
+    return map;
+  }, [request]);
+
+  const awaitingCount = useMemo(
+    () => (request?.responses ?? []).filter(isAwaitingClientReply).length,
+    [request],
+  );
+
+  const displayedResponses = useMemo(() => {
+    const all = request?.responses ?? [];
+    const list = filterMode === "awaiting" ? all.filter(isAwaitingClientReply) : [...all];
+    list.sort((a, b) => {
+      switch (sortMode) {
+        case "price-asc":
+          return comparePrice(a, b, "asc");
+        case "price-desc":
+          return comparePrice(a, b, "desc");
+        case "active":
+          return Date.parse(lastActivityAt(b)) - Date.parse(lastActivityAt(a));
+        default:
+          return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      }
+    });
+    const acceptedId = request?.acceptedResponseId;
+    if (acceptedId) {
+      const idx = list.findIndex((r) => r.id === acceptedId);
+      if (idx > 0) list.unshift(list.splice(idx, 1)[0]);
+    }
+    return list;
+  }, [request, sortMode, filterMode]);
+
+  // Auto-open the accepted proposal, or the only one, on first load.
+  useEffect(() => {
+    if (didInitExpand.current || !request) return;
+    didInitExpand.current = true;
+    if (request.acceptedResponseId) {
+      setExpandedId(request.acceptedResponseId);
+    } else if (request.responses.length === 1) {
+      setExpandedId(request.responses[0].id);
+    }
+  }, [request]);
+
+  const toggleProposal = useCallback((id: string) => {
+    setMountedThreads((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    setExpandedId((cur) => (cur === id ? null : id));
+  }, []);
 
   async function handleStatusAction(action: "accept" | "close", responseId?: string) {
     setActionLoading(action === "accept" ? responseId || action : action);
@@ -126,23 +239,23 @@ export default function TrackRequestPage() {
     }
   }
 
-  async function handleResendConfirmation() {
-    setResendingConfirmation(true);
+  async function handleDelete() {
+    if (!confirm("Ar tikrai norite ištrinti šią užklausą? Šio veiksmo atšaukti negalėsite.")) return;
+    setActionLoading("delete");
     setError("");
     try {
-      const res = await fetch(`/api/tracking/${params.id}/resend-confirmation`, {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (data.success) {
-        setConfirmationSent(true);
+      const res = await fetch(`/api/tracking/${params.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        clearGuestRequest();
+        router.push(session ? "/paskyra/uzklausos" : "/");
       } else {
-        setError(data.error || "Nepavyko išsiųsti patvirtinimo laiško");
+        setError(data?.error || "Nepavyko ištrinti užklausos");
+        setActionLoading("");
       }
     } catch {
-      setError("Nepavyko išsiųsti patvirtinimo laiško");
-    } finally {
-      setResendingConfirmation(false);
+      setError("Nepavyko ištrinti. Bandykite dar kartą.");
+      setActionLoading("");
     }
   }
 
@@ -157,18 +270,18 @@ export default function TrackRequestPage() {
   if (!request) return null;
 
   const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label || request.category;
-  const statusMap: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
+  const statusMap: Record<string, { label: string; variant: "warning" | "brand" | "default" }> = {
     PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
-    OPEN: { label: "Atidaryta", variant: "success" },
-    IN_PROGRESS: { label: "Vykdoma", variant: "warning" },
+    OPEN: { label: "Atidaryta", variant: "brand" },
+    IN_PROGRESS: { label: "Vykdoma", variant: "brand" },
     CLOSED: { label: "Uždaryta", variant: "default" },
   };
   const status = statusMap[request.status] || statusMap.OPEN;
   const verificationState = searchParams.get("verification");
   const deliveryState = searchParams.get("delivery");
-  const isPendingConfirmation = request.status === "PENDING_CONFIRMATION";
   const isOpen = request.status === "OPEN";
   const isClosed = request.status === "CLOSED";
+  const showToolbar = isOpen && request.responses.length > 3;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -182,12 +295,7 @@ export default function TrackRequestPage() {
           <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{request.location}</span>
           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatRelativeDate(request.createdAt)}</span>
           {request.budget && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{request.budget}</span>}
-          {session && (
-            <span className="flex items-center gap-1.5" title="Kiek tiekėjų peržiūrėjo užklausą">
-              <Eye className="h-4 w-4" />
-              {request.viewCount ?? 0} perž.
-            </span>
-          )}
+          {request.deadline && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{request.deadline}</span>}
         </div>
       </div>
 
@@ -230,14 +338,29 @@ export default function TrackRequestPage() {
       {/* Status timeline */}
       <StatusTimeline status={request.status} responseCount={request.responses.length} />
 
+      {/* Provider activity — concrete transparency during the wait */}
+      {isOpen && (
+        <div className="mb-6 flex items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">
+          <Eye className="h-4 w-4 shrink-0" />
+          {request.viewCount && request.viewCount > 0 ? (
+            <span>
+              Jūsų užklausą peržiūrėjo tiekėjų:{" "}
+              <span className="font-semibold text-surface-700 dark:text-surface-200">{request.viewCount}</span>
+            </span>
+          ) : (
+            <span>Tiekėjai dar neperžiūrėjo — pirmieji peržiūri per kelias valandas.</span>
+          )}
+        </div>
+      )}
+
       {/* Next action guidance */}
       {isOpen && request.responses.length === 0 && (
-        <div className="mb-6 rounded-2xl border border-blue-200/60 bg-blue-50/50 p-5 dark:border-blue-800/40 dark:bg-blue-950/30">
+        <div className="mb-6 rounded-2xl border border-surface-200/60 bg-surface-50 p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
           <div className="flex items-center gap-2 mb-1">
-            <SearchIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <p className="text-body-sm font-semibold text-blue-900 dark:text-blue-200">Užklausa aktyvuota</p>
+            <SearchIcon className="h-4 w-4 text-surface-500 dark:text-surface-400" />
+            <p className="text-body-sm font-semibold text-surface-900 dark:text-white">Užklausa aktyvuota</p>
           </div>
-          <p className="text-body-sm text-blue-800/80 dark:text-blue-300/80">
+          <p className="text-body-sm text-surface-500 dark:text-surface-400">
             Tiekėjai mato jūsų užklausą ir netrukus pradės siųsti pasiūlymus. Paprastai pirmieji pasiūlymai ateina per kelias valandas.
           </p>
         </div>
@@ -269,40 +392,13 @@ export default function TrackRequestPage() {
         </div>
       )}
 
-      {isPendingConfirmation && (
-        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-700 dark:bg-amber-500/10">
-          <h2 className="text-body font-semibold text-amber-900 dark:text-amber-200">Liko 1 žingsnis — patvirtinkite el. paštą</h2>
-          <div className="mt-3 space-y-2">
-            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
-              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">1.</span>
-              <span>Patikrinkite savo el. pašto dėžutę (ir spam/šiukšlių aplanką)</span>
-            </div>
-            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
-              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">2.</span>
-              <span>Spauskite patvirtinimo nuorodą laiške</span>
-            </div>
-            <div className="flex items-start gap-2 text-body-sm text-amber-800 dark:text-amber-300">
-              <span className="font-semibold text-amber-900 dark:text-amber-200 shrink-0">3.</span>
-              <span>Po patvirtinimo jūsų užklausa iškart bus perduota tiekėjams ir jie pradės siųsti pasiūlymus</span>
-            </div>
-          </div>
-          <p className="mt-3 text-micro text-amber-700/70 dark:text-amber-400/70">
-            Kol el. paštas nepatvirtintas, tiekėjai jūsų užklausos nemato.
-          </p>
-          {confirmationSent ? (
-            <p className="mt-3 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
-              Patvirtinimo laiškas išsiųstas dar kartą. Patikrinkite el. paštą.
-            </p>
-          ) : (
-            <Button className="mt-4" size="sm" variant="outline" onClick={handleResendConfirmation} isLoading={resendingConfirmation}>
-              Siųsti patvirtinimo laišką dar kartą
-            </Button>
-          )}
-        </div>
-      )}
-
       <Card className="mb-6">
         <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap">{request.description}</p>
+        {request.attachmentUrls && request.attachmentUrls.length > 0 && (
+          <div className="mt-4">
+            <RequestPhotos urls={request.attachmentUrls} />
+          </div>
+        )}
       </Card>
 
       {/* Account value / claim — context-aware */}
@@ -311,9 +407,19 @@ export default function TrackRequestPage() {
       {/* Bookmark reminder for anonymous users */}
       <BookmarkReminder />
 
-      {/* Close request button */}
-      {!isClosed && !isPendingConfirmation && (
-        <div className="mb-6 flex justify-end">
+      {/* Request management actions */}
+      {!isClosed && (
+        <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+          {isOpen && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/uzklausos/sekti/${params.id}/redaguoti`)}
+            >
+              <Pencil className="h-4 w-4 mr-1.5" />
+              Redaguoti
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -327,6 +433,18 @@ export default function TrackRequestPage() {
             <XCircle className="h-4 w-4 mr-1.5" />
             Uždaryti užklausą
           </Button>
+          {isOpen && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+              onClick={handleDelete}
+              isLoading={actionLoading === "delete"}
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Ištrinti
+            </Button>
+          )}
         </div>
       )}
 
@@ -336,106 +454,285 @@ export default function TrackRequestPage() {
 
       {request.responses.length === 0 ? (
         <EmptyState
-          title={isPendingConfirmation ? "Laukiama el. pašto patvirtinimo" : "Kol kas pasiūlymų nėra"}
-          description={isPendingConfirmation ? "Patvirtinkite el. paštą ir tada užklausa bus perduota tiekėjams." : "Tiekėjai netrukus peržiūrės jūsų užklausą ir atsiųs pasiūlymus."}
+          title="Kol kas pasiūlymų nėra"
+          description="Tiekėjai netrukus peržiūrės jūsų užklausą ir atsiųs pasiūlymus."
           icon={<MessageCircle className="h-12 w-12" />}
         />
       ) : (
-        <div className="space-y-4">
-          {request.responses.map((resp) => {
-            const isAccepted = request.acceptedResponseId === resp.id;
-            return (
-              <Card
-                key={resp.id}
-                className={isAccepted ? "ring-2 ring-emerald-500 border-emerald-500" : ""}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-body font-medium text-surface-900 dark:text-white">{resp.provider.name}</p>
-                      {resp.providerBadge && (
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium ${
-                          resp.provider.providerProfile?.planType === "PRO"
-                            ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                            : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                        }`}>
-                          <Shield className="h-3 w-3" />
-                          {resp.providerBadge}
-                        </span>
-                      )}
-                      {isAccepted && (
-                        <Badge variant="success">Priimtas</Badge>
-                      )}
-                    </div>
-                    {resp.provider.providerProfile?.location && (
-                      <p className="text-body-sm text-surface-500">{resp.provider.providerProfile.location}</p>
-                    )}
-                  </div>
-                  {resp.price && (
-                    <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>
-                  )}
-                </div>
-                <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap">{resp.message}</p>
-                <p className="mt-2 text-micro text-surface-400">{formatRelativeDate(resp.createdAt)}</p>
-
-                {/* Accept button — only when request is OPEN */}
-                {isOpen && (
-                  <div className="mt-3">
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => {
-                        if (confirm(`Ar tikrai norite priimti ${resp.provider.name} pasiūlymą?`)) {
-                          handleStatusAction("accept", resp.id);
-                        }
-                      }}
-                      isLoading={actionLoading === resp.id}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1.5" />
-                      Priimti pasiūlymą
-                    </Button>
-                  </div>
-                )}
-
-                {/* Review form — only for accepted response, not yet reviewed */}
-                {isAccepted && !resp.hasReview && (
-                  <ReviewForm
-                    requestId={request.id}
-                    responseId={resp.id}
-                    providerName={resp.provider.name}
-                    trackingToken={params.id as string}
-                    clientId={request.clientId}
-                    onSubmitted={fetchRequest}
-                  />
-                )}
-
-                {/* Review submitted badge */}
-                {isAccepted && resp.hasReview && (
-                  <div className="mt-3 flex items-center gap-1.5 text-body-sm text-emerald-600 dark:text-emerald-400">
-                    <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
-                    Atsiliepimas pateiktas
-                  </div>
-                )}
-
-                {/* Thread with optimistic messaging */}
-                <ThreadChat
-                  responseId={resp.id}
-                  initialMessages={resp.messages.map((m) => ({
-                    ...m,
-                    senderName: m.senderName || m.sender?.name || null,
-                    status: "sent" as const,
-                  }))}
-                  currentSenderName={request.clientName || "Klientas"}
-                  sendMessage={sendTrackingMessage}
-                  placeholder="Rašyti žinutę tiekėjui..."
-                  disabled={isClosed}
+        <>
+          {showToolbar && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                <FilterChip active={filterMode === "all"} onClick={() => setFilterMode("all")}>
+                  Visi ({request.responses.length})
+                </FilterChip>
+                <FilterChip
+                  active={filterMode === "awaiting"}
+                  onClick={() => setFilterMode("awaiting")}
+                >
+                  Laukia atsakymo ({awaitingCount})
+                </FilterChip>
+              </div>
+              <div className="w-full sm:w-56">
+                <Select
+                  aria-label="Rūšiuoti pasiūlymus"
+                  options={SORT_OPTIONS}
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as SortMode)}
                 />
-              </Card>
-            );
-          })}
-        </div>
+              </div>
+            </div>
+          )}
+
+          {displayedResponses.length === 0 ? (
+            <div className="rounded-2xl border border-surface-200/60 bg-surface-50 p-6 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
+              <p className="text-body-sm text-surface-500 dark:text-surface-400">
+                Visi pasiūlymai jau atsakyti.
+              </p>
+              <button
+                onClick={() => setFilterMode("all")}
+                className="mt-2 text-body-sm font-medium text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+              >
+                Rodyti visus pasiūlymus
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {displayedResponses.map((resp) => (
+                <ProposalCard
+                  key={resp.id}
+                  resp={resp}
+                  isAccepted={request.acceptedResponseId === resp.id}
+                  isOpen={isOpen}
+                  isClosed={isClosed}
+                  expanded={expandedId === resp.id}
+                  mounted={mountedThreads.has(resp.id) || expandedId === resp.id}
+                  onToggle={() => toggleProposal(resp.id)}
+                  acceptLoading={actionLoading === resp.id}
+                  onAccept={() => handleStatusAction("accept", resp.id)}
+                  initialMessages={messagesByResponse[resp.id] ?? EMPTY_MESSAGES}
+                  clientName={request.clientName || "Klientas"}
+                  clientId={request.clientId}
+                  requestId={request.id}
+                  trackingToken={params.id as string}
+                  sendMessage={sendTrackingMessage}
+                  onReviewSubmitted={fetchRequest}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-full px-3 py-1.5 text-body-sm font-medium transition-colors",
+        active
+          ? "bg-brand-600 text-white"
+          : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ProposalCard({
+  resp,
+  isAccepted,
+  isOpen,
+  isClosed,
+  expanded,
+  mounted,
+  onToggle,
+  acceptLoading,
+  onAccept,
+  initialMessages,
+  clientName,
+  clientId,
+  requestId,
+  trackingToken,
+  sendMessage,
+  onReviewSubmitted,
+}: {
+  resp: ResponseData;
+  isAccepted: boolean;
+  isOpen: boolean;
+  isClosed: boolean;
+  expanded: boolean;
+  mounted: boolean;
+  onToggle: () => void;
+  acceptLoading: boolean;
+  onAccept: () => void;
+  initialMessages: ThreadMessage[];
+  clientName: string;
+  clientId?: string | null;
+  requestId: string;
+  trackingToken: string;
+  sendMessage: (responseId: string, content: string) => Promise<ThreadMessage>;
+  onReviewSubmitted: () => void;
+}) {
+  const last = lastMessageOf(resp);
+  const snippet = last ? last.content : resp.message;
+  const fromClient = last ? (last.senderId ?? null) !== resp.providerId : false;
+  const awaiting = !isClosed && isAwaitingClientReply(resp);
+  const planType = resp.provider.providerProfile?.planType;
+  const location = resp.provider.providerProfile?.location;
+
+  return (
+    <Card
+      className={cn(
+        "p-4",
+        isAccepted && "border-emerald-500 ring-2 ring-emerald-500",
+        !expanded && "transition-shadow hover:shadow-stripe",
+      )}
+    >
+      {/* Collapsed row — always visible, toggles the conversation */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-start gap-3 text-left"
+      >
+        <ChevronDown
+          className={cn(
+            "mt-1 h-4 w-4 shrink-0 text-surface-400 transition-transform duration-200",
+            expanded && "rotate-180",
+          )}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-body font-medium text-surface-900 dark:text-white">
+              {resp.provider.name}
+            </span>
+            {resp.providerBadge && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium",
+                  planType === "PRO"
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
+                    : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+                )}
+              >
+                <Shield className="h-3 w-3" />
+                {resp.providerBadge}
+              </span>
+            )}
+            {isAccepted && <Badge variant="success">Priimtas</Badge>}
+          </div>
+          {!expanded && (
+            <p className="mt-0.5 truncate text-body-sm text-surface-500 dark:text-surface-400">
+              {fromClient && <span className="text-surface-400 dark:text-surface-500">Jūs: </span>}
+              {snippet}
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {resp.price != null && (
+            <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">
+              &euro;{resp.price}
+            </span>
+          )}
+          {!expanded && (
+            <span className="text-micro text-surface-400">
+              {formatRelativeDate(lastActivityAt(resp))}
+            </span>
+          )}
+          {!expanded && awaiting && (
+            <span className="flex items-center gap-1 text-micro font-medium text-brand-600 dark:text-brand-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+              Laukia atsakymo
+            </span>
+          )}
+        </div>
+      </button>
+
+      {/* Expanded — full proposal text + actions */}
+      {expanded && (
+        <div className="mt-4 border-t border-surface-200/60 pt-4 dark:border-surface-700">
+          {location && (
+            <p className="mb-2 text-body-sm text-surface-500 dark:text-surface-400">{location}</p>
+          )}
+          <div className="flex flex-col items-start gap-0.5">
+            <div className="max-w-[80%] rounded-2xl rounded-bl-md bg-surface-50 px-3.5 py-2 text-body-sm text-surface-700 whitespace-pre-wrap break-words dark:bg-surface-800 dark:text-surface-200">
+              {resp.message}
+            </div>
+            <span className="px-1 text-micro text-surface-400">
+              {formatRelativeDate(resp.createdAt)}
+            </span>
+          </div>
+
+          {isOpen && (
+            <div className="mt-3">
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  if (confirm(`Ar tikrai norite priimti ${resp.provider.name} pasiūlymą?`)) {
+                    onAccept();
+                  }
+                }}
+                isLoading={acceptLoading}
+              >
+                <CheckCircle className="h-4 w-4 mr-1.5" />
+                Priimti pasiūlymą
+              </Button>
+            </div>
+          )}
+
+          {isAccepted && !resp.hasReview && (
+            <ReviewForm
+              requestId={requestId}
+              responseId={resp.id}
+              providerName={resp.provider.name}
+              trackingToken={trackingToken}
+              clientId={clientId}
+              onSubmitted={onReviewSubmitted}
+            />
+          )}
+
+          {isAccepted && resp.hasReview && (
+            <div className="mt-3 flex items-center gap-1.5 text-body-sm text-emerald-600 dark:text-emerald-400">
+              <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
+              Atsiliepimas pateiktas
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Conversation — mounted on first open, then kept alive but hidden when
+          collapsed so in-session messages and the Realtime subscription survive. */}
+      {mounted && (
+        <div className={expanded ? "" : "hidden"}>
+          <ThreadChat
+            threadId={resp.id}
+            threadKind="response"
+            initialMessages={initialMessages}
+            currentSenderName={clientName}
+            viewerRole="client"
+            providerId={resp.providerId}
+            sendMessage={sendMessage}
+            placeholder="Rašyti žinutę tiekėjui..."
+            disabled={isClosed}
+          />
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -623,7 +920,6 @@ function StatusTimeline({ status, responseCount }: { status: string; responseCou
         {steps.map((step, i) => {
           const isCompleted = i < currentIndex;
           const isCurrent = i === currentIndex;
-          const isFuture = i > currentIndex;
 
           return (
             <div key={step.key} className="flex items-center flex-1 last:flex-none">
@@ -631,7 +927,7 @@ function StatusTimeline({ status, responseCount }: { status: string; responseCou
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
                     isCompleted
-                      ? "bg-emerald-500 text-white"
+                      ? "bg-brand-500 text-white"
                       : isCurrent
                         ? "bg-brand-600 text-white ring-4 ring-brand-100 dark:ring-brand-900/50"
                         : "bg-surface-100 text-surface-400 dark:bg-surface-800"
@@ -644,14 +940,14 @@ function StatusTimeline({ status, responseCount }: { status: string; responseCou
                     isCurrent
                       ? "text-brand-600 dark:text-brand-400"
                       : isCompleted
-                        ? "text-emerald-600 dark:text-emerald-400"
+                        ? "text-surface-500 dark:text-surface-400"
                         : "text-surface-400"
                   }`}
                 >
                   {step.label}
                 </span>
                 {isCurrent && step.key === "OPEN" && responseCount > 0 && (
-                  <span className="mt-0.5 text-micro text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="mt-0.5 text-micro text-brand-600 dark:text-brand-400 font-semibold">
                     {responseCount} pasiūl.
                   </span>
                 )}
@@ -660,10 +956,8 @@ function StatusTimeline({ status, responseCount }: { status: string; responseCou
                 <div
                   className={`flex-1 h-0.5 mx-2 rounded-full ${
                     i < currentIndex
-                      ? "bg-emerald-500"
-                      : isFuture
-                        ? "bg-surface-200 dark:bg-surface-700"
-                        : "bg-brand-200 dark:bg-brand-800"
+                      ? "bg-brand-500 dark:bg-brand-700"
+                      : "bg-surface-200 dark:bg-surface-700"
                   }`}
                 />
               )}

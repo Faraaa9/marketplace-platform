@@ -21,8 +21,10 @@ export const serviceRequestSchema = z.object({
   title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
   category: z.string().min(1, "Pasirinkite kategoriją"),
-  location: z.string().min(1, "Pasirinkite miestą"),
-  budget: z.string().max(100).optional(),
+  location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
+  budget: z.string().min(1, "Nurodykite biudžetą").max(100),
+  deadline: z.string().min(1, "Nurodykite terminą").max(100),
+  attachmentUrls: z.array(z.string().url().includes("res.cloudinary.com")).max(5, "Daugiausia 5 nuotraukos").optional(),
   clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
   clientEmail: z.string().email("Neteisingas el. pašto formatas"),
   clientPhone: z.string().optional(),
@@ -33,6 +35,19 @@ export const serviceRequestSchema = z.object({
   (data) => !data.createAccount || (data.password && data.password.length >= 8),
   { message: "Slaptažodis turi būti bent 8 simbolių", path: ["password"] }
 );
+
+// Editable subset of a service request — excludes clientEmail (verified identity)
+// and the account/honeypot fields used only at creation.
+export const serviceRequestEditSchema = z.object({
+  title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
+  description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
+  category: z.string().min(1, "Pasirinkite kategoriją"),
+  location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
+  budget: z.string().min(1, "Nurodykite biudžetą").max(100),
+  deadline: z.string().min(1, "Nurodykite terminą").max(100),
+  attachmentUrls: z.array(z.string().url().includes("res.cloudinary.com")).max(5, "Daugiausia 5 nuotraukos").optional(),
+  clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
+});
 
 export const improveDescriptionSchema = z.object({
   description: z
@@ -85,6 +100,7 @@ export const directInquirySchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
+export type ServiceRequestEditInput = z.infer<typeof serviceRequestEditSchema>;
 export type ImproveDescriptionInput = z.infer<typeof improveDescriptionSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;

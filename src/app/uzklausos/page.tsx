@@ -26,26 +26,39 @@ interface PageProps {
   }>;
 }
 
-const getOpenRequests = unstable_cache(
+const getBoardRequests = unstable_cache(
   async (
     page: number,
     perPage: number,
     filters: { category: string; location: string; search: string; budget: string; sort: string }
   ) => {
-    const where: Record<string, unknown> = { status: "OPEN" };
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // The board shows open requests plus ones that found a provider within
+    // the last 24h — those linger with a "Tiekėjas rastas" stamp.
+    const conditions: Record<string, unknown>[] = [
+      {
+        OR: [
+          { status: "OPEN" },
+          { acceptedResponseId: { not: null }, updatedAt: { gte: oneDayAgo } },
+        ],
+      },
+    ];
+    if (filters.search) {
+      conditions.push({
+        OR: [
+          { title: { contains: filters.search, mode: "insensitive" } },
+          { description: { contains: filters.search, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    const where: Record<string, unknown> = { AND: conditions };
     if (filters.category) where.category = filters.category;
     if (filters.location) where.location = filters.location;
     if (filters.budget) where.budget = filters.budget;
-    if (filters.search) {
-      where.OR = [
-        { title: { contains: filters.search, mode: "insensitive" } },
-        { description: { contains: filters.search, mode: "insensitive" } },
-      ];
-    }
 
     const orderBy: Record<string, string> = { createdAt: "desc" };
-
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const [requests, total, totalActive, newToday, totalProviderResponses] = await Promise.all([
       prisma.serviceRequest.findMany({
@@ -59,6 +72,7 @@ const getOpenRequests = unstable_cache(
           location: true,
           budget: true,
           clientId: true,
+          acceptedResponseId: true,
           createdAt: true,
           _count: { select: { responses: true } },
         },
@@ -101,7 +115,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
   const now = new Date();
 
-  const { requests, total, totalActive, newToday, totalProviderResponses } = await getOpenRequests(
+  const { requests, total, totalActive, newToday, totalProviderResponses } = await getBoardRequests(
     page,
     perPage,
     { category, location, search, budget, sort }
@@ -250,6 +264,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           <div className="grid gap-7 sm:gap-8">
             {requests.map((r, i) => {
               const competition = competitionLevel(r._count.responses);
+              const isMatched = !!r.acceptedResponseId;
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const ctaHref = isOwnRequest
                 ? `/uzklausos/sekti/${r.trackingToken}`
@@ -272,22 +287,28 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                         <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
                           {categoryLabel(r.category)}
                         </span>
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
-                        >
-                          {competition.opportunity ? (
-                            <Sparkles className="h-3 w-3" />
-                          ) : (
-                            <TrendingUp className="h-3 w-3" />
-                          )}
-                          {competition.label}
-                        </span>
+                        {!isMatched && (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
+                          >
+                            {competition.opportunity ? (
+                              <Sparkles className="h-3 w-3" />
+                            ) : (
+                              <TrendingUp className="h-3 w-3" />
+                            )}
+                            {competition.label}
+                          </span>
+                        )}
                       </div>
 
                       {/* title */}
-                      <h3 className="mt-3.5 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]">
+                      <h3
+                        className={`mt-3.5 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]${
+                          isMatched ? " pr-[96px] sm:pr-[172px]" : ""
+                        }`}
+                      >
                         {r.title}
-                        {isNew(r.createdAt) && (
+                        {isNew(r.createdAt) && !isMatched && (
                           <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
                             Nauja
                           </span>
@@ -325,16 +346,29 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                           </span>
                         </div>
 
-                        <Link
-                          href={ctaHref}
-                          className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 font-serif text-[0.9rem] font-medium transition-all active:translate-y-[2px] active:shadow-none ${ctaTone}`}
-                        >
-                          {ctaLabel}
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </Link>
+                        {isMatched && !isOwnRequest ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ece6d7] px-4 py-2 font-serif text-[0.9rem] font-medium text-[#9b8f76] cursor-default dark:bg-surface-800 dark:text-surface-500">
+                            Pasiūlymai nepriimami
+                          </span>
+                        ) : (
+                          <Link
+                            href={ctaHref}
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 font-serif text-[0.9rem] font-medium transition-all active:translate-y-[2px] active:shadow-none ${ctaTone}`}
+                          >
+                            {ctaLabel}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>
+
+                  {isMatched && (
+                    <span className="found-stamp">
+                      <span className="found-stamp__lead">Tiekėjas</span>
+                      <span className="found-stamp__main">Rastas</span>
+                    </span>
+                  )}
 
                   <span aria-hidden className="pin absolute left-5 top-3.5" />
                   <span aria-hidden className="pin absolute right-5 top-3.5" />

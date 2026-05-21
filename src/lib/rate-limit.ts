@@ -113,6 +113,7 @@ export const RATE_LIMITS = {
   responses: { maxRequests: 10, windowMs: 10 * 60 * 1000 },     // 10 per 10 min
   aiImprove: { maxRequests: 15, windowMs: 60 * 60 * 1000 },     // 15 per hour (AI aprašymo tvarkymas)
   aiTranscribe: { maxRequests: 30, windowMs: 60 * 60 * 1000 },  // 30 per hour (balso diktavimas)
+  requestCode: { maxRequests: 8, windowMs: 60 * 60 * 1000 },    // 8 per hour (užklausos el. pašto kodas)
   guestMessages: { maxRequests: 3, windowMs: 60 * 1000 },       // 3 per minute
   directInquiry: { maxRequests: 5, windowMs: 60 * 60 * 1000 },  // 5 per hour (sender)
   directInquiryGuest: { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 per hour (guest)

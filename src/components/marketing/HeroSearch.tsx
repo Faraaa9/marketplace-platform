@@ -2,20 +2,20 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, LayoutGrid, Mic, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowUp, Loader2, Mic, Users } from "lucide-react";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 import { useVoiceRecorder } from "@/lib/use-voice-recorder";
 
 // The box starts ~3 rows tall, grows with the text, and only starts
 // scrolling once it reaches the cap (safety limit so it can't grow forever).
-const MIN_HEIGHT = 168;
+const MIN_HEIGHT = 184;
 const MAX_HEIGHT = 400;
 const MAX_LENGTH = 2000;
 
 export default function HeroSearch() {
   const router = useRouter();
   const [value, setValue] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const autoResize = useCallback(() => {
@@ -49,44 +49,12 @@ export default function HeroSearch() {
     onTranscript: handleTranscript,
   });
 
-  async function submit() {
-    if (submitting) return;
+  function submit() {
     const text = value.trim();
-    if (!text) {
-      router.push("/uzklausos/nauja");
-      return;
-    }
-    const params = new URLSearchParams({ description: text });
-    // Pre-fill category / title / city / budget on the form from the
-    // description so the user doesn't re-enter what they already said.
-    if (text.length >= 15) {
-      setSubmitting(true);
-      try {
-        const res = await fetch("/api/requests/improve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ description: text }),
-        });
-        const data = (await res.json().catch(() => null)) as {
-          success?: boolean;
-          data?: {
-            category?: string;
-            title?: string;
-            location?: string;
-            budget?: string;
-          };
-        } | null;
-        if (res.ok && data?.success && data.data) {
-          if (data.data.category) params.set("category", data.data.category);
-          if (data.data.title) params.set("title", data.data.title);
-          if (data.data.location) params.set("location", data.data.location);
-          if (data.data.budget) params.set("budget", data.data.budget);
-        }
-      } catch {
-        // Navigate with just the description if the AI call fails.
-      }
-    }
-    router.push(`/uzklausos/nauja?${params.toString()}`);
+    // The preview page runs the AI extraction and shows the editable listing.
+    router.push(
+      text ? `/uzklausos/nauja?description=${encodeURIComponent(text)}` : "/uzklausos/nauja",
+    );
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -112,10 +80,16 @@ export default function HeroSearch() {
               ? "Klausau, kalbėkite..."
               : status === "transcribing"
                 ? "Atpažįstu, ką pasakei..."
-                : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje..."
+                : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje. Biudžetas iki 800 €, darbus norėčiau pradėti kitą savaitę."
           }
           className="w-full resize-none rounded-[1.75rem] bg-transparent px-6 pt-5 pb-16 text-[1.0625rem] leading-relaxed text-[#26231F] outline-none placeholder:text-[#9A958B]"
         />
+
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-[1.75rem] bg-gradient-to-t from-[#FBFAF6] from-[70%] to-transparent"
+        />
+
         {isSupported && (
           <button
             type="button"
@@ -152,15 +126,10 @@ export default function HeroSearch() {
         <button
           type="button"
           onClick={submit}
-          disabled={submitting}
           aria-label="Tęsti"
-          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95 disabled:hover:scale-100"
+          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95"
         >
-          {submitting ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <ArrowUp className="h-5 w-5" />
-          )}
+          <ArrowUp className="h-5 w-5" />
         </button>
       </div>
 
@@ -175,14 +144,13 @@ export default function HeroSearch() {
       )}
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <a
-          href="#kategorijos"
+        <Link
+          href="/tiekejai"
           className="inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-sm font-medium text-[#57534C] transition-colors hover:bg-[#E9E4D9]"
         >
-          <LayoutGrid className="h-4 w-4 text-[#C25E3A]" />
-          Naršyti kategorijas
-        </a>
-
+          <Users className="h-4 w-4 text-[#C25E3A]" />
+          Žiūrėti tiekėjus
+        </Link>
         <ImproveDescriptionButton
           value={value}
           onChange={setValue}

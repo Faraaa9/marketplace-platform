@@ -78,6 +78,21 @@
     background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
   }
 
+  /* Site-wide fixed grid background (see layout.tsx) — dark-aware */
+  .layout-grid {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(to right, rgba(42, 39, 35, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(42, 39, 35, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .dark .layout-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+
   /* Text shadow for readability on images */
   .text-shadow-hero {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -190,5 +205,66 @@
     height: 3px;
     border-radius: 9999px;
     background: radial-gradient(circle, rgba(255, 252, 238, 0.8) 0%, rgba(255, 252, 238, 0) 100%);
+  }
+}
+
+/* ───────────── "Tiekėjas rastas" antspaudas ───────────── */
+@layer components {
+  /* Rubber stamp slapped on a note once the request found its provider.
+     Mobile-first: compact base, larger from the sm breakpoint up. */
+  .found-stamp {
+    position: absolute;
+    top: 2.05rem;
+    right: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.3rem 0.72rem 0.36rem;
+    transform: rotate(-13deg);
+    border: 2.5px solid #c0744f;
+    border-radius: 11px;
+    background-color: rgba(245, 231, 221, 0.92);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(157, 71, 42, 0.3),
+      0 4px 9px rgba(70, 40, 18, 0.13);
+    color: #99421f;
+  }
+  .found-stamp__lead {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-indent: 0.24em;
+    text-transform: uppercase;
+  }
+  .found-stamp__main {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-indent: 0.07em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .dark .found-stamp {
+    border-color: #cf8763;
+    background-color: rgba(60, 41, 30, 0.92);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(207, 135, 99, 0.28),
+      0 4px 10px rgba(0, 0, 0, 0.3);
+    color: #e8b08e;
+  }
+  @media (min-width: 640px) {
+    .found-stamp {
+      top: 2.3rem;
+      right: 0.9rem;
+      padding: 0.42rem 1.12rem 0.48rem;
+      border-width: 2.75px;
+      border-radius: 12px;
+    }
+    .found-stamp__lead {
+      font-size: 0.68rem;
+    }
+    .found-stamp__main {
+      font-size: 1.52rem;
+    }
   }
 }

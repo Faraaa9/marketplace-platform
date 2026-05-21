@@ -81,17 +81,8 @@ export default function RootLayout({
   return (
     <html lang="lt">
       <body className={`${inter.className} ${lora.variable} min-h-screen flex flex-col text-surface-900 dark:text-surface-100`}>
-        {/* Site-wide fixed grid background — identical on every page, constant on scroll */}
-        <div
-          aria-hidden
-          className="fixed inset-0 -z-10"
-          style={{
-            backgroundColor: "#ece9e2",
-            backgroundImage:
-              "linear-gradient(to right, rgba(42,39,35,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(42,39,35,0.05) 1px, transparent 1px)",
-            backgroundSize: "56px 56px",
-          }}
-        />
+        {/* Site-wide fixed grid background — identical on every page, constant on scroll; dark-aware via .layout-grid */}
+        <div aria-hidden className="layout-grid fixed inset-0 -z-10" />
         <Providers>
           <Suspense fallback={null}>
             <LoadingProgressBar />

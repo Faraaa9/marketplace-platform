@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -78,6 +79,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         },
       });
 
+      // The public board shows a "Tiekėjas rastas" stamp on matched requests.
+      revalidateTag("requests", { expire: 0 });
+
       return NextResponse.json({ success: true });
     }
 
@@ -90,6 +94,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         where: { id: request.id },
         data: { status: "CLOSED" },
       });
+
+      revalidateTag("requests", { expire: 0 });
 
       return NextResponse.json({ success: true });
     }

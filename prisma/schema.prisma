@@ -99,6 +99,8 @@ model ServiceRequest {
   category                     String
   location                     String
   budget                       String?
+  deadline                     String?
+  attachmentUrls               String[]  @default([])
   status                       String    @default("OPEN")
   acceptedResponseId           String?
   clientId                     String?
@@ -284,6 +286,21 @@ model PendingDirectInquiry {
   @@index([senderEmail])
   @@index([providerId, senderEmail])
   @@map("pending_direct_inquiries")
+}
+
+model RequestEmailVerification {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  code        String
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  resendCount Int       @default(0)
+  lastSentAt  DateTime  @default(now())
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("request_email_verifications")
 }
 
 model PlatformSettings {
