@@ -35,13 +35,14 @@ const getBoardRequests = unstable_cache(
   ) => {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // The board shows open requests plus ones that found a provider within
-    // the last 24h — those linger with a "Tiekėjas rastas" stamp.
+    // The board shows open requests plus ones matched to a provider
+    // (IN_PROGRESS / CLOSED) within the last 24h — those linger with a
+    // "Tiekėjas rastas" stamp.
     const conditions: Record<string, unknown>[] = [
       {
         OR: [
           { status: "OPEN" },
-          { acceptedResponseId: { not: null }, updatedAt: { gte: oneDayAgo } },
+          { status: { in: ["IN_PROGRESS", "CLOSED"] }, updatedAt: { gte: oneDayAgo } },
         ],
       },
     ];
@@ -73,7 +74,7 @@ const getBoardRequests = unstable_cache(
           location: true,
           budget: true,
           clientId: true,
-          acceptedResponseId: true,
+          status: true,
           attachmentUrls: true,
           createdAt: true,
           _count: { select: { responses: true } },
@@ -266,7 +267,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           <div className="grid gap-7 sm:gap-8">
             {requests.map((r, i) => {
               const competition = competitionLevel(r._count.responses);
-              const isMatched = !!r.acceptedResponseId;
+              const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const ctaHref = isOwnRequest
                 ? `/uzklausos/sekti/${r.trackingToken}`
