@@ -10,8 +10,6 @@ interface EmailVerificationProps {
   onEmailChange: (value: string) => void;
   verified: boolean;
   onVerifiedChange: (value: boolean) => void;
-  /** Logged-in users: the email is fixed to the account and already trusted. */
-  accountLocked?: boolean;
 }
 
 const RESEND_SECONDS = 60;
@@ -19,14 +17,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Email field with inline 6-digit code verification. The request can only be
- * published once the email is confirmed (or the user is logged in).
+ * published once the email is confirmed.
  */
 export default function EmailVerification({
   email,
   onEmailChange,
   verified,
   onVerifiedChange,
-  accountLocked,
 }: EmailVerificationProps) {
   const [step, setStep] = useState<"edit" | "code">("edit");
   const [sending, setSending] = useState(false);
@@ -99,24 +96,6 @@ export default function EmailVerification({
     setCode(digits);
     if (error) setError("");
     if (digits.length === 6) verifyCode(digits);
-  }
-
-  // ── Logged in — email owned by the account ──
-  if (accountLocked) {
-    return (
-      <div>
-        <Input
-          id="clientEmail"
-          label="El. paštas"
-          value={email}
-          readOnly
-          className="bg-surface-50 text-surface-500 dark:bg-surface-800 dark:text-surface-400"
-        />
-        <p className="mt-1.5 flex items-center gap-1.5 text-micro font-medium text-emerald-600 dark:text-emerald-400">
-          <Check className="h-3.5 w-3.5" /> Patvirtinta — jūsų paskyros el. paštas
-        </p>
-      </div>
-    );
   }
 
   // ── Verified ──

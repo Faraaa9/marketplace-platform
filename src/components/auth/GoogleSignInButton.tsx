@@ -7,12 +7,15 @@ interface Props {
   callbackUrl?: string | null;
   label?: string;
   className?: string;
+  /** Runs synchronously before the OAuth redirect — e.g. to stash form state. */
+  onBeforeSignIn?: () => void;
 }
 
 export default function GoogleSignInButton({
   callbackUrl,
   label = "Tęsti su Google",
   className = "",
+  onBeforeSignIn,
 }: Props) {
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +25,7 @@ export default function GoogleSignInButton({
       disabled={loading}
       onClick={() => {
         setLoading(true);
+        onBeforeSignIn?.();
         signIn("google", { callbackUrl: callbackUrl || "/" });
       }}
       className={`inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-body-sm font-medium text-surface-700 shadow-sm transition-all hover:bg-surface-50 hover:shadow disabled:cursor-not-allowed disabled:opacity-60 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:hover:bg-surface-700 ${className}`}

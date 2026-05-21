@@ -3,9 +3,10 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, ArrowRight, Check, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, Check, Sparkles, Pencil } from "lucide-react";
 import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
 import { saveGuestRequest } from "@/lib/guest-request";
+import { saveListingDraft, loadListingDraft, clearListingDraft } from "@/lib/listing-draft";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
@@ -15,6 +16,7 @@ import EmailVerification from "@/components/requests/EmailVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import PhotoUpload from "@/components/requests/PhotoUpload";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function NewRequestPage() {
   return (
@@ -37,6 +39,18 @@ interface FormState {
   clientPhone: string;
   honeypot: string;
 }
+
+// Editing any of these latches the editor open, so it never collapses out from
+// under someone who is still completing the listing by hand.
+const LISTING_FIELDS = new Set<keyof FormState>([
+  "title",
+  "description",
+  "category",
+  "location",
+  "budget",
+  "deadline",
+  "attachmentUrls",
+]);
 
 function NewRequestForm() {
   const router = useRouter();
@@ -65,11 +79,29 @@ function NewRequestForm() {
   const [attemptedPublish, setAttemptedPublish] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const isLoggedIn = status === "authenticated" && !!session?.user;
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+    if (LISTING_FIELDS.has(key)) setEditorOpen(true);
+  }
+
+  // Stash the listing so it survives the Google OAuth redirect round-trip.
+  function persistDraft() {
+    saveListingDraft({
+      title: form.title,
+      description: form.description,
+      category: form.category,
+      location: form.location,
+      budget: form.budget,
+      deadline: form.deadline,
+      attachmentUrls: form.attachmentUrls,
+      clientName: form.clientName,
+      clientEmail: form.clientEmail,
+      clientPhone: form.clientPhone,
+    });
   }
 
   // Pre-fill name + email for logged-in users.
@@ -83,6 +115,16 @@ function NewRequestForm() {
       }));
     }
   }, [status, session]);
+
+  // Restore the dictated listing after returning from a Google sign-in redirect.
+  useEffect(() => {
+    if (searchParams.get("restored") !== "1") return;
+    const draft = loadListingDraft();
+    if (draft) setForm((f) => ({ ...f, ...draft }));
+    clearListingDraft();
+    router.replace("/uzklausos/nauja");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Run AI extraction once when arriving from the hero box.
   useEffect(() => {
@@ -139,11 +181,16 @@ function NewRequestForm() {
   const emailOk = emailVerified || isLoggedIn;
   const ready = missingListing.length === 0 && nameOk && emailOk;
 
+  // When the dictated listing already passes, collapse the editor to a single
+  // "Redaguoti skelbimą" affordance — nothing to fix, so don't show the form.
+  const listingComplete = missingListing.length === 0;
+  const showEditor = editorOpen || !listingComplete;
+
   const publishHint = (() => {
     const gaps = [...missingListing];
     if (!nameOk) gaps.push("vardą");
     if (gaps.length > 0) return `Dar reikia užpildyti: ${gaps.join(", ")}`;
-    if (!emailOk) return "Patvirtink el. paštą, kad galėtum paskelbti";
+    if (!emailOk) return "Prisijunk arba patvirtink el. paštą, kad galėtum paskelbti";
     return "";
   })();
 
@@ -164,6 +211,7 @@ function NewRequestForm() {
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success && data.data?.trackingToken) {
         if (!isLoggedIn) saveGuestRequest(data.data.trackingToken, form.title);
+        clearListingDraft();
         router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
       } else {
         setError(data?.error || "Nepavyko paskelbti skelbimo");
@@ -211,6 +259,7 @@ function NewRequestForm() {
       />
 
       {/* ── Complete & fix ── */}
+      {showEditor ? (
       <div className="mt-8 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
@@ -320,11 +369,54 @@ function NewRequestForm() {
           </div>
         </div>
       </div>
+      ) : (
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <span className="flex items-center gap-1.5 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
+            <Check className="h-4 w-4 shrink-0" /> Skelbimas paruoštas — gali skelbti
+          </span>
+          <button
+            type="button"
+            onClick={() => setEditorOpen(true)}
+            className="inline-flex items-center gap-1.5 text-body-sm font-medium text-brand-600 underline-offset-2 transition-colors hover:text-brand-700 hover:underline dark:text-brand-400 dark:hover:text-brand-300"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Redaguoti skelbimą
+          </button>
+        </div>
+      )}
 
       {/* ── Contacts ── */}
       <div className="mt-4 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
         <h2 className="mb-4 text-body-sm font-semibold text-surface-900 dark:text-white">Kontaktai</h2>
         <div className="space-y-4">
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-700 dark:bg-emerald-500/10">
+              <Check className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div className="min-w-0">
+                <p className="text-body-sm font-medium text-surface-900 dark:text-surface-100">
+                  Prisijungta{session?.user?.name ? ` kaip ${session.user.name}` : ""}
+                </p>
+                <p className="truncate text-micro text-surface-500 dark:text-surface-400">
+                  {session?.user?.email} · el. paštas patvirtintas
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <GoogleSignInButton
+                callbackUrl="/uzklausos/nauja?restored=1"
+                label="Tęsti su Google"
+                onBeforeSignIn={persistDraft}
+              />
+              <p className="mt-1.5 text-micro text-surface-400">
+                Greičiausias būdas — el. paštas patvirtinamas iškart, kodo siųsti nereikia.
+              </p>
+              <div className="my-4 flex items-center gap-3">
+                <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+                <span className="text-micro text-surface-400">arba užpildyk ranka</span>
+                <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+              </div>
+            </div>
+          )}
           <Input
             id="clientName"
             label="Tavo vardas"
@@ -333,13 +425,14 @@ function NewRequestForm() {
             onChange={(e) => update("clientName", e.target.value)}
             error={showErrors && !nameOk ? "Bent 2 simboliai" : undefined}
           />
-          <EmailVerification
-            email={form.clientEmail}
-            onEmailChange={(v) => update("clientEmail", v)}
-            verified={emailVerified}
-            onVerifiedChange={setEmailVerified}
-            accountLocked={isLoggedIn}
-          />
+          {!isLoggedIn && (
+            <EmailVerification
+              email={form.clientEmail}
+              onEmailChange={(v) => update("clientEmail", v)}
+              verified={emailVerified}
+              onVerifiedChange={setEmailVerified}
+            />
+          )}
           <Input
             id="clientPhone"
             label="Telefonas (neprivaloma)"
