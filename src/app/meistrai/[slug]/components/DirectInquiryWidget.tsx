@@ -322,7 +322,7 @@ export default function DirectInquiryWidget({
         <p className="mb-4 text-micro text-blue-700/70 dark:text-blue-400/70">
           Prisijunkite prie savo paskyros, grįšite čia ir galėsite išsiųsti žinutę vienu paspaudimu.
         </p>
-        <Link href={`/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejai/${providerId}?inquiry=1`)}`}>
+        <Link href={`/prisijungti?callbackUrl=${encodeURIComponent(`/meistrai/${providerId}?inquiry=1`)}`}>
           <Button size="sm">
             <LogIn className="h-4 w-4" />
             Prisijungti

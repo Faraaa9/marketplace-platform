@@ -19,6 +19,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/tiekejai",
+        destination: "/meistrai",
+        permanent: false,
+      },
+      {
+        source: "/tiekejai/:path*",
+        destination: "/meistrai/:path*",
+        permanent: false,
+      },
+      {
         source: "/admin/tiekėjai",
         destination: "/admin/tiekejai",
         permanent: false,

@@ -32,7 +32,7 @@ export function slugify(text: string): string {
 
 /**
  * Prisma cuid v1: 25 chars, starts with "c" followed by 24 lowercase
- * alphanumeric chars. We use this to detect legacy `/tiekejai/[id]` URLs and
+ * alphanumeric chars. We use this to detect legacy `/meistrai/[id]` URLs and
  * redirect to the slug version.
  */
 export function isCuid(value: string): boolean {

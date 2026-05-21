@@ -794,7 +794,7 @@ export default function ProviderDashboard() {
             </div>
           </Card>
         </Link>
-        <Link href={`/tiekejai/${session?.user?.id}`} className="group">
+        <Link href={`/meistrai/${session?.user?.id}`} className="group">
           <Card hover>
             <div className="flex items-center justify-between">
               <div>

@@ -25,13 +25,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${BASE_URL}/tiekejai`,
+      url: `${BASE_URL}/meistrai`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/tiekejai/katalogas`,
+      url: `${BASE_URL}/meistrai/katalogas`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
@@ -99,14 +99,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const providerEntries: SitemapEntry[] = activeProviderProfiles
     .filter((p): p is typeof p & { slug: string } => Boolean(p.slug))
     .map((p) => ({
-      url: `${BASE_URL}/tiekejai/${p.slug}`,
+      url: `${BASE_URL}/meistrai/${p.slug}`,
       lastModified: p.updatedAt,
       changeFrequency: "weekly",
       priority: 0.8,
     }));
 
   const supplierEntries: SitemapEntry[] = supplierSlugs.map((s) => ({
-    url: `${BASE_URL}/tiekejai/katalogas/${s.slug}`,
+    url: `${BASE_URL}/meistrai/katalogas/${s.slug}`,
     lastModified: s.updatedAt,
     changeFrequency: "weekly",
     priority: 0.6,

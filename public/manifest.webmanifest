@@ -24,9 +24,9 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Rasti tiekėjus",
-      "short_name": "Tiekėjai",
-      "url": "/tiekejai",
+      "name": "Rasti meistrus",
+      "short_name": "Meistrai",
+      "url": "/meistrai",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

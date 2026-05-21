@@ -145,7 +145,7 @@ export default function HeroSearch() {
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <Link
-          href="/tiekejai"
+          href="/meistrai"
           className="inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-sm font-medium text-[#57534C] transition-colors hover:bg-[#E9E4D9]"
         >
           <Users className="h-4 w-4 text-[#C25E3A]" />

@@ -9,7 +9,7 @@ import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import type { ProviderCardData, ProviderFilters } from "@/lib/provider-filters";
 
 export const metadata: Metadata = {
-  title: "Paslaugų tiekėjai — PaslaugųRinka",
+  title: "Meistrai ir paslaugų teikėjai",
   description: "Raskite patikimus paslaugų tiekėjus Lietuvoje. Peržiūrėkite profilius, specializacijas ir atsiliepimus.",
 };
 
@@ -204,7 +204,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
               <Users className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             </div>
             <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Paslaugų tiekėjai
+              Meistrai ir paslaugų teikėjai
             </h1>
           </div>
           <p className="text-body text-surface-500 dark:text-surface-400 ml-[52px]">
@@ -237,7 +237,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
               </p>
             </div>
             <Link
-              href="/tiekejai/katalogas"
+              href="/meistrai/katalogas"
               className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-body-sm font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
             >
               Katalogas

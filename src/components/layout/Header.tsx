@@ -11,10 +11,9 @@ import UserMenu from "@/components/layout/UserMenu";
 import { getUserMenuLinks } from "@/lib/redirects";
 
 const NAV_LINKS = [
-  { href: "/tiekejai", label: "Tiekėjai" },
+  { href: "/meistrai", label: "Meistrai" },
   { href: "/uzklausos", label: "Užklausos" },
   { href: "/uzklausos/nauja", label: "Pateikti užklausą" },
-  { href: "/tiekejams", label: "Tiekėjams" },
 ];
 
 export default function Header() {

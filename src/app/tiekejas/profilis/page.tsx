@@ -287,7 +287,7 @@ export default function ProviderProfilePage() {
                 <span className="hidden sm:inline text-surface-200 dark:text-surface-700">·</span>
                 {account.isActive && account.emailVerified ? (
                   <Link
-                    href={`/tiekejai/${account.userId}`}
+                    href={`/meistrai/${account.userId}`}
                     className="inline-flex items-center gap-1 text-micro font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
                   >
                     <Eye className="h-3 w-3" />

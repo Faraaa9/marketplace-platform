@@ -31,7 +31,7 @@ export default async function ClaimPage({ params }: PageProps) {
             Profilis „{slug}" neegzistuoja arba buvo pašalintas.
           </p>
           <Link
-            href="/tiekejai/katalogas"
+            href="/meistrai/katalogas"
             className="mt-6 inline-flex items-center gap-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -54,7 +54,7 @@ export default async function ClaimPage({ params }: PageProps) {
             Tiekėjas „{supplier.displayName}" jau turi savininką.
           </p>
           <Link
-            href={`/tiekejai/katalogas/${slug}`}
+            href={`/meistrai/katalogas/${slug}`}
             className="mt-6 inline-flex items-center gap-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -70,7 +70,7 @@ export default async function ClaimPage({ params }: PageProps) {
       <div className="mx-auto max-w-lg px-4 sm:px-6 py-8 sm:py-12">
         {/* Back link */}
         <Link
-          href={`/tiekejai/katalogas/${slug}`}
+          href={`/meistrai/katalogas/${slug}`}
           className="mb-6 inline-flex items-center gap-1.5 text-body-sm text-surface-500 hover:text-surface-700 transition-colors dark:hover:text-surface-300"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

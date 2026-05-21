@@ -51,7 +51,7 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
     qs.set("page", String(p));
     if (city) qs.set("city", city);
     if (categorySlug) qs.set("category", categorySlug);
-    return `/tiekejai/katalogas?${qs.toString()}`;
+    return `/meistrai/katalogas?${qs.toString()}`;
   }
 
   return (
@@ -60,11 +60,11 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
       <div className="relative overflow-hidden border-b border-surface-200/50 dark:border-surface-800/50">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <Link
-            href="/tiekejai"
+            href="/meistrai"
             className="mb-4 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
           >
             <ArrowLeft className="h-4 w-4" />
-            Visi tiekejai
+            Visi meistrai
           </Link>
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950">
@@ -85,7 +85,7 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
         {roots.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
             <Link
-              href="/tiekejai/katalogas"
+              href="/meistrai/katalogas"
               className={`rounded-lg px-3 py-1.5 text-body-sm transition-colors ${
                 !categorySlug
                   ? "bg-brand-600 text-white"
@@ -97,7 +97,7 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
             {roots.filter((cat) => cat.supplierCount > 0).map((cat) => (
               <Link
                 key={cat.id}
-                href={`/tiekejai/katalogas?category=${cat.slug}`}
+                href={`/meistrai/katalogas?category=${cat.slug}`}
                 className={`rounded-lg px-3 py-1.5 text-body-sm transition-colors ${
                   categorySlug === cat.slug
                     ? "bg-brand-600 text-white"
@@ -134,7 +134,7 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
           {result.suppliers.map((s) => (
             <Link
               key={s.id}
-              href={`/tiekejai/katalogas/${s.slug}`}
+              href={`/meistrai/katalogas/${s.slug}`}
               className="flex items-center gap-4 rounded-2xl bg-white p-4 transition-all hover:shadow-md dark:bg-surface-900/50 dark:hover:bg-surface-800/50"
             >
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">

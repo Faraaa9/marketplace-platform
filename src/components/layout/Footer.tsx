@@ -31,7 +31,6 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li><FooterLink href="/uzklausos/nauja">Pateikti užklausą</FooterLink></li>
               <li><FooterLink href="/uzklausos">Visos užklausos</FooterLink></li>
-              <li><FooterLink href="/tiekejams">Tiekėjams</FooterLink></li>
             </ul>
           </div>
 
@@ -50,6 +49,7 @@ export default function Footer() {
               Pradėkite
             </h4>
             <ul className="space-y-2.5">
+              <li><FooterLink href="/tiekejams">Tapti meistru</FooterLink></li>
               <li><FooterLink href="/registruotis">Registruotis</FooterLink></li>
               <li><FooterLink href="/prisijungti">Prisijungti</FooterLink></li>
             </ul>

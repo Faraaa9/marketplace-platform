@@ -83,7 +83,7 @@ export default async function SimilarProvidersSection({
         {mapped.map((provider) => (
           <Link
             key={provider.id}
-            href={`/tiekejai/${provider.id}`}
+            href={`/meistrai/${provider.id}`}
             className="group rounded-xl border border-surface-200/60 p-3 transition-all hover:border-brand-200 hover:bg-brand-50/40 dark:border-surface-700/50 dark:hover:border-brand-800 dark:hover:bg-brand-950/20"
           >
             <div className="mb-2 flex items-center gap-2.5">

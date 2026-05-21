@@ -47,7 +47,7 @@ export default async function MyClaimedSuppliersPage() {
             Raskite savo įmonės profilį kataloge ir pateikite perėmimo prašymą.
           </p>
           <Link
-            href="/tiekejai/katalogas"
+            href="/meistrai/katalogas"
             className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
           >
             Perziureti kataloga
@@ -93,7 +93,7 @@ export default async function MyClaimedSuppliersPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
-                    href={`/tiekejai/katalogas/${s.slug}`}
+                    href={`/meistrai/katalogas/${s.slug}`}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-3 py-1.5 text-body-sm text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 transition-colors"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />

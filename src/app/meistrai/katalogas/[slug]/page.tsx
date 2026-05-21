@@ -65,11 +65,11 @@ export default async function ImportedSupplierDetailPage({ params }: PageProps) 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-body-sm text-surface-500">
-          <Link href="/tiekejai" className="hover:text-surface-700 transition-colors">
-            Tiekejai
+          <Link href="/meistrai" className="hover:text-surface-700 transition-colors">
+            Meistrai
           </Link>
           <span>/</span>
-          <Link href="/tiekejai/katalogas" className="hover:text-surface-700 transition-colors">
+          <Link href="/meistrai/katalogas" className="hover:text-surface-700 transition-colors">
             Katalogas
           </Link>
           <span>/</span>
@@ -269,7 +269,7 @@ export default async function ImportedSupplierDetailPage({ params }: PageProps) 
                 {supplier.categories.map((cat) => (
                   <Link
                     key={cat.id}
-                    href={`/tiekejai/katalogas?category=${cat.slug}`}
+                    href={`/meistrai/katalogas?category=${cat.slug}`}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-3 py-1.5 text-body-sm text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
                   >
                     <Tag className="h-3 w-3" />

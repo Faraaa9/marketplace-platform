@@ -72,9 +72,9 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
   const { slug } = await params;
   const lookup = await resolveProvider(slug);
 
-  // Legacy /tiekejai/[cuid] → redirect to slug version (preserves SEO juice).
+  // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
   if (lookup && "__redirectTo" in lookup) {
-    redirect(`/tiekejai/${lookup.__redirectTo}`);
+    redirect(`/meistrai/${lookup.__redirectTo}`);
   }
 
   if (!lookup) {
@@ -109,7 +109,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
-  const profileUrl = `${baseUrl}/tiekejai/${resolvedSlug}`;
+  const profileUrl = `${baseUrl}/meistrai/${resolvedSlug}`;
   const localBusinessSchema = buildLocalBusinessSchema(provider, profileUrl);
   const breadcrumbSchema = buildBreadcrumbSchema(provider.name, profileUrl, baseUrl);
   const reviewSchemas = buildReviewSchemas(provider.name, topReviews);
@@ -141,11 +141,11 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
         <Link
-          href="/tiekejai"
+          href="/meistrai"
           className="mb-8 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
         >
           <ArrowLeft className="h-4 w-4" />
-          Visi tiekėjai
+          Visi meistrai
         </Link>
 
         {/* ── Profile Layout ── */}
@@ -287,7 +287,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                     {provider.specializations.map((spec) => (
                       <Link
                         key={spec}
-                        href={`/tiekejai?category=${spec}`}
+                        href={`/meistrai?category=${spec}`}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-micro font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                       >
                         <SpecIcon value={spec} />
@@ -799,8 +799,8 @@ function buildBreadcrumbSchema(
       {
         "@type": "ListItem",
         position: 2,
-        name: "Tiekėjai",
-        item: `${baseUrl}/tiekejai`,
+        name: "Meistrai",
+        item: `${baseUrl}/meistrai`,
       },
       {
         "@type": "ListItem",

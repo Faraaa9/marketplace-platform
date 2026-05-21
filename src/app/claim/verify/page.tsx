@@ -145,7 +145,7 @@ function VerifyLayout({
         {children}
         {showBackLink && (
           <Link
-            href="/tiekejai/katalogas"
+            href="/meistrai/katalogas"
             className="mt-8 inline-flex items-center gap-2 text-body-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
           >
             <ArrowLeft className="h-4 w-4" />
