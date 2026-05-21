@@ -1,6 +1,59 @@
 import { LITHUANIAN_CITIES } from "@/lib/constants";
-import type { ProviderCardData } from "@/store/useProviderFilterStore";
 
+export interface ProviderCardData {
+  id: string;
+  slug: string | null;
+  name: string | null;
+  profileImage: string | null;
+  coverImage: string | null;
+  description: string | null;
+  specializations: string[];
+  location: string | null;
+  planType: string;
+  badge: string | null;
+  responseCount: number;
+  acceptedCount: number;
+  isRecentlyActive: boolean;
+  avgRating: number | null;
+  reviewCount: number;
+  hasActiveStory: boolean;
+  availableForUrgent: boolean;
+  priceFrom: number | null;
+  avgResponseTimeHours: number | null;
+}
+
+export interface ProviderFilters {
+  search: string;
+  location: string;
+  category: string;
+  active: boolean;
+  urgent: boolean;
+  top: boolean;
+}
+
+export const EMPTY_PROVIDER_FILTERS: ProviderFilters = {
+  search: "",
+  location: "",
+  category: "",
+  active: false,
+  urgent: false,
+  top: false,
+};
+
+const TOP_RATING_THRESHOLD = 4.5;
+
+export function hasActiveProviderFilters(filters: ProviderFilters): boolean {
+  return Boolean(
+    filters.search ||
+      filters.location ||
+      filters.category ||
+      filters.active ||
+      filters.urgent ||
+      filters.top,
+  );
+}
+
+/** Prisma `where` fragment for the provider location filter (server-side). */
 export function buildProviderLocationFilter(location: string) {
   if (!location) {
     return undefined;
@@ -23,54 +76,69 @@ export function buildProviderLocationFilter(location: string) {
   };
 }
 
+/** In-memory equivalent of buildProviderLocationFilter, used for client-side filtering. */
+function matchesLocation(providerLocation: string | null, filter: string): boolean {
+  if (!filter) return true;
+  // A provider serving the whole country satisfies every city filter.
+  if (providerLocation === "Visa Lietuva") return true;
+  if (filter === "Visa Lietuva") {
+    return (
+      providerLocation !== null &&
+      (LITHUANIAN_CITIES as readonly string[]).includes(providerLocation)
+    );
+  }
+  return providerLocation === filter;
+}
+
 /** Quality score for sorting providers. Higher = better. */
 export function computeProviderScore(p: ProviderCardData): number {
   let score = 0;
 
-  // Plan tier (0-20)
   if (p.planType === "PRO") score += 20;
   else if (p.planType === "BASIC") score += 10;
 
-  // Has profile image (0-5)
   if (p.profileImage) score += 5;
-
-  // Has description (0-5)
   if (p.description) score += 5;
-
-  // Has location (0-3)
   if (p.location) score += 3;
 
-  // Has specializations (0-5)
-  if (p.specializations.length > 0) score += Math.min(p.specializations.length, 3) + 2;
-
-  // Rating (0-15)
-  if (p.avgRating !== null) {
-    score += Math.round(p.avgRating * 3); // max 15 for 5.0
+  if (p.specializations.length > 0) {
+    score += Math.min(p.specializations.length, 3) + 2;
   }
 
-  // Review count (0-10)
-  if (p.reviewCount > 0) {
-    score += Math.min(p.reviewCount, 10);
-  }
-
-  // Accepted count (0-10)
-  if (p.acceptedCount > 0) {
-    score += Math.min(p.acceptedCount, 10);
-  }
-
-  // Response count (0-5)
-  if (p.responseCount > 0) {
-    score += Math.min(Math.floor(p.responseCount / 2), 5);
-  }
-
-  // Recently active (0-8)
+  if (p.avgRating !== null) score += Math.round(p.avgRating * 3);
+  if (p.reviewCount > 0) score += Math.min(p.reviewCount, 10);
+  if (p.acceptedCount > 0) score += Math.min(p.acceptedCount, 10);
+  if (p.responseCount > 0) score += Math.min(Math.floor(p.responseCount / 2), 5);
   if (p.isRecentlyActive) score += 8;
-
-  // Available for urgent (0-3)
   if (p.availableForUrgent) score += 3;
-
-  // Has active story (0-2)
   if (p.hasActiveStory) score += 2;
 
   return score;
+}
+
+/** Local-first filtering + ranking. Runs in-memory so filter changes are instant. */
+export function filterAndSortProviders(
+  providers: ProviderCardData[],
+  filters: ProviderFilters,
+): ProviderCardData[] {
+  const query = filters.search.trim().toLowerCase();
+
+  const result = providers.filter((p) => {
+    if (query) {
+      const haystack = `${p.name ?? ""} ${p.description ?? ""}`.toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    if (!matchesLocation(p.location, filters.location)) return false;
+    if (filters.category && !p.specializations.includes(filters.category)) {
+      return false;
+    }
+    if (filters.urgent && !p.availableForUrgent) return false;
+    if (filters.active && !p.isRecentlyActive) return false;
+    if (filters.top && (p.avgRating === null || p.avgRating < TOP_RATING_THRESHOLD)) {
+      return false;
+    }
+    return true;
+  });
+
+  return result.sort((a, b) => computeProviderScore(b) - computeProviderScore(a));
 }

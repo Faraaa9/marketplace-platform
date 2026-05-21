@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LITHUANIAN_CITIES, SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { Users, ArrowRight, Database } from "lucide-react";
-import ProviderFilterBar from "@/components/tiekejai/ProviderFilterBar";
-import ProviderListingClient from "@/components/tiekejai/ProviderListingClient";
+import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
-import { buildProviderLocationFilter, computeProviderScore } from "@/lib/provider-filters";
-import type { ProviderCardData } from "@/store/useProviderFilterStore";
+import type { ProviderCardData, ProviderFilters } from "@/lib/provider-filters";
 
 export const metadata: Metadata = {
   title: "Paslaugų tiekėjai — PaslaugųRinka",
@@ -19,7 +17,6 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{
-    page?: string;
     search?: string;
     location?: string;
     category?: string;
@@ -30,56 +27,32 @@ interface PageProps {
 }
 
 const DESC_PREVIEW_LENGTH = 160;
-const PER_PAGE = 20;
-// When the user enables computed filters (active/top) we still filter client-side
-// on a page-sized window. To keep pagination accurate we widen the SQL fetch.
-// TODO: denormalize ProviderProfile.lastActiveAt + avgRating/reviewCount to push
-// these filters into SQL ORDER BY/WHERE for true unbounded pagination.
-const COMPUTED_FILTER_MULTIPLIER = 3;
+// Local-first listing: every provider is fetched once and filtered in the
+// browser, so category/location/search changes are instant. 500 is a safety
+// ceiling — beyond it, filtering should move back into SQL.
+const MAX_PROVIDERS = 500;
 
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page || "1"));
-  const search = params.search || "";
-  const location = params.location || "";
-  const category = params.category || "";
-  const filterActive = params.active === "1";
-  const filterUrgent = params.urgent === "1";
-  const filterTop = params.top === "1";
 
-  const validCategory = SERVICE_CATEGORIES.some((c) => c.value === category) ? category : "";
-
-  // ── Build Prisma where ──
-  const profileWhere: Record<string, unknown> = { isActive: true };
-  const locationFilter = buildProviderLocationFilter(location);
-  if (locationFilter) Object.assign(profileWhere, locationFilter);
-  if (filterUrgent) profileWhere.availableForUrgent = true;
-  // SQL-side category filter — uses GIN index on specializations
-  if (validCategory) profileWhere.specializations = { has: validCategory };
+  // Initial filters come from the URL so shared/deep links keep working.
+  const rawCategory = params.category ?? "";
+  const initialFilters: ProviderFilters = {
+    search: params.search?.trim() || "",
+    location: params.location || "",
+    category: SERVICE_CATEGORIES.some((c) => c.value === rawCategory) ? rawCategory : "",
+    active: params.active === "1",
+    urgent: params.urgent === "1",
+    top: params.top === "1",
+  };
 
   const where: Record<string, unknown> = {
     role: "PROVIDER",
     emailVerified: { not: null },
-    providerProfile: profileWhere,
+    providerProfile: { isActive: true },
   };
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { providerProfile: { description: { contains: search, mode: "insensitive" } } },
-    ];
-  }
-
-  // When computed filters (active/top) are active we overfetch a small window
-  // and trim after the in-memory filter. Otherwise we paginate purely in SQL.
-  const needsComputedFilter = filterActive || filterTop;
-  const sqlSkip = needsComputedFilter ? 0 : (page - 1) * PER_PAGE;
-  const sqlTake = needsComputedFilter
-    ? page * PER_PAGE * COMPUTED_FILTER_MULTIPLIER
-    : PER_PAGE;
-
-  const [totalCount, providers, storyFeatureOn] = await Promise.all([
-    prisma.user.count({ where }),
+  const [providers, storyFeatureOn] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -103,8 +76,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         _count: { select: { responses: true, reviewsReceived: true } },
       },
       orderBy: { createdAt: "desc" },
-      skip: sqlSkip,
-      take: sqlTake,
+      take: MAX_PROVIDERS,
     }),
     isStoryEnabled(),
   ]);
@@ -174,7 +146,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   const providersWithStories = new Set(activeStories.map((s) => s.providerId));
 
   // ── Map to card data ──
-  let mapped: ProviderCardData[] = providers.map((p) => {
+  const allProviders: ProviderCardData[] = providers.map((p) => {
     const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
@@ -220,37 +192,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     };
   });
 
-  // ── Post-fetch filters (need computed fields not in DB yet) ──
-  // TODO: denormalize ProviderProfile.lastActiveAt + avgRating/reviewCount
-  // so these can be pushed into SQL WHERE clauses.
-  if (filterActive) {
-    mapped = mapped.filter((p) => p.isRecentlyActive);
-  }
-  if (filterTop) {
-    mapped = mapped.filter((p) => p.avgRating !== null && p.avgRating >= 4.5);
-  }
-
-  // ── Sort by quality score (page-sized array — fine to sort in-memory) ──
-  mapped.sort((a, b) => computeProviderScore(b) - computeProviderScore(a));
-
-  // ── Paginate ──
-  // total reflects the SQL-side filtered count; when computed filters trim
-  // the result client-side the displayed count may be slightly higher than
-  // what is rendered. Acceptable trade-off until denormalization lands.
-  const total = totalCount;
-  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const pageProviders = needsComputedFilter
-    ? mapped.slice((page - 1) * PER_PAGE, page * PER_PAGE)
-    : mapped;
-
-  // ── Active filter params for URL persistence ──
-  const activeFilters: Record<string, string> = {};
-  if (search) activeFilters.search = search;
-  if (location) activeFilters.location = location;
-  if (validCategory) activeFilters.category = validCategory;
-  if (filterActive) activeFilters.active = "1";
-  if (filterUrgent) activeFilters.urgent = "1";
-  if (filterTop) activeFilters.top = "1";
+  const total = allProviders.length;
 
   return (
     <div className="min-h-screen">
@@ -274,29 +216,10 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filter bar */}
-        <div className="mb-6">
-          <ProviderFilterBar
-            activeSearch={search}
-            activeLocation={location}
-            activeCategory={validCategory}
-            activeNow={filterActive}
-            urgentWork={filterUrgent}
-            topRated={filterTop}
-            cities={[...LITHUANIAN_CITIES]}
-            categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
-            serverTotal={total}
-          />
-        </div>
-
-        {/* Server-rendered listing */}
-        <ProviderListingClient
-          providers={pageProviders}
-          serverSearch={search}
-          serverPage={page}
-          serverTotalPages={pages}
-          serverTotal={total}
-          activeFilters={activeFilters}
+        {/* Filter bar + listing — local-first, filters run in-memory */}
+        <ProvidersExperience
+          initialProviders={allProviders}
+          initialFilters={initialFilters}
         />
 
         {/* Imported catalog CTA */}

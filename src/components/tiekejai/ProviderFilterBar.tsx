@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import {
   Search,
   X,
   Check,
-  Loader2,
   MapPin,
   SlidersHorizontal,
   Zap,
@@ -15,73 +13,53 @@ import {
   ChevronDown,
   Tag,
 } from "lucide-react";
-
-interface CategoryOption {
-  value: string;
-  label: string;
-}
+import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
+import type { ProviderFilters } from "@/lib/provider-filters";
 
 interface FilterBarProps {
-  activeSearch: string;
-  activeLocation: string;
-  activeCategory: string;
-  activeNow: boolean;
-  urgentWork: boolean;
-  topRated: boolean;
-  cities: string[];
-  categories: CategoryOption[];
-  serverTotal: number;
+  filters: ProviderFilters;
+  resultCount: number;
+  onChange: (patch: Partial<ProviderFilters>) => void;
+  onClear: () => void;
+}
+
+function resultLabel(count: number) {
+  if (count === 0) return "Nerasta";
+  const noun = count === 1 ? "tiekėjas" : count < 10 ? "tiekėjai" : "tiekėjų";
+  return `${count} ${noun}`;
 }
 
 export default function ProviderFilterBar({
-  activeSearch,
-  activeLocation,
-  activeCategory,
-  activeNow,
-  urgentWork,
-  topRated,
-  cities,
-  categories,
-  serverTotal,
+  filters,
+  resultCount,
+  onChange,
+  onClear,
 }: FilterBarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPushedSearch = useRef(activeSearch);
+  const { search, location, category, active, urgent, top } = filters;
 
-  const [searchValue, setSearchValue] = useState(activeSearch);
-  const [isPending, startTransition] = useTransition();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const locationRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
 
-  const [mobileLocation, setMobileLocation] = useState(activeLocation);
-  const [mobileCategory, setMobileCategory] = useState(activeCategory);
-  const [mobileActive, setMobileActive] = useState(activeNow);
-  const [mobileUrgent, setMobileUrgent] = useState(urgentWork);
-  const [mobileTop, setMobileTop] = useState(topRated);
+  const [mobileLocation, setMobileLocation] = useState(location);
+  const [mobileCategory, setMobileCategory] = useState(category);
+  const [mobileActive, setMobileActive] = useState(active);
+  const [mobileUrgent, setMobileUrgent] = useState(urgent);
+  const [mobileTop, setMobileTop] = useState(top);
 
-  const activeFilterCount = [activeLocation, activeCategory, activeNow, urgentWork, topRated].filter(Boolean).length;
-  const activeCategoryLabel = categories.find((c) => c.value === activeCategory)?.label ?? "";
-
-  useEffect(() => {
-    setSearchValue(activeSearch);
-    lastPushedSearch.current = activeSearch;
-  }, [activeSearch]);
+  const activeFilterCount = [location, category, active, urgent, top].filter(Boolean).length;
+  const activeCategoryLabel =
+    SERVICE_CATEGORIES.find((c) => c.value === category)?.label ?? "";
 
   useEffect(() => {
-    setMobileLocation(activeLocation);
-    setMobileCategory(activeCategory);
-    setMobileActive(activeNow);
-    setMobileUrgent(urgentWork);
-    setMobileTop(topRated);
-  }, [activeLocation, activeCategory, activeNow, urgentWork, topRated]);
-
-  useEffect(() => {
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, []);
+    setMobileLocation(location);
+    setMobileCategory(category);
+    setMobileActive(active);
+    setMobileUrgent(urgent);
+    setMobileTop(top);
+  }, [location, category, active, urgent, top]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -112,73 +90,24 @@ export default function ProviderFilterBar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [categoryOpen]);
 
-  const buildUrl = useCallback(
-    (overrides: Record<string, string>) => {
-      const p = new URLSearchParams(searchParams.toString());
-      for (const [k, v] of Object.entries(overrides)) {
-        if (v) p.set(k, v);
-        else p.delete(k);
-      }
-      p.delete("page");
-      const qs = p.toString();
-      return `/tiekejai${qs ? `?${qs}` : ""}`;
-    },
-    [searchParams]
-  );
-
-  function navigate(overrides: Record<string, string>) {
-    startTransition(() => { router.push(buildUrl(overrides)); });
-  }
-
-  function handleSearch(value: string) {
-    setSearchValue(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (value === lastPushedSearch.current) return;
-      lastPushedSearch.current = value;
-      navigate({ search: value });
-    }, 400);
-  }
-
-  function clearSearch() {
-    setSearchValue("");
-    if (lastPushedSearch.current) {
-      lastPushedSearch.current = "";
-      navigate({ search: "" });
-    }
-  }
-
-  function toggleFilter(key: string, currentlyActive: boolean) {
-    navigate({ [key]: currentlyActive ? "" : "1" });
-  }
-
-  function setLocation(city: string) {
-    navigate({ location: activeLocation === city ? "" : city });
+  function selectLocation(city: string) {
+    onChange({ location: location === city ? "" : city });
     setLocationOpen(false);
   }
 
-  function setCategory(value: string) {
-    navigate({ category: activeCategory === value ? "" : value });
+  function selectCategory(value: string) {
+    onChange({ category: category === value ? "" : value });
     setCategoryOpen(false);
   }
 
-  function clearAll() {
-    setSearchValue("");
-    lastPushedSearch.current = "";
-    startTransition(() => { router.push("/tiekejai"); });
-    setMobileOpen(false);
-  }
-
   function applyMobileFilters() {
-    const p = new URLSearchParams();
-    if (searchValue) p.set("search", searchValue);
-    if (mobileLocation) p.set("location", mobileLocation);
-    if (mobileCategory) p.set("category", mobileCategory);
-    if (mobileActive) p.set("active", "1");
-    if (mobileUrgent) p.set("urgent", "1");
-    if (mobileTop) p.set("top", "1");
-    const qs = p.toString();
-    startTransition(() => { router.push(`/tiekejai${qs ? `?${qs}` : ""}`); });
+    onChange({
+      location: mobileLocation,
+      category: mobileCategory,
+      active: mobileActive,
+      urgent: mobileUrgent,
+      top: mobileTop,
+    });
     setMobileOpen(false);
   }
 
@@ -188,9 +117,12 @@ export default function ProviderFilterBar({
     setMobileActive(false);
     setMobileUrgent(false);
     setMobileTop(false);
-    setSearchValue("");
-    lastPushedSearch.current = "";
-    startTransition(() => { router.push("/tiekejai"); });
+    onClear();
+    setMobileOpen(false);
+  }
+
+  function handleClearAll() {
+    onClear();
     setMobileOpen(false);
   }
 
@@ -206,16 +138,13 @@ export default function ProviderFilterBar({
           <input
             type="text"
             placeholder="Ieškoti tiekėjo pagal vardą ar aprašymą..."
-            value={searchValue}
-            onChange={(e) => handleSearch(e.target.value)}
+            value={search}
+            onChange={(e) => onChange({ search: e.target.value })}
             className="w-full h-14 rounded-full border border-surface-200/80 bg-white pl-14 pr-12 text-body text-surface-900 shadow-sm placeholder:text-surface-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-300 focus:shadow-lg dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:focus:border-brand-500"
           />
-          {isPending && (
-            <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-500 animate-spin" />
-          )}
-          {searchValue && !isPending && (
+          {search && (
             <button
-              onClick={clearSearch}
+              onClick={() => onChange({ search: "" })}
               className="absolute right-5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 dark:hover:bg-surface-700"
             >
               <X className="h-4 w-4" />
@@ -230,16 +159,16 @@ export default function ProviderFilterBar({
             <button
               onClick={() => setLocationOpen(!locationOpen)}
               className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
-                activeLocation
+                location
                   ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
                   : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
               }`}
             >
               <MapPin className="h-3.5 w-3.5" />
-              {activeLocation || "Miestas"}
-              {activeLocation ? (
+              {location || "Miestas"}
+              {location ? (
                 <span
-                  onClick={(e) => { e.stopPropagation(); navigate({ location: "" }); }}
+                  onClick={(e) => { e.stopPropagation(); onChange({ location: "" }); }}
                   className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
                 >
                   <X className="h-3 w-3" />
@@ -251,17 +180,17 @@ export default function ProviderFilterBar({
 
             {locationOpen && (
               <div className="absolute left-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
-                {cities.map((city) => (
+                {LITHUANIAN_CITIES.map((city) => (
                   <button
                     key={city}
-                    onClick={() => setLocation(city)}
+                    onClick={() => selectLocation(city)}
                     className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
-                      activeLocation === city
+                      location === city
                         ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
                         : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
                     }`}
                   >
-                    {activeLocation === city && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    {location === city && <Check className="h-3.5 w-3.5 shrink-0" />}
                     {city}
                   </button>
                 ))}
@@ -274,16 +203,16 @@ export default function ProviderFilterBar({
             <button
               onClick={() => setCategoryOpen(!categoryOpen)}
               className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
-                activeCategory
+                category
                   ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
                   : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
               }`}
             >
               <Tag className="h-3.5 w-3.5" />
               {activeCategoryLabel || "Kategorija"}
-              {activeCategory ? (
+              {category ? (
                 <span
-                  onClick={(e) => { e.stopPropagation(); navigate({ category: "" }); }}
+                  onClick={(e) => { e.stopPropagation(); onChange({ category: "" }); }}
                   className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
                 >
                   <X className="h-3 w-3" />
@@ -295,17 +224,17 @@ export default function ProviderFilterBar({
 
             {categoryOpen && (
               <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
-                {categories.map((cat) => (
+                {SERVICE_CATEGORIES.map((cat) => (
                   <button
                     key={cat.value}
-                    onClick={() => setCategory(cat.value)}
+                    onClick={() => selectCategory(cat.value)}
                     className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
-                      activeCategory === cat.value
+                      category === cat.value
                         ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
                         : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
                     }`}
                   >
-                    {activeCategory === cat.value && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    {category === cat.value && <Check className="h-3.5 w-3.5 shrink-0" />}
                     {cat.label}
                   </button>
                 ))}
@@ -316,24 +245,19 @@ export default function ProviderFilterBar({
           <div className="h-5 w-px bg-surface-200 dark:bg-surface-700" />
 
           {/* Toggle chips */}
-          <FilterToggle active={activeNow} onClick={() => toggleFilter("active", activeNow)} icon={<Clock className="h-3.5 w-3.5" />}>
+          <FilterToggle active={active} onClick={() => onChange({ active: !active })} icon={<Clock className="h-3.5 w-3.5" />}>
             Aktyvus
           </FilterToggle>
-          <FilterToggle active={urgentWork} onClick={() => toggleFilter("urgent", urgentWork)} icon={<Zap className="h-3.5 w-3.5" />}>
+          <FilterToggle active={urgent} onClick={() => onChange({ urgent: !urgent })} icon={<Zap className="h-3.5 w-3.5" />}>
             Skubūs
           </FilterToggle>
-          <FilterToggle active={topRated} onClick={() => toggleFilter("top", topRated)} icon={<Star className="h-3.5 w-3.5" />}>
+          <FilterToggle active={top} onClick={() => onChange({ top: !top })} icon={<Star className="h-3.5 w-3.5" />}>
             Top
           </FilterToggle>
 
           {/* Spacer + count */}
           <div className="ml-auto flex items-center gap-2">
-            {isPending && <Loader2 className="h-3.5 w-3.5 text-brand-500 animate-spin" />}
-            <span className="text-body-sm text-surface-400">
-              {serverTotal === 0
-                ? "Nerasta"
-                : `${serverTotal} ${serverTotal === 1 ? "tiekėjas" : serverTotal < 10 ? "tiekėjai" : "tiekėjų"}`}
-            </span>
+            <span className="text-body-sm text-surface-400">{resultLabel(resultCount)}</span>
           </div>
         </div>
       </div>
@@ -348,13 +272,13 @@ export default function ProviderFilterBar({
             <input
               type="text"
               placeholder="Ieškoti tiekėjo..."
-              value={searchValue}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={search}
+              onChange={(e) => onChange({ search: e.target.value })}
               className="w-full h-11 rounded-full border border-surface-200/80 bg-white pl-10 pr-9 text-body-sm text-surface-900 shadow-sm placeholder:text-surface-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 dark:border-surface-700 dark:bg-surface-800 dark:text-white"
             />
-            {searchValue && (
+            {search && (
               <button
-                onClick={clearSearch}
+                onClick={() => onChange({ search: "" })}
                 className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-surface-400"
               >
                 <X className="h-3.5 w-3.5" />
@@ -381,19 +305,15 @@ export default function ProviderFilterBar({
 
         {/* Mobile result count + active chips inline */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-body-sm text-surface-400 shrink-0">
-            {serverTotal === 0
-              ? "Nerasta"
-              : `${serverTotal} ${serverTotal === 1 ? "tiekėjas" : serverTotal < 10 ? "tiekėjai" : "tiekėjų"}`}
-          </span>
-          {(activeFilterCount > 0 || activeSearch) && (
+          <span className="text-body-sm text-surface-400 shrink-0">{resultLabel(resultCount)}</span>
+          {(activeFilterCount > 0 || search) && (
             <>
               <div className="h-3.5 w-px bg-surface-200 dark:bg-surface-700" />
-              {activeLocation && <ActiveChip label={activeLocation} onRemove={() => navigate({ location: "" })} />}
-              {activeCategory && <ActiveChip label={activeCategoryLabel} onRemove={() => navigate({ category: "" })} />}
-              {activeNow && <ActiveChip label="Aktyvus" onRemove={() => toggleFilter("active", true)} />}
-              {urgentWork && <ActiveChip label="Skubūs" onRemove={() => toggleFilter("urgent", true)} />}
-              {topRated && <ActiveChip label="Top" onRemove={() => toggleFilter("top", true)} />}
+              {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
+              {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
+              {active && <ActiveChip label="Aktyvus" onRemove={() => onChange({ active: false })} />}
+              {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
+              {top && <ActiveChip label="Top" onRemove={() => onChange({ top: false })} />}
             </>
           )}
         </div>
@@ -433,7 +353,7 @@ export default function ProviderFilterBar({
                   Miestas
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {cities.map((city) => {
+                  {LITHUANIAN_CITIES.map((city) => {
                     const isActive = mobileLocation === city;
                     return (
                       <button
@@ -459,7 +379,7 @@ export default function ProviderFilterBar({
                   Kategorija
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {categories.map((cat) => {
+                  {SERVICE_CATEGORIES.map((cat) => {
                     const isActive = mobileCategory === cat.value;
                     return (
                       <button
@@ -505,7 +425,7 @@ export default function ProviderFilterBar({
                   onClick={applyMobileFilters}
                   className="flex-1 h-12 rounded-xl bg-brand-600 text-body-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
                 >
-                  Rodyti ({serverTotal})
+                  Rodyti rezultatus
                 </button>
               </div>
             </div>
@@ -516,16 +436,16 @@ export default function ProviderFilterBar({
       {/* ═══════════════════════════════════════════════════════════
           Desktop active chips row (shown below search when filters active)
          ═══════════════════════════════════════════════════════════ */}
-      {(activeFilterCount > 0 || activeSearch) && (
+      {(activeFilterCount > 0 || search) && (
         <div className="hidden md:flex items-center gap-2 flex-wrap">
-          {activeSearch && <ActiveChip label={`"${activeSearch}"`} onRemove={() => { clearSearch(); navigate({ search: "" }); }} />}
-          {activeLocation && <ActiveChip label={activeLocation} onRemove={() => navigate({ location: "" })} />}
-          {activeCategory && <ActiveChip label={activeCategoryLabel} onRemove={() => navigate({ category: "" })} />}
-          {activeNow && <ActiveChip label="Aktyvus" onRemove={() => toggleFilter("active", true)} />}
-          {urgentWork && <ActiveChip label="Skubūs" onRemove={() => toggleFilter("urgent", true)} />}
-          {topRated && <ActiveChip label="Top reitingas" onRemove={() => toggleFilter("top", true)} />}
+          {search && <ActiveChip label={`"${search}"`} onRemove={() => onChange({ search: "" })} />}
+          {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
+          {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
+          {active && <ActiveChip label="Aktyvus" onRemove={() => onChange({ active: false })} />}
+          {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
+          {top && <ActiveChip label="Top reitingas" onRemove={() => onChange({ top: false })} />}
           <button
-            onClick={clearAll}
+            onClick={handleClearAll}
             className="text-body-sm text-surface-400 hover:text-surface-600 transition-colors dark:hover:text-surface-300 ml-1"
           >
             Išvalyti viską

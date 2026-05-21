@@ -19,7 +19,7 @@ import {
   Globe,
 } from "lucide-react";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
-import type { ProviderCardData } from "@/store/useProviderFilterStore";
+import type { ProviderCardData } from "@/lib/provider-filters";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -27,11 +27,11 @@ import type { ProviderCardData } from "@/store/useProviderFilterStore";
 
 interface ProviderListingClientProps {
   providers: ProviderCardData[];
-  serverSearch: string;
-  serverPage: number;
-  serverTotalPages: number;
-  serverTotal: number;
-  activeFilters: Record<string, string>;
+  page: number;
+  totalPages: number;
+  hasActiveFilters: boolean;
+  onPageChange: (page: number) => void;
+  onClearFilters: () => void;
 }
 
 interface ProviderDetail {
@@ -461,11 +461,12 @@ function InfoTile({
 
 export default function ProviderListingClient({
   providers,
-  serverPage,
-  serverTotalPages,
-  activeFilters,
+  page,
+  totalPages,
+  hasActiveFilters,
+  onPageChange,
+  onClearFilters,
 }: ProviderListingClientProps) {
-  const hasAnyFilters = Object.keys(activeFilters).length > 0;
 
   /* ── Sheet state ── */
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -575,13 +576,6 @@ export default function ProviderListingClient({
     [openSheet]
   );
 
-  function buildPageUrl(page: number) {
-    const p = new URLSearchParams(activeFilters);
-    if (page > 1) p.set("page", String(page));
-    const qs = p.toString();
-    return `/tiekejai${qs ? `?${qs}` : ""}`;
-  }
-
   return (
     <>
       {providers.length > 0 ? (
@@ -601,15 +595,15 @@ export default function ProviderListingClient({
               <a
                 key={p.id}
                 href={`/tiekejai/${p.id}`}
-                className="group block h-full cursor-pointer select-none"
+                className="block h-full cursor-pointer select-none"
                 onMouseEnter={() => handleMouseEnter(p.id)}
                 onClick={(e) => handleCardClick(e, p.id)}
               >
                 <article
-                  className={`h-full overflow-hidden rounded-[28px] bg-white ring-1 ring-black/[0.06] transition-all duration-200 hover:bg-slate-50 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] dark:bg-surface-900 dark:ring-white/[0.08] dark:hover:bg-surface-800/80 flex flex-col ${
+                  className={`h-full overflow-hidden rounded-[28px] bg-white ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_4px_10px_rgba(0,0,0,0.13),0_16px_36px_rgba(0,0,0,0.26)] dark:bg-surface-900 dark:ring-white/[0.08] flex flex-col ${
                     sheetProviderId === p.id
-                      ? "ring-2 ring-brand-500 shadow-lg"
-                      : "shadow-sm"
+                      ? "ring-2 ring-brand-500 shadow-[0_4px_10px_rgba(0,0,0,0.13),0_16px_36px_rgba(0,0,0,0.26)]"
+                      : "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_3px_10px_rgba(0,0,0,0.08)]"
                   }`}
                 >
                   {/* ── Cover image ── */}
@@ -620,7 +614,7 @@ export default function ProviderListingClient({
                         alt={p.name || ""}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        className="object-cover"
                       />
                     ) : (
                       <div
@@ -706,23 +700,24 @@ export default function ProviderListingClient({
             <Search className="h-6 w-6 text-surface-400" />
           </div>
           <p className="text-body font-semibold text-surface-700 dark:text-surface-300">
-            {hasAnyFilters
+            {hasActiveFilters
               ? "Tiekėjų pagal pasirinktus filtrus nerasta"
               : "Tiekėjų kol kas nėra"}
           </p>
           <p className="mt-1.5 text-body-sm text-surface-400 max-w-md mx-auto">
-            {hasAnyFilters
+            {hasActiveFilters
               ? "Pabandykite pakeisti filtrus arba peržiūrėti visus tiekėjus"
               : "Platforma dar tik auga. Paskelbkite užklausą — ji bus matoma visiems būsimiems tiekėjams."}
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {hasAnyFilters && (
-              <Link
-                href="/tiekejai"
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={onClearFilters}
                 className="inline-flex items-center gap-1.5 rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
               >
                 Išvalyti filtrus
-              </Link>
+              </button>
             )}
             <Link
               href="/uzklausos/nauja"
@@ -736,26 +731,28 @@ export default function ProviderListingClient({
       )}
 
       {/* ── Pagination ── */}
-      {serverTotalPages > 1 && (
+      {totalPages > 1 && (
         <div className="mt-8 flex justify-center items-center gap-2">
-          {serverPage > 1 && (
-            <Link
-              href={buildPageUrl(serverPage - 1)}
+          {page > 1 && (
+            <button
+              type="button"
+              onClick={() => onPageChange(page - 1)}
               className="rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
             >
               Ankstesnis
-            </Link>
+            </button>
           )}
           <span className="flex items-center px-4 text-body-sm text-surface-500 font-medium">
-            {serverPage} / {serverTotalPages}
+            {page} / {totalPages}
           </span>
-          {serverPage < serverTotalPages && (
-            <Link
-              href={buildPageUrl(serverPage + 1)}
+          {page < totalPages && (
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
               className="rounded-full border border-surface-200 bg-white px-5 py-2.5 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300"
             >
               Kitas
-            </Link>
+            </button>
           )}
         </div>
       )}
