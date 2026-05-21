@@ -8,6 +8,7 @@ import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 import { getUserMenuLinks } from "@/lib/redirects";
 
 const NAV_LINKS = [
@@ -41,7 +42,7 @@ export default function Header() {
       className={cn(
         "sticky top-0 z-50 transition-colors duration-300",
         solid
-          ? "border-b border-[#DBD6CB] bg-[#ECE9E2]/85 backdrop-blur-md"
+          ? "border-b border-[#DBD6CB] bg-[#ECE9E2]/85 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/85"
           : "border-b border-transparent bg-transparent"
       )}
     >
@@ -55,7 +56,7 @@ export default function Header() {
             >
               P
             </span>
-            <span className="text-[17px] font-semibold tracking-tight text-[#26231F]">
+            <span className="text-[17px] font-semibold tracking-tight text-[#26231F] dark:text-surface-50">
               {APP_NAME}
             </span>
           </Link>
@@ -66,7 +67,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-[15px] text-[#57534C] transition-colors hover:text-[#26231F]"
+                className="text-[15px] text-[#57534C] transition-colors hover:text-[#26231F] dark:text-surface-400 dark:hover:text-surface-100"
               >
                 {item.label}
               </Link>
@@ -75,17 +76,18 @@ export default function Header() {
 
           {/* Right actions */}
           <div className="flex items-center gap-2.5">
+            <ThemeToggle />
             {!session ? (
               <>
                 <Link
                   href="/prisijungti"
-                  className="hidden rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 px-4 py-2 text-sm font-medium text-[#26231F] transition-colors hover:bg-[#E9E4D9] sm:inline-flex"
+                  className="hidden rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 px-4 py-2 text-sm font-medium text-[#26231F] transition-colors hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-100 dark:hover:bg-surface-700 sm:inline-flex"
                 >
                   Prisijungti
                 </Link>
                 <Link
                   href="/registruotis"
-                  className="inline-flex rounded-full bg-[#2A2723] px-4 py-2 text-sm font-medium text-[#F2EFE8] transition-colors hover:bg-[#3A3631]"
+                  className="inline-flex rounded-full bg-[#2A2723] px-4 py-2 text-sm font-medium text-[#F2EFE8] transition-colors hover:bg-[#3A3631] dark:bg-surface-100 dark:text-surface-900 dark:hover:bg-white"
                 >
                   Registruotis
                 </Link>
@@ -98,7 +100,7 @@ export default function Header() {
             )}
 
             <button
-              className="rounded-lg p-2 text-[#57534C] transition-colors hover:bg-[#E2DDD2] md:hidden"
+              className="rounded-lg p-2 text-[#57534C] transition-colors hover:bg-[#E2DDD2] dark:text-surface-400 dark:hover:bg-surface-800 md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Meniu"
             >
@@ -109,32 +111,32 @@ export default function Header() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="border-t border-[#DBD6CB] py-3 md:hidden">
+          <div className="border-t border-[#DBD6CB] py-3 dark:border-surface-800 md:hidden">
             <div className="flex flex-col gap-0.5">
               {NAV_LINKS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2]"
+                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="my-1.5 h-px bg-[#DBD6CB]" />
+              <div className="my-1.5 h-px bg-[#DBD6CB] dark:bg-surface-800" />
               {!session ? (
                 <>
                   <Link
                     href="/prisijungti"
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2]"
+                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                   >
                     Prisijungti
                   </Link>
                   <Link
                     href="/registruotis"
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#C25E3A] hover:bg-[#E2DDD2]"
+                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#C25E3A] hover:bg-[#E2DDD2] dark:text-brand-400 dark:hover:bg-surface-800"
                   >
                     Registruotis
                   </Link>
@@ -142,9 +144,9 @@ export default function Header() {
               ) : (
                 <>
                   <div className="px-3 py-2">
-                    <p className="truncate text-sm font-semibold text-[#26231F]">{userName}</p>
+                    <p className="truncate text-sm font-semibold text-[#26231F] dark:text-surface-100">{userName}</p>
                     {userEmail && (
-                      <p className="truncate text-xs text-[#8A8478]">{userEmail}</p>
+                      <p className="truncate text-xs text-[#8A8478] dark:text-surface-400">{userEmail}</p>
                     )}
                   </div>
                   {menuLinks.map((link) => (
@@ -152,7 +154,7 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2]"
+                      className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                     >
                       {link.label}
                     </Link>
@@ -162,7 +164,7 @@ export default function Header() {
                       signOut({ callbackUrl: "/" });
                       setMobileOpen(false);
                     }}
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2]"
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                   >
                     Atsijungti
                     <LogOut className="h-4 w-4" />

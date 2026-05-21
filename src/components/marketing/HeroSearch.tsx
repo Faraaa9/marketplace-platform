@@ -66,7 +66,7 @@ export default function HeroSearch() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="relative rounded-[1.75rem] border border-[#D8D2C6] bg-[#FBFAF6] shadow-[0_18px_48px_-20px_rgba(40,35,30,0.28)] transition-colors focus-within:border-[#C5B7A4]">
+      <div className="relative rounded-[1.75rem] border border-[#D8D2C6] bg-[#FBFAF6] shadow-[0_18px_48px_-20px_rgba(40,35,30,0.28)] transition-colors focus-within:border-[#C5B7A4] dark:border-surface-700 dark:bg-surface-900 dark:focus-within:border-surface-600">
         <textarea
           ref={textareaRef}
           id="hero-description"
@@ -82,12 +82,12 @@ export default function HeroSearch() {
                 ? "Atpažįstu, ką pasakei..."
                 : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje. Biudžetas iki 800 €, darbus norėčiau pradėti kitą savaitę."
           }
-          className="w-full resize-none rounded-[1.75rem] bg-transparent px-6 pt-5 pb-16 text-[1.0625rem] leading-relaxed text-[#26231F] outline-none placeholder:text-[#9A958B]"
+          className="w-full resize-none rounded-[1.75rem] bg-transparent px-6 pt-5 pb-16 text-[1.0625rem] leading-relaxed text-[#26231F] outline-none placeholder:text-[#9A958B] dark:text-surface-100 dark:placeholder:text-surface-500"
         />
 
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-[1.75rem] bg-gradient-to-t from-[#FBFAF6] from-[70%] to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-[1.75rem] bg-gradient-to-t from-[#FBFAF6] from-[70%] to-transparent dark:from-surface-900"
         />
 
         {isSupported && (
@@ -106,7 +106,7 @@ export default function HeroSearch() {
             className={`absolute bottom-4 left-4 grid h-10 w-10 place-items-center rounded-full transition-all hover:scale-105 active:scale-95 disabled:cursor-default disabled:hover:scale-100 ${
               status === "recording"
                 ? "bg-[#DC2626] text-white shadow-sm"
-                : "border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] hover:bg-[#E9E4D9]"
+                : "border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
             }`}
           >
             {status === "recording" && (
@@ -134,7 +134,7 @@ export default function HeroSearch() {
       </div>
 
       {error && (
-        <p role="alert" className="mt-2 px-1 text-sm text-[#B4451F]">
+        <p role="alert" className="mt-2 px-1 text-sm text-[#B4451F] dark:text-red-400">
           {error === "denied"
             ? "Mikrofonas užblokuotas. Leiskite jį naršyklės nustatymuose ir bandykite dar kartą."
             : error === "unavailable"
@@ -146,9 +146,9 @@ export default function HeroSearch() {
       <div className="mt-4 flex items-center justify-between gap-3">
         <Link
           href="/meistrai"
-          className="inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-sm font-medium text-[#57534C] transition-colors hover:bg-[#E9E4D9]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-sm font-medium text-[#57534C] transition-colors hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-300 dark:hover:bg-surface-700"
         >
-          <Users className="h-4 w-4 text-[#C25E3A]" />
+          <Users className="h-4 w-4 text-[#C25E3A] dark:text-brand-400" />
           Žiūrėti tiekėjus
         </Link>
         <ImproveDescriptionButton

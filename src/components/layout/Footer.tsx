@@ -4,7 +4,7 @@ import { APP_NAME } from "@/lib/constants";
 export default function Footer() {
   // Transparent everywhere so the site-wide grid background flows through.
   return (
-    <footer className="border-t border-[#DBD6CB]">
+    <footer className="border-t border-[#DBD6CB] dark:border-surface-800">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-1">
@@ -15,17 +15,17 @@ export default function Footer() {
               >
                 P
               </span>
-              <span className="text-[17px] font-semibold tracking-tight text-[#26231F]">
+              <span className="text-[17px] font-semibold tracking-tight text-[#26231F] dark:text-surface-50">
                 {APP_NAME}
               </span>
             </div>
-            <p className="max-w-xs text-sm leading-relaxed text-[#6B6760]">
+            <p className="max-w-xs text-sm leading-relaxed text-[#6B6760] dark:text-surface-400">
               Patikima platforma, jungianti paslaugų tiekėjus su klientais visoje Lietuvoje.
             </p>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F]">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F] dark:text-surface-100">
               Platforma
             </h4>
             <ul className="space-y-2.5">
@@ -35,7 +35,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F]">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F] dark:text-surface-100">
               Informacija
             </h4>
             <ul className="space-y-2.5">
@@ -45,7 +45,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F]">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F] dark:text-surface-100">
               Pradėkite
             </h4>
             <ul className="space-y-2.5">
@@ -56,8 +56,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-[#DBD6CB] pt-6">
-          <p className="text-center text-xs text-[#8C877D]">
+        <div className="mt-12 border-t border-[#DBD6CB] pt-6 dark:border-surface-800">
+          <p className="text-center text-xs text-[#8C877D] dark:text-surface-500">
             &copy; {new Date().getFullYear()} {APP_NAME}. Visos teisės saugomos.
           </p>
         </div>
@@ -70,7 +70,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
   return (
     <Link
       href={href}
-      className="text-sm text-[#6B6760] transition-colors duration-200 hover:text-[#C25E3A]"
+      className="text-sm text-[#6B6760] transition-colors duration-200 hover:text-[#C25E3A] dark:text-surface-400 dark:hover:text-brand-400"
     >
       {children}
     </Link>

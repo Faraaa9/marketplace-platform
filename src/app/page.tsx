@@ -204,7 +204,7 @@ export default async function HomePage() {
         {/* Warm glow behind the headline */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F6F1E6]/75 blur-3xl"
+          className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F6F1E6]/75 blur-3xl dark:bg-[#3a3128]/30"
         />
 
         {/* Floating decorations (wide screens only) */}
@@ -215,50 +215,51 @@ export default async function HomePage() {
               <path
                 d="M250,28 C200,140 108,180 106,308 C104,438 168,500 212,576"
                 stroke="#C6BFB0"
+                className="dark:stroke-[#3f3a32]"
                 strokeWidth="2"
                 strokeDasharray="5 7"
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute" style={{ left: "69%", top: "5%", transform: "translate(-50%,-50%)" }}>
-              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#E1DAEC] ring-1 ring-[#CABFE0]">
-                <Package className="h-6 w-6 text-[#7C6AA6]" />
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#E1DAEC] ring-1 ring-[#CABFE0] dark:bg-[#2e2740] dark:ring-[#43395f]">
+                <Package className="h-6 w-6 text-[#7C6AA6] dark:text-[#b3a3d6]" />
               </div>
             </div>
             <div className="absolute" style={{ left: "30%", top: "52%", transform: "translate(-50%,-50%)" }}>
-              <div className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D4E5CD] ring-1 ring-[#BBD3B0]">
-                <Search className="h-6 w-6 text-[#5E8C50]" />
+              <div className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D4E5CD] ring-1 ring-[#BBD3B0] dark:bg-[#26331f] dark:ring-[#3a4d30]">
+                <Search className="h-6 w-6 text-[#5E8C50] dark:text-[#9cc088]" />
                 <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 translate-y-full rounded-md bg-[#4A463F] px-2 py-[3px] text-[11px] font-medium text-white">
                   Tu
                 </span>
               </div>
             </div>
             <div className="absolute" style={{ left: "58%", top: "96%", transform: "translate(-50%,-50%)" }}>
-              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D5E0EC] ring-1 ring-[#BCCCDF]">
-                <Check className="h-6 w-6 text-[#5A79A4]" />
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D5E0EC] ring-1 ring-[#BCCCDF] dark:bg-[#222d3b] dark:ring-[#374559]">
+                <Check className="h-6 w-6 text-[#5A79A4] dark:text-[#9db5d6]" />
               </div>
             </div>
           </div>
 
           {/* Right — sample request card */}
           <div className="absolute right-[2.5%] top-[16%] w-[256px] rotate-[2.5deg]">
-            <div className="rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-4 shadow-[0_20px_44px_-20px_rgba(40,35,30,0.32)]">
+            <div className="rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-4 shadow-[0_20px_44px_-20px_rgba(40,35,30,0.32)] dark:border-surface-800 dark:bg-surface-900">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[#8C877D]">
+                <div className="flex items-center gap-1.5 text-[#8C877D] dark:text-surface-400">
                   <FileText className="h-3.5 w-3.5" />
                   <span className="text-[11px] font-medium">Nauja užklausa</span>
                 </div>
-                <Maximize2 className="h-3 w-3 text-[#B5AFA2]" />
+                <Maximize2 className="h-3 w-3 text-[#B5AFA2] dark:text-surface-500" />
               </div>
-              <p className="mt-2.5 text-[13px] font-semibold leading-snug text-[#26231F]">
+              <p className="mt-2.5 text-[13px] font-semibold leading-snug text-[#26231F] dark:text-surface-100">
                 Vonios kambario remontas — Vilnius
               </p>
               <div className="mt-3 space-y-1.5">
-                <div className="h-1.5 w-full rounded-full bg-[#E8E3D8]" />
-                <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8]" />
+                <div className="h-1.5 w-full rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
+                <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
               </div>
-              <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5">
-                <span className="text-[11px] text-[#8C877D]">6 specialistai atsakė</span>
+              <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5 dark:border-surface-800">
+                <span className="text-[11px] text-[#8C877D] dark:text-surface-400">6 specialistai atsakė</span>
                 <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C25E3A] text-[9px] font-bold text-white">
                   P
                 </span>
@@ -297,15 +298,15 @@ export default async function HomePage() {
 
         {/* Centered content */}
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-12 pb-10">
-          <span className="mb-7 inline-flex items-center rounded-full bg-[#2A2723] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#ECE9E2]">
+          <span className="mb-7 inline-flex items-center rounded-full bg-[#2A2723] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#ECE9E2] dark:bg-surface-800 dark:text-surface-200">
             Paslaugų rinka
           </span>
-          <h1 className="text-center text-[2.75rem] font-bold leading-[1.05] tracking-tight text-[#26231F] sm:text-[3.5rem] lg:text-[4.25rem]">
+          <h1 className="text-center text-[2.75rem] font-bold leading-[1.05] tracking-tight text-[#26231F] dark:text-surface-50 sm:text-[3.5rem] lg:text-[4.25rem]">
             Rask specialistą,
             <br />
             kurio tikrai reikia
           </h1>
-          <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760]">
+          <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760] dark:text-surface-300">
             Aprašyk, ko tau reikia, ir gauk pasiūlymų iš patikrintų specialistų
             visoje Lietuvoje.
           </p>
@@ -321,14 +322,14 @@ export default async function HomePage() {
               {AVATARS.map((a) => (
                 <span
                   key={a.initials}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2]"
+                  className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2] dark:ring-surface-900"
                   style={{ backgroundColor: a.color }}
                 >
                   {a.initials}
                 </span>
               ))}
             </div>
-            <span className="text-sm text-[#6B6760]">{trustText}</span>
+            <span className="text-sm text-[#6B6760] dark:text-surface-300">{trustText}</span>
           </div>
         </div>
       </section>
@@ -343,13 +344,13 @@ export default async function HomePage() {
         <section className="py-20">
           <div className="mx-auto max-w-7xl px-6">
             <div className="mb-12 text-center">
-              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
+              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A] dark:text-brand-400">
                 Naujausi darbai
               </span>
-              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] dark:text-surface-50 sm:text-4xl">
                 Ką šiuo metu ieško klientai
               </h2>
-              <p className="mt-3 text-[#6B6760]">
+              <p className="mt-3 text-[#6B6760] dark:text-surface-300">
                 Peržiūrėk naujausias užklausas ir pateik savo pasiūlymą
               </p>
             </div>
@@ -358,31 +359,31 @@ export default async function HomePage() {
                 <Link
                   key={r.id}
                   href="/uzklausos"
-                  className="group rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-5 transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)]"
+                  className="group rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-5 transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)] dark:border-surface-800 dark:bg-surface-900 dark:hover:border-surface-700"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="line-clamp-1 font-semibold text-[#26231F]">
+                    <h3 className="line-clamp-1 font-semibold text-[#26231F] dark:text-surface-100">
                       {r.title}
                     </h3>
                     {r.budget && (
-                      <span className="shrink-0 text-sm font-semibold text-[#C25E3A]">
+                      <span className="shrink-0 text-sm font-semibold text-[#C25E3A] dark:text-brand-400">
                         {budgetLabel(r.budget)}
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 line-clamp-2 text-sm text-[#6B6760]">
+                  <p className="mt-2 line-clamp-2 text-sm text-[#6B6760] dark:text-surface-400">
                     {truncate(r.description, 100)}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="rounded-lg bg-[#EFE0D6] px-2.5 py-1 text-xs font-medium text-[#A84E2E]">
+                    <span className="rounded-lg bg-[#EFE0D6] px-2.5 py-1 text-xs font-medium text-[#A84E2E] dark:bg-brand-950/60 dark:text-brand-300">
                       {categoryLabel(r.category)}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-xs text-[#8C877D]">
+                    <span className="inline-flex items-center gap-1 text-xs text-[#8C877D] dark:text-surface-400">
                       <MapPin className="h-3 w-3" />
                       {r.location}
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center gap-3 border-t border-[#EAE5DA] pt-3 text-xs text-[#8C877D]">
+                  <div className="mt-3 flex items-center gap-3 border-t border-[#EAE5DA] pt-3 text-xs text-[#8C877D] dark:border-surface-800 dark:text-surface-400">
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatRelativeDate(r.createdAt)}
@@ -398,7 +399,7 @@ export default async function HomePage() {
             <div className="mt-10 text-center">
               <Link
                 href="/uzklausos"
-                className="group inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#FBFAF6] px-5 py-2.5 text-sm font-semibold text-[#26231F] transition-colors hover:bg-white"
+                className="group inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#FBFAF6] px-5 py-2.5 text-sm font-semibold text-[#26231F] transition-colors hover:bg-white dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:hover:bg-surface-700"
               >
                 Visos užklausos
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -412,10 +413,10 @@ export default async function HomePage() {
       <section id="kaip-veikia" className="scroll-mt-24 py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-12 text-center">
-            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
+            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A] dark:text-brand-400">
               Kaip tai veikia
             </span>
-            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] dark:text-surface-50 sm:text-4xl">
               Trys paprasti žingsniai
             </h2>
           </div>
@@ -423,18 +424,18 @@ export default async function HomePage() {
             {HOW_IT_WORKS.map((item, idx) => (
               <div
                 key={item.title}
-                className="relative rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-8"
+                className="relative rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-8 dark:border-surface-800 dark:bg-surface-900"
               >
                 <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-[#C25E3A] text-lg font-bold text-white">
                   {idx + 1}
                 </div>
-                <div className="absolute right-6 top-6 text-[#E0DACB]">
+                <div className="absolute right-6 top-6 text-[#E0DACB] dark:text-surface-700">
                   {item.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-[#26231F]">
+                <h3 className="text-lg font-semibold text-[#26231F] dark:text-surface-100">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#6B6760]">
+                <p className="mt-2 text-sm leading-relaxed text-[#6B6760] dark:text-surface-400">
                   {item.desc}
                 </p>
               </div>
@@ -447,10 +448,10 @@ export default async function HomePage() {
       <section id="kategorijos" className="scroll-mt-24 py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-12 text-center">
-            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
+            <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A] dark:text-brand-400">
               Kategorijos
             </span>
-            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-[#26231F] dark:text-surface-50 sm:text-4xl">
               Paslaugų kategorijos
             </h2>
           </div>
@@ -459,12 +460,12 @@ export default async function HomePage() {
               <Link
                 key={cat.value}
                 href={`/uzklausos/nauja?category=${cat.value}`}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)]"
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)] dark:border-surface-800 dark:bg-surface-900 dark:hover:border-surface-700"
               >
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] transition-transform group-hover:scale-110">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] transition-transform group-hover:scale-110 dark:bg-brand-950/60 dark:text-brand-300">
                   {iconMap[cat.icon]}
                 </div>
-                <span className="text-sm font-medium text-[#26231F]">
+                <span className="text-sm font-medium text-[#26231F] dark:text-surface-100">
                   {cat.label}
                 </span>
               </Link>
@@ -476,14 +477,14 @@ export default async function HomePage() {
       {/* ──────────────────────── Stats ───────────────────────── */}
       <section className="py-20">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-10">
+          <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-10 dark:border-surface-800 dark:bg-surface-900">
             <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className="text-4xl font-bold text-[#C25E3A] sm:text-[2.75rem]">
+                  <div className="text-4xl font-bold text-[#C25E3A] sm:text-[2.75rem] dark:text-brand-400">
                     {stat.value}
                   </div>
-                  <div className="mt-2 text-sm font-medium text-[#6B6760]">
+                  <div className="mt-2 text-sm font-medium text-[#6B6760] dark:text-surface-400">
                     {stat.label}
                   </div>
                 </div>
@@ -498,26 +499,26 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
             <div>
-              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A]">
+              <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-wider text-[#C25E3A] dark:text-brand-400">
                 Klausimai ir atsakymai
               </span>
-              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-tight text-[#26231F] dark:text-surface-50 sm:text-4xl">
                 Ką verta žinoti prieš pradedant
               </h2>
-              <p className="mt-4 max-w-md leading-relaxed text-[#6B6760]">
+              <p className="mt-4 max-w-md leading-relaxed text-[#6B6760] dark:text-surface-300">
                 Trumpi atsakymai į dažniausius klausimus. Jei vis tiek lieka
                 neaišku, gali pradėti nuo pirmos užklausos ir išbandyti platformą
                 praktiškai.
               </p>
             </div>
-            <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-6">
+            <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 dark:border-surface-800 dark:bg-surface-900">
               <Accordion type="single" collapsible defaultValue="free" className="w-full">
                 {FAQ_ITEMS.map((item) => (
-                  <AccordionItem key={item.value} value={item.value} className="border-[#EAE5DA]">
-                    <AccordionTrigger className="text-[#26231F] hover:text-[#C25E3A]">
+                  <AccordionItem key={item.value} value={item.value} className="border-[#EAE5DA] dark:border-surface-800">
+                    <AccordionTrigger className="text-[#26231F] hover:text-[#C25E3A] dark:text-surface-100 dark:hover:text-brand-400">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-[#6B6760]">
+                    <AccordionContent className="text-[#6B6760] dark:text-surface-400">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>
