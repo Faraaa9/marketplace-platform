@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getEmailDeliverySettings } from "@/lib/platform-settings";
 
 interface SendEmailParams {
   to: string;
@@ -10,6 +11,7 @@ interface SendEmailParams {
 export interface SendEmailResult {
   success: boolean;
   mock?: boolean;
+  suppressed?: boolean;
   error?: unknown;
 }
 
@@ -60,6 +62,29 @@ function readEnvFileValue(name: string) {
 }
 
 export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<SendEmailResult> {
+  // Email test mode: when enabled in admin settings, outbound mail reaches only
+  // allowlisted addresses. Shields real clients from dev/test traffic.
+  try {
+    const { emailTestMode, emailAllowlist } = await getEmailDeliverySettings();
+    if (emailTestMode) {
+      const recipient = to.trim().toLowerCase();
+      const allowed = emailAllowlist.some(
+        (entry) => entry.trim().toLowerCase() === recipient,
+      );
+      if (!allowed) {
+        console.log(
+          `[Email] Testavimo režimas — laiškas praleistas (gavėjas ne sąraše): ${to} | ${subject}`,
+        );
+        devEmailLog.unshift({ to, subject, html, sentAt: new Date().toISOString() });
+        if (devEmailLog.length > DEV_EMAIL_LOG_MAX) devEmailLog.length = DEV_EMAIL_LOG_MAX;
+        return { success: true, suppressed: true };
+      }
+    }
+  } catch (error) {
+    // Fail open: a settings-read failure must not silently drop all email.
+    console.error("[Email] Nepavyko patikrinti testavimo režimo:", error);
+  }
+
   const runtimeResendApiKey = process.env.RESEND_API_KEY?.trim();
   const resendApiKey =
     !runtimeResendApiKey || runtimeResendApiKey.includes("placeholder")

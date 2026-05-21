@@ -287,9 +287,11 @@ model PendingDirectInquiry {
 }
 
 model PlatformSettings {
-  id           String   @id @default("singleton")
-  storyEnabled Boolean  @default(true)
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default("singleton")
+  storyEnabled   Boolean  @default(true)
+  emailTestMode  Boolean  @default(false)
+  emailAllowlist String[] @default([])
+  updatedAt      DateTime @updatedAt
 
   @@map("platform_settings")
 }
