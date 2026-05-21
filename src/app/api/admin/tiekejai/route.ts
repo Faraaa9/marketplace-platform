@@ -6,6 +6,8 @@ import { sendEmail, providerActivatedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
+const VALID_PLAN_TYPES = ["FREE", "BASIC", "PRO"];
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -68,7 +70,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userId, action } = await req.json();
+    const { userId, action, planType } = await req.json();
     if (!userId || !action) {
       return NextResponse.json({ success: false, error: "Trūksta duomenų" }, { status: 400 });
     }
@@ -101,6 +103,30 @@ export async function PATCH(req: NextRequest) {
 
     if (action === "delete") {
       await prisma.user.delete({ where: { id: userId } });
+    }
+
+    if (action === "set-plan") {
+      if (!VALID_PLAN_TYPES.includes(planType)) {
+        return NextResponse.json({ success: false, error: "Netinkamas plano tipas" }, { status: 400 });
+      }
+
+      // The effective plan resolves to FREE unless a Subscription is ACTIVE
+      // (see getEffectivePlanType), so a manual grant must move both records.
+      if (planType === "FREE") {
+        await prisma.$transaction([
+          prisma.providerProfile.update({ where: { userId }, data: { planType: "FREE" } }),
+          prisma.subscription.updateMany({ where: { userId }, data: { status: "CANCELED" } }),
+        ]);
+      } else {
+        await prisma.$transaction([
+          prisma.providerProfile.update({ where: { userId }, data: { planType } }),
+          prisma.subscription.upsert({
+            where: { userId },
+            update: { planType, status: "ACTIVE" },
+            create: { userId, planType, status: "ACTIVE" },
+          }),
+        ]);
+      }
     }
 
     return NextResponse.json({ success: true });

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Select from "@/components/ui/Select";
+import Button from "@/components/ui/Button";
 import { Search, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Provider {
@@ -36,6 +38,8 @@ export default function AdminProvidersPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [planValue, setPlanValue] = useState("");
+  const [savingPlan, setSavingPlan] = useState(false);
 
   const fetchProviders = useCallback(async () => {
     setLoading(true);
@@ -64,6 +68,22 @@ export default function AdminProvidersPage() {
     });
     fetchProviders();
     setSelectedProvider(null);
+  }
+
+  async function handleSavePlan() {
+    if (!selectedProvider) return;
+    setSavingPlan(true);
+    try {
+      await fetch("/api/admin/tiekejai", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedProvider.id, action: "set-plan", planType: planValue }),
+      });
+      await fetchProviders();
+      setSelectedProvider(null);
+    } finally {
+      setSavingPlan(false);
+    }
   }
 
   return (
@@ -133,7 +153,7 @@ export default function AdminProvidersPage() {
                   <td className="py-3 px-4 text-surface-500">{p._count.responses}</td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setSelectedProvider(p)} className="p-1.5 hover:bg-surface-100 rounded-lg transition-colors dark:hover:bg-surface-700">
+                      <button onClick={() => { setSelectedProvider(p); setPlanValue(p.providerProfile?.planType || "FREE"); }} className="p-1.5 hover:bg-surface-100 rounded-lg transition-colors dark:hover:bg-surface-700">
                         <Eye className="h-4 w-4 text-surface-500" />
                       </button>
                       {p.providerProfile?.isActive ? (
@@ -190,8 +210,30 @@ export default function AdminProvidersPage() {
             <p><strong className="text-surface-900 dark:text-white">Vietovė:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.location || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Specializacijos:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.specializations.join(", ") || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Aprašymas:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.description || "—"}</span></p>
-            <p><strong className="text-surface-900 dark:text-white">Planas:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.planType}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Atsakymų:</strong> <span className="text-surface-500">{selectedProvider._count.responses}</span></p>
+
+            <div className="pt-2 border-t border-surface-100 dark:border-surface-800">
+              <label className="block font-medium text-surface-900 dark:text-white mb-1.5">Planas</label>
+              <div className="flex gap-2">
+                <Select
+                  value={planValue}
+                  onChange={(e) => setPlanValue(e.target.value)}
+                  options={[
+                    { value: "FREE", label: "FREE — nemokamas" },
+                    { value: "BASIC", label: "BASIC — 29 €/mėn" },
+                    { value: "PRO", label: "PRO — 59 €/mėn" },
+                  ]}
+                />
+                <Button
+                  onClick={handleSavePlan}
+                  isLoading={savingPlan}
+                  disabled={planValue === selectedProvider.providerProfile.planType}
+                  className="shrink-0"
+                >
+                  Išsaugoti
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </Modal>
