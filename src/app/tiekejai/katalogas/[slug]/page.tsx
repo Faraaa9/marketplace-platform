@@ -235,7 +235,7 @@ export default async function ImportedSupplierDetailPage({ params }: PageProps) 
                     className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-4 py-2.5 text-body-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
                   >
                     <Settings className="h-4 w-4" />
-                    Valdymo panele
+                    Katalogo profiliai
                   </Link>
                 </div>
               </div>

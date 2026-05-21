@@ -25,7 +25,7 @@ export default async function MyClaimedSuppliersPage() {
         className="mb-6 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
       >
         <ArrowLeft className="h-4 w-4" />
-        Valdymo panele
+        Valdymo panelė
       </Link>
 
       <div className="mb-6">
