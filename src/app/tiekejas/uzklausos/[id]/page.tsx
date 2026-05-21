@@ -14,13 +14,16 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
-import { MapPin, Clock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft, AlertTriangle, Settings } from "lucide-react";
+import { MapPin, Clock, CalendarClock, Euro, Mail, Phone, User, Send, CheckCircle, Lock, ArrowLeft, AlertTriangle, Settings } from "lucide-react";
 import Link from "next/link";
+import RequestPhotos from "@/components/requests/RequestPhotos";
+import GenerateProposalButton from "@/components/ai/GenerateProposalButton";
 
 interface MessageData {
   id: string;
   content: string;
   createdAt: string;
+  senderId?: string | null;
   senderName?: string;
   sender?: { id: string; name: string };
 }
@@ -41,6 +44,8 @@ interface RequestData {
   category: string;
   location: string;
   budget?: string;
+  deadline?: string;
+  attachmentUrls?: string[];
   status: string;
   acceptedResponseId?: string;
   clientName: string;
@@ -115,6 +120,7 @@ export default function ProviderRequestDetailPage() {
       id: data.data.id,
       content: data.data.content,
       createdAt: data.data.createdAt,
+      senderId: data.data.sender?.id ?? null,
       senderName: data.data.senderName,
       sender: data.data.sender,
       status: "sent",
@@ -155,11 +161,17 @@ export default function ProviderRequestDetailPage() {
           <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{request.location}</span>
           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatRelativeDate(request.createdAt)}</span>
           {request.budget && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{request.budget}</span>}
+          {request.deadline && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{request.deadline}</span>}
         </div>
       </div>
 
       <Card className="mb-6">
         <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap mb-4">{request.description}</p>
+        {request.attachmentUrls && request.attachmentUrls.length > 0 && (
+          <div className="mb-4">
+            <RequestPhotos urls={request.attachmentUrls} />
+          </div>
+        )}
         <hr className="border-surface-200/50 dark:border-surface-700 mb-3" />
         <div className="flex flex-wrap gap-4 text-body-sm text-surface-500">
           <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{request.clientName}</span>
@@ -207,6 +219,7 @@ export default function ProviderRequestDetailPage() {
                 placeholder="Aprašykite ką galite pasiūlyti, terminus, sąlygas..."
                 value={responseMessage}
                 onChange={(e) => setResponseMessage(e.target.value)}
+                autoResize
               />
               <div className="mt-1.5 flex items-center justify-between text-micro">
                 <span className={responseMessage.length > 0 && responseMessage.length < 10 ? "text-red-500 dark:text-red-400" : "text-surface-400"}>
@@ -218,6 +231,13 @@ export default function ProviderRequestDetailPage() {
                   {responseMessage.length}/10
                 </span>
               </div>
+              <GenerateProposalButton
+                requestId={request.id}
+                value={responseMessage}
+                onChange={setResponseMessage}
+                targetId="response"
+                className="mt-2"
+              />
             </div>
             <Input
               id="price"
@@ -290,18 +310,25 @@ export default function ProviderRequestDetailPage() {
               <p className="text-body font-medium text-surface-900 dark:text-white">{resp.provider.name}</p>
               {resp.price && <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>}
             </div>
-            <p className="text-body text-surface-700 dark:text-surface-300 whitespace-pre-wrap">{resp.message}</p>
-            <p className="mt-2 text-micro text-surface-400">{formatRelativeDate(resp.createdAt)}</p>
+            <div className="flex flex-col items-end gap-0.5">
+              <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-body-sm text-white whitespace-pre-wrap break-words">
+                {resp.message}
+              </div>
+              <span className="px-1 text-micro text-surface-400">{formatRelativeDate(resp.createdAt)}</span>
+            </div>
 
             {/* Thread with optimistic messaging */}
             <ThreadChat
-              responseId={resp.id}
+              threadId={resp.id}
+              threadKind="response"
               initialMessages={resp.messages.map((m) => ({
                 ...m,
                 senderName: m.senderName || m.sender?.name || null,
                 status: "sent" as const,
               }))}
               currentSenderName={session?.user?.name || "Tiekėjas"}
+              viewerRole="provider"
+              providerId={resp.provider.id}
               sendMessage={sendThreadMessage}
               placeholder="Rašyti žinutę..."
               disabled={request.status === "CLOSED"}

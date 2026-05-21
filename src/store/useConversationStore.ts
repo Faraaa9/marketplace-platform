@@ -7,6 +7,7 @@ export interface ThreadMessage {
   content: string;
   createdAt: string;
   senderName: string | null;
+  senderId?: string | null;
   sender?: { id?: string; name: string } | null;
   /** Optimistic status */
   status: "sent" | "sending" | "failed";

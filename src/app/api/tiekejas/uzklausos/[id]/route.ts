@@ -27,6 +27,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         category: true,
         location: true,
         budget: true,
+        deadline: true,
+        attachmentUrls: true,
         status: true,
         acceptedResponseId: true,
         clientId: true,
@@ -47,6 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 id: true,
                 content: true,
                 createdAt: true,
+                senderId: true,
                 senderName: true,
                 sender: { select: { id: true, name: true } },
               },
@@ -73,6 +76,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       } catch {
         // view tracking must never break the page
       }
+    }
+
+    // Mark this provider's conversation thread as read — best-effort.
+    try {
+      await prisma.response.updateMany({
+        where: { requestId: id, providerId: guard.userId },
+        data: { providerLastReadAt: new Date() },
+      });
+    } catch {
+      // read tracking must never break the page
     }
 
     const [totalResponses, profile, subscription] = await Promise.all([
@@ -106,6 +119,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       category: request.category,
       location: request.location,
       budget: request.budget,
+      deadline: request.deadline,
+      attachmentUrls: request.attachmentUrls,
       status: request.status,
       acceptedResponseId: request.acceptedResponseId,
       clientName: request.clientName,

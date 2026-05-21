@@ -1,11 +1,13 @@
 type NotifyProviderAboutDirectInquiryParams = {
   providerId: string;
+  inquiryId: string;
   senderEmail: string;
   senderName?: string | null;
 };
 
 export function getDirectInquiryNotificationData({
   providerId,
+  inquiryId,
   senderEmail,
   senderName,
 }: NotifyProviderAboutDirectInquiryParams) {
@@ -16,6 +18,6 @@ export function getDirectInquiryNotificationData({
     type: "DIRECT_INQUIRY",
     title: "Nauja tiesioginė žinutė",
     body: `${senderLabel} parašė jums tiesioginę žinutę`,
-    link: "/tiekejas/zinutes",
+    link: `/tiekejas/zinutes/${inquiryId}`,
   };
 }

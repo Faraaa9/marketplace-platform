@@ -8,6 +8,7 @@ import {
   CheckCircle,
   LogIn,
   Mail,
+  MessageCircle,
   RefreshCw,
   Send,
   X,
@@ -62,6 +63,7 @@ export default function DirectInquiryWidget({
   const [verifyError, setVerifyError] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [conversationToken, setConversationToken] = useState<string | null>(null);
 
   const isLoggedIn = !!session?.user;
 
@@ -141,6 +143,7 @@ export default function DirectInquiryWidget({
       });
       const data = await res.json();
       if (data.success) {
+        setConversationToken(data.data?.trackingToken ?? null);
         setInquiryResult({ success: true, message: "Žinutė išsiųsta!" });
         setInquiryForm({ description: "", budget: "", senderEmail: "", senderPhone: "", senderName: "" });
       } else {
@@ -215,6 +218,7 @@ export default function DirectInquiryWidget({
       const data = await res.json();
       if (data.success) {
         setVerifyStep("form");
+        setConversationToken(data.data?.trackingToken ?? null);
         setInquiryResult({ success: true, message: "Žinutė išsiųsta!" });
         setInquiryForm({ description: "", budget: "", senderEmail: "", senderPhone: "", senderName: "" });
         setPendingId(null);
@@ -263,6 +267,7 @@ export default function DirectInquiryWidget({
     setVerifyCode("");
     setVerifyError("");
     setPendingId(null);
+    setConversationToken(null);
     setTimeout(() => inquiryRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   }
 
@@ -274,6 +279,7 @@ export default function DirectInquiryWidget({
     setVerifyCode("");
     setVerifyError("");
     setPendingId(null);
+    setConversationToken(null);
     closeMessageModal();
   }
 
@@ -287,11 +293,21 @@ export default function DirectInquiryWidget({
           Žinutė išsiųsta!
         </p>
         <p className="mb-3 text-micro text-emerald-700/70 dark:text-emerald-400/70">
-          Tiekėjas gaus jūsų žinutę ir galės su jumis susisiekti el. paštu.
+          Tiekėjas gaus jūsų žinutę. Atsakymą matysite pokalbyje.
         </p>
-        <Button size="sm" variant="outline" onClick={closeInquiryForm}>
-          Uždaryti
-        </Button>
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          {conversationToken && (
+            <Link href={`/zinutes/${conversationToken}`}>
+              <Button size="sm">
+                <MessageCircle className="h-4 w-4" />
+                Peržiūrėti pokalbį
+              </Button>
+            </Link>
+          )}
+          <Button size="sm" variant="outline" onClick={closeInquiryForm}>
+            Uždaryti
+          </Button>
+        </div>
       </div>
     );
   }

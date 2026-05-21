@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
+import { createMessageNotification } from "@/lib/message-notifications";
 
 /**
  * Post a message to a response thread.
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         id: true,
         providerId: true,
         request: {
-          select: { clientId: true, status: true },
+          select: { id: true, clientId: true, status: true, title: true, trackingToken: true },
         },
       },
     });
@@ -65,12 +66,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Per daug žinučių. Palaukite minutę." }, { status: 429 });
     }
 
+    const sanitizedContent = sanitizeHtml(parsed.data.content);
+
     // Duplicate detection: block identical message within last 30 seconds
     const recentDuplicate = await prisma.message.findFirst({
       where: {
         responseId: id,
         senderId: session.user.id,
-        content: sanitizeHtml(parsed.data.content),
+        content: sanitizedContent,
         createdAt: { gte: new Date(Date.now() - 30 * 1000) },
       },
       select: { id: true },
@@ -79,21 +82,50 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
     }
 
-    const message = await prisma.message.create({
-      data: {
-        responseId: id,
-        senderId: session.user.id,
-        senderName: session.user.name || null,
-        content: sanitizeHtml(parsed.data.content),
-      },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        senderName: true,
-        sender: { select: { id: true, name: true } },
-      },
-    });
+    // Persist the message and bump the thread's activity timestamp atomically.
+    // The provider's own send also counts as "read" so it never shows unread.
+    const now = new Date();
+    const [message] = await prisma.$transaction([
+      prisma.message.create({
+        data: {
+          responseId: id,
+          senderId: session.user.id,
+          senderName: session.user.name || null,
+          content: sanitizedContent,
+        },
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          senderName: true,
+          sender: { select: { id: true, name: true } },
+        },
+      }),
+      prisma.response.update({
+        where: { id },
+        data: {
+          lastMessageAt: now,
+          ...(isProvider ? { providerLastReadAt: now } : {}),
+        },
+      }),
+    ]);
+
+    // Notify the other participant — best-effort, never blocks the send.
+    if (isProvider) {
+      if (response.request.clientId) {
+        await createMessageNotification({
+          userId: response.request.clientId,
+          link: `/uzklausos/sekti/${response.request.trackingToken}`,
+          contextLabel: response.request.title,
+        });
+      }
+    } else {
+      await createMessageNotification({
+        userId: response.providerId,
+        link: `/tiekejas/uzklausos/${response.request.id}`,
+        contextLabel: response.request.title,
+      });
+    }
 
     return NextResponse.json({ success: true, data: message });
   } catch (error) {

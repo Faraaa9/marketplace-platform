@@ -116,12 +116,15 @@ export async function POST(req: NextRequest) {
           senderEmail: email,
           senderPhone: senderPhone ? sanitizeHtml(senderPhone.trim()) : null,
           senderName: session.user.name || null,
+          // The sender wrote this — leave it unread for the provider.
+          providerLastReadAt: new Date(0),
         },
       });
 
       await tx.notification.create({
         data: getDirectInquiryNotificationData({
           providerId,
+          inquiryId: createdInquiry.id,
           senderEmail: email,
           senderName: createdInquiry.senderName,
         }),
@@ -130,7 +133,10 @@ export async function POST(req: NextRequest) {
       return createdInquiry;
     });
 
-    return NextResponse.json({ success: true, data: { id: inquiry.id } }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: { id: inquiry.id, trackingToken: inquiry.trackingToken } },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Direct inquiry error:", error);
     return NextResponse.json(

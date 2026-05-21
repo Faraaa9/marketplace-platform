@@ -144,26 +144,36 @@ model Response {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  // Conversation tracking — denormalized so the provider inbox can sort by
+  // recent activity and flag unread threads without scanning all messages.
+  lastMessageAt      DateTime @default(now())
+  providerLastReadAt DateTime @default(now())
+
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   provider User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
   messages Message[]
   reviews  Review[]
 
-  @@index([providerId])
+  @@index([providerId, lastMessageAt])
   @@map("responses")
 }
 
 model Message {
-  id         String   @id @default(cuid())
-  responseId String
-  senderId   String?
-  senderName String?
-  content    String   @db.Text
-  createdAt  DateTime @default(now())
+  id              String   @id @default(cuid())
+  // A message belongs to exactly one thread: either a Response or a
+  // DirectInquiry. Both are nullable; app code always sets exactly one.
+  responseId      String?
+  directInquiryId String?
+  senderId        String?
+  senderName      String?
+  content         String   @db.Text
+  createdAt       DateTime @default(now())
 
-  response Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  sender   User?    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  response      Response?      @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  directInquiry DirectInquiry? @relation(fields: [directInquiryId], references: [id], onDelete: Cascade)
+  sender        User?          @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
+  @@index([directInquiryId])
   @@map("messages")
 }
 
@@ -245,22 +255,29 @@ model Review {
 }
 
 model DirectInquiry {
-  id           String   @id @default(cuid())
-  providerId   String
-  description  String   @db.Text
-  budget       String?
-  senderUserId String?
-  senderEmail  String
-  senderPhone  String?
-  senderName   String?
-  status       String   @default("NEW")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  trackingToken String   @unique @default(cuid())
+  providerId    String
+  description   String   @db.Text
+  budget        String?
+  senderUserId  String?
+  senderEmail   String
+  senderPhone   String?
+  senderName    String?
+  status        String   @default("NEW")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  provider User  @relation("InquiryProvider", fields: [providerId], references: [id], onDelete: Cascade)
-  sender   User? @relation("InquirySender", fields: [senderUserId], references: [id], onDelete: SetNull)
+  // Conversation tracking — a DirectInquiry is now a two-way message thread.
+  lastMessageAt      DateTime @default(now())
+  providerLastReadAt DateTime @default(now())
+
+  provider User      @relation("InquiryProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  sender   User?     @relation("InquirySender", fields: [senderUserId], references: [id], onDelete: SetNull)
+  messages Message[]
 
   @@index([providerId, status])
+  @@index([providerId, lastMessageAt])
   @@index([senderUserId])
   @@index([senderEmail])
   @@map("direct_inquiries")

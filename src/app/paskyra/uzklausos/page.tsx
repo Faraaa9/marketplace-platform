@@ -58,36 +58,21 @@ export default function MyRequestsPage() {
     return requests.filter((r) => r.status === filter);
   }, [requests, filter]);
 
-  const stats = useMemo(() => {
-    const active = requests.filter((r) => r.status === "OPEN" || r.status === "IN_PROGRESS").length;
-    const totalResponses = requests.reduce((sum, r) => sum + r._count.responses, 0);
-    const withNewResponses = requests.filter((r) => {
-      if (!r.lastResponseAt) return false;
-      const lastResp = new Date(r.lastResponseAt).getTime();
-      return Date.now() - lastResp < 24 * 60 * 60 * 1000;
-    }).length;
-    return { total: requests.length, active, totalResponses, withNewResponses };
-  }, [requests]);
-
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      {/* Header */}
-      <div className="border-b border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-        <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-surface-900 dark:text-white">
-              Mano užklausos
-            </h1>
-            <Link href="/uzklausos/nauja">
-              <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nauja</Button>
-            </Link>
-          </div>
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-surface-900 dark:text-white">
+            Mano užklausos
+          </h1>
+          <Link href="/uzklausos/nauja">
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nauja</Button>
+          </Link>
         </div>
-      </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-6">
         {requests.length === 0 ? (
           <EmptyState
             title="Neturite užklausų"
@@ -97,14 +82,6 @@ export default function MyRequestsPage() {
           />
         ) : (
           <>
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <StatCard value={stats.total} label="Iš viso" />
-              <StatCard value={stats.active} label="Aktyvios" highlight />
-              <StatCard value={stats.totalResponses} label="Pasiūlymai" />
-              <StatCard value={stats.withNewResponses} label="Nauji atsakymai" alert={stats.withNewResponses > 0} />
-            </div>
-
             {/* Filter tabs */}
             <div className="flex gap-1 mb-5 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
               {FILTER_TABS.map((tab) => {
@@ -223,19 +200,4 @@ function NextActionHint({ status, responseCount }: { status: string; responseCou
     return <span className="text-micro text-brand-600 dark:text-brand-400 font-medium">Susisiekite su tiekėju</span>;
   }
   return null;
-}
-
-function StatCard({ value, label, highlight, alert }: { value: number; label: string; highlight?: boolean; alert?: boolean }) {
-  return (
-    <div className="rounded-xl border border-surface-200/60 bg-white px-4 py-3 dark:border-surface-700/50 dark:bg-surface-900">
-      <p className={`text-lg font-bold ${
-        alert ? "text-brand-600 dark:text-brand-400" :
-        highlight ? "text-emerald-600 dark:text-emerald-400" :
-        "text-surface-900 dark:text-white"
-      }`}>
-        {value}
-      </p>
-      <p className="text-micro text-surface-400 dark:text-surface-500">{label}</p>
-    </div>
-  );
 }

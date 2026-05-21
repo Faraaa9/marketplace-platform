@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { createMessageNotification } from "@/lib/message-notifications";
 
 /**
  * Post a message to a response thread, authenticated by tracking token.
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     // Look up the request by tracking token
     const request = await prisma.serviceRequest.findUnique({
       where: { trackingToken: token },
-      select: { id: true, clientId: true, clientName: true, status: true },
+      select: { id: true, clientId: true, clientName: true, status: true, title: true },
     });
 
     if (!request) {
@@ -110,20 +111,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
     }
 
-    const message = await prisma.message.create({
-      data: {
-        responseId,
-        senderId,
-        senderName,
-        content: sanitizedContent,
-      },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        senderName: true,
-        sender: { select: { name: true } },
-      },
+    // Persist the message and bump the thread's activity timestamp atomically.
+    const now = new Date();
+    const [message] = await prisma.$transaction([
+      prisma.message.create({
+        data: {
+          responseId,
+          senderId,
+          senderName,
+          content: sanitizedContent,
+        },
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          senderName: true,
+          sender: { select: { name: true } },
+        },
+      }),
+      prisma.response.update({
+        where: { id: responseId },
+        data: { lastMessageAt: now },
+      }),
+    ]);
+
+    // Notify the provider of the new client message — best-effort.
+    await createMessageNotification({
+      userId: response.providerId,
+      link: `/tiekejas/uzklausos/${request.id}`,
+      contextLabel: request.title,
     });
 
     return NextResponse.json({ success: true, data: message });

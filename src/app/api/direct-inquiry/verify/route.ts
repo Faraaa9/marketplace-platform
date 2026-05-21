@@ -122,12 +122,15 @@ export async function POST(req: NextRequest) {
           senderEmail: pending.senderEmail,
           senderPhone: pending.senderPhone,
           senderName: pending.senderName,
+          // The sender wrote this — leave it unread for the provider.
+          providerLastReadAt: new Date(0),
         },
       });
 
       await tx.notification.create({
         data: getDirectInquiryNotificationData({
           providerId: pending.providerId,
+          inquiryId: createdInquiry.id,
           senderEmail: pending.senderEmail,
           senderName: pending.senderName,
         }),
@@ -138,7 +141,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { id: inquiry.id },
+      data: { id: inquiry.id, trackingToken: inquiry.trackingToken },
     });
   } catch (error) {
     if (error instanceof Error && error.message === "ALREADY_VERIFIED") {

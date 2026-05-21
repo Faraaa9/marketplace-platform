@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import { MagicCard } from "@/components/magicui/magic-card";
 import Image from "next/image";
-import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Send, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
+import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
 
 interface Stats {
   userName: string | null;
@@ -399,7 +399,7 @@ export default function ProviderDashboard() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadInbox, setUnreadInbox] = useState(0);
   const [storyModalOpen, setStoryModalOpen] = useState(false);
 
   useEffect(() => {
@@ -410,10 +410,10 @@ export default function ProviderDashboard() {
           setStats(data.data);
 
           if (data.data.emailVerified && data.data.isActive) {
-            fetch("/api/tiekejas/zinutes?status=NEW&page=1")
+            fetch("/api/tiekejas/zinutes")
               .then((r) => r.json())
-              .then((messagesData) => {
-                if (messagesData.success) setUnreadMessages(messagesData.data.unreadCount);
+              .then((inboxData) => {
+                if (inboxData.success) setUnreadInbox(inboxData.data.totalUnread);
               })
               .catch(() => {});
           }
@@ -731,7 +731,7 @@ export default function ProviderDashboard() {
             <Card hover>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Užklausos</CardTitle>
+                  <CardTitle>Klientų užklausos</CardTitle>
                   <p className="text-body-sm text-surface-500 mt-1">Naršyti ir atsakyti</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
@@ -742,7 +742,7 @@ export default function ProviderDashboard() {
           <Card>
             <div className="flex items-center justify-between opacity-50">
               <div>
-                <CardTitle>Užklausos</CardTitle>
+                <CardTitle>Klientų užklausos</CardTitle>
                 <p className="text-body-sm text-surface-500 mt-1">
                   {!stats.emailVerified ? "Patvirtinkite el. paštą" : "Paskyra sustabdyta"}
                 </p>
@@ -758,15 +758,15 @@ export default function ProviderDashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <CardTitle>Žinutės</CardTitle>
-                    {unreadMessages > 0 && (
+                    {unreadInbox > 0 && (
                       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
-                        {unreadMessages}
+                        {unreadInbox}
                       </span>
                     )}
                   </div>
-                  <p className="text-body-sm text-surface-500 mt-1">Tiesioginės užklausos</p>
+                  <p className="text-body-sm text-surface-500 mt-1">Pokalbiai su klientais</p>
                 </div>
-                <Send className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+                <MessageCircle className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
               </div>
             </Card>
           </Link>
