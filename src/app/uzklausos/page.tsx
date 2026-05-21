@@ -8,6 +8,7 @@ import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
+import PinnedRequestPhotos from "@/components/requests/PinnedRequestPhotos";
 
 export const metadata: Metadata = {
   title: "Viešos užklausos — PaslaugųRinka",
@@ -73,6 +74,7 @@ const getBoardRequests = unstable_cache(
           budget: true,
           clientId: true,
           acceptedResponseId: true,
+          attachmentUrls: true,
           createdAt: true,
           _count: { select: { responses: true } },
         },
@@ -319,6 +321,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       <p className="mt-2 text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
                         {truncate(r.description, 150)}
                       </p>
+
+                      {/* attachment photos */}
+                      {r.attachmentUrls.length > 0 && (
+                        <div className="mt-4">
+                          <PinnedRequestPhotos urls={r.attachmentUrls} title={r.title} />
+                        </div>
+                      )}
 
                       {/* divider */}
                       <div className="mt-5 border-t border-[#d8cda6] dark:border-surface-700/70" />

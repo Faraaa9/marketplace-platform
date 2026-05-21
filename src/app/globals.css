@@ -268,3 +268,88 @@
     }
   }
 }
+
+/* ───────────── Užklausų lenta — prisegtos nuotraukos ───────────── */
+@layer components {
+  /* Attachment photos tacked to the note like prints on a corkboard */
+  .polaroid-board {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.9rem 0.7rem;
+    padding-top: 0.7rem;
+  }
+
+  /* A single print — thin frame, thick foot, lifted off the note */
+  .polaroid {
+    position: relative;
+    flex: none;
+    padding: 7px 7px 22px;
+    border-radius: 2px;
+    background-color: #ffffff;
+    box-shadow:
+      0 1px 2px rgba(50, 34, 12, 0.16),
+      0 5px 12px rgba(50, 34, 12, 0.18);
+    transition: box-shadow 0.18s ease;
+    cursor: pointer;
+  }
+  .polaroid:hover {
+    box-shadow:
+      0 2px 4px rgba(50, 34, 12, 0.2),
+      0 9px 20px rgba(50, 34, 12, 0.26);
+  }
+  .dark .polaroid {
+    background-color: #ebe7dc;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.45),
+      0 6px 14px rgba(0, 0, 0, 0.5);
+  }
+  .dark .polaroid:hover {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.5),
+      0 10px 22px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Brass tack centred just above each print */
+  .polaroid__pin {
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .polaroid__photo {
+    position: relative;
+    display: block;
+    width: 92px;
+    height: 92px;
+    overflow: hidden;
+    background-color: #e7e2d4;
+  }
+  .dark .polaroid__photo {
+    background-color: #d6d1c2;
+  }
+
+  /* "+N" tile standing in for the remaining photos */
+  .polaroid__photo--more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #93805c;
+    background-color: #efe9d7;
+  }
+  .dark .polaroid__photo--more {
+    color: #8a8068;
+    background-color: #c8c2b0;
+  }
+
+  @media (min-width: 640px) {
+    .polaroid__photo {
+      width: 106px;
+      height: 106px;
+    }
+  }
+}
