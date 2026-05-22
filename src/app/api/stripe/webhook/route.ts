@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, subscriptionConfirmationEmail } from "@/lib/email";
+import { sendEmail, creditPurchaseEmail } from "@/lib/email";
+import { grantCredits } from "@/lib/credits";
 
 // TODO: Set STRIPE_SECRET_KEY in .env.local
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
@@ -26,53 +27,53 @@ export async function POST(req: NextRequest) {
 
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.userId;
-        if (!userId) break;
+        const checkoutSession = event.data.object as Stripe.Checkout.Session;
 
-        const subscriptionId = session.subscription as string;
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const priceId = subscription.items.data[0].price.id;
-
-        // Explicit price-to-plan mapping — reject unknown price IDs
-        const PRICE_PLAN_MAP: Record<string, string> = {};
-        if (process.env.STRIPE_BASIC_PRICE_ID) PRICE_PLAN_MAP[process.env.STRIPE_BASIC_PRICE_ID] = "BASIC";
-        if (process.env.STRIPE_PRO_PRICE_ID) PRICE_PLAN_MAP[process.env.STRIPE_PRO_PRICE_ID] = "PRO";
-
-        const planType = PRICE_PLAN_MAP[priceId];
-        if (!planType) {
-          console.error(`Unknown Stripe price ID in webhook: ${priceId}`);
-          return NextResponse.json({ error: "Unknown price ID" }, { status: 400 });
+        // Phase 4: checkout is one-time credit purchases only.
+        if (
+          checkoutSession.mode !== "payment" ||
+          checkoutSession.payment_status !== "paid"
+        ) {
+          break;
         }
 
-        await prisma.subscription.upsert({
-          where: { userId },
-          update: {
-            stripeCustomerId: session.customer as string,
-            stripeSubscriptionId: subscriptionId,
-            planType,
-            status: "ACTIVE",
-            currentPeriodEnd: new Date((subscription as unknown as { current_period_end: number }).current_period_end * 1000),
-          },
-          create: {
-            userId,
-            stripeCustomerId: session.customer as string,
-            stripeSubscriptionId: subscriptionId,
-            planType,
-            status: "ACTIVE",
-            currentPeriodEnd: new Date((subscription as unknown as { current_period_end: number }).current_period_end * 1000),
-          },
+        const providerProfileId = checkoutSession.metadata?.providerProfileId;
+        const creditsRaw = checkoutSession.metadata?.credits;
+        const creditPackId = checkoutSession.metadata?.creditPackId;
+        if (!providerProfileId || !creditsRaw) {
+          console.error("Credit purchase webhook missing metadata:", checkoutSession.id);
+          break;
+        }
+        const credits = parseInt(creditsRaw, 10);
+        if (!Number.isInteger(credits) || credits <= 0) {
+          console.error("Credit purchase webhook bad credits value:", creditsRaw);
+          break;
+        }
+
+        // Idempotent on the checkout session id — a redelivered webhook
+        // credits the account only once.
+        const result = await grantCredits({
+          providerProfileId,
+          amount: credits,
+          type: "PURCHASE",
+          note: `Kreditų pirkimas (${credits})`,
+          creditPackId: creditPackId || undefined,
+          stripeCheckoutSessionId: checkoutSession.id,
         });
 
-        await prisma.providerProfile.update({
-          where: { userId },
-          data: { planType },
-        });
-
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (user?.email) {
-          const emailData = subscriptionConfirmationEmail(user.name || "Tiekėjau", planType);
-          await sendEmail({ to: user.email, ...emailData });
+        if (!result.alreadyProcessed) {
+          const profile = await prisma.providerProfile.findUnique({
+            where: { id: providerProfileId },
+            select: { user: { select: { name: true, email: true } } },
+          });
+          if (profile?.user?.email) {
+            const emailData = creditPurchaseEmail(
+              profile.user.name || "Tiekėjau",
+              credits,
+              result.balance,
+            );
+            await sendEmail({ to: profile.user.email, ...emailData });
+          }
         }
 
         break;

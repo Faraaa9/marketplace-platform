@@ -3,12 +3,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Sparkles, Mail, X } from "lucide-react";
+import { Sparkles, Mail, X, Gift } from "lucide-react";
+import CreditPacksCard from "./CreditPacksCard";
 
 interface Settings {
   storyEnabled: boolean;
   emailTestMode: boolean;
   emailAllowlist: string[];
+  freeStarterCredits: number;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,12 +23,16 @@ export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [starterInput, setStarterInput] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success) setSettings(data.data);
+        if (data.success) {
+          setSettings(data.data);
+          setStarterInput(String(data.data.freeStarterCredits ?? 3));
+        }
       })
       .catch(() => setError("Nepavyko užkrauti nustatymų"))
       .finally(() => setLoading(false));
@@ -68,6 +74,15 @@ export default function AdminSettingsPage() {
   function toggleEmailTestMode() {
     if (!settings) return;
     save({ emailTestMode: !settings.emailTestMode });
+  }
+
+  async function saveStarter() {
+    const count = parseInt(starterInput, 10);
+    if (!Number.isInteger(count) || count < 0) {
+      setError("Startinių kreditų skaičius turi būti 0 arba daugiau");
+      return;
+    }
+    await save({ freeStarterCredits: count });
   }
 
   async function handleAddEmail(e: FormEvent) {
@@ -282,6 +297,46 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </Card>
+
+          {/* Startiniai kreditai */}
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
+                <Gift className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-body font-semibold text-surface-900 dark:text-white">
+                  Startiniai kreditai
+                </p>
+                <p className="text-micro text-surface-500 dark:text-surface-400">
+                  Kiek nemokamų kreditų gauna naujas tiekėjas, susikūręs profilį
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                value={starterInput}
+                onChange={(e) => setStarterInput(e.target.value)}
+                className="w-24 rounded-lg border border-surface-200 bg-white px-3 py-2 text-body-sm text-surface-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-900 dark:text-white"
+              />
+              <button
+                onClick={saveStarter}
+                disabled={saving}
+                className="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+              >
+                Išsaugoti
+              </button>
+              {saving && <span className="text-micro text-surface-400">Saugoma...</span>}
+              {saved && !saving && (
+                <span className="text-micro text-emerald-600 dark:text-emerald-400">Išsaugota</span>
+              )}
+            </div>
+          </Card>
+
+          {/* Kreditų paketai */}
+          <CreditPacksCard />
         </div>
       )}
     </div>

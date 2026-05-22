@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { getEmailDeliverySettings } from "@/lib/platform-settings";
+import { creditsLabel } from "@/lib/utils";
 
 interface SendEmailParams {
   to: string;
@@ -351,14 +352,16 @@ export function claimRejectedEmail(supplierName: string, reason?: string) {
   };
 }
 
-export function subscriptionConfirmationEmail(name: string, plan: string) {
+export function creditPurchaseEmail(name: string, credits: number, balance: number) {
   return {
-    subject: `${plan} planas aktyvuotas — PaslaugųRinka`,
+    subject: "Kreditai pridėti — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
-        <p>Jūsų <strong>${plan}</strong> planas sėkmingai aktyvuotas. Dabar galite naudotis visomis plano galimybėmis.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/planai" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti planą</a></p>
+        <p>Jūsų paskyrą papildėme <strong>${credits} ${creditsLabel(credits)}</strong>.</p>
+        <p>Dabartinis balansas: <strong>${balance} ${creditsLabel(balance)}</strong>.</p>
+        <p>Kreditus naudokite klientų užklausoms atrakinti — vienas kreditas atrakina vieną užklausą.</p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/uzklausos" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
       </div>
     `,
   };

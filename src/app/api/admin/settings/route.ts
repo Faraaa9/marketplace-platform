@@ -3,8 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
   getEmailDeliverySettings,
+  getFreeStarterCredits,
   isStoryEnabled,
   setEmailDeliverySettings,
+  setFreeStarterCredits,
   setStoryEnabled,
 } from "@/lib/platform-settings";
 
@@ -15,7 +17,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function loadSettings() {
   const storyEnabled = await isStoryEnabled();
   const { emailTestMode, emailAllowlist } = await getEmailDeliverySettings();
-  return { storyEnabled, emailTestMode, emailAllowlist };
+  const freeStarterCredits = await getFreeStarterCredits();
+  return { storyEnabled, emailTestMode, emailAllowlist, freeStarterCredits };
 }
 
 export async function GET() {
@@ -44,6 +47,17 @@ export async function PUT(req: NextRequest) {
 
     if (typeof body.storyEnabled === "boolean") {
       await setStoryEnabled(body.storyEnabled);
+    }
+
+    if (body.freeStarterCredits !== undefined) {
+      const count = Number(body.freeStarterCredits);
+      if (!Number.isInteger(count) || count < 0) {
+        return NextResponse.json(
+          { success: false, error: "Startinių kreditų skaičius turi būti 0 arba daugiau" },
+          { status: 400 },
+        );
+      }
+      await setFreeStarterCredits(count);
     }
 
     const emailPatch: { emailTestMode?: boolean; emailAllowlist?: string[] } = {};

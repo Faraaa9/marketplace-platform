@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder"
   apiVersion: "2023-10-16",
 });
 
+/**
+ * POST /api/stripe/create-checkout
+ * Starts a one-time Stripe Checkout for a credit pack. The pack (and its
+ * price) is resolved server-side from the database — never trust a
+ * client-supplied price. The webhook credits the account on payment.
+ */
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,34 +24,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { plan } = await req.json();
-
-    // Server-side plan-to-price mapping — never trust client-provided price IDs
-    const PLAN_PRICE_MAP: Record<string, string | undefined> = {
-      BASIC: process.env.STRIPE_BASIC_PRICE_ID,
-      PRO: process.env.STRIPE_PRO_PRICE_ID,
-    };
-
-    if (!plan || !(plan in PLAN_PRICE_MAP)) {
-      return NextResponse.json({ success: false, error: "Netinkamas planas" }, { status: 400 });
+    const profile = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, error: "Neturite tiekėjo profilio" },
+        { status: 403 },
+      );
     }
 
-    const priceId = PLAN_PRICE_MAP[plan];
-    if (!priceId) {
-      // TODO: Set STRIPE_BASIC_PRICE_ID / STRIPE_PRO_PRICE_ID in .env.local
-      console.error(`Missing Stripe price ID for plan: ${plan}`);
-      return NextResponse.json({ success: false, error: "Plano kaina nesukonfigūruota" }, { status: 500 });
+    const { creditPackId } = await req.json();
+    if (!creditPackId || typeof creditPackId !== "string") {
+      return NextResponse.json({ success: false, error: "Nenurodytas paketas" }, { status: 400 });
     }
+
+    const pack = await prisma.creditPack.findUnique({
+      where: { id: creditPackId },
+      select: {
+        id: true,
+        name: true,
+        credits: true,
+        priceCents: true,
+        currency: true,
+        isActive: true,
+      },
+    });
+    if (!pack || !pack.isActive) {
+      return NextResponse.json({ success: false, error: "Paketas neprieinamas" }, { status: 400 });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: "payment",
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/planai?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/planai?canceled=true`,
+      line_items: [
+        {
+          price_data: {
+            currency: pack.currency,
+            product_data: { name: `${pack.name} — PaslaugųRinka` },
+            unit_amount: pack.priceCents,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${appUrl}/tiekejas/planai?success=true`,
+      cancel_url: `${appUrl}/tiekejas/planai?canceled=true`,
       metadata: {
         userId: session.user.id,
-        plan,
+        providerProfileId: profile.id,
+        creditPackId: pack.id,
+        // Snapshot the credit count so the webhook credits exactly what was
+        // bought, even if an admin re-prices the pack afterward.
+        credits: String(pack.credits),
       },
     });
 

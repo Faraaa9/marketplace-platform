@@ -33,3 +33,16 @@ export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
   return str.slice(0, length) + "...";
 }
+
+/**
+ * Lithuanian plural form of "kreditas" (credit) for a given count.
+ * 1 → kreditas · 2-9 → kreditai · 0 and 10-20 → kreditų
+ */
+export function creditsLabel(n: number): string {
+  const abs = Math.abs(Math.trunc(n)) % 100;
+  const last = abs % 10;
+  if (abs >= 11 && abs <= 19) return "kreditų";
+  if (last === 1) return "kreditas";
+  if (last >= 2 && last <= 9) return "kreditai";
+  return "kreditų";
+}
