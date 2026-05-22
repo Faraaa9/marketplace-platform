@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { responseSchema } from "@/lib/validations";
 import { sendEmail, newResponseEmail } from "@/lib/email";
+import { buildReplyAddress } from "@/lib/inbound-email";
 import { isLeadUnlocked } from "@/lib/credits";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
@@ -221,9 +222,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
-    // Send email to client
+    // Send email to client. Reply-To carries a signed token so the client can
+    // answer the offer straight from their inbox and have it land in the thread.
     const emailData = newResponseEmail(request.clientName, request.title, request.trackingToken);
-    await sendEmail({ to: request.clientEmail, ...emailData });
+    await sendEmail({
+      to: request.clientEmail,
+      ...emailData,
+      replyTo:
+        buildReplyAddress({ kind: "response", threadId: response.id, role: "client" }) ??
+        undefined,
+    });
 
     // Create notification for client if they have account
     if (request.clientId) {

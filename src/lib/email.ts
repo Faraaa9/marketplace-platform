@@ -7,6 +7,8 @@ interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
+  /** Per-call Reply-To override. Falls back to the EMAIL_REPLY_TO env when unset. */
+  replyTo?: string;
 }
 
 export interface SendEmailResult {
@@ -62,7 +64,7 @@ function readEnvFileValue(name: string) {
   }
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<SendEmailResult> {
+export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams): Promise<SendEmailResult> {
   // Email test mode: when enabled in admin settings, outbound mail reaches only
   // allowlisted addresses. Shields real clients from dev/test traffic.
   try {
@@ -102,6 +104,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
     );
   }
   const emailReplyTo = process.env.EMAIL_REPLY_TO?.trim() || readEnvFileValue("EMAIL_REPLY_TO")?.trim();
+  const effectiveReplyTo = replyTo?.trim() || emailReplyTo;
 
   if (!resendApiKey) {
     console.warn("WARNING: RESEND_API_KEY not set — email will not be sent");
@@ -135,7 +138,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
         to,
         subject,
         html,
-        ...(emailReplyTo ? { reply_to: emailReplyTo } : {}),
+        ...(effectiveReplyTo ? { reply_to: effectiveReplyTo } : {}),
       }),
     });
 

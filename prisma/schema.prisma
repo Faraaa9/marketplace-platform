@@ -660,3 +660,26 @@ model LeadUnlock {
   @@index([requestId])
   @@map("lead_unlocks")
 }
+
+// Emails received via the Resend inbound webhook. Every inbound message is
+// persisted here as an audit trail; a copy is routed into a conversation
+// thread when the recipient address carries a valid reply token, otherwise
+// it stays in the admin support inbox.
+model InboundEmail {
+  id              String   @id @default(cuid())
+  resendEmailId   String   @unique // Resend's email_id — also the idempotency key
+  messageId       String? // RFC Message-ID header
+  fromAddress     String
+  toAddress       String // the recipient address the webhook delivered to
+  subject         String?
+  textBody        String?  @db.Text
+  htmlBody        String?  @db.Text
+  status          String   @default("INBOX") // INBOX | ROUTED | IGNORED
+  routedMessageId String? // Message.id when status = ROUTED
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("inbound_emails")
+}
