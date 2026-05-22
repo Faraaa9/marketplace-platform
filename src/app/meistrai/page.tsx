@@ -192,6 +192,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       description,
       categories,
       location: p.providerProfile?.location || null,
+      isVerified: p.providerProfile?.isVerified ?? false,
       badge,
       responseCount: p._count.responses,
       acceptedCount,
