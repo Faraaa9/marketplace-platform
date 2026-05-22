@@ -372,13 +372,15 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
               </ProfileSection>
             )}
 
-            <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
-              <ReviewsSection
-                providerId={provider.id}
-                avgRating={provider.avgRating}
-                totalReviews={provider.totalReviews}
-              />
-            </Suspense>
+            <div id="atsiliepimai" className="scroll-mt-24">
+              <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
+                <ReviewsSection
+                  providerId={provider.id}
+                  avgRating={provider.avgRating}
+                  totalReviews={provider.totalReviews}
+                />
+              </Suspense>
+            </div>
           </div>
           </div>
 

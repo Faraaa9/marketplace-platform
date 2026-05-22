@@ -47,7 +47,10 @@ export async function POST(req: NextRequest) {
     // Derive providerId from the accepted response (never trust client body)
     const acceptedResponse = await prisma.response.findUnique({
       where: { id: responseId },
-      select: { providerId: true },
+      select: {
+        providerId: true,
+        provider: { select: { providerProfile: { select: { slug: true } } } },
+      },
     });
 
     if (!acceptedResponse) {
@@ -55,6 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     const providerId = acceptedResponse.providerId;
+    const providerSlug = acceptedResponse.provider.providerProfile?.slug;
 
     // Block self-review: cannot review yourself
     if (providerId === session.user.id) {
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
         type: "NEW_REVIEW",
         title: "Naujas atsiliepimas",
         body: `Klientas įvertino jūsų paslaugą: ${rating}/5`,
-        link: `/tiekejas`,
+        link: providerSlug ? `/meistrai/${providerSlug}#atsiliepimai` : `/tiekejas`,
       },
     });
 
