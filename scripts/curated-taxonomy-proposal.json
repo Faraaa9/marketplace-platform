@@ -81,7 +81,9 @@
         { "name": "Bendrijų administravimas" },
         { "name": "Maistas ir konditerija" },
         { "name": "Perkraustymas ir transportas" },
-        { "name": "Sniego valymas" }
+        { "name": "Sniego valymas" },
+        { "name": "Automobilių remontas ir priežiūra", "apima": "tepalų keitimas, techninės apžiūros paruošimas, smulkus auto remontas ir priežiūra" },
+        { "name": "Gyvūnų gaudymas ir išvežimas", "apima": "laukinių ir benamių gyvūnų gaudymas, išvežimas, perkėlimas" }
       ]
     },
     {
@@ -154,7 +156,8 @@
         { "name": "Tortai ir saldumynai", "apima": "iš 'Verslui' — tortai, desertai" },
         { "name": "Barmenai ir maitinimas renginiuose", "apima": "iš 'Verslui' — barmenai" },
         { "name": "Patalpų ir sodybų nuoma renginiams" },
-        { "name": "Renginių įgarsinimas ir techninis aptarnavimas" }
+        { "name": "Renginių įgarsinimas ir techninis aptarnavimas" },
+        { "name": "Floristika ir gėlės", "apima": "puokštės, gėlių kompozicijos, dovanų ir progų gėlės, gėlių pristatymas, renginių floristika" }
       ]
     },
     {

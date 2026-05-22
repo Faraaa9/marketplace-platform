@@ -24,11 +24,15 @@ const prisma = new PrismaClient();
 const DRY_RUN = process.argv.includes("--dry-run");
 
 // Each legacy request (matched by a distinctive title fragment) -> curated slug.
-// Only requests with a clear, unambiguous category are listed here.
+// The auto / animal-removal / florist categories were added to the curated
+// taxonomy (curated-taxonomy-proposal.json) before this backfill runs.
 const MAPPINGS = [
   { titleContains: "Rūsio patalpos", categorySlug: "kapitalinis-ir-patalpu-remontas" },
   { titleContains: "Masažisto paslaugos", categorySlug: "sveikata-ir-gydymas" },
   { titleContains: "IKEA baldų surinkimas", categorySlug: "smulkus-meistrai-i-namus" },
+  { titleContains: "Automobilio paruošimas", categorySlug: "automobiliu-remontas-ir-prieziura" },
+  { titleContains: "Laukinio katino išvežimas", categorySlug: "gyvunu-gaudymas-ir-isvezimas" },
+  { titleContains: "Gėlių puokštė", categorySlug: "floristika-ir-geles" },
 ];
 
 async function main() {
