@@ -283,9 +283,58 @@ export default function ProviderRequestDetailPage() {
       )}
 
       {isMyResponseAccepted && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-body-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-          <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          Klientas priėmė jūsų pasiūlymą!
+        <div className="mb-6 rounded-2xl border border-emerald-200/70 bg-emerald-50/50 dark:border-emerald-800/40 dark:bg-emerald-950/30">
+          <div className="flex items-start gap-3.5 p-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-xs dark:bg-emerald-500/10">
+              <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">
+                Klientas priėmė jūsų pasiūlymą
+              </h3>
+              <p className="mt-1 text-body-sm text-surface-600 dark:text-surface-300">
+                Sveikiname! Liko susisiekti su klientu ir suderinti darbo detales.
+              </p>
+            </div>
+          </div>
+
+          {(request.clientEmail || request.clientPhone) && (
+            <div className="border-t border-emerald-200/60 px-5 py-4 dark:border-emerald-800/40">
+              <p className="mb-2.5 text-caption font-semibold text-surface-500 dark:text-surface-400">
+                Kliento kontaktai
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {request.clientEmail && (
+                  <a
+                    href={`mailto:${request.clientEmail}`}
+                    className="flex min-h-[44px] flex-1 items-center gap-2.5 rounded-xl border border-surface-200/70 bg-white px-3.5 py-2 transition-shadow hover:shadow-soft dark:border-surface-700/50 dark:bg-surface-900"
+                  >
+                    <Mail className="h-4 w-4 shrink-0 text-surface-400" />
+                    <span className="min-w-0 flex-1 truncate text-body-sm text-surface-700 dark:text-surface-200">
+                      {request.clientEmail}
+                    </span>
+                    <span className="shrink-0 text-caption font-semibold text-brand-600 dark:text-brand-400">
+                      Rašyti
+                    </span>
+                  </a>
+                )}
+                {request.clientPhone && (
+                  <a
+                    href={`tel:${request.clientPhone}`}
+                    className="flex min-h-[44px] flex-1 items-center gap-2.5 rounded-xl border border-surface-200/70 bg-white px-3.5 py-2 transition-shadow hover:shadow-soft dark:border-surface-700/50 dark:bg-surface-900"
+                  >
+                    <Phone className="h-4 w-4 shrink-0 text-surface-400" />
+                    <span className="min-w-0 flex-1 truncate text-body-sm text-surface-700 dark:text-surface-200">
+                      {request.clientPhone}
+                    </span>
+                    <span className="shrink-0 text-caption font-semibold text-brand-600 dark:text-brand-400">
+                      Skambinti
+                    </span>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -309,11 +358,19 @@ export default function ProviderRequestDetailPage() {
         )}
       </h2>
       <div className="space-y-4">
-        {request.responses.map((resp) => (
-          <Card key={resp.id}>
-            <div className="flex justify-between mb-2">
-              <p className="text-body font-medium text-surface-900 dark:text-white">{resp.provider.name}</p>
-              {resp.price && <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>}
+        {request.responses.map((resp) => {
+          const isAccepted = request.acceptedResponseId === resp.id;
+          return (
+          <Card
+            key={resp.id}
+            className={isAccepted ? "border-emerald-500 ring-2 ring-emerald-500" : undefined}
+          >
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-body font-medium text-surface-900 dark:text-white">{resp.provider.name}</p>
+                {isAccepted && <Badge variant="success">Priimtas</Badge>}
+              </div>
+              {resp.price != null && <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>}
             </div>
             <div className="flex flex-col items-end gap-0.5">
               <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-body-sm text-white whitespace-pre-wrap break-words">
@@ -339,7 +396,8 @@ export default function ProviderRequestDetailPage() {
               disabled={request.status === "CLOSED"}
             />
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
