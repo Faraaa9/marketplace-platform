@@ -14,12 +14,12 @@ import {
   Shield,
 } from "lucide-react";
 
-interface ClaimSupplier {
+interface ClaimProviderProfile {
   id: string;
   displayName: string;
   slug: string;
   status: string;
-  city: string | null;
+  location: string | null;
   externalSourceUrl: string | null;
 }
 
@@ -31,7 +31,7 @@ interface ClaimUser {
 
 interface Claim {
   id: string;
-  supplierRecordId: string;
+  providerProfileId: string;
   requestedByEmail: string;
   verificationMethod: string;
   status: string;
@@ -42,7 +42,7 @@ interface Claim {
   reviewNotes: string | null;
   submittedEvidenceJson: string | null;
   createdAt: string;
-  supplier: ClaimSupplier | null;
+  providerProfile: ClaimProviderProfile | null;
   requestedBy: ClaimUser | null;
   reviewedBy: ClaimUser | null;
 }
@@ -207,7 +207,7 @@ export default function AdminClaimsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold text-surface-900 dark:text-white truncate">
-                      {claim.supplier?.displayName ?? "Nežinomas tiekėjas"}
+                      {claim.providerProfile?.displayName ?? "Nežinomas tiekėjas"}
                     </h3>
                     <Badge variant={statusVariant(claim.status)}>
                       {statusLabel(claim.status)}
@@ -222,14 +222,14 @@ export default function AdminClaimsPage() {
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-micro text-surface-500">
                     <span>{claim.requestedByEmail}</span>
                     <span>{claim.verificationMethod === "email" ? "El. paštu" : "Rankiniu būdu"}</span>
-                    {claim.supplier?.city && <span>{claim.supplier.city}</span>}
+                    {claim.providerProfile?.location && <span>{claim.providerProfile.location}</span>}
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {relativeDate(claim.createdAt)}
                     </span>
-                    {claim.supplier?.externalSourceUrl && (
+                    {claim.providerProfile?.externalSourceUrl && (
                       <a
-                        href={claim.supplier.externalSourceUrl}
+                        href={claim.providerProfile.externalSourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 dark:text-brand-400"

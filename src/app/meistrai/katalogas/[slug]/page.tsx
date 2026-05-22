@@ -16,7 +16,6 @@ import {
   Settings,
   Shield,
   Star,
-  Tag,
 } from "lucide-react";
 import * as supplierService from "@/lib/imported/supplier-service";
 import { canManageSupplier } from "@/lib/imported/supplier-access";
@@ -25,6 +24,8 @@ import EmptyState from "@/components/ui/EmptyState";
 export const metadata: Metadata = {
   title: "Tiekejo profilis — PaslaugosRinka",
   description: "Importuoto tiekejo profilis is paslaugos.lt katalogo.",
+  // Imported/unclaimed profiles must not be broadly indexed by search engines.
+  robots: { index: false, follow: false },
 };
 
 interface PageProps {
@@ -255,32 +256,6 @@ export default async function ImportedSupplierDetailPage({ params }: PageProps) 
                   </p>
                 </div>
                 <ClaimButton slug={supplier.slug} />
-              </div>
-            </div>
-          )}
-
-          {/* Categories */}
-          {supplier.categories.length > 0 && (
-            <div className="mt-8">
-              <h2 className="mb-3 text-heading-3 font-semibold text-surface-900 dark:text-white">
-                Kategorijos ({supplier.categories.length})
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {supplier.categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/meistrai/katalogas?category=${cat.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-3 py-1.5 text-body-sm text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                  >
-                    <Tag className="h-3 w-3" />
-                    {cat.name}
-                    {cat.isPrimary && (
-                      <span className="rounded bg-blue-100 px-1 text-micro text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                        primary
-                      </span>
-                    )}
-                  </Link>
-                ))}
               </div>
             </div>
           )}

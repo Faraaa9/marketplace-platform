@@ -4,11 +4,12 @@ import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { Building2, MapPin, ArrowLeft, ArrowRight, Star, Shield } from "lucide-react";
 import * as supplierService from "@/lib/imported/supplier-service";
-import * as categoryService from "@/lib/imported/category-service";
 
 export const metadata: Metadata = {
   title: "Importuotas katalogas — PaslaugosRinka",
   description: "Importuoti tiekėjų profiliai iš paslaugos.lt katalogo. Perimkite savo profilį.",
+  // Imported/unclaimed profiles must not be broadly indexed by search engines.
+  robots: { index: false, follow: false },
 };
 
 interface PageProps {
@@ -22,26 +23,24 @@ interface PageProps {
 const PER_PAGE = 50;
 
 const getCatalogPageData = unstable_cache(
-  async (limit: number, offset: number, city: string | undefined, categorySlug: string | undefined) => {
-    const [result, stats, roots] = await Promise.all([
-      supplierService.list({ limit, offset, city, categorySlug }),
+  async (limit: number, offset: number, city: string | undefined) => {
+    const [result, stats] = await Promise.all([
+      supplierService.list({ limit, offset, city }),
       supplierService.getStats(),
-      categoryService.getRoots(),
     ]);
-    return { result, stats, roots };
+    return { result, stats };
   },
   ["imported-catalog-page"],
-  { revalidate: 600, tags: ["suppliers", "categories"] }
+  { revalidate: 600, tags: ["suppliers"] }
 );
 
 export default async function ImportedCatalogPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
   const city = params.city || undefined;
-  const categorySlug = params.category || undefined;
   const offset = (page - 1) * PER_PAGE;
 
-  const { result, stats, roots } = await getCatalogPageData(PER_PAGE, offset, city, categorySlug);
+  const { result, stats } = await getCatalogPageData(PER_PAGE, offset, city);
 
   const totalPages = Math.ceil(result.total / PER_PAGE);
 
@@ -50,7 +49,6 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
     const qs = new URLSearchParams();
     qs.set("page", String(p));
     if (city) qs.set("city", city);
-    if (categorySlug) qs.set("category", categorySlug);
     return `/meistrai/katalogas?${qs.toString()}`;
   }
 
@@ -81,35 +79,6 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Category filter chips */}
-        {roots.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            <Link
-              href="/meistrai/katalogas"
-              className={`rounded-lg px-3 py-1.5 text-body-sm transition-colors ${
-                !categorySlug
-                  ? "bg-brand-600 text-white"
-                  : "bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300"
-              }`}
-            >
-              Visos
-            </Link>
-            {roots.filter((cat) => cat.supplierCount > 0).map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/meistrai/katalogas?category=${cat.slug}`}
-                className={`rounded-lg px-3 py-1.5 text-body-sm transition-colors ${
-                  categorySlug === cat.slug
-                    ? "bg-brand-600 text-white"
-                    : "bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300"
-                }`}
-              >
-                {cat.name} ({cat.supplierCount})
-              </Link>
-            ))}
-          </div>
-        )}
-
         {/* Pagination top */}
         <div className="mb-4 flex items-center justify-between text-body-sm text-surface-500">
           <span>
@@ -183,7 +152,6 @@ export default async function ImportedCatalogPage({ searchParams }: PageProps) {
                       {s.city}
                     </span>
                   )}
-                  <span>{s.categoryCount} kategorijos</span>
                 </div>
               </div>
             </Link>

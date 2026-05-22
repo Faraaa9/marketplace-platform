@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         take: limit,
         select: {
           id: true,
-          supplierRecordId: true,
+          providerProfileId: true,
           requestedByEmail: true,
           requestedByUserId: true,
           verificationMethod: true,
@@ -46,13 +46,13 @@ export async function GET(req: NextRequest) {
           submittedEvidenceJson: true,
           createdAt: true,
           updatedAt: true,
-          supplier: {
+          providerProfile: {
             select: {
               id: true,
               displayName: true,
               slug: true,
               status: true,
-              city: true,
+              location: true,
               externalSourceUrl: true,
             },
           },

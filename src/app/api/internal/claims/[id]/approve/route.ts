@@ -24,7 +24,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     if ("error" in result) {
-      const status = result.error === "NOT_FOUND" ? 404 : 400;
+      const status =
+        result.error === "NOT_FOUND"
+          ? 404
+          : result.error === "APPROVAL_CONFLICT" || result.error === "IDENTITY_EXISTS"
+            ? 409
+            : 400;
       return NextResponse.json({ success: false, error: result.message, code: result.error }, { status });
     }
 

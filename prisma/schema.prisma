@@ -62,7 +62,7 @@ model Account {
 
 model ProviderProfile {
   id                 String    @id @default(cuid())
-  userId             String    @unique
+  userId             String?   @unique
   slug               String?   @unique
   description        String?   @db.Text
   headline           String?
@@ -77,14 +77,41 @@ model ProviderProfile {
   website            String?
   isActive           Boolean   @default(false)
   planType           String    @default("FREE")
+  moderationStatus   String    @default("APPROVED")
+  moderationReason   String?
+  moderatedAt        DateTime?
   planExpiresAt      DateTime?
   images             String[]  @default([])
+
+  // ── Absorbed from SupplierRecord — Phase 2: unified provider entity ──
+  // A ProviderProfile now represents ANY provider: self-created (registered)
+  // or imported from the paslaugos.lt catalog (claimed or not yet).
+  displayName        String?
+  status             String    @default("claimed")     // claimed | unclaimed
+  sourceType         String    @default("self_created") // self_created | imported
+  shortSummary       String?
+  publicEmail        String?
+  heroImageUrl       String?
+  companyCode        String?
+  isVerified         Boolean   @default(false)
+  rating             Float?
+  reviewCount        Int       @default(0)
+  externalSource     String?
+  externalSourceUrl  String?
+  enrichedAt         DateTime?
+  metadataJson       String?   @db.Text
+
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  claimRequests ClaimRequest[]
 
   @@index([specializations], type: Gin)
+  @@index([moderationStatus])
+  @@index([status])
+  @@index([sourceType])
+  @@index([externalSourceUrl])
   @@map("provider_profiles")
 }
 
@@ -102,6 +129,9 @@ model ServiceRequest {
   deadline                     String?
   attachmentUrls               String[]  @default([])
   status                       String    @default("OPEN")
+  moderationStatus             String    @default("APPROVED")
+  moderationReason             String?
+  moderatedAt                  DateTime?
   acceptedResponseId           String?
   clientId                     String?
   clientEmail                  String
@@ -118,6 +148,7 @@ model ServiceRequest {
   @@index([status])
   @@index([category])
   @@index([location])
+  @@index([moderationStatus, createdAt])
   @@map("service_requests")
 }
 
@@ -234,15 +265,18 @@ model EmailVerificationToken {
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  rating     Int
-  comment    String?  @db.Text
-  clientId   String?
-  providerId String
-  requestId  String
-  responseId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String    @id @default(cuid())
+  rating           Int
+  comment          String?   @db.Text
+  clientId         String?
+  providerId       String
+  requestId        String
+  responseId       String
+  moderationStatus String    @default("APPROVED")
+  moderationReason String?
+  moderatedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   client   User?          @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
   provider User           @relation("ReviewProvider", fields: [providerId], references: [id], onDelete: Cascade)
@@ -251,22 +285,26 @@ model Review {
 
   @@unique([requestId, responseId])
   @@index([providerId])
+  @@index([moderationStatus])
   @@map("reviews")
 }
 
 model DirectInquiry {
-  id            String   @id @default(cuid())
-  trackingToken String   @unique @default(cuid())
-  providerId    String
-  description   String   @db.Text
-  budget        String?
-  senderUserId  String?
-  senderEmail   String
-  senderPhone   String?
-  senderName    String?
-  status        String   @default("NEW")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String    @id @default(cuid())
+  trackingToken    String    @unique @default(cuid())
+  providerId       String
+  description      String    @db.Text
+  budget           String?
+  senderUserId     String?
+  senderEmail      String
+  senderPhone      String?
+  senderName       String?
+  status           String    @default("NEW")
+  moderationStatus String    @default("APPROVED")
+  moderationReason String?
+  moderatedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Conversation tracking — a DirectInquiry is now a two-way message thread.
   lastMessageAt      DateTime @default(now())
@@ -280,6 +318,7 @@ model DirectInquiry {
   @@index([providerId, lastMessageAt])
   @@index([senderUserId])
   @@index([senderEmail])
+  @@index([moderationStatus])
   @@map("direct_inquiries")
 }
 
@@ -331,17 +370,21 @@ model PlatformSettings {
 }
 
 model ProviderStory {
-  id            String   @id @default(cuid())
-  providerId    String
-  imageUrl      String
-  imagePublicId String?
-  text          String?  @db.VarChar(200)
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
+  id               String    @id @default(cuid())
+  providerId       String
+  imageUrl         String
+  imagePublicId    String?
+  text             String?   @db.VarChar(200)
+  moderationStatus String    @default("APPROVED")
+  moderationReason String?
+  moderatedAt      DateTime?
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
 
   provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId, expiresAt])
+  @@index([moderationStatus])
   @@map("provider_stories")
 }
 
@@ -468,7 +511,8 @@ model SupplierSourceSnapshot {
 
 model ClaimRequest {
   id                    String    @id @default(cuid())
-  supplierRecordId      String
+  supplierRecordId      String?
+  providerProfileId     String?
   requestedByEmail      String
   requestedByUserId     String?
   verificationMethod    String
@@ -483,11 +527,13 @@ model ClaimRequest {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  supplier    SupplierRecord @relation(fields: [supplierRecordId], references: [id])
-  requestedBy User?          @relation("ClaimRequestUser", fields: [requestedByUserId], references: [id], onDelete: SetNull)
-  reviewedBy  User?          @relation("ClaimReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  supplier        SupplierRecord?  @relation(fields: [supplierRecordId], references: [id])
+  providerProfile ProviderProfile? @relation(fields: [providerProfileId], references: [id], onDelete: SetNull)
+  requestedBy     User?            @relation("ClaimRequestUser", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  reviewedBy      User?            @relation("ClaimReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
 
   @@index([supplierRecordId])
+  @@index([providerProfileId])
   @@index([status])
   @@index([requestedByEmail])
   @@index([expiresAt])
@@ -512,4 +558,25 @@ model SupplierIdentity {
   @@index([userId])
   @@index([ownershipStatus])
   @@map("supplier_identities")
+}
+
+model ModerationLog {
+  id           String   @id @default(cuid())
+  entityType   String
+  entityId     String?
+  verdict      String
+  source       String
+  categories   String[] @default([])
+  reason       String?  @db.Text
+  matchedTerms String[] @default([])
+  textSample   String?  @db.Text
+  model        String?
+  latencyMs    Int?
+  actorUserId  String?
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([verdict])
+  @@index([createdAt])
+  @@map("moderation_logs")
 }

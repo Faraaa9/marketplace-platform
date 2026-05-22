@@ -1,15 +1,22 @@
 /**
- * Supplier Repository — Prisma queries for imported supplier records.
+ * Supplier Repository — Prisma queries for imported providers.
+ *
+ * Imported providers now live in the unified `ProviderProfile` table.
+ * Every query is scoped to `sourceType: "imported"` so registered
+ * (self-created) providers never leak into the catalog.
  */
 
 import { prisma } from "@/lib/prisma";
+
+/** Base filter — only imported catalog providers belong here. */
+const IMPORTED_WHERE = { sourceType: "imported" } as const;
 
 const SUPPLIER_LIST_SELECT = {
   id: true,
   displayName: true,
   slug: true,
   status: true,
-  city: true,
+  location: true,
   isVerified: true,
   externalSource: true,
   heroImageUrl: true,
@@ -24,17 +31,18 @@ const SUPPLIER_SELECT = {
   slug: true,
   status: true,
   sourceType: true,
+  description: true,
   shortSummary: true,
-  phonePublic: true,
-  emailPublic: true,
-  websiteUrl: true,
-  city: true,
+  phone: true,
+  publicEmail: true,
+  website: true,
+  location: true,
   companyCode: true,
   isVerified: true,
   externalSource: true,
   externalSourceUrl: true,
   heroImageUrl: true,
-  galleryUrls: true,
+  images: true,
   rating: true,
   reviewCount: true,
   createdAt: true,
@@ -47,108 +55,48 @@ interface FindManyOptions {
   categorySlug?: string;
 }
 
-export async function findMany({ limit = 50, offset = 0, city, categorySlug }: FindManyOptions = {}) {
-  const where: Record<string, unknown> = {};
+export async function findMany({ limit = 50, offset = 0, city }: FindManyOptions = {}) {
+  // categorySlug is intentionally ignored: ProviderProfile has no category
+  // links yet (added in a later phase). Catalog filtering by category is
+  // temporarily disabled.
+  const where: Record<string, unknown> = { ...IMPORTED_WHERE };
 
-  if (city) where.city = city;
-  if (categorySlug) {
-    const subtreeIds = await getSubtreeCategoryIds(categorySlug);
-    if (subtreeIds.length > 0) {
-      where.categoryLinks = { some: { categoryId: { in: subtreeIds } } };
-    } else {
-      where.categoryLinks = { some: { categoryId: "nonexistent" } };
-    }
-  }
+  if (city) where.location = city;
 
   const [items, total] = await Promise.all([
-    prisma.supplierRecord.findMany({
+    prisma.providerProfile.findMany({
       where,
       orderBy: { displayName: "asc" },
       skip: offset,
       take: limit,
-      select: {
-        ...SUPPLIER_LIST_SELECT,
-        _count: { select: { categoryLinks: true } },
-      },
+      select: SUPPLIER_LIST_SELECT,
     }),
-    prisma.supplierRecord.count({ where }),
+    prisma.providerProfile.count({ where }),
   ]);
 
   return { items, total };
 }
 
 export async function findBySlug(slug: string) {
-  return prisma.supplierRecord.findUnique({
-    where: { slug },
-    select: {
-      ...SUPPLIER_SELECT,
-      categoryLinks: {
-        select: {
-          isPrimary: true,
-          confidenceScore: true,
-          category: { select: { id: true, name: true, slug: true, depth: true, path: true } },
-        },
-        orderBy: { isPrimary: "desc" },
-      },
-      snapshots: {
-        select: { id: true, sourceName: true, sourceUrl: true, rawTitle: true, capturedAt: true },
-        orderBy: { capturedAt: "desc" },
-        take: 5,
-      },
-    },
+  return prisma.providerProfile.findFirst({
+    where: { ...IMPORTED_WHERE, slug },
+    select: SUPPLIER_SELECT,
   });
 }
 
-export async function findByCategory(categorySlug: string, { limit = 50, offset = 0 } = {}) {
-  // Resolve subtree IDs for the category
-  const subtreeIds = await getSubtreeCategoryIds(categorySlug);
-
-  const linkWhere = subtreeIds.length > 0
-    ? { categoryId: { in: subtreeIds } }
-    : { category: { slug: "nonexistent" } };
-
-  const [items, total] = await Promise.all([
-    prisma.supplierCategoryLink.findMany({
-      where: linkWhere,
-      skip: offset,
-      take: limit,
-      select: {
-        isPrimary: true,
-        supplier: { select: SUPPLIER_LIST_SELECT },
-      },
-    }),
-    prisma.supplierCategoryLink.count({ where: linkWhere }),
-  ]);
-
-  return {
-    items: items.map((l) => ({ ...l.supplier, isPrimary: l.isPrimary })),
-    total,
-  };
-}
-
-/** Resolve a category slug to all subtree category IDs (self + all descendants). */
-async function getSubtreeCategoryIds(slug: string): Promise<string[]> {
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    select: { id: true, path: true },
-  });
-  if (!category) return [];
-
-  const descendants = await prisma.category.findMany({
-    where: { path: { startsWith: category.path + "/" } },
-    select: { id: true },
-  });
-
-  return [category.id, ...descendants.map((c) => c.id)];
+/**
+ * Category-based lookup is disabled until ProviderProfile gains category
+ * links in a later phase. Returns an empty result so callers stay stable.
+ */
+export async function findByCategory(_categorySlug: string, _opts: { limit?: number; offset?: number } = {}) {
+  return { items: [] as Array<Record<string, never>>, total: 0 };
 }
 
 export async function getSupplierStats() {
-  const [total, unclaimed, withCity, links, snapshots] = await Promise.all([
-    prisma.supplierRecord.count(),
-    prisma.supplierRecord.count({ where: { status: "unclaimed" } }),
-    prisma.supplierRecord.count({ where: { city: { not: null } } }),
-    prisma.supplierCategoryLink.count(),
-    prisma.supplierSourceSnapshot.count(),
+  const [total, unclaimed, withCity] = await Promise.all([
+    prisma.providerProfile.count({ where: IMPORTED_WHERE }),
+    prisma.providerProfile.count({ where: { ...IMPORTED_WHERE, status: "unclaimed" } }),
+    prisma.providerProfile.count({ where: { ...IMPORTED_WHERE, location: { not: null } } }),
   ]);
-  return { total, unclaimed, withCity, links, snapshots };
+  return { total, unclaimed, withCity, links: 0, snapshots: 0 };
 }

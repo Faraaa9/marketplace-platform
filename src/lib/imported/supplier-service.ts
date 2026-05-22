@@ -1,5 +1,8 @@
 /**
- * Supplier Service — business logic and DTO mapping for imported suppliers.
+ * Supplier Service — business logic and DTO mapping for imported providers.
+ *
+ * Imported providers are read from the unified `ProviderProfile` table
+ * (filtered to `sourceType: "imported"` in the repository layer).
  */
 
 import * as repo from "./supplier-repository";
@@ -27,6 +30,7 @@ export interface SupplierDetailDto {
   slug: string;
   status: string;
   sourceType: string;
+  description: string | null;
   shortSummary: string | null;
   phonePublic: string | null;
   emailPublic: string | null;
@@ -61,56 +65,64 @@ export interface SupplierDetailDto {
 
 // ── DTO mappers ──────────────────────────────────────────────────────
 
-function toListDto(s: { id: string; displayName: string; slug: string; status: string; city: string | null; isVerified: boolean; externalSource: string | null; heroImageUrl?: string | null; rating?: number | null; reviewCount?: number; shortSummary?: string | null; _count?: { categoryLinks: number } }): SupplierListDto {
+type ListRow = {
+  id: string;
+  displayName: string | null;
+  slug: string | null;
+  status: string;
+  location: string | null;
+  isVerified: boolean;
+  externalSource: string | null;
+  heroImageUrl: string | null;
+  rating: number | null;
+  reviewCount: number;
+  shortSummary: string | null;
+};
+
+function toListDto(s: ListRow): SupplierListDto {
   return {
     id: s.id,
-    displayName: s.displayName,
-    slug: s.slug,
+    displayName: s.displayName ?? "",
+    slug: s.slug ?? "",
     status: s.status,
-    city: s.city,
+    city: s.location,
     isVerified: s.isVerified,
     source: s.externalSource,
-    categoryCount: s._count?.categoryLinks ?? 0,
-    heroImageUrl: s.heroImageUrl ?? null,
-    rating: s.rating ?? null,
-    reviewCount: s.reviewCount ?? 0,
-    shortSummary: s.shortSummary ?? null,
+    // Category links are added in a later phase — none exist yet.
+    categoryCount: 0,
+    heroImageUrl: s.heroImageUrl,
+    rating: s.rating,
+    reviewCount: s.reviewCount,
+    shortSummary: s.shortSummary,
   };
 }
 
 function toDetailDto(s: NonNullable<Awaited<ReturnType<typeof repo.findBySlug>>>): SupplierDetailDto {
   return {
     id: s.id,
-    displayName: s.displayName,
-    slug: s.slug,
+    displayName: s.displayName ?? "",
+    slug: s.slug ?? "",
     status: s.status,
     sourceType: s.sourceType,
+    description: s.description,
     shortSummary: s.shortSummary,
-    phonePublic: s.phonePublic,
-    emailPublic: s.emailPublic,
-    websiteUrl: s.websiteUrl,
-    city: s.city,
+    phonePublic: s.phone,
+    emailPublic: s.publicEmail,
+    websiteUrl: s.website,
+    city: s.location,
     companyCode: s.companyCode,
     isVerified: s.isVerified,
     externalSource: s.externalSource,
     externalSourceUrl: s.externalSourceUrl,
-    heroImageUrl: s.heroImageUrl ?? null,
-    galleryUrls: s.galleryUrls ? JSON.parse(s.galleryUrls) : [],
-    rating: s.rating ?? null,
-    reviewCount: s.reviewCount ?? 0,
+    heroImageUrl: s.heroImageUrl,
+    // `images` is already a String[] on ProviderProfile — no JSON parsing.
+    galleryUrls: s.images ?? [],
+    rating: s.rating,
+    reviewCount: s.reviewCount,
     createdAt: s.createdAt,
-    categories: (s.categoryLinks || []).map((l) => ({
-      ...l.category,
-      isPrimary: l.isPrimary,
-      confidence: l.confidenceScore,
-    })),
-    snapshots: (s.snapshots || []).map((snap) => ({
-      id: snap.id,
-      sourceName: snap.sourceName,
-      sourceUrl: snap.sourceUrl,
-      rawTitle: snap.rawTitle,
-      capturedAt: snap.capturedAt,
-    })),
+    // Category links and source snapshots are added in a later phase.
+    categories: [],
+    snapshots: [],
   };
 }
 
@@ -127,8 +139,12 @@ export async function getBySlug(slug: string): Promise<SupplierDetailDto | null>
   return toDetailDto(supplier);
 }
 
-export async function getByCategorySlug(categorySlug: string, opts: { limit?: number; offset?: number } = {}) {
-  return repo.findByCategory(categorySlug, opts);
+/**
+ * Category-based listing is disabled until ProviderProfile gains category
+ * links in a later phase. Returns an empty result so callers stay stable.
+ */
+export async function getByCategorySlug(_categorySlug: string, _opts: { limit?: number; offset?: number } = {}) {
+  return { items: [] as SupplierListDto[], total: 0 };
 }
 
 export async function getStats() {

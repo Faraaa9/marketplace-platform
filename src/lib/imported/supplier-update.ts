@@ -21,20 +21,20 @@ export const supplierEditSchema = z.object({
 export type SupplierEditInput = z.infer<typeof supplierEditSchema>;
 
 /**
- * Update editable fields on a SupplierRecord.
+ * Update editable fields on an imported provider's ProviderProfile.
  * Caller must verify access before calling this.
  */
-export async function updateSupplierFields(supplierId: string, data: SupplierEditInput) {
-  return prisma.supplierRecord.update({
-    where: { id: supplierId },
+export async function updateSupplierFields(profileId: string, data: SupplierEditInput) {
+  return prisma.providerProfile.update({
+    where: { id: profileId },
     data: {
       displayName: data.displayName,
       shortSummary: data.shortSummary || null,
       description: data.description || null,
-      phonePublic: data.phonePublic || null,
-      emailPublic: data.emailPublic || null,
-      websiteUrl: data.websiteUrl || null,
-      city: data.city || null,
+      phone: data.phonePublic || null,
+      publicEmail: data.emailPublic || null,
+      website: data.websiteUrl || null,
+      location: data.city || null,
     },
     select: {
       id: true,

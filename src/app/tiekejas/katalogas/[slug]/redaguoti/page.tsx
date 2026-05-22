@@ -19,7 +19,6 @@ interface SupplierData {
   city: string | null;
   externalSource: string | null;
   externalSourceUrl: string | null;
-  categories: Array<{ name: string; slug: string; isPrimary: boolean }>;
 }
 
 interface FormState {
@@ -185,11 +184,6 @@ export default function SupplierEditPage() {
               <a href={supplier.externalSourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700">
                 {supplier.externalSourceUrl}
               </a>
-            </p>
-          )}
-          {supplier.categories.length > 0 && (
-            <p>
-              Kategorijos: {supplier.categories.map((c) => c.name).join(", ")}
             </p>
           )}
         </div>

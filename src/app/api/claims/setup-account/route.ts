@@ -38,12 +38,13 @@ export async function POST(req: NextRequest) {
       where: { tokenHash },
       select: {
         id: true,
+        providerProfileId: true,
         requestedByEmail: true,
         requestedByUserId: true,
         status: true,
         expiresAt: true,
         emailVerifiedAt: true,
-        supplier: { select: { displayName: true, slug: true } },
+        providerProfile: { select: { id: true, displayName: true, slug: true, userId: true } },
       },
     });
 
@@ -91,17 +92,17 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        // Upsert ProviderProfile — don't wipe existing values
-        if (existingUser.role !== "ADMIN") {
-          await tx.providerProfile.upsert({
-            where: { userId: existingUser.id },
-            update: isApproved ? { isActive: true } : {},
-            create: {
-              userId: existingUser.id,
-              specializations: [],
-              images: [],
-              isActive: isApproved,
-            },
+        // If the claim was already approved but the imported profile was
+        // not yet bound (approved before the account existed), bind it now.
+        if (
+          isApproved &&
+          existingUser.role !== "ADMIN" &&
+          claim.providerProfile &&
+          !claim.providerProfile.userId
+        ) {
+          await tx.providerProfile.update({
+            where: { id: claim.providerProfile.id },
+            data: { userId: existingUser.id, status: "claimed", isActive: true },
             select: { id: true },
           });
         }
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
           accountStatus: "exists" as const,
           email: existingUser.email,
           role: existingUser.role === "ADMIN" ? "ADMIN" : "PROVIDER",
-          supplierName: claim.supplier?.displayName || null,
+          supplierName: claim.providerProfile?.displayName || null,
           claimStatus: claim.status,
           canManageSupplier: isApproved,
           nextPath: isApproved ? "/tiekejas/katalogas" : "/tiekejas",
@@ -142,16 +143,15 @@ export async function POST(req: NextRequest) {
         select: { id: true, email: true },
       });
 
-      // Create ProviderProfile immediately
-      await tx.providerProfile.create({
-        data: {
-          userId: created.id,
-          specializations: [],
-          images: [],
-          isActive: isApproved,
-        },
-        select: { id: true },
-      });
+      // If the claim was already approved, bind the imported profile to
+      // the new user now (approval ran before this account existed).
+      if (isApproved && claim.providerProfile && !claim.providerProfile.userId) {
+        await tx.providerProfile.update({
+          where: { id: claim.providerProfile.id },
+          data: { userId: created.id, status: "claimed", isActive: true },
+          select: { id: true },
+        });
+      }
 
       // Link claim to user
       await tx.claimRequest.update({
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
         accountStatus: "created" as const,
         email: user.email,
         role: "PROVIDER",
-        supplierName: claim.supplier?.displayName || null,
+        supplierName: claim.providerProfile?.displayName || null,
         claimStatus: claim.status,
         canManageSupplier: isApproved,
         nextPath: isApproved ? "/tiekejas/katalogas" : "/tiekejas",

@@ -2,10 +2,12 @@
  * Claim Service — business logic for claim lifecycle.
  *
  * Flow: createClaim -> verifyToken (email verified) -> approve/reject
- * On approve: creates SupplierIdentity, sets SupplierRecord.status = 'claimed'
+ * A claim targets an unclaimed imported ProviderProfile. On approve the
+ * target profile is bound directly to the claimer (userId/status/isActive).
  */
 
 import * as repo from "./claim-repository";
+import { ClaimApprovalConflictError } from "./claim-repository";
 import { generateToken, hashToken, defaultExpiresAt, VERIFICATION_METHODS } from "./token";
 import type { VerificationMethod } from "./token";
 
@@ -27,13 +29,14 @@ export const ClaimErrors = {
   IDENTITY_EXISTS: "IDENTITY_EXISTS",
   EXPIRED_CLAIM: "EXPIRED_CLAIM",
   EMAIL_NOT_VERIFIED: "EMAIL_NOT_VERIFIED",
+  APPROVAL_CONFLICT: "APPROVAL_CONFLICT",
 } as const;
 
 // ── Types ────────────────────────────────────────────────────────────
 
 interface ClaimDto {
   id: string;
-  supplierRecordId: string;
+  providerProfileId: string;
   supplier: { id: string; displayName: string; slug: string; status: string } | null;
   requestedByEmail: string;
   requestedByUserId: string | null;
@@ -77,8 +80,8 @@ function isClaimExpired(claim: { status: string; expiresAt: Date }): boolean {
 function claimToDto(claim: Record<string, unknown>): ClaimDto {
   return {
     id: claim.id as string,
-    supplierRecordId: claim.supplierRecordId as string,
-    supplier: (claim.supplier as ClaimDto["supplier"]) || null,
+    providerProfileId: claim.providerProfileId as string,
+    supplier: (claim.providerProfile as ClaimDto["supplier"]) || null,
     requestedByEmail: claim.requestedByEmail as string,
     requestedByUserId: (claim.requestedByUserId as string) || null,
     verificationMethod: claim.verificationMethod as string,
@@ -140,7 +143,7 @@ export async function createClaim({
   const tokenH = hashToken(rawToken);
 
   const claim = await repo.createClaimRequest({
-    supplierRecordId: supplier.id,
+    providerProfileId: supplier.id,
     requestedByEmail: normalizedEmail,
     requestedByUserId: requestedByUserId || null,
     verificationMethod,
@@ -150,7 +153,7 @@ export async function createClaim({
   });
 
   return {
-    claim: claimToDto({ ...claim, supplier }),
+    claim: claimToDto({ ...claim, providerProfile: supplier }),
     token: rawToken,
   };
 }
@@ -205,14 +208,19 @@ export async function verifyToken(rawToken: string): Promise<{ claim: ClaimDto }
 
 /**
  * Approve a pending claim inside a transaction.
- * Creates SupplierIdentity and marks SupplierRecord as claimed.
+ * Binds the target ProviderProfile to the claimer and marks it claimed.
  */
 export async function approveClaim(
   claimId: string,
   { reviewNotes, reviewedByUserId }: { reviewNotes?: string; reviewedByUserId?: string } = {}
-): Promise<{ claim: ClaimDto; identity: Record<string, unknown> } | ServiceError> {
+): Promise<{ claim: ClaimDto; profile: Record<string, unknown> | null } | ServiceError> {
   const claim = await repo.findClaimById(claimId);
   if (!claim) return { error: ClaimErrors.NOT_FOUND, message: "Claim request not found" };
+
+  const { providerProfileId } = claim;
+  if (!providerProfileId) {
+    return { error: ClaimErrors.NOT_FOUND, message: "Claim has no linked provider profile" };
+  }
 
   if (claim.status !== "pending") {
     return { error: ClaimErrors.INVALID_STATUS, message: `Cannot approve claim with status "${claim.status}"` };
@@ -226,27 +234,34 @@ export async function approveClaim(
     return { error: ClaimErrors.EMAIL_NOT_VERIFIED, message: "Email must be verified before approving this claim" };
   }
 
-  const existingIdentity = await repo.findActiveIdentity(claim.supplierRecordId);
+  const existingIdentity = await repo.findActiveIdentity(providerProfileId);
   if (existingIdentity) {
-    return { error: ClaimErrors.IDENTITY_EXISTS, message: "Supplier already has an active identity" };
+    return { error: ClaimErrors.IDENTITY_EXISTS, message: "This profile already has an owner" };
   }
 
-  const result = await repo.approveClaimTransaction(
-    claimId,
-    {
-      supplierRecordId: claim.supplierRecordId,
-      requestedByEmail: claim.requestedByEmail,
-      requestedByUserId: claim.requestedByUserId ?? null,
-      verificationMethod: claim.verificationMethod,
-    },
-    reviewedByUserId || null,
-    reviewNotes || null
-  );
+  try {
+    const result = await repo.approveClaimTransaction(
+      claimId,
+      {
+        providerProfileId,
+        requestedByEmail: claim.requestedByEmail,
+        requestedByUserId: claim.requestedByUserId ?? null,
+        verificationMethod: claim.verificationMethod,
+      },
+      reviewedByUserId || null,
+      reviewNotes || null
+    );
 
-  return {
-    claim: claimToDto(result.claim),
-    identity: result.identity,
-  };
+    return {
+      claim: claimToDto(result.claim),
+      profile: result.profile,
+    };
+  } catch (err) {
+    if (err instanceof ClaimApprovalConflictError) {
+      return { error: ClaimErrors.APPROVAL_CONFLICT, message: err.message };
+    }
+    throw err;
+  }
 }
 
 /**

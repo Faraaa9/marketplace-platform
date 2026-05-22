@@ -43,9 +43,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
     const { slug } = await params;
 
     // Access control: must be owner/manager
-    const identity = await canManageSupplier(session.user.id, slug);
-    if (!identity) {
+    const canManage = await canManageSupplier(session.user.id, slug);
+    if (!canManage) {
       return NextResponse.json({ success: false, error: "Neturite teises redaguoti sio profilio" }, { status: 403 });
+    }
+
+    // Resolve the imported provider profile by slug (unified ProviderProfile).
+    const supplier = await supplierService.getBySlug(slug);
+    if (!supplier) {
+      return NextResponse.json({ success: false, error: "Tiekejas nerastas" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -57,7 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
       );
     }
 
-    const updated = await updateSupplierFields(identity.supplier.id, parsed.data);
+    const updated = await updateSupplierFields(supplier.id, parsed.data);
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error("PUT /api/suppliers/[slug] error:", error);
