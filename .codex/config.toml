@@ -1,0 +1,4 @@
+# Project-local Codex configuration.
+# Supabase MCP uses OAuth; this file stores only the project endpoint, not secrets.
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=pkozhyfkdrofuxnheffw"
