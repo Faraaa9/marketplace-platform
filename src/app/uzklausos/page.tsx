@@ -298,12 +298,14 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                     <div className="paper-note__sheet px-6 pb-8 pt-11 sm:px-9">
                       {/* category + competition */}
                       <div className="flex items-center justify-between gap-3">
-                        <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
-                          {r.categoryName}
-                        </span>
+                        {r.categoryName && (
+                          <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
+                            {r.categoryName}
+                          </span>
+                        )}
                         {!isMatched && (
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
+                            className={`ml-auto inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
                           >
                             {competition.opportunity ? (
                               <Sparkles className="h-3 w-3" />
