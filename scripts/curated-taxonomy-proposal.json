@@ -1,0 +1,206 @@
+{
+  "_about": "Fazė 1 — sukuruota taksonomija. 840 importuotų kategorijų → 137 'pickable' kategorijos po 9 šaknų. Šaknys = grupės. Pickable = ką renkasi tiekėjas (iki 6) ir klientas (1 užklausai). Importuoti smulkūs lapai lieka tik SEO/paieškai.",
+  "_changes": [
+    "Numesta ~90 'klausk-profesionalu/*' eilučių — forumo/Q&A puslapiai, ne kategorijos.",
+    "Numesti tikslūs dublikatai.",
+    "Valymo kategorijos perkeltos iš 'Buitinės paslaugos' į 'Valymo paslaugos' šaknį.",
+    "Renginių/dekoravimo kategorijos perkeltos iš 'Paslaugos verslui' į 'Renginiai'.",
+    "Meno/tapybos kategorijos perkeltos iš 'Statybos' į 'Tradiciniai amatai'.",
+    "Šaknis 'Mokymai' pervadinta į 'Grožis, sveikata ir mokymai' — joje 90% grožio paslaugų.",
+    "3 stambūs hub'ai (Vidaus apdaila, Baldų gamyba, Mokymai/kursai) išskaidyti į smulkesnes kategorijas."
+  ],
+  "roots": [
+    {
+      "root": "Statybos, apdaila",
+      "rootSlug": "statyba-apdaila-remontas",
+      "categories": [
+        { "name": "Pamatų įrengimas", "apima": "gręžtiniai, juostiniai, sraigtiniai, plokštuminiai, poliai, projektavimas, šiltinimas" },
+        { "name": "Betonavimo darbai", "apima": "grindų betonavimas, tvoros/kapaviečių pamatų betonavimas" },
+        { "name": "Namų statyba", "apima": "individualūs, karkasiniai, rąstiniai, moduliniai, skydiniai namai, mobilūs nameliai" },
+        { "name": "Mūro darbai", "apima": "mūrijimas, klinkerio klijavimas" },
+        { "name": "Grindų klojimas ir įrengimas", "apima": "grindų klojimas, lyginimas, laminatas, grindjuostės" },
+        { "name": "Plytelių klijavimas" },
+        { "name": "Sienų apdaila", "apima": "tapetai, skysti tapetai, gipso kartonas, glaistymas, dažymas" },
+        { "name": "Lubų įrengimas", "apima": "Armstrong, įtempiamos, pakabinamos lubos, lubų dažymas" },
+        { "name": "Kapitalinis ir patalpų remontas", "apima": "kapitalinis buto, virtuvės, vonios, balkono, laiptinių remontas" },
+        { "name": "Fasado apdaila ir šiltinimas", "apima": "fasado dažymas, tinkavimas, plokštės, ventiliuojami fasadai, apšiltinimas" },
+        { "name": "Stogų dengimas", "apima": "stogdengiai, bituminė danga, kraigas, stoglangiai" },
+        { "name": "Stogų remontas ir priežiūra", "apima": "stogo remontas, dažymas, pakalimas, šiltinimas, sniego gaudyklės" },
+        { "name": "Skardinimo darbai", "apima": "skardos lankstymas, palangių/parapetų/kamino skardinimas" },
+        { "name": "Langų ir durų montavimas", "apima": "langų/durų montavimas, remontas, stiklo paketų keitimas, apdaila" },
+        { "name": "Langų ir durų gamyba", "apima": "mediniai, plastikiniai langai" },
+        { "name": "Balkonų ir terasų stiklinimas", "apima": "balkonų stiklinimas, terasų įrengimas ir stiklinimas" },
+        { "name": "Roletai, žaliuzės" },
+        { "name": "Elektros darbai", "apima": "elektrikai, elektronikos inžinieriai, telekomunikacijų montuotojai" },
+        { "name": "Santechnikos darbai" },
+        { "name": "Šildymo sistemos ir katilai" },
+        { "name": "Vandens gręžiniai ir filtrai" },
+        { "name": "Laiptų gamyba ir montavimas", "apima": "laiptai, pakopos, turėklai, lauko laiptai" },
+        { "name": "Medžio darbai, staliai" },
+        { "name": "Metalo darbai ir suvirinimas", "apima": "metalo gaminiai, suvirintojai" },
+        { "name": "Griovimo ir žemės darbai", "apima": "griovimas, žemės kasimas/lyginimas, skylių gręžimas" },
+        { "name": "Kaminų įrengimas", "apima": "kaminai, įdėklai, apskardinimas" },
+        { "name": "Architektūra ir projektavimas", "apima": "architektai, statybos dokumentų tvarkymas" },
+        { "name": "Statybos darbų valdymas", "apima": "statybos vadovai, projektų valdymas, pagalbiniai darbininkai" },
+        { "name": "Smulkūs statybos ir remonto darbai", "apima": "smulkūs/kitos statybos darbai, konstrukcijų montavimas, šuliniai, sandėliukai" },
+        { "name": "Aukštalipių darbai", "apima": "fasadų plovimas, dažymas aukštyje, langų valymas aukštyje, pramoninis alpinizmas" }
+      ]
+    },
+    {
+      "root": "Aplinka, sodas",
+      "rootSlug": "aplinka-sodas",
+      "categories": [
+        { "name": "Aplinkos tvarkymas ir apželdinimas", "apima": "alpinariumai, gėlynai, gyvatvorės, sodinimas, kraštovaizdis" },
+        { "name": "Vejos priežiūra ir įrengimas" },
+        { "name": "Medžių ir vaismedžių genėjimas", "apima": "genėjimas, pjovimas, šakų išvežimas/smulkinimas" },
+        { "name": "Tvoros ir vartai", "apima": "medinės/metalinės/segmentinės/skardinės/tinklinės/betoninės tvoros, kiemo/garažo vartai" },
+        { "name": "Vartų automatika" },
+        { "name": "Kapų priežiūra ir paminklai", "apima": "kapaviečių renovacija, tvarkymas, antkapiai, paminklai" },
+        { "name": "Trinkelių klojimas" },
+        { "name": "Kiemo dangos ir medžiagos", "apima": "skalda, smėlis, žvyras, juodžemis" },
+        { "name": "Malkų gamyba ir pristatymas" },
+        { "name": "Kalvystės darbai" },
+        { "name": "Metalo laužo supirkimas" }
+      ]
+    },
+    {
+      "root": "Buitinės paslaugos",
+      "rootSlug": "buitines-paslaugos",
+      "categories": [
+        { "name": "Technikos ir elektronikos remontas", "apima": "buitinė, foto-video technika, kompiuteriai, telefonai" },
+        { "name": "Smulkūs meistrai į namus", "apima": "meistrai į namus, galandimas, dviračių/paspirtukų, muzikos instrumentų remontas" },
+        { "name": "Daiktų ir įrangos nuoma", "apima": "baldų, indų, įrankių, įvairios technikos nuoma" },
+        { "name": "Nekilnojamojo turto nuoma ir brokeriai" },
+        { "name": "Kenkėjų naikinimas ir dezinfekcija", "apima": "kenkėjai, pelėsis, kvapų naikinimas, ozonavimas, dezinfekcija" },
+        { "name": "Raktų gamyba ir avarinis atrakinimas" },
+        { "name": "Vaikų priežiūra, auklės" },
+        { "name": "Akvariumų priežiūra" },
+        { "name": "Draudimo agentai" },
+        { "name": "Nuotekų išvežimas ir valymo įrenginiai" },
+        { "name": "Rėminimo paslaugos" },
+        { "name": "Bendrijų administravimas" },
+        { "name": "Maistas ir konditerija" },
+        { "name": "Perkraustymas ir transportas" },
+        { "name": "Sniego valymas" }
+      ]
+    },
+    {
+      "root": "Valymo paslaugos",
+      "rootSlug": "valymo-paslaugos",
+      "categories": [
+        { "name": "Namų ir butų valymas", "apima": "butų, namų, valymas po nuomininkų, trumpalaikės nuomos" },
+        { "name": "Biurų ir komercinių patalpų valymas", "apima": "biurų, komercinių, generalinis valymas" },
+        { "name": "Valymas po statybų ir remonto" },
+        { "name": "Langų valymas" },
+        { "name": "Baldų ir minkštų paviršių valymas", "apima": "baldų, čiužinių, kilimų, užuolaidų valymas" },
+        { "name": "Drabužių cheminis valymas" },
+        { "name": "Laiptinių valymas" },
+        { "name": "Valymas garais ir srautinis valymas" },
+        { "name": "Baseinų valymas" }
+      ]
+    },
+    {
+      "root": "Interjeras, baldai",
+      "rootSlug": "interjeras-baldai",
+      "categories": [
+        { "name": "Baldų gamyba", "apima": "spintos, lovos, stalai, miegamojo, biuro, vaikų, minkšti baldai" },
+        { "name": "Virtuvės baldų gamyba" },
+        { "name": "Baldų projektavimas ir dizainas" },
+        { "name": "Baldų restauravimas", "apima": "restauravimas, baldų aptraukimas, dažymas" },
+        { "name": "Interjero dizainas", "apima": "interjero dizaineriai, dekoravimas" },
+        { "name": "Interjero dekoras ir montavimas", "apima": "dekoro montavimas, originalios interjero detalės" },
+        { "name": "Akmens, marmuro ir granito darbai" },
+        { "name": "Stiklas, vitražai ir mozaikos", "apima": "stiklo konstrukcijos, vitražai, mozaikos" },
+        { "name": "Užuolaidų siuvimas" },
+        { "name": "Židinių įrengimas" }
+      ]
+    },
+    {
+      "root": "Grožis, sveikata ir mokymai",
+      "rootSlug": "mokymai",
+      "_note": "Buvusi šaknis 'Mokymai' — pervadinta, nes ~90% turinio yra grožio paslaugos.",
+      "categories": [
+        { "name": "Kosmetologija ir veido procedūros", "apima": "kosmetologės, biorevitalizacija, botulino/hialurono injekcijos, krioterapija" },
+        { "name": "Manikiūras ir pedikiūras" },
+        { "name": "Kirpyklos ir plaukų priežiūra", "apima": "kirpyklos, kirpėjai, plaukų tiesinimas" },
+        { "name": "Makiažas ir vizažas", "apima": "vizažistės, proginis/vestuvinis/permanentinis makiažas" },
+        { "name": "Blakstienų ir antakių priežiūra" },
+        { "name": "Depiliacija" },
+        { "name": "Tatuiruotės" },
+        { "name": "Grožio paslaugos (kita)", "apima": "iš 'Tradiciniai amatai' — grožio paslaugos, stilistai" },
+        { "name": "Sveikata ir gydymas", "apima": "iš 'Tradiciniai amatai' — sveikata/gydymas, žolininkai" },
+        { "name": "Kalbų kursai ir korepetitoriai", "apima": "anglų, vokiečių, rusų ir kt. kalbų kursai" },
+        { "name": "Mokyklinių dalykų korepetitoriai", "apima": "matematika, fizika, chemija, biologija ir kt." },
+        { "name": "Muzikos ir meno pamokos", "apima": "dainavimas, muzikos/dailės mokytojai, dizaino mokymai" },
+        { "name": "Asmeninio augimo ir karjeros koučingas", "apima": "koučingas, karjeros konsultantai, oratorystė" },
+        { "name": "Kiti kursai ir mokymai", "apima": "lektoriai, neformalus ugdymas, vertimo kursai" },
+        { "name": "Sportas ir treniruotės" }
+      ]
+    },
+    {
+      "root": "Renginiai",
+      "rootSlug": "renginiai",
+      "categories": [
+        { "name": "Renginių organizavimas", "apima": "banketai, gimtadieniai, konferencijos, šventės, sužadėtuvės, mergvakariai" },
+        { "name": "Renginių vedėjai", "apima": "visi vedėjai — gimtadienių, vestuvių, karaokės, protmūšių" },
+        { "name": "Renginių dekoravimas", "apima": "iš 'Verslui' — vestuvių, gimtadienių, kalėdinis, įmonių dekoravimas" },
+        { "name": "Šventinės įrangos nuoma", "apima": "kėdės, stalai, palapinės, arkos, dekoracijos, raidės" },
+        { "name": "Foto pramogų nuoma", "apima": "foto būdelės, sienelės, veidrodžiai, momentinis fotoaparatas" },
+        { "name": "Vaikų pramogos ir animatoriai", "apima": "animatoriai, batutai, žaidimų kambariai, piešimas ant veido" },
+        { "name": "Vaikų edukacija ir kūrybinės dirbtuvės" },
+        { "name": "Šou programos", "apima": "muilo burbulų, putų šou, magijos/mokslo šou" },
+        { "name": "Muzikantai ir atlikėjai", "apima": "iš 'Verslui' — muzikantai, dainininkai, grupės, choreografai" },
+        { "name": "Vestuvių paslaugos", "apima": "iš 'Verslui' — paslaugos vestuvėms, kvietimai, bažnyčios puošimas" },
+        { "name": "Tortai ir saldumynai", "apima": "iš 'Verslui' — tortai, desertai" },
+        { "name": "Barmenai ir maitinimas renginiuose", "apima": "iš 'Verslui' — barmenai" },
+        { "name": "Patalpų ir sodybų nuoma renginiams" },
+        { "name": "Renginių įgarsinimas ir techninis aptarnavimas" }
+      ]
+    },
+    {
+      "root": "Paslaugos verslui",
+      "rootSlug": "verslui",
+      "categories": [
+        { "name": "Buhalterija ir apskaita" },
+        { "name": "Teisinės paslaugos", "apima": "advokatai, teisininkai, darbo teisė, viešieji pirkimai, detektyvai" },
+        { "name": "Finansų ir verslo konsultacijos", "apima": "finansų konsultantai, ekonomistai, verslo konsultantai, auditas" },
+        { "name": "Personalas ir HR", "apima": "HR specialistai, personalo sprendimai, pardavimų vadybininkai" },
+        { "name": "Rinkodara ir reklama", "apima": "rinkodara, reklamos paslaugos, SEO, RSV, komunikacija" },
+        { "name": "Reklamos gamyba ir spauda", "apima": "reklamos gamyba, spaudos paslaugos, iškabos" },
+        { "name": "Grafikos dizainas ir iliustracijos", "apima": "grafikos dizaineriai, iliustruotojai, 3D modeliavimas" },
+        { "name": "Interneto svetainių kūrimas" },
+        { "name": "Programavimas ir IT paslaugos", "apima": "programuotojai, IT specialistai, automatikos/verslo valdymo sistemos" },
+        { "name": "Fotografijos paslaugos", "apima": "fotografai, fotografai verslui, fotopaslaugos" },
+        { "name": "Video paslaugos", "apima": "video klipų kūrimas, video aptarnavimas" },
+        { "name": "Muzikos kūrimas ir garso paslaugos" },
+        { "name": "Tekstų rašymas ir redagavimas", "apima": "redaktoriai, tekstų surinkėjai, rašto darbai, žurnalistai" },
+        { "name": "Vertimų paslaugos" },
+        { "name": "Pakavimas ir pakuočių gamyba", "apima": "pakuočių gamyba, produktų pakavimas, dokumentų naikinimas" },
+        { "name": "Automobilių nuoma", "apima": "lengvieji, ilgalaikė/trumpalaikė, autobusai, kemperiai, prabangūs auto" },
+        { "name": "Inžineriniai ir projektavimo darbai", "apima": "gamybos inžinieriai, braižytojai, 3D spausdinimas, CNC frezavimas" },
+        { "name": "Prekyba ir tiekimas", "apima": "prekyba, vandens pristatymas" },
+        { "name": "Virtualūs asistentai ir biuro paslaugos" },
+        { "name": "Kitos verslo paslaugos", "apima": "catch-all — viešbučiai, būrėjai, plėvelės klijavimas, vitrinų dekoravimas" }
+      ]
+    },
+    {
+      "root": "Tradiciniai amatai",
+      "rootSlug": "tradiciniai-amatai",
+      "categories": [
+        { "name": "Keramika ir dailė", "apima": "keramikai, dailė/menai, skulptoriai, drožėjai" },
+        { "name": "Tekstilės amatai", "apima": "audėjai, mezgėjos, pynimas, siuvinėjimas, vėlimas" },
+        { "name": "Drabužių siuvimas ir taisymas", "apima": "siuvėjai, kailinių/vestuvinių suknelių siuvimas, dizaineriai" },
+        { "name": "Juvelyrika ir papuošalai" },
+        { "name": "Odos gaminiai" },
+        { "name": "Žvakių ir muilo gamyba" },
+        { "name": "Rankų darbo dirbiniai ir suvenyrai", "apima": "žaislai, lėlės, veltiniai, pirografija" },
+        { "name": "Menai ir tapyba", "apima": "iš 'Statybos' — dailininkai, portretai, paveikslai, grafiti, aerografija" },
+        { "name": "Akmens mūras ir lauko židiniai" },
+        { "name": "Bitininkystė" },
+        { "name": "Krosnių ir kaminų meistrai", "apima": "krosnys, kaminų valymas/įdėklai, stogų valymas" },
+        { "name": "Laidojimo paslaugos" },
+        { "name": "Paslaugos augintiniams" }
+      ]
+    }
+  ]
+}
