@@ -143,7 +143,14 @@ export async function POST(req: NextRequest) {
 
     // Send verification email
     const emailData = directInquiryVerificationEmail(code);
-    await sendEmail({ to: senderEmail, ...emailData });
+    const emailResult = await sendEmail({ to: senderEmail, ...emailData });
+    if (!emailResult.success) {
+      console.error("Direct inquiry initiate: nepavyko išsiųsti kodo laiško", emailResult.error);
+      return NextResponse.json(
+        { success: false, error: "Nepavyko išsiųsti patvirtinimo kodo. Pabandykite vėliau." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -85,7 +85,14 @@ export async function POST(req: NextRequest) {
 
     // Send new code
     const emailData = directInquiryVerificationEmail(newCode);
-    await sendEmail({ to: pending.senderEmail, ...emailData });
+    const emailResult = await sendEmail({ to: pending.senderEmail, ...emailData });
+    if (!emailResult.success) {
+      console.error("Direct inquiry resend: nepavyko išsiųsti kodo laiško", emailResult.error);
+      return NextResponse.json(
+        { success: false, error: "Nepavyko išsiųsti kodo. Pabandykite vėliau." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

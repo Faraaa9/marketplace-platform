@@ -85,6 +85,13 @@ export async function POST(req: NextRequest) {
     });
 
     const result = await sendEmail({ to: email, ...requestCodeVerificationEmail(code) });
+    if (!result.success) {
+      console.error("Request send-code: nepavyko išsiųsti kodo laiško", result.error);
+      return NextResponse.json(
+        { success: false, error: "Nepavyko išsiųsti kodo. Pabandykite vėliau." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
       success: true,

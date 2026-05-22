@@ -40,7 +40,11 @@ export async function POST(req: NextRequest) {
     });
 
     const emailData = passwordResetEmail(user.name || "Vartotojas", token);
-    await sendEmail({ to: email, ...emailData });
+    const emailResult = await sendEmail({ to: email, ...emailData });
+    if (!emailResult.success) {
+      // Keep the client response identical (anti-enumeration); surface server-side only.
+      console.error("Forgot password: nepavyko išsiųsti atstatymo laiško", emailResult.error);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
