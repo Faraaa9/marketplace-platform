@@ -44,7 +44,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           description: true,
           services: true,
           experienceYears: true,
-          categories: { select: { category: { select: { name: true } } } },
+          categories: { select: { category: { select: { name: true } } }, orderBy: { sortOrder: "asc" } },
           offersInvoices: true,
           availableForUrgent: true,
         },
