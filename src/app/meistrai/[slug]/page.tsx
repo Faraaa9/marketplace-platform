@@ -153,9 +153,9 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
           <div className="min-w-0 space-y-6">
 
           {/* ── Hero: Cover + Avatar + Name + Meta ── */}
-          <div className="overflow-hidden rounded-3xl bg-white dark:bg-surface-900/50">
+          <div className="overflow-hidden rounded-t-[28px] rounded-b-3xl bg-white dark:bg-surface-900/50">
             {/* Cover photo with gradient overlay */}
-            <div className="relative h-52 w-full bg-gradient-to-br from-brand-100 via-brand-50 to-surface-100 sm:h-72 dark:from-brand-950 dark:via-surface-900 dark:to-surface-800">
+            <div className="relative h-52 w-full overflow-hidden rounded-[28px_28px_18px_18px] bg-gradient-to-br from-brand-100 via-brand-50 to-surface-100 sm:h-72 dark:from-brand-950 dark:via-surface-900 dark:to-surface-800">
               {provider.images.length > 0 ? (
                 <>
                   <Image
@@ -169,6 +169,14 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                   />
                   {/* Subtle top vignette for contrast */}
                   <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-transparent" />
+                  {/* Soft bottom shade — lets the floating card merge into the photo */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.12) 100%)",
+                    }}
+                  />
                 </>
               ) : (
                 <div className="absolute inset-0 overflow-hidden">
@@ -179,26 +187,12 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                   </div>
                 </div>
               )}
-
-              {/* Easing gradient: fade starts ~60% from top of the cover photo */}
-              <div
-                className="absolute inset-x-0 bottom-0 h-[5%]"
-                style={{
-                  background: "linear-gradient(to top, rgb(255 255 255 / 1) 0%, rgb(255 255 255 / 0.5) 50%, rgb(255 255 255 / 0) 100%)",
-                }}
-              />
-              <div
-                className="absolute inset-x-0 bottom-0 h-[5%] hidden dark:block"
-                style={{
-                  background: "linear-gradient(to top, rgb(15 18 28 / 1) 0%, rgb(15 18 28 / 0.5) 50%, rgb(15 18 28 / 0) 100%)",
-                }}
-              />
             </div>
 
             {/* Profile info overlapping cover */}
             <div className="px-6 sm:px-8 pb-6 sm:pb-8">
-              <div className="relative z-10 -mt-14 flex items-end gap-4 sm:gap-5">
-                <div className="shrink-0 rounded-full bg-white p-1 shadow-xl ring-1 ring-surface-200/80 dark:bg-surface-900 dark:ring-surface-700/70">
+              <div className="relative z-10 -mt-14 flex items-start gap-4 sm:gap-5">
+                <div className="shrink-0 rounded-full bg-white p-1 shadow-[0_4px_16px_rgba(0,0,0,0.1)] ring-1 ring-surface-200/70 dark:bg-surface-900 dark:ring-surface-700/70">
                   <StoryAvatarButton
                     stories={stories}
                     providerName={provider.name}
@@ -208,7 +202,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
 
                 <HeroInfoCard>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="min-w-0 text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">
+                    <h1 className="min-w-0 text-2xl font-bold leading-tight tracking-[-0.03em] text-surface-900 sm:text-[34px] dark:text-white">
                       {provider.name}
                     </h1>
                     {provider.badge && (
@@ -226,18 +220,18 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                   </div>
 
                   {provider.headline && (
-                    <p className="mt-0.5 truncate text-body-sm text-slate-500 dark:text-surface-400">
+                    <p className="mt-2 truncate text-[15px] leading-snug text-surface-500 dark:text-surface-400">
                       {provider.headline}
                     </p>
                   )}
 
                   {provider.avgRating !== null && (
-                    <div className="mt-1.5 flex items-center gap-1.5">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                       <RatingStars rating={provider.avgRating} />
-                      <span className="text-body-sm font-semibold text-slate-900 dark:text-white">
+                      <span className="text-body-sm font-medium text-surface-700 dark:text-surface-300">
                         {provider.avgRating}
                       </span>
-                      <span className="text-body-sm text-slate-400">
+                      <span className="whitespace-nowrap text-body-sm text-surface-400">
                         ({provider.totalReviews} {reviewsLabel(provider.totalReviews)})
                       </span>
                     </div>
@@ -247,37 +241,34 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
 
               {/* Meta info below the avatar row */}
               <div className="mt-4 space-y-2.5">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-surface-500">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {provider.location && (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
+                    <MetaPill icon={<MapPin className="h-3.5 w-3.5" />}>
                       {provider.location}
-                    </span>
+                    </MetaPill>
                   )}
-                  <span className="inline-flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
+                  <MetaPill icon={<Calendar className="h-3.5 w-3.5" />}>
                     Narys nuo{" "}
                     {new Date(provider.memberSince).toLocaleDateString("lt-LT", {
                       year: "numeric",
                       month: "long",
                     })}
-                  </span>
+                  </MetaPill>
+                  {isRecentlyActive && (
+                    <MetaPill icon={<Clock className="h-3.5 w-3.5" />} tone="success">
+                      Aktyvus šią savaitę
+                    </MetaPill>
+                  )}
                   {provider.website && (
                     <a
                       href={provider.website.startsWith("http") ? provider.website : `https://${provider.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-body-sm text-brand-700 transition-colors hover:bg-brand-100 dark:bg-brand-950/60 dark:text-brand-300 dark:hover:bg-brand-950"
                     >
                       <Globe className="h-3.5 w-3.5" />
                       Svetainė
                     </a>
-                  )}
-                  {isRecentlyActive && (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <Clock className="h-3.5 w-3.5" />
-                      Aktyvus šią savaitę
-                    </span>
                   )}
                 </div>
 
@@ -288,7 +279,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                       <Link
                         key={spec}
                         href={`/meistrai?category=${spec}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-micro font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 text-micro font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
                       >
                         <SpecIcon value={spec} />
                         {categoryLabel(spec)}
@@ -526,7 +517,9 @@ async function resolveProvider(
     where: { slug: slugOrId },
     select: { userId: true, slug: true },
   });
-  if (bySlug?.slug) {
+  // Imported (unclaimed) providers have no userId — this page resolves by
+  // userId, so they are not surfaced here until Phase 2.3 rewires it.
+  if (bySlug?.slug && bySlug.userId) {
     return { userId: bySlug.userId, slug: bySlug.slug };
   }
 
@@ -551,7 +544,7 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
         id,
         role: "PROVIDER",
         emailVerified: { not: null },
-        providerProfile: { isActive: true },
+        providerProfile: { isActive: true, moderationStatus: "APPROVED" },
       },
       select: {
         id: true,
@@ -581,7 +574,7 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
       },
     }),
     prisma.review.aggregate({
-      where: { providerId: id },
+      where: { providerId: id, moderationStatus: "APPROVED" },
       _avg: { rating: true },
       _count: { _all: true },
     }),
@@ -653,6 +646,7 @@ async function getActiveStories(providerId: string): Promise<StoryData[]> {
   const stories = await prisma.providerStory.findMany({
     where: {
       providerId,
+      moderationStatus: "APPROVED",
       expiresAt: { gt: new Date() },
       provider: {
         role: "PROVIDER",
@@ -688,6 +682,7 @@ async function getTopReviewsForSeo(providerId: string): Promise<SeoReview[]> {
   const reviews = await prisma.review.findMany({
     where: {
       providerId,
+      moderationStatus: "APPROVED",
       comment: { not: null },
     },
     select: {
@@ -927,7 +922,7 @@ function RatingStars({ rating }: { rating: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`h-4 w-4 ${
+          className={`h-3.5 w-3.5 ${
             star <= Math.round(rating)
               ? "fill-amber-400 text-amber-400"
               : "text-surface-200 dark:text-surface-700"
@@ -955,6 +950,29 @@ function TrustStat({ label, value, icon }: { label: string; value: string; icon:
 function QuickFact({ children, icon }: { children: ReactNode; icon: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-100 px-3 py-1.5 text-body-sm text-surface-700 dark:bg-surface-800 dark:text-surface-300">
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+function MetaPill({
+  icon,
+  children,
+  tone = "neutral",
+}: {
+  icon: ReactNode;
+  children: ReactNode;
+  tone?: "neutral" | "success";
+}) {
+  const toneClasses =
+    tone === "success"
+      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+      : "bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-body-sm ${toneClasses}`}
+    >
       {icon}
       {children}
     </span>

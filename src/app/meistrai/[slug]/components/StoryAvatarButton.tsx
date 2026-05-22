@@ -34,14 +34,14 @@ export default function StoryAvatarButton({
         }}
         className={`shrink-0 rounded-full p-[3px] transition-all ${
           hasStories
-            ? "cursor-pointer bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400 hover:scale-105"
+            ? "cursor-pointer bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400"
             : "cursor-default bg-transparent"
         }`}
         disabled={!hasStories}
         aria-label={hasStories ? "Peržiūrėti tiekėjo story" : providerName}
       >
         <div
-          className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 sm:h-20 sm:w-20 dark:from-brand-950 dark:to-surface-800 ${
+          className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 sm:h-[72px] sm:w-[72px] dark:from-brand-950 dark:to-surface-800 ${
             hasStories ? "ring-2 ring-white dark:ring-surface-900" : ""
           }`}
         >
@@ -52,7 +52,7 @@ export default function StoryAvatarButton({
               width={80}
               height={80}
               priority
-              sizes="(max-width: 640px) 64px, 80px"
+              sizes="(max-width: 640px) 64px, 72px"
               className="h-full w-full object-cover"
             />
           ) : (
