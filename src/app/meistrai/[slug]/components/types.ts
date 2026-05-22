@@ -18,7 +18,6 @@ export interface ProviderProfileData {
   experienceYears: number | null;
   offersInvoices: boolean;
   availableForUrgent: boolean;
-  specializations: string[];
   location: string | null;
   website: string | null;
   phone: string | null;

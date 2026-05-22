@@ -10,7 +10,7 @@ const MAX_REVIEW_CHARS = 300;
 const SYSTEM_PROMPT = `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Paslaugų tiekėjas nori atsakyti į kliento užklausą ir nusiųsti jam pasiūlymą. Tavo užduotis — tiekėjo vardu parašyti profesionalų, įtikinamą ir šiltą pasiūlymo tekstą.
 
 Gausi du blokus:
-- INFORMACIJA APIE TIEKĖJĄ — jo patirtis, paslaugos, specializacijos, klientų atsiliepimai.
+- INFORMACIJA APIE TIEKĖJĄ — jo patirtis, paslaugos, veiklos sritys, klientų atsiliepimai.
 - KLIENTO UŽKLAUSA — ką klientas nori, kad būtų padaryta.
 
 Grąžink TIK galiojantį JSON objektą:
@@ -21,7 +21,7 @@ Grąžink TIK galiojantį JSON objektą:
 - Taisyklinga, sklandi, natūrali lietuvių kalba. Tonas profesionalus, bet draugiškas ir žmogiškas.
 - Pradėk trumpu pasisveikinimu. Jei pateiktas kliento vardas — kreipkis vardu.
 - Konkrečiai atsiliepk į kliento užklausą — parodyk, kad supratai, ko jam reikia.
-- Pasiremk TIK tikra tiekėjo informacija (patirtis, specializacijos, paslaugos, atsiliepimai). NEIŠGALVOK faktų, projektų, skaičių, datų ar atsiliepimų.
+- Pasiremk TIK tikra tiekėjo informacija (patirtis, veiklos sritys, paslaugos, atsiliepimai). NEIŠGALVOK faktų, projektų, skaičių, datų ar atsiliepimų.
 - Jei informacijos apie tiekėją mažai — parašyk trumpesnį, paprastą pasiūlymą. Geriau trumpiau, nei prikurti.
 - NENURODYK konkrečių kainų ar sumų — kainą tiekėjas nurodys atskirai.
 - Jei užklausoje trūksta svarbios informacijos darbui įvertinti — pabaigoje mandagiai paklausk 1–3 trumpų, konkrečių patikslinančių klausimų.
@@ -44,7 +44,8 @@ export interface ProposalProviderContext {
   description?: string | null;
   services?: string | null;
   experienceYears?: number | null;
-  specializations: string[];
+  /** Curated category names the provider serves. */
+  categoryNames: string[];
   offersInvoices: boolean;
   availableForUrgent: boolean;
   reviews: ProposalReview[];
@@ -91,8 +92,8 @@ function parseResult(raw: string): ProposalDraftResult | null {
 function buildProviderBlock(provider: ProposalProviderContext): string {
   const lines: string[] = [`Vardas: ${provider.name}`];
   if (provider.headline) lines.push(`Antraštė: ${provider.headline}`);
-  if (provider.specializations.length) {
-    lines.push(`Specializacijos: ${provider.specializations.join(", ")}`);
+  if (provider.categoryNames.length) {
+    lines.push(`Veiklos sritys: ${provider.categoryNames.join(", ")}`);
   }
   if (provider.experienceYears) lines.push(`Patirtis: ${provider.experienceYears} m.`);
   if (provider.description) lines.push(`Apie tiekėją: ${provider.description}`);

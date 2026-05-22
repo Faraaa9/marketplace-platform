@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SERVICE_CATEGORIES, BUDGET_OPTIONS, LITHUANIAN_CITIES } from "@/lib/constants";
+import { BUDGET_OPTIONS, LITHUANIAN_CITIES } from "@/lib/constants";
+import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Pagination from "@/components/ui/Pagination";
@@ -27,7 +28,7 @@ interface Request {
   id: string;
   title: string;
   description: string;
-  category: string;
+  categoryRef: { id: string; name: string } | null;
   location: string;
   budget?: string;
   createdAt: string;
@@ -53,6 +54,7 @@ function ProviderRequestsContent() {
   const [pages, setPages] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Lock body scroll when mobile filter sheet is open
@@ -72,6 +74,16 @@ function ProviderRequestsContent() {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [filtersOpen]);
+
+  // Curated service taxonomy for the category filter.
+  useEffect(() => {
+    fetch("/api/service-categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setCategoryGroups(data.data || []);
+      })
+      .catch(() => {});
+  }, []);
 
   const page = parseInt(searchParams.get("page") || "1");
   const category = searchParams.get("category") || "";
@@ -142,8 +154,13 @@ function ProviderRequestsContent() {
     return Date.now() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000;
   }
 
-  const categoryLabel = (val: string) =>
-    SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
+  const categoryLabel = (slug: string) => {
+    for (const group of categoryGroups) {
+      const match = group.categories.find((c) => c.slug === slug);
+      if (match) return match.name;
+    }
+    return slug;
+  };
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
@@ -232,14 +249,14 @@ function ProviderRequestsContent() {
                   </button>
                 </div>
                 <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-4">
-                  <FilterSelects category={category} location={location} onUpdate={updateFilter} />
+                  <FilterSelects category={category} location={location} categoryGroups={categoryGroups} onUpdate={updateFilter} />
                   <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
                 </div>
               </div>
               {/* Desktop inline panel */}
               <div className="hidden sm:block rounded-xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
                 <div className="flex items-end gap-3">
-                  <FilterSelects category={category} location={location} onUpdate={updateFilter} />
+                  <FilterSelects category={category} location={location} categoryGroups={categoryGroups} onUpdate={updateFilter} />
                   <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
                 </div>
               </div>
@@ -330,9 +347,11 @@ function ProviderRequestsContent() {
                     >
                       {/* Top: category + status badges */}
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
-                          {categoryLabel(req.category)}
-                        </span>
+                        {req.categoryRef && (
+                          <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
+                            {req.categoryRef.name}
+                          </span>
+                        )}
                         {isNewRequest && !req.hasResponded && (
                           <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-micro font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                             <Zap className="h-3 w-3" />
@@ -428,10 +447,12 @@ const filterSelectClass =
 function FilterSelects({
   category,
   location,
+  categoryGroups,
   onUpdate,
 }: {
   category: string;
   location: string;
+  categoryGroups: ServiceCategoryGroup[];
   onUpdate: (key: string, value: string) => void;
 }) {
   return (
@@ -440,8 +461,12 @@ function FilterSelects({
         <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Kategorija</label>
         <select value={category} onChange={(e) => onUpdate("category", e.target.value)} className={filterSelectClass}>
           <option value="">Visos</option>
-          {SERVICE_CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
+          {categoryGroups.map((group) => (
+            <optgroup key={group.root.id} label={group.root.name}>
+              {group.categories.map((c) => (
+                <option key={c.id} value={c.slug}>{c.name}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>

@@ -36,7 +36,6 @@ export async function GET() {
           experienceYears: true,
           offersInvoices: true,
           availableForUrgent: true,
-          specializations: true,
           location: true,
           phone: true,
           website: true,
@@ -46,6 +45,10 @@ export async function GET() {
           images: true,
           createdAt: true,
           updatedAt: true,
+          categories: {
+            select: { categoryId: true, sortOrder: true },
+            orderBy: { sortOrder: "asc" },
+          },
         },
       }),
       prisma.user.findUnique({
@@ -64,6 +67,7 @@ export async function GET() {
     const data = profile ? {
       ...profile,
       images: parsedImages,
+      categoryIds: profile.categories.map((c) => c.categoryId),
       userName: user?.name || null,
       userEmail: user?.email || null,
       emailVerified: !!user?.emailVerified,
@@ -117,45 +121,97 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const profile = await prisma.providerProfile.update({
-      where: { userId: session.user.id },
-      data: {
-        description: sanitizeHtml(parsed.data.description),
-        headline: parsed.data.headline ? sanitizeHtml(parsed.data.headline) : null,
-        services: parsed.data.services ? sanitizeHtml(parsed.data.services) : null,
-        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
-        moderationReason: moderation.reason,
-        moderatedAt: new Date(),
-        priceFrom: parsed.data.priceFrom ?? null,
-        experienceYears: parsed.data.experienceYears ?? null,
-        offersInvoices: parsed.data.offersInvoices ?? false,
-        availableForUrgent: parsed.data.availableForUrgent ?? false,
-        specializations: parsed.data.specializations,
-        location: parsed.data.location,
-        phone: parsed.data.phone || null,
-        website: parsed.data.website || null,
-      },
-      select: {
-        id: true,
-        userId: true,
-        description: true,
-        headline: true,
-        services: true,
-        priceFrom: true,
-        experienceYears: true,
-        offersInvoices: true,
-        availableForUrgent: true,
-        specializations: true,
-        location: true,
-        phone: true,
-        website: true,
-        isActive: true,
-        planType: true,
-        planExpiresAt: true,
-        images: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    // Curated categories, max 6, de-duplicated, order preserved.
+    const categoryIds = [...new Set(parsed.data.categoryIds)].slice(0, 6);
+
+    const profile = await prisma.$transaction(async (tx) => {
+      const updated = await tx.providerProfile.update({
+        where: { userId: session.user.id },
+        data: {
+          description: sanitizeHtml(parsed.data.description),
+          headline: parsed.data.headline ? sanitizeHtml(parsed.data.headline) : null,
+          services: parsed.data.services ? sanitizeHtml(parsed.data.services) : null,
+          moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
+          priceFrom: parsed.data.priceFrom ?? null,
+          experienceYears: parsed.data.experienceYears ?? null,
+          offersInvoices: parsed.data.offersInvoices ?? false,
+          availableForUrgent: parsed.data.availableForUrgent ?? false,
+          location: parsed.data.location,
+          phone: parsed.data.phone || null,
+          website: parsed.data.website || null,
+        },
+        select: {
+          id: true,
+          userId: true,
+          description: true,
+          headline: true,
+          services: true,
+          priceFrom: true,
+          experienceYears: true,
+          offersInvoices: true,
+          availableForUrgent: true,
+          location: true,
+          phone: true,
+          website: true,
+          isActive: true,
+          planType: true,
+          planExpiresAt: true,
+          images: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      // Sync ProviderProfileCategory rows: drop rows no longer chosen,
+      // create new ones with sortOrder following the submitted order.
+      const existing = await tx.providerProfileCategory.findMany({
+        where: { providerProfileId: updated.id },
+        select: { categoryId: true },
+      });
+      const existingIds = new Set(existing.map((c) => c.categoryId));
+      const nextIds = new Set(categoryIds);
+
+      const toRemove = [...existingIds].filter((id) => !nextIds.has(id));
+      if (toRemove.length > 0) {
+        await tx.providerProfileCategory.deleteMany({
+          where: { providerProfileId: updated.id, categoryId: { in: toRemove } },
+        });
+      }
+
+      const toAdd = categoryIds
+        .map((categoryId, index) => ({ categoryId, sortOrder: index }))
+        .filter((c) => !existingIds.has(c.categoryId));
+      if (toAdd.length > 0) {
+        await tx.providerProfileCategory.createMany({
+          data: toAdd.map((c) => ({
+            providerProfileId: updated.id,
+            categoryId: c.categoryId,
+            sortOrder: c.sortOrder,
+          })),
+        });
+      }
+
+      // Keep sortOrder aligned with the submitted order for kept rows.
+      await Promise.all(
+        categoryIds
+          .map((categoryId, index) => ({ categoryId, sortOrder: index }))
+          .filter((c) => existingIds.has(c.categoryId))
+          .map((c) =>
+            tx.providerProfileCategory.update({
+              where: {
+                providerProfileId_categoryId: {
+                  providerProfileId: updated.id,
+                  categoryId: c.categoryId,
+                },
+              },
+              data: { sortOrder: c.sortOrder },
+            }),
+          ),
+      );
+
+      return { ...updated, categoryIds };
     });
 
     if (moderation.verdict !== "ok") {

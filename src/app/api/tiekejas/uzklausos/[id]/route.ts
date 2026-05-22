@@ -6,7 +6,7 @@ import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
-import { checkEligibility, parseSpecializations } from "@/lib/provider-eligibility";
+import { checkEligibility } from "@/lib/provider-eligibility";
 
 /**
  * Provider view of a request.
@@ -25,6 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         title: true,
         description: true,
         category: true,
+        categoryId: true,
+        categoryRef: { select: { id: true, rootId: true, name: true } },
         location: true,
         budget: true,
         deadline: true,
@@ -92,7 +94,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       prisma.response.count({ where: { requestId: id } }),
       prisma.providerProfile.findUnique({
         where: { userId: guard.userId },
-        select: { planType: true, specializations: true },
+        select: {
+          planType: true,
+          categories: { select: { category: { select: { id: true, rootId: true } } } },
+        },
       }),
       prisma.subscription.findUnique({
         where: { userId: guard.userId },
@@ -105,18 +110,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const plan = PLAN_LIMITS[planType];
 
     // Eligibility check
-    const specs = parseSpecializations(profile?.specializations);
+    const providerCategories = (profile?.categories ?? []).map((c) => c.category);
     const eligibility = checkEligibility(
       guard.userId,
-      { category: request.category, status: request.status, clientId: request.clientId },
-      specs,
+      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      providerCategories,
     );
 
     const data = {
       id: request.id,
       title: request.title,
       description: request.description,
-      category: request.category,
+      category: request.categoryRef?.name ?? request.category,
       location: request.location,
       budget: request.budget,
       deadline: request.deadline,
@@ -163,7 +168,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const request = await prisma.serviceRequest.findUnique({
       where: { id },
       select: {
-        id: true, category: true, status: true, clientId: true,
+        id: true, category: true, categoryId: true, status: true, clientId: true,
+        categoryRef: { select: { id: true, rootId: true } },
         clientName: true, clientEmail: true, title: true, trackingToken: true,
       },
     });
@@ -171,16 +177,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 
-    // Load provider specializations and check eligibility
+    // Load provider categories and check eligibility
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: guard.userId },
-      select: { specializations: true, planType: true },
+      select: {
+        planType: true,
+        categories: { select: { category: { select: { id: true, rootId: true } } } },
+      },
     });
-    const specs = parseSpecializations(profile?.specializations);
+    const providerCategories = (profile?.categories ?? []).map((c) => c.category);
     const eligibility = checkEligibility(
       guard.userId,
-      { category: request.category, status: request.status, clientId: request.clientId },
-      specs,
+      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      providerCategories,
     );
 
     if (!eligibility.allowed) {

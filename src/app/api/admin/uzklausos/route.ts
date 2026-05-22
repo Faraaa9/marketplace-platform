@@ -23,7 +23,15 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
-    if (category) where.category = category;
+    if (category) {
+      // `?category=` carries a curated category slug — resolve it to the id.
+      const picked = await prisma.category.findUnique({
+        where: { slug: category },
+        select: { id: true },
+      });
+      // Unknown slug → match nothing rather than silently ignoring the filter.
+      where.categoryId = picked ? picked.id : "__no_match__";
+    }
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -35,7 +43,10 @@ export async function GET(req: NextRequest) {
     const [requests, total] = await Promise.all([
       prisma.serviceRequest.findMany({
         where,
-        include: { _count: { select: { responses: true } } },
+        include: {
+          _count: { select: { responses: true } },
+          categoryRef: { select: { name: true } },
+        },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,

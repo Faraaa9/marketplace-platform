@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -41,7 +40,8 @@ interface RequestData {
   id: string;
   title: string;
   description: string;
-  category: string;
+  /** Resolved category name (string), or null if the request has no category. */
+  category: string | null;
   location: string;
   budget?: string;
   deadline?: string;
@@ -130,7 +130,6 @@ export default function ProviderRequestDetailPage() {
   if (loading) return <LoadingSpinner />;
   if (!request) return <EmptyState title="Užklausa nerasta" />;
 
-  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label;
   const hasResponded = request.responses.some((r) => r.provider.id === session?.user?.id);
   const myResponse = request.responses.find((r) => r.provider.id === session?.user?.id);
   const isMyResponseAccepted = myResponse && request.acceptedResponseId === myResponse.id;
@@ -153,7 +152,7 @@ export default function ProviderRequestDetailPage() {
 
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <Badge variant="brand">{categoryLabel}</Badge>
+          {request.category && <Badge variant="brand">{request.category}</Badge>}
           <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
         </div>
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mt-3">{request.title}</h1>

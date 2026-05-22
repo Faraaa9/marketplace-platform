@@ -18,7 +18,6 @@ import {
   FileCheck,
   Globe,
 } from "lucide-react";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import type { ProviderCardData } from "@/lib/provider-filters";
 
 /* ═══════════════════════════════════════════════════════
@@ -47,7 +46,7 @@ interface ProviderDetail {
   experienceYears: number | null;
   offersInvoices: boolean;
   availableForUrgent: boolean;
-  specializations: string[];
+  categories: { id: string; name: string; slug: string }[];
   location: string | null;
   website: string | null;
   planType: string;
@@ -65,7 +64,7 @@ interface ProviderDetail {
     createdAt: string;
     clientName: string;
     requestTitle: string;
-    requestCategory: string;
+    requestCategory: string | null;
   }>;
   lastActiveAt: string;
   memberSince: string;
@@ -74,9 +73,6 @@ interface ProviderDetail {
 /* ═══════════════════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════════════════ */
-
-const specLabel = (val: string) =>
-  SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
 
 const GRADIENTS = [
   "from-slate-600 to-slate-800",
@@ -315,19 +311,19 @@ function SheetContent({
             )}
           </div>
 
-          {/* Specializations */}
-          {detail.specializations.length > 0 && (
+          {/* Categories */}
+          {detail.categories.length > 0 && (
             <div>
               <h4 className="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">
-                Specializacijos
+                Veiklos sritys
               </h4>
               <div className="flex flex-wrap gap-1.5">
-                {detail.specializations.map((s) => (
+                {detail.categories.map((c) => (
                   <span
-                    key={s}
+                    key={c.id}
                     className="rounded-full bg-surface-100 px-3 py-1 text-xs text-surface-600 dark:bg-surface-800 dark:text-surface-300"
                   >
-                    {specLabel(s)}
+                    {c.name}
                   </span>
                 ))}
               </div>
@@ -582,9 +578,9 @@ export default function ProviderListingClient({
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {providers.map((p) => {
             const badge = pickBadge(p);
-            const mainSpec =
-              p.specializations.length > 0
-                ? specLabel(p.specializations[0])
+            const mainCategory =
+              p.categories.length > 0
+                ? p.categories[0].name
                 : "Paslaugų tiekėjas";
             const priceText =
               p.priceFrom !== null && p.priceFrom > 0
@@ -655,7 +651,7 @@ export default function ProviderListingClient({
                   <div className="flex flex-1 flex-col px-5 py-3.5">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-[13px] text-surface-500 dark:text-surface-400 truncate">
-                        {mainSpec}
+                        {mainCategory}
                       </span>
                       <span className="text-[13px] font-semibold text-surface-900 dark:text-white whitespace-nowrap">
                         {priceText}

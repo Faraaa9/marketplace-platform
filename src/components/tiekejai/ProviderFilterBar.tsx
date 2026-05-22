@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Tag,
 } from "lucide-react";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
+import { LITHUANIAN_CITIES } from "@/lib/constants";
+import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
 
 interface FilterBarProps {
@@ -48,10 +49,22 @@ export default function ProviderFilterBar({
   const [mobileActive, setMobileActive] = useState(active);
   const [mobileUrgent, setMobileUrgent] = useState(urgent);
   const [mobileTop, setMobileTop] = useState(top);
+  const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
+
+  useEffect(() => {
+    fetch("/api/service-categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setCategoryGroups(data.data || []);
+      })
+      .catch(() => {});
+  }, []);
 
   const activeFilterCount = [location, category, active, urgent, top].filter(Boolean).length;
   const activeCategoryLabel =
-    SERVICE_CATEGORIES.find((c) => c.value === category)?.label ?? "";
+    categoryGroups
+      .flatMap((g) => g.categories)
+      .find((c) => c.slug === category)?.name ?? "";
 
   useEffect(() => {
     setMobileLocation(location);
@@ -223,21 +236,32 @@ export default function ProviderFilterBar({
             </button>
 
             {categoryOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
-                {SERVICE_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => selectCategory(cat.value)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
-                      category === cat.value
-                        ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                        : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-                    }`}
-                  >
-                    {category === cat.value && <Check className="h-3.5 w-3.5 shrink-0" />}
-                    {cat.label}
-                  </button>
-                ))}
+              <div className="absolute left-0 top-full z-50 mt-1.5 max-h-80 w-64 overflow-y-auto rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
+                {categoryGroups.length === 0 ? (
+                  <p className="px-3 py-2 text-body-sm text-surface-400">Kraunama…</p>
+                ) : (
+                  categoryGroups.map((group) => (
+                    <div key={group.root.id} className="mb-1 last:mb-0">
+                      <p className="px-3 pt-2 pb-1 text-micro font-semibold uppercase tracking-wider text-surface-400">
+                        {group.root.name}
+                      </p>
+                      {group.categories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => selectCategory(cat.slug)}
+                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
+                            category === cat.slug
+                              ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
+                              : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
+                          }`}
+                        >
+                          {category === cat.slug && <Check className="h-3.5 w-3.5 shrink-0" />}
+                          {cat.name}
+                        </button>
+                      ))}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -378,25 +402,38 @@ export default function ProviderFilterBar({
                 <label className="text-body-sm font-semibold text-surface-700 dark:text-surface-200 mb-3 block">
                   Kategorija
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {SERVICE_CATEGORIES.map((cat) => {
-                    const isActive = mobileCategory === cat.value;
-                    return (
-                      <button
-                        key={cat.value}
-                        onClick={() => setMobileCategory(isActive ? "" : cat.value)}
-                        className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-all ${
-                          isActive
-                            ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
-                            : "bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300"
-                        }`}
-                      >
-                        <Tag className="h-3.5 w-3.5" />
-                        <span className="truncate">{cat.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {categoryGroups.length === 0 ? (
+                  <p className="text-body-sm text-surface-400">Kraunama…</p>
+                ) : (
+                  <div className="space-y-4">
+                    {categoryGroups.map((group) => (
+                      <div key={group.root.id}>
+                        <p className="mb-2 text-micro font-semibold uppercase tracking-wider text-surface-400">
+                          {group.root.name}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {group.categories.map((cat) => {
+                            const isActive = mobileCategory === cat.slug;
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => setMobileCategory(isActive ? "" : cat.slug)}
+                                className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-all ${
+                                  isActive
+                                    ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
+                                    : "bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300"
+                                }`}
+                              >
+                                <Tag className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{cat.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Toggle filters */}

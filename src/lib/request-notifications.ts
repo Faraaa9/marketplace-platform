@@ -1,33 +1,49 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, newRequestAlertEmail } from "@/lib/email";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
+import { expandToMatchSet } from "@/lib/category-matching";
 
-export async function notifyRelevantProviders(title: string, category: string, location: string, excludeUserId?: string | null) {
+/**
+ * Notify providers whose curated categories match a new request. Matching is
+ * tree-aware: a provider who picked a root category is alerted for requests
+ * in any category under it.
+ */
+export async function notifyRelevantProviders(
+  title: string,
+  categoryId: string | null,
+  location: string,
+  excludeUserId?: string | null,
+) {
+  // A request with no curated category has nothing to match providers on.
+  if (!categoryId) return;
+
+  const [category, matchSet] = await Promise.all([
+    prisma.category.findUnique({ where: { id: categoryId }, select: { name: true } }),
+    expandToMatchSet([categoryId]),
+  ]);
+  const categoryLabel = category?.name || "paslaugos";
+
   const providers = await prisma.user.findMany({
     where: {
       role: "PROVIDER",
       emailVerified: { not: null },
-      providerProfile: { isActive: true },
+      providerProfile: {
+        isActive: true,
+        categories: { some: { categoryId: { in: matchSet } } },
+      },
     },
     select: {
       id: true,
       name: true,
       email: true,
-      providerProfile: { select: { specializations: true, location: true } },
+      providerProfile: { select: { location: true } },
     },
   });
-
-  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === category)?.label || category;
 
   for (const provider of providers) {
     // Skip the request creator (prevent self-notification)
     if (excludeUserId && provider.id === excludeUserId) continue;
 
-    const specs: string[] = provider.providerProfile?.specializations ?? [];
     const providerLocation = provider.providerProfile?.location || "";
-    const specMatch = specs.includes(category);
-    if (!specMatch) continue;
-
     const locationMatch =
       providerLocation === location ||
       providerLocation === "Visa Lietuva" ||

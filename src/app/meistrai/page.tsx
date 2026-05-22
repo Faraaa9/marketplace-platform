@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { getServiceCategoryGroups } from "@/lib/service-categories";
 import { Users, ArrowRight, Database } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { isStoryEnabled } from "@/lib/platform-settings";
@@ -35,24 +36,13 @@ const MAX_PROVIDERS = 500;
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  // Initial filters come from the URL so shared/deep links keep working.
-  const rawCategory = params.category ?? "";
-  const initialFilters: ProviderFilters = {
-    search: params.search?.trim() || "",
-    location: params.location || "",
-    category: SERVICE_CATEGORIES.some((c) => c.value === rawCategory) ? rawCategory : "",
-    active: params.active === "1",
-    urgent: params.urgent === "1",
-    top: params.top === "1",
-  };
-
   const where: Record<string, unknown> = {
     role: "PROVIDER",
     emailVerified: { not: null },
     providerProfile: { isActive: true, moderationStatus: "APPROVED" },
   };
 
-  const [providers, storyFeatureOn] = await Promise.all([
+  const [providers, storyFeatureOn, categoryGroups] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -64,7 +54,10 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           select: {
             slug: true,
             description: true,
-            specializations: true,
+            categories: {
+              select: { category: { select: { id: true, name: true, slug: true } } },
+              orderBy: { sortOrder: "asc" },
+            },
             location: true,
             images: true,
             planType: true,
@@ -79,7 +72,26 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       take: MAX_PROVIDERS,
     }),
     isStoryEnabled(),
+    getServiceCategoryGroups(),
   ]);
+
+  // Initial filters come from the URL so shared/deep links keep working.
+  // `?category=` is validated against the curated depth-1 category slugs —
+  // these are the only values the provider category filter can match.
+  const validCategorySlugs = new Set(
+    categoryGroups.flatMap((group) =>
+      group.categories.map((category) => category.slug),
+    ),
+  );
+  const rawCategory = params.category ?? "";
+  const initialFilters: ProviderFilters = {
+    search: params.search?.trim() || "",
+    location: params.location || "",
+    category: validCategorySlugs.has(rawCategory) ? rawCategory : "",
+    active: params.active === "1",
+    urgent: params.urgent === "1",
+    top: params.top === "1",
+  };
 
   const providerIds = providers.map((p) => p.id);
 
@@ -152,7 +164,11 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
     const firstImage: string | null = p.providerProfile?.images?.[0] ?? null;
-    const specs: string[] = p.providerProfile?.specializations ?? [];
+    const categories = (p.providerProfile?.categories ?? []).map((link) => ({
+      id: link.category.id,
+      name: link.category.name,
+      slug: link.category.slug,
+    }));
 
     const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
@@ -177,7 +193,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       profileImage: getSafeProviderImageUrl(firstImage || p.image, { width: 96, crop: "fill" }),
       coverImage: getSafeProviderImageUrl(firstImage || p.image, { width: 600, height: 400, crop: "fill" }),
       description,
-      specializations: specs,
+      categories,
       location: p.providerProfile?.location || null,
       planType,
       badge,

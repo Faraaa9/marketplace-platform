@@ -4,7 +4,7 @@ const MAX_AGE_MS = 60 * 60 * 1000; // 1 hour — long enough for an OAuth round-
 export interface ListingDraft {
   title: string;
   description: string;
-  category: string;
+  categoryId: string;
   location: string;
   budget: string;
   deadline: string;

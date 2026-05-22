@@ -1,24 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
+import { LITHUANIAN_CITIES } from "@/lib/constants";
+import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ListingPreview from "@/components/requests/ListingPreview";
 import PhotoUpload from "@/components/requests/PhotoUpload";
+import CategorySelect from "@/components/requests/CategorySelect";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 
 interface FormState {
   title: string;
   description: string;
-  category: string;
+  categoryId: string;
   location: string;
   budget: string;
   deadline: string;
@@ -34,13 +35,14 @@ export default function EditRequestPage() {
   const [form, setForm] = useState<FormState>({
     title: "",
     description: "",
-    category: "",
+    categoryId: "",
     location: "",
     budget: "",
     deadline: "",
     attachmentUrls: [],
     clientName: "",
   });
+  const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [status, setStatus] = useState("");
@@ -61,7 +63,7 @@ export default function EditRequestPage() {
           setForm({
             title: d.title || "",
             description: d.description || "",
-            category: d.category || "",
+            categoryId: d.categoryId || "",
             location: d.location || "",
             budget: d.budget || "",
             deadline: d.deadline || "",
@@ -84,6 +86,33 @@ export default function EditRequestPage() {
     };
   }, [token]);
 
+  // Load the grouped curated categories for the picker.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/service-categories");
+        const data = await res.json().catch(() => null);
+        if (!cancelled && res.ok && data?.success && Array.isArray(data.data)) {
+          setCategoryGroups(data.data as ServiceCategoryGroup[]);
+        }
+      } catch {
+        // Picker stays empty — categoryId is still validated as required.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) map.set(cat.id, cat.name);
+    }
+    return map;
+  }, [categoryGroups]);
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -95,7 +124,7 @@ export default function EditRequestPage() {
     titleOk &&
     descOk &&
     nameOk &&
-    !!form.category &&
+    !!form.categoryId &&
     !!form.location.trim() &&
     !!form.budget.trim() &&
     !!form.deadline.trim();
@@ -151,7 +180,7 @@ export default function EditRequestPage() {
     );
   }
 
-  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === form.category)?.label;
+  const categoryLabel = form.categoryId ? categoryNameById.get(form.categoryId) : undefined;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -220,14 +249,13 @@ export default function EditRequestPage() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              id="category"
+            <CategorySelect
+              id="categoryId"
               label="Kategorija"
-              options={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
-              placeholder="Pasirink kategoriją"
-              value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-              error={attempted && !form.category ? "Privaloma" : undefined}
+              groups={categoryGroups}
+              value={form.categoryId}
+              onChange={(v) => update("categoryId", v)}
+              error={attempted && !form.categoryId ? "Privaloma" : undefined}
             />
             <Input
               id="location"

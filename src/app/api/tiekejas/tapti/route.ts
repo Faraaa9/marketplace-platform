@@ -61,7 +61,6 @@ export async function POST() {
       prisma.providerProfile.create({
         data: {
           userId,
-          specializations: [],
           images: [],
           isActive: !!user?.emailVerified,
         },

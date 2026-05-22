@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { expandToMatchSet } from "@/lib/category-matching";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,20 @@ export async function GET(req: NextRequest) {
     const perPage = 20;
 
     const where: Record<string, unknown> = { status: "OPEN", moderationStatus: "APPROVED" };
-    if (category) where.category = category;
+    if (category) {
+      // `?category=<slug>` — resolve the slug to a curated category. A root
+      // slug expands to its children so the board shows the whole branch.
+      const matched = await prisma.category.findUnique({
+        where: { slug: category },
+        select: { id: true },
+      });
+      if (matched) {
+        where.categoryId = { in: await expandToMatchSet([matched.id]) };
+      } else {
+        // Unknown category slug — return an empty result rather than ignoring it.
+        where.categoryId = { in: [] as string[] };
+      }
+    }
     if (location) where.location = location;
     if (budget) where.budget = budget;
     if (search) {
@@ -31,7 +45,7 @@ export async function GET(req: NextRequest) {
           id: true,
           title: true,
           description: true,
-          category: true,
+          categoryRef: { select: { name: true } },
           location: true,
           budget: true,
           createdAt: true,
@@ -46,9 +60,16 @@ export async function GET(req: NextRequest) {
 
     const pages = Math.ceil(total / perPage);
 
+    // Keep the response field name `category` — now the curated category
+    // display name — so existing consumers keep working.
+    const serialized = requests.map(({ categoryRef, ...r }) => ({
+      ...r,
+      category: categoryRef?.name ?? "",
+    }));
+
     return NextResponse.json({
       success: true,
-      data: { requests, total, pages, page },
+      data: { requests: serialized, total, pages, page },
     });
   } catch (error) {
     console.error("Public requests error:", error);

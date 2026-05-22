@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       prisma.user.findMany({
         where,
         include: {
-          providerProfile: true,
+          providerProfile: { include: { categories: { select: { category: { select: { name: true } } } } } },
           _count: { select: { responses: true } },
         },
         orderBy: { createdAt: "desc" },

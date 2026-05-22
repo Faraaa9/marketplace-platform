@@ -1,5 +1,11 @@
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 
+export interface ProviderCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface ProviderCardData {
   id: string;
   slug: string | null;
@@ -7,7 +13,7 @@ export interface ProviderCardData {
   profileImage: string | null;
   coverImage: string | null;
   description: string | null;
-  specializations: string[];
+  categories: ProviderCategory[];
   location: string | null;
   planType: string;
   badge: string | null;
@@ -101,8 +107,8 @@ export function computeProviderScore(p: ProviderCardData): number {
   if (p.description) score += 5;
   if (p.location) score += 3;
 
-  if (p.specializations.length > 0) {
-    score += Math.min(p.specializations.length, 3) + 2;
+  if (p.categories.length > 0) {
+    score += Math.min(p.categories.length, 3) + 2;
   }
 
   if (p.avgRating !== null) score += Math.round(p.avgRating * 3);
@@ -129,7 +135,12 @@ export function filterAndSortProviders(
       if (!haystack.includes(query)) return false;
     }
     if (!matchesLocation(p.location, filters.location)) return false;
-    if (filters.category && !p.specializations.includes(filters.category)) {
+    if (
+      filters.category &&
+      !p.categories.some(
+        (c) => c.slug === filters.category || c.id === filters.category,
+      )
+    ) {
       return false;
     }
     if (filters.urgent && !p.availableForUrgent) return false;

@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2, ArrowRight, Check, Sparkles, Pencil } from "lucide-react";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
+import { LITHUANIAN_CITIES } from "@/lib/constants";
+import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { saveGuestRequest } from "@/lib/guest-request";
 import { saveListingDraft, loadListingDraft, clearListingDraft } from "@/lib/listing-draft";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmailVerification from "@/components/requests/EmailVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import PhotoUpload from "@/components/requests/PhotoUpload";
+import CategorySelect from "@/components/requests/CategorySelect";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
@@ -29,7 +30,7 @@ export default function NewRequestPage() {
 interface FormState {
   title: string;
   description: string;
-  category: string;
+  categoryId: string;
   location: string;
   budget: string;
   deadline: string;
@@ -45,7 +46,7 @@ interface FormState {
 const LISTING_FIELDS = new Set<keyof FormState>([
   "title",
   "description",
-  "category",
+  "categoryId",
   "location",
   "budget",
   "deadline",
@@ -63,7 +64,7 @@ function NewRequestForm() {
   const [form, setForm] = useState<FormState>({
     title: "",
     description: initialDescription,
-    category: "",
+    categoryId: "",
     location: "",
     budget: "",
     deadline: "",
@@ -73,6 +74,10 @@ function NewRequestForm() {
     clientPhone: "",
     honeypot: "",
   });
+  const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
+  // The AI may answer before the category list finishes loading — stash its
+  // raw slug/id here and resolve it once the picker options are available.
+  const [pendingAiCategory, setPendingAiCategory] = useState("");
   const [aiLoading, setAiLoading] = useState(cameFromHero);
   const [aiFailed, setAiFailed] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -93,7 +98,7 @@ function NewRequestForm() {
     saveListingDraft({
       title: form.title,
       description: form.description,
-      category: form.category,
+      categoryId: form.categoryId,
       location: form.location,
       budget: form.budget,
       deadline: form.deadline,
@@ -102,6 +107,32 @@ function NewRequestForm() {
       clientEmail: form.clientEmail,
       clientPhone: form.clientPhone,
     });
+  }
+
+  // id -> name and slug -> id maps over the curated categories. The AI returns
+  // a category slug; the picker stores the id.
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) map.set(cat.id, cat.name);
+    }
+    return map;
+  }, [categoryGroups]);
+
+  const categoryIdBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) map.set(cat.slug, cat.id);
+    }
+    return map;
+  }, [categoryGroups]);
+
+  /** Resolve an AI-returned category slug (or id) to a valid category id. */
+  function resolveAiCategory(value: string | undefined): string {
+    if (!value) return "";
+    if (categoryIdBySlug.has(value)) return categoryIdBySlug.get(value) ?? "";
+    if (categoryNameById.has(value)) return value;
+    return "";
   }
 
   // Pre-fill name + email for logged-in users.
@@ -115,6 +146,25 @@ function NewRequestForm() {
       }));
     }
   }, [status, session]);
+
+  // Load the grouped curated categories for the picker.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/service-categories");
+        const data = await res.json().catch(() => null);
+        if (!cancelled && res.ok && data?.success && Array.isArray(data.data)) {
+          setCategoryGroups(data.data as ServiceCategoryGroup[]);
+        }
+      } catch {
+        // Picker stays empty — the form still validates categoryId as required.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Restore the dictated listing after returning from a Google sign-in redirect.
   useEffect(() => {
@@ -145,11 +195,15 @@ function NewRequestForm() {
             ...f,
             description: d.improvedDescription || f.description,
             title: d.title || f.title,
-            category: d.category || f.category,
             location: d.location || f.location,
             budget: d.budget || f.budget,
             deadline: d.deadline || f.deadline,
           }));
+          // AI returns a curated category slug — resolve it to an id once the
+          // picker options are loaded.
+          if (typeof d.category === "string" && d.category) {
+            setPendingAiCategory(d.category);
+          }
         } else {
           setAiFailed(true);
         }
@@ -165,6 +219,18 @@ function NewRequestForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Apply the AI-picked category once the picker options have loaded. Only
+  // fills an empty slot — a manual pick always wins.
+  useEffect(() => {
+    if (!pendingAiCategory || categoryGroups.length === 0) return;
+    const resolved = resolveAiCategory(pendingAiCategory);
+    if (resolved) {
+      setForm((f) => (f.categoryId ? f : { ...f, categoryId: resolved }));
+    }
+    setPendingAiCategory("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAiCategory, categoryGroups]);
+
   // ── Validation ──
   const titleOk = form.title.trim().length >= 5;
   const descOk = form.description.trim().length >= 20;
@@ -173,7 +239,7 @@ function NewRequestForm() {
   const missingListing: string[] = [];
   if (!titleOk) missingListing.push("pavadinimą");
   if (!descOk) missingListing.push("aprašymą");
-  if (!form.category) missingListing.push("kategoriją");
+  if (!form.categoryId) missingListing.push("kategoriją");
   if (!form.location.trim()) missingListing.push("miestą");
   if (!form.budget.trim()) missingListing.push("biudžetą");
   if (!form.deadline.trim()) missingListing.push("terminą");
@@ -232,7 +298,7 @@ function NewRequestForm() {
     );
   }
 
-  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === form.category)?.label;
+  const categoryLabel = form.categoryId ? categoryNameById.get(form.categoryId) : undefined;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -301,14 +367,21 @@ function NewRequestForm() {
             <ImproveDescriptionButton
               value={form.description}
               onChange={(value) => update("description", value)}
-              onMeta={(meta) =>
-                setForm((prev) => ({
-                  ...prev,
-                  category: prev.category || meta.category,
-                  title: prev.title || meta.title,
-                  location: prev.location || meta.location,
-                }))
-              }
+              onMeta={(meta) => {
+                setForm((prev) => {
+                  const resolved = resolveAiCategory(meta.category);
+                  return {
+                    ...prev,
+                    categoryId: prev.categoryId || resolved,
+                    title: prev.title || meta.title,
+                    location: prev.location || meta.location,
+                  };
+                });
+                // If categories have not loaded yet, retry resolution later.
+                if (meta.category && categoryGroups.length === 0) {
+                  setPendingAiCategory(meta.category);
+                }
+              }}
               targetId="description"
               category={categoryLabel}
               title={form.title}
@@ -326,14 +399,13 @@ function NewRequestForm() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              id="category"
+            <CategorySelect
+              id="categoryId"
               label="Kategorija"
-              options={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
-              placeholder="Pasirink kategoriją"
-              value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-              error={showErrors && !form.category ? "Privaloma" : undefined}
+              groups={categoryGroups}
+              value={form.categoryId}
+              onChange={(v) => update("categoryId", v)}
+              error={showErrors && !form.categoryId ? "Privaloma" : undefined}
             />
             <Input
               id="location"

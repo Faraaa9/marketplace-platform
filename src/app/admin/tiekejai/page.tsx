@@ -18,7 +18,7 @@ interface Provider {
     planType: string;
     description?: string;
     location?: string;
-    specializations: string[];
+    categories?: { category: { name: string } }[];
   } | null;
   _count: { responses: number };
 }
@@ -208,7 +208,7 @@ export default function AdminProvidersPage() {
           <div className="space-y-3 text-body-sm">
             <p><strong className="text-surface-900 dark:text-white">El. paštas:</strong> <span className="text-surface-500">{selectedProvider.email}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Vietovė:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.location || "—"}</span></p>
-            <p><strong className="text-surface-900 dark:text-white">Specializacijos:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.specializations.join(", ") || "—"}</span></p>
+            <p><strong className="text-surface-900 dark:text-white">Kategorijos:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.categories?.map((c) => c.category.name).join(", ") || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Aprašymas:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.description || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Atsakymų:</strong> <span className="text-surface-500">{selectedProvider._count.responses}</span></p>
 

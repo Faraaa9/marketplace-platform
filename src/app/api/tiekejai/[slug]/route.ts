@@ -51,7 +51,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
             experienceYears: true,
             offersInvoices: true,
             availableForUrgent: true,
-            specializations: true,
             location: true,
             phone: true,
             website: true,
@@ -60,6 +59,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
             isActive: true,
             moderationStatus: true,
             createdAt: true,
+            categories: {
+              select: {
+                category: { select: { id: true, name: true, slug: true } },
+              },
+              orderBy: { sortOrder: "asc" },
+            },
           },
         },
         subscription: { select: { status: true } },
@@ -94,7 +99,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     const badge = PLAN_LIMITS[planType]?.badge || null;
 
     const images: string[] = provider.providerProfile.images ?? [];
-    const specializations: string[] = provider.providerProfile.specializations ?? [];
+    const categories = (provider.providerProfile.categories ?? []).map((link) => ({
+      id: link.category.id,
+      name: link.category.name,
+      slug: link.category.slug,
+    }));
 
     // --- Trust signals ---
 
@@ -104,7 +113,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     const maxPoints = 7;
     if (profile.description && profile.description.length >= 20) completenessPoints++;
     if (profile.headline) completenessPoints++;
-    if (specializations.length > 0) completenessPoints++;
+    if (categories.length > 0) completenessPoints++;
     if (profile.services) completenessPoints++;
     if (profile.location) completenessPoints++;
     if (profile.phone) completenessPoints++;
@@ -160,7 +169,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
         comment: true,
         createdAt: true,
         client: { select: { name: true } },
-        request: { select: { title: true, category: true } },
+        request: {
+          select: {
+            title: true,
+            categoryRef: { select: { name: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 10,
@@ -183,7 +197,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
       experienceYears: provider.providerProfile.experienceYears,
       offersInvoices: provider.providerProfile.offersInvoices,
       availableForUrgent: provider.providerProfile.availableForUrgent,
-      specializations,
+      categories,
       location: provider.providerProfile.location,
       website: provider.providerProfile.website,
       planType,
@@ -201,7 +215,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
         createdAt: r.createdAt,
         clientName: r.client?.name || "Klientas",
         requestTitle: r.request.title,
-        requestCategory: r.request.category,
+        requestCategory: r.request.categoryRef?.name ?? null,
       })),
       lastActiveAt: provider.responses[0]?.createdAt || provider.providerProfile.createdAt,
       memberSince: provider.createdAt,

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -14,7 +13,7 @@ interface Request {
   id: string;
   trackingToken: string;
   title: string;
-  category: string;
+  categoryRef: { name: string } | null;
   location: string;
   status: string;
   createdAt: string;
@@ -116,7 +115,7 @@ export default function MyRequestsPage() {
               <div className="space-y-3">
                 {filtered.map((req) => {
                   const status = STATUS_MAP[req.status] || STATUS_MAP.OPEN;
-                  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === req.category)?.label;
+                  const categoryName = req.categoryRef?.name;
                   const hasNewResponse = req.lastResponseAt &&
                     Date.now() - new Date(req.lastResponseAt).getTime() < 24 * 60 * 60 * 1000;
 
@@ -137,9 +136,11 @@ export default function MyRequestsPage() {
 
                         {/* Meta */}
                         <div className="flex flex-wrap items-center gap-3 text-micro text-surface-400 dark:text-surface-500">
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-0.5 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-400">
-                            {categoryLabel}
-                          </span>
+                          {categoryName && (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-0.5 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-400">
+                              {categoryName}
+                            </span>
+                          )}
                           <span className="inline-flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {req.location}

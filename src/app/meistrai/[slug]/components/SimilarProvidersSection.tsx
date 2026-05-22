@@ -7,17 +7,17 @@ import { getEffectivePlanType } from "@/lib/constants";
 
 interface SimilarProvidersSectionProps {
   providerId: string;
-  specializations: string[];
+  categoryIds: string[];
   location: string | null;
 }
 
 export default async function SimilarProvidersSection({
   providerId,
-  specializations,
+  categoryIds,
   location,
 }: SimilarProvidersSectionProps) {
-  const primarySpecialization = specializations[0];
-  if (!primarySpecialization) return null;
+  const primaryCategoryId = categoryIds[0];
+  if (!primaryCategoryId) return null;
 
   const providers = await prisma.user.findMany({
     where: {
@@ -27,7 +27,7 @@ export default async function SimilarProvidersSection({
       providerProfile: {
         isActive: true,
         moderationStatus: "APPROVED",
-        specializations: { has: primarySpecialization },
+        categories: { some: { categoryId: primaryCategoryId } },
         ...(location ? { location } : {}),
       },
     },

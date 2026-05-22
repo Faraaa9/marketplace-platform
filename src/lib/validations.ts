@@ -20,7 +20,7 @@ export const registerSchema = registerSchemaBase.refine((data) => data.password 
 export const serviceRequestSchema = z.object({
   title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
-  category: z.string().min(1, "Pasirinkite kategoriją"),
+  categoryId: z.string().min(1, "Pasirinkite kategoriją"),
   location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
   budget: z.string().min(1, "Nurodykite biudžetą").max(100),
   deadline: z.string().min(1, "Nurodykite terminą").max(100),
@@ -41,7 +41,7 @@ export const serviceRequestSchema = z.object({
 export const serviceRequestEditSchema = z.object({
   title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
-  category: z.string().min(1, "Pasirinkite kategoriją"),
+  categoryId: z.string().min(1, "Pasirinkite kategoriją"),
   location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
   budget: z.string().min(1, "Nurodykite biudžetą").max(100),
   deadline: z.string().min(1, "Nurodykite terminą").max(100),
@@ -82,7 +82,7 @@ export const providerProfileSchema = z.object({
   experienceYears: z.number().int().min(0).max(99).nullable().optional(),
   offersInvoices: z.boolean().optional(),
   availableForUrgent: z.boolean().optional(),
-  specializations: z.array(z.string()).min(1, "Pasirinkite bent vieną specializaciją"),
+  categoryIds: z.array(z.string()).min(1, "Pasirinkite bent vieną kategoriją").max(6, "Daugiausia 6 kategorijos"),
   location: z.string().min(1, "Pasirinkite miestą"),
   phone: z.string().optional(),
   website: z.string().url("Neteisingas URL formatas").optional().or(z.literal("")),

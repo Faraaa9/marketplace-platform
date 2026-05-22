@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import Select from "@/components/ui/Select";
 import Badge from "@/components/ui/Badge";
@@ -11,13 +10,18 @@ import { Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 interface Request {
   id: string;
   title: string;
-  category: string;
+  categoryRef: { name: string } | null;
   location: string;
   status: string;
   clientName: string;
   clientEmail: string;
   createdAt: string;
   _count: { responses: number };
+}
+
+interface CategoryOption {
+  value: string;
+  label: string;
 }
 
 interface Pagination {
@@ -32,9 +36,32 @@ export default function AdminRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+
+  // Load the curated taxonomy for the category filter — the depth-1
+  // categories users actually pick. Value is the slug the API filters by.
+  useEffect(() => {
+    fetch("/api/service-categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.success) return;
+        const options: CategoryOption[] = (
+          data.data as Array<{
+            categories: Array<{ slug: string; name: string }>;
+          }>
+        ).flatMap((group) =>
+          group.categories.map((category) => ({
+            value: category.slug,
+            label: category.name,
+          })),
+        );
+        setCategoryOptions(options);
+      })
+      .catch(() => setCategoryOptions([]));
+  }, []);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -93,7 +120,7 @@ export default function AdminRequestsPage() {
           onChange={(e) => setStatusFilter(e.target.value)}
         />
         <Select
-          options={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+          options={categoryOptions}
           placeholder="Visos kategorijos"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -116,12 +143,12 @@ export default function AdminRequestsPage() {
             </thead>
             <tbody className="bg-white dark:bg-surface-900">
               {requests.map((req) => {
-                const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === req.category)?.label;
+                const categoryName = req.categoryRef?.name;
                 return (
                   <tr key={req.id} className="border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
                     <td className="py-3 px-4 font-medium text-surface-900 dark:text-white max-w-[200px] truncate">{req.title}</td>
                     <td className="py-3 px-4 text-surface-500">{req.clientName}</td>
-                    <td className="py-3 px-4"><Badge>{categoryLabel}</Badge></td>
+                    <td className="py-3 px-4">{categoryName ? <Badge>{categoryName}</Badge> : <span className="text-surface-400">—</span>}</td>
                     <td className="py-3 px-4">
                       <select
                         value={req.status}

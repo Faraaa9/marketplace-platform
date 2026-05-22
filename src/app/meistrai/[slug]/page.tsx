@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
-import { SERVICE_CATEGORIES, getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
+import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
 import EmptyState from "@/components/ui/EmptyState";
@@ -28,30 +28,20 @@ import {
   ArrowLeft,
   Award,
   BadgeCheck,
-  Calculator,
   Calendar,
   CheckCircle,
   Clock,
-  Droplets,
   Euro,
   FileCheck,
   Globe,
-  GraduationCap,
-  Hammer,
   MapPin,
   MessageSquare,
-  Monitor,
-  MoreHorizontal,
   Package,
-  Palette,
-  Scale,
   Search,
   Shield,
   ShieldCheck,
-  Sparkles,
   Star,
-  Trees,
-  Truck,
+  Tag,
   UserCheck,
   Wrench,
   Zap,
@@ -67,6 +57,17 @@ export const dynamic = "force-dynamic";
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
+
+interface ProviderCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/** ProviderProfileData plus the provider's curated categories. */
+type ProviderProfileWithCategories = ProviderProfileData & {
+  categories: ProviderCategory[];
+};
 
 export default async function PublicProviderProfilePage({ params }: PageProps) {
   const { slug } = await params;
@@ -272,17 +273,17 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                   )}
                 </div>
 
-                {/* Specializations as subtle badges with icons */}
-                {provider.specializations.length > 0 && (
+                {/* Curated categories as subtle badges */}
+                {provider.categories.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {provider.specializations.map((spec) => (
+                    {provider.categories.map((category) => (
                       <Link
-                        key={spec}
-                        href={`/meistrai?category=${spec}`}
+                        key={category.id}
+                        href={`/meistrai?category=${category.slug}`}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 text-micro font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
                       >
-                        <SpecIcon value={spec} />
-                        {categoryLabel(spec)}
+                        <Tag className="h-3 w-3" />
+                        {category.name}
                       </Link>
                     ))}
                   </div>
@@ -487,7 +488,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
             <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
               <SimilarProvidersSection
                 providerId={provider.id}
-                specializations={provider.specializations}
+                categoryIds={provider.categories.map((c) => c.id)}
                 location={provider.location}
               />
             </Suspense>
@@ -537,7 +538,9 @@ async function resolveProvider(
   return null;
 }
 
-async function getProviderProfile(id: string): Promise<ProviderProfileData | null> {
+async function getProviderProfile(
+  id: string,
+): Promise<ProviderProfileWithCategories | null> {
   const [provider, reviewSummary, recentResponses, acceptedRows] = await Promise.all([
     prisma.user.findFirst({
       where: {
@@ -560,7 +563,10 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
             experienceYears: true,
             offersInvoices: true,
             availableForUrgent: true,
-            specializations: true,
+            categories: {
+              select: { category: { select: { id: true, name: true, slug: true } } },
+              orderBy: { sortOrder: "asc" },
+            },
             location: true,
             phone: true,
             website: true,
@@ -601,8 +607,12 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
   const planType = getEffectivePlanType(profile.planType || "FREE", provider.subscription?.status);
   const badge = PLAN_LIMITS[planType]?.badge || null;
   const images = sanitizeImageUrls(profile.images);
-  const specializations = profile.specializations ?? [];
-  const profileCompleteness = calculateProfileCompleteness(profile, images, specializations);
+  const categories: ProviderCategory[] = (profile.categories ?? []).map((link) => ({
+    id: link.category.id,
+    name: link.category.name,
+    slug: link.category.slug,
+  }));
+  const profileCompleteness = calculateProfileCompleteness(profile, images, categories);
   const avgResponseTimeHours = calculateAvgResponseTimeHours(recentResponses);
   const avgRating =
     reviewSummary._avg.rating !== null
@@ -622,7 +632,7 @@ async function getProviderProfile(id: string): Promise<ProviderProfileData | nul
     experienceYears: profile.experienceYears,
     offersInvoices: profile.offersInvoices,
     availableForUrgent: profile.availableForUrgent,
-    specializations,
+    categories,
     location: profile.location,
     website: profile.website,
     phone: profile.phone,
@@ -706,7 +716,7 @@ async function getTopReviewsForSeo(providerId: string): Promise<SeoReview[]> {
 }
 
 function buildLocalBusinessSchema(
-  provider: ProviderProfileData,
+  provider: ProviderProfileWithCategories,
   profileUrl: string
 ): Record<string, unknown> {
   const schema: Record<string, unknown> = {
@@ -769,8 +779,8 @@ function buildLocalBusinessSchema(
     schema.sameAs = [websiteUrl];
   }
 
-  if (provider.specializations.length > 0) {
-    schema.knowsAbout = provider.specializations.map((spec) => categoryLabel(spec));
+  if (provider.categories.length > 0) {
+    schema.knowsAbout = provider.categories.map((category) => category.name);
   }
 
   return schema;
@@ -849,13 +859,13 @@ function calculateProfileCompleteness(
     phone: string | null;
   },
   images: string[],
-  specializations: string[]
+  categories: ProviderCategory[]
 ) {
   let completenessPoints = 0;
   const maxPoints = 7;
   if (profile.description && profile.description.length >= 20) completenessPoints++;
   if (profile.headline) completenessPoints++;
-  if (specializations.length > 0) completenessPoints++;
+  if (categories.length > 0) completenessPoints++;
   if (profile.services) completenessPoints++;
   if (profile.location) completenessPoints++;
   if (profile.phone) completenessPoints++;
@@ -878,29 +888,6 @@ function calculateAvgResponseTimeHours(
   }
 
   return counted > 0 ? Math.round(totalMs / counted / (1000 * 60 * 60)) : null;
-}
-
-function categoryLabel(value: string) {
-  return SERVICE_CATEGORIES.find((category) => category.value === value)?.label || value;
-}
-
-const SPEC_ICONS: Record<string, ReactNode> = {
-  statyba: <Hammer className="h-3 w-3" />,
-  santechnika: <Droplets className="h-3 w-3" />,
-  elektra: <Zap className="h-3 w-3" />,
-  valymas: <Sparkles className="h-3 w-3" />,
-  transportas: <Truck className="h-3 w-3" />,
-  sodas: <Trees className="h-3 w-3" />,
-  it: <Monitor className="h-3 w-3" />,
-  dizainas: <Palette className="h-3 w-3" />,
-  teise: <Scale className="h-3 w-3" />,
-  buhalterija: <Calculator className="h-3 w-3" />,
-  svietimas: <GraduationCap className="h-3 w-3" />,
-  kita: <MoreHorizontal className="h-3 w-3" />,
-};
-
-function SpecIcon({ value }: { value: string }) {
-  return <>{SPEC_ICONS[value] || <Wrench className="h-3 w-3" />}</>;
 }
 
 function responseTimeLabel(hours: number | null) {

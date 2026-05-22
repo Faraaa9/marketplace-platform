@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES } from "@/lib/constants";
+import { LITHUANIAN_CITIES } from "@/lib/constants";
+import { getServiceCategoryGroups } from "@/lib/service-categories";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
@@ -82,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Pull the minimum surface area from DB: slug + updatedAt only.
   // Parallelize to keep total sitemap response under ~3s.
-  const [activeProviderProfiles, supplierSlugs] = await Promise.all([
+  const [activeProviderProfiles, supplierSlugs, categoryGroups] = await Promise.all([
     prisma.providerProfile.findMany({
       where: {
         isActive: true,
@@ -95,6 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { status: { in: ["unclaimed", "claimed"] } },
       select: { slug: true, updatedAt: true },
     }),
+    getServiceCategoryGroups(),
   ]);
 
   const providerEntries: SitemapEntry[] = activeProviderProfiles
@@ -115,11 +117,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Category × city combo URLs targeting the public requests listing
   // (where category + location are real, indexable query params).
-  // SERVICE_CATEGORIES × LITHUANIAN_CITIES = 12 × 20 = 240 combos.
+  // Uses the curated depth-1 category slugs — the granular services users
+  // actually filter by. depth-1 categories × LITHUANIAN_CITIES combos.
+  const categorySlugs = categoryGroups.flatMap((group) =>
+    group.categories.map((category) => category.slug),
+  );
   const comboEntries: SitemapEntry[] = [];
-  for (const category of SERVICE_CATEGORIES) {
+  for (const categorySlug of categorySlugs) {
     for (const city of LITHUANIAN_CITIES) {
-      const qs = new URLSearchParams({ category: category.value, location: city }).toString();
+      const qs = new URLSearchParams({ category: categorySlug, location: city }).toString();
       comboEntries.push({
         url: `${BASE_URL}/uzklausos?${qs}`,
         lastModified: now,

@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { clearGuestRequest } from "@/lib/guest-request";
 import { formatRelativeDate, cn } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -270,7 +269,9 @@ export default function TrackRequestPage() {
   }
   if (!request) return null;
 
-  const categoryLabel = SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label || request.category;
+  // The tracking API returns `category` already resolved to the curated
+  // category display name.
+  const categoryLabel = request.category;
   const statusMap: Record<string, { label: string; variant: "warning" | "brand" | "default" }> = {
     PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
     OPEN: { label: "Atidaryta", variant: "brand" },

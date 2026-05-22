@@ -16,7 +16,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         id: true,
         title: true,
         description: true,
-        category: true,
+        // `categoryId` lets the edit form pre-select the picker; `categoryRef`
+        // supplies the display name (returned as the `category` field).
+        categoryId: true,
+        categoryRef: { select: { name: true } },
         location: true,
         budget: true,
         deadline: true,
@@ -99,12 +102,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { reviews: _reviews, _count, ...requestWithoutReviews } = request;
+    const { reviews: _reviews, _count, categoryRef, ...requestWithoutReviews } = request;
 
     return NextResponse.json({
       success: true,
       data: {
         ...requestWithoutReviews,
+        // Keep the response field name `category` — now the curated category
+        // display name — so existing consumers keep working.
+        category: categoryRef?.name ?? "",
         responses: responsesWithBadge,
         viewCount: _count.views,
       },

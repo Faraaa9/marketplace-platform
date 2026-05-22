@@ -6,7 +6,11 @@ import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
 import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate, truncate } from "@/lib/utils";
-import { SERVICE_CATEGORIES, BUDGET_OPTIONS } from "@/lib/constants";
+import { BUDGET_OPTIONS } from "@/lib/constants";
+import {
+  getServiceCategoryGroups,
+  getServiceCategoryNameMap,
+} from "@/lib/service-categories";
 import {
   Accordion,
   AccordionContent,
@@ -14,30 +18,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Hammer, Droplets, Zap, Sparkles, Truck, Trees, Monitor, Palette, Scale,
-  Calculator, GraduationCap, MoreHorizontal, ArrowRight, MapPin, Clock,
-  MessageSquare, FileText, Users, ShieldCheck, Check, Package, Maximize2, Search,
+  Zap, Sparkles, ArrowRight, MapPin, Clock,
+  MessageSquare, FileText, Users, ShieldCheck, Check, Package, Maximize2, Search, Tag,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description:
     "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
-};
-
-const iconMap: Record<string, React.ReactNode> = {
-  Hammer: <Hammer className="h-6 w-6" />,
-  Droplets: <Droplets className="h-6 w-6" />,
-  Zap: <Zap className="h-6 w-6" />,
-  Sparkles: <Sparkles className="h-6 w-6" />,
-  Truck: <Truck className="h-6 w-6" />,
-  Trees: <Trees className="h-6 w-6" />,
-  Monitor: <Monitor className="h-6 w-6" />,
-  Palette: <Palette className="h-6 w-6" />,
-  Scale: <Scale className="h-6 w-6" />,
-  Calculator: <Calculator className="h-6 w-6" />,
-  GraduationCap: <GraduationCap className="h-6 w-6" />,
-  MoreHorizontal: <MoreHorizontal className="h-6 w-6" />,
 };
 
 const AVATARS = [
@@ -72,7 +60,7 @@ const HOME_PAGE_FALLBACK_DATA = {
     id: string;
     title: string;
     description: string;
-    category: string;
+    categoryRef: { name: string; slug: string } | null;
     location: string;
     budget: string | null;
     createdAt: Date;
@@ -81,7 +69,6 @@ const HOME_PAGE_FALLBACK_DATA = {
   providerCount: 0,
   requestCount: 0,
   responseCount: 0,
-  categoryCount: 0,
 };
 
 const FAQ_ITEMS = [
@@ -126,14 +113,14 @@ const FAQ_ITEMS = [
 const getHomePageData = unstable_cache(
   async () => {
     try {
-      const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
+      const [recentRequests, providerCount, requestCount, responseCount] = await Promise.all([
         prisma.serviceRequest.findMany({
           where: { status: "OPEN", moderationStatus: "APPROVED" },
           select: {
             id: true,
             title: true,
             description: true,
-            category: true,
+            categoryRef: { select: { name: true, slug: true } },
             location: true,
             budget: true,
             createdAt: true,
@@ -151,7 +138,6 @@ const getHomePageData = unstable_cache(
         }),
         prisma.serviceRequest.count(),
         prisma.response.count(),
-        prisma.serviceRequest.groupBy({ by: ["category"] }).then((g) => g.length),
       ]);
 
       return {
@@ -159,7 +145,6 @@ const getHomePageData = unstable_cache(
         providerCount,
         requestCount,
         responseCount,
-        categoryCount,
       };
     } catch (error) {
       console.error("Home page data error:", error);
@@ -171,16 +156,18 @@ const getHomePageData = unstable_cache(
 );
 
 export default async function HomePage() {
-  const {
-    recentRequests,
-    providerCount,
-    requestCount,
-    responseCount,
-    categoryCount,
-  } = await getHomePageData();
+  const [
+    { recentRequests, providerCount, requestCount, responseCount },
+    categoryGroups,
+  ] = await Promise.all([getHomePageData(), getServiceCategoryGroups()]);
 
-  const categoryLabel = (val: string) =>
-    SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
+  // Depth-1 categories are the granular services users actually pick — the
+  // roots are just group headers, so they don't count toward the stat.
+  const categoryCount = categoryGroups.reduce(
+    (sum, group) => sum + group.categories.length,
+    0,
+  );
+
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
@@ -194,7 +181,7 @@ export default async function HomePage() {
     { value: providerCount || 1, label: "Specialistų" },
     { value: requestCount || 1, label: "Pateiktų užklausų" },
     { value: responseCount || 1, label: "Pateiktų pasiūlymų" },
-    { value: categoryCount || SERVICE_CATEGORIES.length, label: "Kategorijų" },
+    { value: categoryCount || 1, label: "Kategorijų" },
   ];
 
   return (
@@ -375,9 +362,11 @@ export default async function HomePage() {
                     {truncate(r.description, 100)}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="rounded-lg bg-[#EFE0D6] px-2.5 py-1 text-xs font-medium text-[#A84E2E] dark:bg-brand-950/60 dark:text-brand-300">
-                      {categoryLabel(r.category)}
-                    </span>
+                    {r.categoryRef?.name && (
+                      <span className="rounded-lg bg-[#EFE0D6] px-2.5 py-1 text-xs font-medium text-[#A84E2E] dark:bg-brand-950/60 dark:text-brand-300">
+                        {r.categoryRef.name}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1 text-xs text-[#8C877D] dark:text-surface-400">
                       <MapPin className="h-3 w-3" />
                       {r.location}
@@ -455,18 +444,18 @@ export default async function HomePage() {
               Paslaugų kategorijos
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {SERVICE_CATEGORIES.map((cat) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
+            {categoryGroups.map((group) => (
               <Link
-                key={cat.value}
-                href={`/uzklausos/nauja?category=${cat.value}`}
+                key={group.root.id}
+                href={`/uzklausos?category=${group.root.slug}`}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)] dark:border-surface-800 dark:bg-surface-900 dark:hover:border-surface-700"
               >
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] transition-transform group-hover:scale-110 dark:bg-brand-950/60 dark:text-brand-300">
-                  {iconMap[cat.icon]}
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] dark:bg-brand-950/60 dark:text-brand-300">
+                  <Tag className="h-6 w-6" />
                 </div>
                 <span className="text-sm font-medium text-[#26231F] dark:text-surface-100">
-                  {cat.label}
+                  {group.root.name}
                 </span>
               </Link>
             ))}

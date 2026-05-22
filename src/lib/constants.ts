@@ -1,20 +1,5 @@
 export const APP_NAME = "PaslaugųRinka";
 
-export const SERVICE_CATEGORIES = [
-  { value: "statyba", label: "Statyba ir remontas", icon: "Hammer" },
-  { value: "santechnika", label: "Santechnika", icon: "Droplets" },
-  { value: "elektra", label: "Elektros darbai", icon: "Zap" },
-  { value: "valymas", label: "Valymo paslaugos", icon: "Sparkles" },
-  { value: "transportas", label: "Transportas ir perkraustymas", icon: "Truck" },
-  { value: "sodas", label: "Sodo ir aplinkos tvarkymas", icon: "Trees" },
-  { value: "it", label: "IT paslaugos", icon: "Monitor" },
-  { value: "dizainas", label: "Dizainas ir interjeras", icon: "Palette" },
-  { value: "teise", label: "Teisinės paslaugos", icon: "Scale" },
-  { value: "buhalterija", label: "Buhalterija", icon: "Calculator" },
-  { value: "svietimas", label: "Švietimas ir korepetitoriai", icon: "GraduationCap" },
-  { value: "kita", label: "Kita", icon: "MoreHorizontal" },
-] as const;
-
 export const BUDGET_OPTIONS = [
   { value: "iki-100", label: "Iki €100" },
   { value: "100-500", label: "€100 – €500" },

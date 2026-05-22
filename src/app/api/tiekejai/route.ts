@@ -33,9 +33,16 @@ export async function GET(req: NextRequest) {
     }
 
     if (category) {
+      // ?category=<slug> — providers whose curated categories include it.
+      const picked = await prisma.category.findUnique({
+        where: { slug: category },
+        select: { id: true },
+      });
       where.providerProfile = {
         ...(where.providerProfile as Record<string, unknown>),
-        specializations: { has: category },
+        categories: picked
+          ? { some: { categoryId: picked.id } }
+          : { some: { categoryId: "__none__" } },
       };
     }
 
@@ -57,10 +64,15 @@ export async function GET(req: NextRequest) {
           providerProfile: {
             select: {
               description: true,
-              specializations: true,
               location: true,
               images: true,
               planType: true,
+              categories: {
+                select: {
+                  category: { select: { id: true, name: true, slug: true } },
+                },
+                orderBy: { sortOrder: "asc" },
+              },
             },
           },
           subscription: { select: { status: true } },
@@ -83,14 +95,18 @@ export async function GET(req: NextRequest) {
         p.subscription?.status
       );
       const images: string[] = p.providerProfile?.images ?? [];
-      const specializations: string[] = p.providerProfile?.specializations ?? [];
+      const categories = (p.providerProfile?.categories ?? []).map((link) => ({
+        id: link.category.id,
+        name: link.category.name,
+        slug: link.category.slug,
+      }));
 
       return {
         id: p.id,
         name: p.name,
         image: images[0] || p.image || null,
         description: p.providerProfile?.description || null,
-        specializations,
+        categories,
         location: p.providerProfile?.location || null,
         planType,
         responseCount: p._count.responses,

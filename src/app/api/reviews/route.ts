@@ -137,7 +137,9 @@ export async function GET(req: NextRequest) {
         comment: true,
         createdAt: true,
         client: { select: { name: true } },
-        request: { select: { title: true, category: true } },
+        request: {
+          select: { title: true, categoryRef: { select: { name: true } } },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 50,

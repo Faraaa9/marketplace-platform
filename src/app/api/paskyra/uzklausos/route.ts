@@ -18,7 +18,7 @@ export async function GET() {
         id: true,
         trackingToken: true,
         title: true,
-        category: true,
+        categoryRef: { select: { name: true } },
         location: true,
         status: true,
         createdAt: true,

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         trackingToken: true,
         status: true,
         title: true,
-        category: true,
+        categoryId: true,
         location: true,
         clientId: true,
         requestVerificationExpiresAt: true,
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    notifyRelevantProviders(request.title, request.category, request.location, request.clientId).catch((error) =>
+    notifyRelevantProviders(request.title, request.categoryId, request.location, request.clientId).catch((error) =>
       console.error("Provider notification error:", error)
     );
 

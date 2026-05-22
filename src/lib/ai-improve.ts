@@ -1,5 +1,5 @@
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import type { ImproveDescriptionInput } from "@/lib/validations";
+import { getServiceCategoryGroups } from "@/lib/service-categories";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini handles Lithuanian grammar/nuance best of the OpenRouter models.
@@ -8,10 +8,29 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 30_000;
 
-const CATEGORY_VALUES = new Set<string>(SERVICE_CATEGORIES.map((c) => c.value));
-const CATEGORY_LIST = SERVICE_CATEGORIES.map((c) => `${c.value} (${c.label})`).join(", ");
+/**
+ * Build the curated-category prompt list (`slug (Pavadinimas)`, grouped by
+ * root) and the valid-slug set used to validate the model's answer. The
+ * taxonomy lives in the DB, so this resolves at call time.
+ */
+async function getCategoryPromptData(): Promise<{ list: string; validSlugs: Set<string> }> {
+  const groups = await getServiceCategoryGroups();
+  const validSlugs = new Set<string>();
+  const lines: string[] = [];
+  for (const group of groups) {
+    const items = group.categories
+      .map((c) => {
+        validSlugs.add(c.slug);
+        return `${c.slug} (${c.name})`;
+      })
+      .join(", ");
+    if (items) lines.push(`${group.root.name}: ${items}`);
+  }
+  return { list: lines.join("\n"), validSlugs };
+}
 
-const SYSTEM_PROMPT = `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Klientas rašo užklausą — aprašo, kokios paslaugos jam reikia. Tavo tikslas, kad paslaugų tiekėjas iškart suprastų užduotį ir galėtų ją tiksliai įkainoti.
+function buildSystemPrompt(categoryList: string): string {
+  return `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Klientas rašo užklausą — aprašo, kokios paslaugos jam reikia. Tavo tikslas, kad paslaugų tiekėjas iškart suprastų užduotį ir galėtų ją tiksliai įkainoti.
 
 Grąžink TIK galiojantį JSON objektą su laukais:
 {"improvedDescription": "...", "title": "...", "category": "...", "location": "...", "budget": "...", "deadline": "...", "recommendations": [{"prompt": "...", "field": "..."}]}
@@ -25,7 +44,9 @@ Grąžink TIK galiojantį JSON objektą su laukais:
 
 "title" — trumpas, konkretus užklausos pavadinimas lietuvių kalba (3–8 žodžiai, daugiausia 70 simbolių). Pvz. „Trinkelių klojimas kieme".
 
-"category" — TIKSLIAI vienas kodas iš šio sąrašo (grąžink tik kodą, ne pavadinimą skliausteliuose): ${CATEGORY_LIST}. Parink tinkamiausią pagal aprašymą.
+"category" — TIKSLIAI vienas kategorijos kodas (slug) iš šio sąrašo (grąžink tik kodą, ne pavadinimą skliausteliuose). Kategorijos sugrupuotos pagal sritį:
+${categoryList}
+Parink tinkamiausią konkrečią kategoriją pagal aprašymą.
 
 "location" — vietovė. Jei aprašyme paminėtas miestas, rajonas, miestelis ar kaimas (Lietuvos arba užsienio) — grąžink jį vardininko linksniu ir taisyklinga rašyba (pvz. „Trakų rajone" → „Trakai", „darbai Kaune" → „Kaunas"). Jei vietovė aprašyme nepaminėta — grąžink tuščią eilutę "".
 
@@ -39,6 +60,7 @@ Grąžink TIK galiojantį JSON objektą su laukais:
 Neklausk to, kas jau parašyta. Jei aprašymas jau išsamus — grąžink tuščią sąrašą [].
 
 Grąžink TIK JSON, be jokio papildomo teksto.`;
+}
 
 export class AiImproveError extends Error {}
 
@@ -50,6 +72,7 @@ export interface ImproveRecommendation {
 export interface ImproveDescriptionResult {
   improvedDescription: string;
   title: string;
+  /** A curated category slug, or "" when the model picked nothing valid. */
   category: string;
   location: string;
   budget: string;
@@ -57,7 +80,7 @@ export interface ImproveDescriptionResult {
   recommendations: ImproveRecommendation[];
 }
 
-function parseResult(raw: string): ImproveDescriptionResult | null {
+function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionResult | null {
   const cleaned = raw
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
@@ -80,7 +103,7 @@ function parseResult(raw: string): ImproveDescriptionResult | null {
   const title = typeof record.title === "string" ? record.title.trim().slice(0, 90) : "";
 
   const rawCategory = (typeof record.category === "string" ? record.category.trim() : "").toLowerCase();
-  const category = CATEGORY_VALUES.has(rawCategory) ? rawCategory : "";
+  const category = validSlugs.has(rawCategory) ? rawCategory : "";
 
   const location =
     typeof record.location === "string" ? record.location.trim().slice(0, 100) : "";
@@ -115,6 +138,9 @@ export async function improveDescription(
     throw new AiImproveError("AI_NOT_CONFIGURED");
   }
 
+  const { list: categoryList, validSlugs } = await getCategoryPromptData();
+  const systemPrompt = buildSystemPrompt(categoryList);
+
   const context: string[] = [];
   if (input.category) context.push(`Kategorija: ${input.category}`);
   if (input.title) context.push(`Pavadinimas: ${input.title}`);
@@ -138,7 +164,7 @@ export async function improveDescription(
         reasoning: { enabled: false },
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
       }),
@@ -159,7 +185,7 @@ export async function improveDescription(
       throw new AiImproveError("AI_EMPTY_RESPONSE");
     }
 
-    const result = parseResult(raw);
+    const result = parseResult(raw, validSlugs);
     if (!result) {
       throw new AiImproveError("AI_EMPTY_RESPONSE");
     }

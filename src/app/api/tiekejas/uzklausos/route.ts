@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
-import { parseSpecializations } from "@/lib/provider-eligibility";
+import { expandToMatchSet } from "@/lib/category-matching";
 
 export const dynamic = "force-dynamic";
 
@@ -18,34 +18,37 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get("sort") || "relevance";
     const perPage = 20;
 
-    // Load provider profile for relevance scoring
+    // Load provider profile — curated categories drive matching + relevance.
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: guard.userId },
-      select: { specializations: true, location: true },
+      select: {
+        location: true,
+        categories: { select: { categoryId: true } },
+      },
     });
 
-    const providerSpecs = parseSpecializations(profile?.specializations);
+    const providerCategoryIds = profile?.categories.map((c) => c.categoryId) ?? [];
     const providerLocation = profile?.location || "";
 
-    // Build filter — only matching specializations, exclude own requests
+    // The set of request categoryIds this provider can serve (tree-aware).
+    const providerMatchSet = await expandToMatchSet(providerCategoryIds);
+
+    // An explicit ?category= filter (curated slug) narrows to that branch.
+    let filterIds = providerMatchSet;
+    if (category) {
+      const picked = await prisma.category.findUnique({
+        where: { slug: category },
+        select: { id: true },
+      });
+      filterIds = picked ? await expandToMatchSet([picked.id]) : [];
+    }
+
     const where: Record<string, unknown> = {
       status: "OPEN",
       moderationStatus: "APPROVED",
       clientId: { not: guard.userId },
+      categoryId: { in: filterIds },
     };
-    // Filter by provider specializations (only show requests they can respond to)
-    if (providerSpecs.length > 0) {
-      if (category) {
-        // If explicit category filter, use it (but only if it's in their specs)
-        where.category = category;
-      } else {
-        // Default: only show categories matching provider's specializations
-        where.category = { in: providerSpecs };
-      }
-    } else {
-      // No specializations — show nothing (they need to set up profile first)
-      where.category = { in: [] };
-    }
     if (location) where.location = location;
     if (search) {
       where.OR = [
@@ -60,7 +63,8 @@ export async function GET(req: NextRequest) {
         id: true,
         title: true,
         description: true,
-        category: true,
+        categoryId: true,
+        categoryRef: { select: { id: true, name: true } },
         location: true,
         budget: true,
         status: true,
@@ -75,34 +79,32 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Score relevance + mark responded
-    const scored = allRequests.map((req) => {
+    // Score relevance + mark responded.
+    const providerMatch = new Set(providerMatchSet);
+    const scored = allRequests.map((reqRow) => {
       let score = 0;
-      if (providerSpecs.includes(req.category)) score += 2;
+      if (reqRow.categoryId && providerMatch.has(reqRow.categoryId)) score += 2;
       if (
-        req.location === providerLocation ||
-        req.location === "Visa Lietuva" ||
+        reqRow.location === providerLocation ||
+        reqRow.location === "Visa Lietuva" ||
         providerLocation === "Visa Lietuva"
       ) {
         score += 1;
       }
-      const { responses, ...rest } = req;
+      const { responses, ...rest } = reqRow;
       return { ...rest, relevance: score, hasResponded: responses.length > 0 };
     });
 
     // Sort
     if (sort === "newest") {
       scored.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else {
       // relevance (default)
       scored.sort((a, b) => {
         if (b.relevance !== a.relevance) return b.relevance - a.relevance;
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
     }
 
@@ -117,8 +119,8 @@ export async function GET(req: NextRequest) {
         total,
         pages,
         page,
-        hasSpecializations: providerSpecs.length > 0,
-        providerSpecs,
+        hasCategories: providerCategoryIds.length > 0,
+        providerCategoryIds,
       },
     });
   } catch (error) {

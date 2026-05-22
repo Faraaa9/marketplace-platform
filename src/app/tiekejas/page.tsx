@@ -16,7 +16,7 @@ interface Stats {
   totalRequests: number;
   matchingRequests: number;
   myResponses: number;
-  specializations: string[];
+  categoryCount: number;
   thisMonthResponses: number;
   planType: string;
   storedPlanType: string;
@@ -360,10 +360,10 @@ function ResendVerificationBanner() {
 function getNextAction(stats: Stats): { label: string; description: string; href: string; priority: "high" | "medium" | "low" } | null {
   if (!stats.emailVerified) return null; // banner handles this
   if (!stats.isActive) return null; // suspended banner handles this
-  if (stats.specializations.length === 0) {
+  if (stats.categoryCount === 0) {
     return {
-      label: "Pasirinkite specializacijas",
-      description: "Be specializacijų nematysite jums tinkamų užklausų",
+      label: "Pasirinkite veiklos sritis",
+      description: "Be veiklos sričių nematysite jums tinkamų užklausų",
       href: "/tiekejas/profilis",
       priority: "high",
     };
@@ -379,7 +379,7 @@ function getNextAction(stats: Stats): { label: string; description: string; href
   if (stats.matchingRequests > 0 && stats.myResponses === 0) {
     return {
       label: "Atsakykite į pirmą užklausą",
-      description: `${stats.matchingRequests} užklausos atitinka jūsų specializaciją`,
+      description: `${stats.matchingRequests} užklausos atitinka jūsų veiklos sritis`,
       href: "/tiekejas/uzklausos",
       priority: "high",
     };

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
-import { parseSpecializations } from "@/lib/provider-eligibility";
 import { generateProposalDraft, AiProposalError } from "@/lib/ai-proposal";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 
 /**
  * Generates an AI proposal draft for the provider, built from their own
@@ -32,7 +30,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         select: {
           title: true,
           description: true,
-          category: true,
+          categoryRef: { select: { name: true } },
           location: true,
           budget: true,
           deadline: true,
@@ -46,7 +44,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           description: true,
           services: true,
           experienceYears: true,
-          specializations: true,
+          categories: { select: { category: { select: { name: true } } } },
           offersInvoices: true,
           availableForUrgent: true,
         },
@@ -67,8 +65,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 
-    const categoryLabel =
-      SERVICE_CATEGORIES.find((c) => c.value === request.category)?.label || request.category;
+    const categoryLabel = request.categoryRef?.name ?? "";
 
     const result = await generateProposalDraft(
       {
@@ -77,7 +74,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         description: profile?.description ?? null,
         services: profile?.services ?? null,
         experienceYears: profile?.experienceYears ?? null,
-        specializations: parseSpecializations(profile?.specializations),
+        categoryNames: profile?.categories.map((c) => c.category.name) ?? [],
         offersInvoices: profile?.offersInvoices ?? false,
         availableForUrgent: profile?.availableForUrgent ?? false,
         reviews: reviews

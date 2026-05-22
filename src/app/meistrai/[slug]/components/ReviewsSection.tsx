@@ -1,6 +1,5 @@
 import { Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { formatRelativeDate } from "@/lib/utils";
 import TestimonialMarquee from "./TestimonialMarquee";
 import type { TestimonialData } from "./TestimonialMarquee";
@@ -24,14 +23,13 @@ export default async function ReviewsSection({
       comment: true,
       createdAt: true,
       client: { select: { name: true } },
-      request: { select: { title: true, category: true } },
+      request: {
+        select: { title: true, categoryRef: { select: { name: true } } },
+      },
     },
     orderBy: { createdAt: "desc" },
     take: 10,
   });
-
-  const categoryLabel = (val: string) =>
-    SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
 
   // Build testimonials for marquee — only reviews with comments, sorted by rating desc
   const testimonials: TestimonialData[] = reviews
@@ -42,7 +40,7 @@ export default async function ReviewsSection({
       rating: r.rating,
       comment: r.comment!,
       clientName: r.client?.name || "Klientas",
-      category: categoryLabel(r.request.category),
+      category: r.request.categoryRef?.name ?? "",
     }));
 
   return (
@@ -120,7 +118,9 @@ export default async function ReviewsSection({
                 </p>
               )}
               <p className="ml-9 mt-1 text-micro text-surface-400">
-                {categoryLabel(review.request.category)}: {review.request.title}
+                {review.request.categoryRef?.name
+                  ? `${review.request.categoryRef.name}: ${review.request.title}`
+                  : review.request.title}
               </p>
             </div>
           ))}

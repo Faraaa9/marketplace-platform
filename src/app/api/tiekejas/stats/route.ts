@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { expandToMatchSet } from "@/lib/category-matching";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export async function GET() {
         description: true,
         headline: true,
         services: true,
-        specializations: true,
+        categories: { select: { categoryId: true } },
         location: true,
         phone: true,
         images: true,
@@ -44,15 +45,16 @@ export async function GET() {
       );
     }
 
-    const specs: string[] = profile.specializations ?? [];
+    const categoryIds = profile.categories.map((c) => c.categoryId);
+    const matchSet = await expandToMatchSet(categoryIds);
 
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
     const [totalRequests, matchingRequests, myResponses, thisMonthResponses, user, subscription] = await Promise.all([
       prisma.serviceRequest.count({ where: { status: "OPEN" } }),
-      specs.length > 0
+      categoryIds.length > 0
         ? prisma.serviceRequest.count({
-            where: { status: "OPEN", category: { in: specs }, clientId: { not: session.user.id } },
+            where: { status: "OPEN", categoryId: { in: matchSet }, clientId: { not: session.user.id } },
           })
         : Promise.resolve(0),
       prisma.response.count({ where: { providerId: session.user.id } }),
@@ -73,7 +75,7 @@ export async function GET() {
     const completenessItems = [
       { key: "description", done: !!(profile.description && profile.description.length >= 20), label: "Aprašymas" },
       { key: "headline", done: !!profile.headline, label: "Antraštė" },
-      { key: "specializations", done: specs.length > 0, label: "Specializacijos" },
+      { key: "categories", done: categoryIds.length > 0, label: "Kategorijos" },
       { key: "services", done: !!profile.services, label: "Paslaugos" },
       { key: "location", done: !!profile.location, label: "Miestas" },
       { key: "phone", done: !!profile.phone, label: "Telefonas" },
@@ -126,7 +128,7 @@ export async function GET() {
         totalRequests,
         matchingRequests,
         myResponses,
-        specializations: specs,
+        categoryCount: categoryIds.length,
         thisMonthResponses,
         planType: effectivePlan,
         storedPlanType: storedPlan,

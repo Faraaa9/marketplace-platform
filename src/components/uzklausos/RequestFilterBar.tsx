@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X, Check, ArrowUpDown } from "lucide-react";
-
-interface CategoryOption {
-  value: string;
-  label: string;
-}
+import type { ServiceCategoryGroup } from "@/lib/service-categories";
 
 interface BudgetOption {
   value: string;
@@ -20,7 +16,8 @@ interface FilterBarProps {
   activeSearch: string;
   activeBudget: string;
   activeSort: string;
-  categories: CategoryOption[];
+  /** Grouped curated categories — the filter value is the category `slug`. */
+  categoryGroups: ServiceCategoryGroup[];
   cities: string[];
   budgets: BudgetOption[];
   sortOptions: { value: string; label: string }[];
@@ -33,7 +30,7 @@ export default function RequestFilterBar({
   activeSearch,
   activeBudget,
   activeSort,
-  categories,
+  categoryGroups,
   cities,
   budgets,
   sortOptions,
@@ -156,7 +153,16 @@ export default function RequestFilterBar({
     pendingBudget !== activeBudget;
   const pendingCount = [pendingCategory, pendingLocation, pendingBudget].filter(Boolean).length;
 
-  const categoryLabel = categories.find((c) => c.value === activeCategory)?.label;
+  // slug -> name across every group, for the active-category chip label.
+  const categoryNameBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) map.set(cat.slug, cat.name);
+    }
+    return map;
+  }, [categoryGroups]);
+
+  const categoryLabel = categoryNameBySlug.get(activeCategory);
   const budgetLabelActive = budgets.find((b) => b.value === activeBudget)?.label;
 
   return (
@@ -202,7 +208,7 @@ export default function RequestFilterBar({
               className="hidden sm:block absolute right-0 top-full mt-2 w-96 rounded-xl border border-[#d2c5a1] bg-[#fbfaf6] shadow-lg z-50 dark:border-surface-700 dark:bg-surface-900"
             >
               <FilterPanelContent
-                categories={categories}
+                categoryGroups={categoryGroups}
                 cities={cities}
                 budgets={budgets}
                 pendingCategory={pendingCategory}
@@ -246,7 +252,7 @@ export default function RequestFilterBar({
             </div>
             <div className="overflow-y-auto flex-1">
               <FilterPanelContent
-                categories={categories}
+                categoryGroups={categoryGroups}
                 cities={cities}
                 budgets={budgets}
                 pendingCategory={pendingCategory}
@@ -341,7 +347,7 @@ export default function RequestFilterBar({
 /* ─── Filter panel content (shared between desktop dropdown and mobile sheet) ─── */
 
 function FilterPanelContent({
-  categories,
+  categoryGroups,
   cities,
   budgets,
   pendingCategory,
@@ -355,7 +361,7 @@ function FilterPanelContent({
   pendingChanged,
   pendingCount,
 }: {
-  categories: CategoryOption[];
+  categoryGroups: ServiceCategoryGroup[];
   cities: string[];
   budgets: BudgetOption[];
   pendingCategory: string;
@@ -371,39 +377,31 @@ function FilterPanelContent({
 }) {
   return (
     <div className="p-4 space-y-4">
-      {/* Category select */}
+      {/* Category select — grouped curated categories, single-select by slug */}
       <div>
-        <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-2 block">
+        <label
+          htmlFor="filter-category"
+          className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-2 block"
+        >
           Kategorija
         </label>
-        <div className="grid grid-cols-2 gap-1 max-h-44 overflow-y-auto overscroll-contain rounded-lg">
-          {categories.map((cat) => {
-            const isSelected = pendingCategory === cat.value;
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setPendingCategory(isSelected ? "" : cat.value)}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-caption font-medium text-left transition-colors ${
-                  isSelected
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                    : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-                }`}
-              >
-                <span
-                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-                    isSelected
-                      ? "border-brand-600 bg-brand-600 dark:border-brand-500 dark:bg-brand-500"
-                      : "border-surface-300 dark:border-surface-600"
-                  }`}
-                >
-                  {isSelected && <Check className="h-3 w-3 text-white" />}
-                </span>
-                <span className="truncate">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <select
+          id="filter-category"
+          value={pendingCategory}
+          onChange={(e) => setPendingCategory(e.target.value)}
+          className="w-full h-10 rounded-lg border border-[#cdc09f] bg-[#fbfaf6] px-3 text-caption font-medium text-surface-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/25 focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+        >
+          <option value="">Visos kategorijos</option>
+          {categoryGroups.map((group) => (
+            <optgroup key={group.root.id} label={group.root.name}>
+              {group.categories.map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       {/* Divider */}

@@ -78,6 +78,19 @@ export async function POST(req: NextRequest) {
 
     const clientId = verifiedViaAccount && userId ? userId : null;
 
+    // Resolve the chosen curated category. `categoryId` drives matching; the
+    // legacy `category` String column (NOT NULL) is set to the category slug.
+    const category = await prisma.category.findUnique({
+      where: { id: data.categoryId },
+      select: { id: true, slug: true },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: "Pasirinkta kategorija nerasta" },
+        { status: 400 },
+      );
+    }
+
     const [textModeration, imageModeration] = await Promise.all([
       moderateText({
         entityType: "ServiceRequest",
@@ -113,7 +126,8 @@ export async function POST(req: NextRequest) {
       data: {
         title: sanitizeHtml(data.title),
         description: sanitizeHtml(data.description),
-        category: data.category,
+        category: category.slug,
+        categoryId: category.id,
         location: data.location,
         budget: sanitizeHtml(data.budget),
         deadline: sanitizeHtml(data.deadline),
@@ -141,7 +155,7 @@ export async function POST(req: NextRequest) {
     if (isPublished) {
       // The request is live — refresh public caches and reach out to providers.
       revalidateTag("requests", { expire: 0 });
-      notifyRelevantProviders(request.title, request.category, request.location, clientId).catch(
+      notifyRelevantProviders(request.title, request.categoryId, request.location, clientId).catch(
         (error) => console.error("Provider notification error:", error),
       );
     }

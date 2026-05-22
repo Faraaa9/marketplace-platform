@@ -3,9 +3,11 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { SERVICE_CATEGORIES, LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
+import { LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
+import { getServiceCategoryGroups } from "@/lib/service-categories";
+import { expandToMatchSet } from "@/lib/category-matching";
 import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 import PinnedRequestPhotos from "@/components/requests/PinnedRequestPhotos";
@@ -56,7 +58,17 @@ const getBoardRequests = unstable_cache(
     }
 
     const where: Record<string, unknown> = { AND: conditions, moderationStatus: "APPROVED" };
-    if (filters.category) where.category = filters.category;
+    if (filters.category) {
+      // `?category=<slug>` — resolve to a curated category. A root slug
+      // expands to its children so the board shows the whole branch.
+      const matched = await prisma.category.findUnique({
+        where: { slug: filters.category },
+        select: { id: true },
+      });
+      where.categoryId = matched
+        ? { in: await expandToMatchSet([matched.id]) }
+        : { in: [] as string[] };
+    }
     if (filters.location) where.location = filters.location;
     if (filters.budget) where.budget = filters.budget;
 
@@ -70,7 +82,7 @@ const getBoardRequests = unstable_cache(
           trackingToken: true,
           title: true,
           description: true,
-          category: true,
+          categoryRef: { select: { name: true } },
           location: true,
           budget: true,
           clientId: true,
@@ -92,9 +104,11 @@ const getBoardRequests = unstable_cache(
     ]);
 
     // unstable_cache serializes via JSON, so Dates round-trip as strings.
-    // Coerce here so consumers get real Date objects.
-    const serialized = requests.map((r) => ({
+    // Coerce here so consumers get real Date objects. Flatten the curated
+    // category relation to a plain display name.
+    const serialized = requests.map(({ categoryRef, ...r }) => ({
       ...r,
+      categoryName: categoryRef?.name ?? "",
       createdAt: r.createdAt.toISOString(),
     }));
 
@@ -120,11 +134,11 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
   const now = new Date();
 
-  const { requests, total, totalActive, newToday, totalProviderResponses } = await getBoardRequests(
-    page,
-    perPage,
-    { category, location, search, budget, sort }
-  );
+  const [{ requests, total, totalActive, newToday, totalProviderResponses }, categoryGroups] =
+    await Promise.all([
+      getBoardRequests(page, perPage, { category, location, search, budget, sort }),
+      getServiceCategoryGroups(),
+    ]);
 
   // Client-side sort for response count (kept post-cache so it doesn't bloat the key surface)
   if (sort === "responses-asc") {
@@ -134,9 +148,6 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   }
 
   const pages = Math.ceil(total / perPage);
-
-  const categoryLabel = (val: string) =>
-    SERVICE_CATEGORIES.find((c) => c.value === val)?.label || val;
 
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
@@ -255,7 +266,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           activeSearch={search}
           activeBudget={budget}
           activeSort={sort}
-          categories={SERVICE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+          categoryGroups={categoryGroups}
           cities={[...LITHUANIAN_CITIES]}
           budgets={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
           sortOptions={SORT_OPTIONS}
@@ -290,7 +301,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       {/* category + competition */}
                       <div className="flex items-center justify-between gap-3">
                         <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
-                          {categoryLabel(r.category)}
+                          {r.categoryName}
                         </span>
                         {!isMatched && (
                           <span
