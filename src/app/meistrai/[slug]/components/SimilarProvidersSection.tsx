@@ -3,7 +3,6 @@ import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
-import { getEffectivePlanType } from "@/lib/constants";
 
 interface SimilarProvidersSectionProps {
   providerId: string;
@@ -40,10 +39,8 @@ export default async function SimilarProvidersSection({
           description: true,
           images: true,
           location: true,
-          planType: true,
         },
       },
-      subscription: { select: { status: true } },
       reviewsReceived: { where: { moderationStatus: "APPROVED" }, select: { rating: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -67,10 +64,6 @@ export default async function SimilarProvidersSection({
       image: getSafeProviderImageUrl(images[0] || provider.image),
       description: provider.providerProfile?.description || null,
       location: provider.providerProfile?.location || null,
-      planType: getEffectivePlanType(
-        provider.providerProfile?.planType || "FREE",
-        provider.subscription?.status
-      ),
       avgRating,
     };
   });

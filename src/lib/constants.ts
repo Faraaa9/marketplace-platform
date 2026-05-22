@@ -9,47 +9,6 @@ export const BUDGET_OPTIONS = [
   { value: "derinama", label: "Kaina derinama" },
 ] as const;
 
-export const PLAN_LIMITS = {
-  FREE: {
-    responsesPerMonth: 3,
-    canSeePhone: false,
-    canSeeEmail: true,
-    priorityListing: false,
-    badge: null,
-    price: 0,
-  },
-  BASIC: {
-    responsesPerMonth: 30,
-    canSeePhone: true,
-    canSeeEmail: true,
-    priorityListing: false,
-    badge: "Patikimas",
-    price: 29,
-  },
-  PRO: {
-    responsesPerMonth: -1, // unlimited
-    canSeePhone: true,
-    canSeeEmail: true,
-    priorityListing: true,
-    badge: "PRO",
-    price: 59,
-  },
-} as const;
-
-/**
- * Resolve the effective plan based on subscription billing status.
- * ACTIVE → paid plan works as stored.
- * PAST_DUE or CANCELED (or missing) → downgrade to FREE entitlements.
- */
-export function getEffectivePlanType(
-  storedPlanType: string,
-  subscriptionStatus?: string | null,
-): keyof typeof PLAN_LIMITS {
-  if (storedPlanType === "FREE") return "FREE";
-  if (subscriptionStatus === "ACTIVE") return storedPlanType as keyof typeof PLAN_LIMITS;
-  return "FREE";
-}
-
 export const LITHUANIAN_CITIES = [
   "Vilnius",
   "Kaunas",

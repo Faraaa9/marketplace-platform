@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import { Search, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -15,7 +14,7 @@ interface Provider {
   createdAt: string;
   providerProfile: {
     isActive: boolean;
-    planType: string;
+    creditBalance: number;
     description?: string;
     location?: string;
     categories?: { category: { name: string } }[];
@@ -38,8 +37,8 @@ export default function AdminProvidersPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [planValue, setPlanValue] = useState("");
-  const [savingPlan, setSavingPlan] = useState(false);
+  const [giftAmount, setGiftAmount] = useState("");
+  const [gifting, setGifting] = useState(false);
 
   const fetchProviders = useCallback(async () => {
     setLoading(true);
@@ -70,19 +69,21 @@ export default function AdminProvidersPage() {
     setSelectedProvider(null);
   }
 
-  async function handleSavePlan() {
+  async function handleGiftCredits() {
     if (!selectedProvider) return;
-    setSavingPlan(true);
+    const amount = parseInt(giftAmount, 10);
+    if (!Number.isInteger(amount) || amount <= 0) return;
+    setGifting(true);
     try {
       await fetch("/api/admin/tiekejai", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: selectedProvider.id, action: "set-plan", planType: planValue }),
+        body: JSON.stringify({ userId: selectedProvider.id, action: "grant-credits", credits: amount }),
       });
       await fetchProviders();
       setSelectedProvider(null);
     } finally {
-      setSavingPlan(false);
+      setGifting(false);
     }
   }
 
@@ -129,7 +130,7 @@ export default function AdminProvidersPage() {
               <tr className="border-b border-surface-200/50 bg-surface-50 dark:border-surface-700 dark:bg-surface-800/50">
                 <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Vardas</th>
                 <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">El. paštas</th>
-                <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Planas</th>
+                <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Kreditai</th>
                 <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Statusas</th>
                 <th className="text-left py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Atsakymai</th>
                 <th className="text-right py-3 px-4 font-medium text-surface-500 text-micro uppercase tracking-wider">Veiksmai</th>
@@ -140,10 +141,8 @@ export default function AdminProvidersPage() {
                 <tr key={p.id} className="border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
                   <td className="py-3 px-4 font-medium text-surface-900 dark:text-white">{p.name}</td>
                   <td className="py-3 px-4 text-surface-500">{p.email}</td>
-                  <td className="py-3 px-4">
-                    <Badge variant={p.providerProfile?.planType === "PRO" ? "brand" : p.providerProfile?.planType === "BASIC" ? "success" : "default"}>
-                      {p.providerProfile?.planType || "FREE"}
-                    </Badge>
+                  <td className="py-3 px-4 font-medium tabular-nums text-surface-700 dark:text-surface-300">
+                    {p.providerProfile?.creditBalance ?? 0}
                   </td>
                   <td className="py-3 px-4">
                     <Badge variant={p.providerProfile?.isActive ? "success" : "warning"}>
@@ -153,7 +152,7 @@ export default function AdminProvidersPage() {
                   <td className="py-3 px-4 text-surface-500">{p._count.responses}</td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => { setSelectedProvider(p); setPlanValue(p.providerProfile?.planType || "FREE"); }} className="p-1.5 hover:bg-surface-100 rounded-lg transition-colors dark:hover:bg-surface-700">
+                      <button onClick={() => { setSelectedProvider(p); setGiftAmount(""); }} className="p-1.5 hover:bg-surface-100 rounded-lg transition-colors dark:hover:bg-surface-700">
                         <Eye className="h-4 w-4 text-surface-500" />
                       </button>
                       {p.providerProfile?.isActive ? (
@@ -213,24 +212,26 @@ export default function AdminProvidersPage() {
             <p><strong className="text-surface-900 dark:text-white">Atsakymų:</strong> <span className="text-surface-500">{selectedProvider._count.responses}</span></p>
 
             <div className="pt-2 border-t border-surface-100 dark:border-surface-800">
-              <label className="block font-medium text-surface-900 dark:text-white mb-1.5">Planas</label>
+              <p className="font-medium text-surface-900 dark:text-white mb-1.5">
+                Kreditų balansas: {selectedProvider.providerProfile.creditBalance}
+              </p>
+              <label className="block text-micro text-surface-500 mb-1.5">Dovanoti kreditų</label>
               <div className="flex gap-2">
-                <Select
-                  value={planValue}
-                  onChange={(e) => setPlanValue(e.target.value)}
-                  options={[
-                    { value: "FREE", label: "FREE — nemokamas" },
-                    { value: "BASIC", label: "BASIC — 29 €/mėn" },
-                    { value: "PRO", label: "PRO — 59 €/mėn" },
-                  ]}
+                <input
+                  type="number"
+                  min="1"
+                  value={giftAmount}
+                  onChange={(e) => setGiftAmount(e.target.value)}
+                  placeholder="Pvz. 5"
+                  className="w-32 rounded-xl border border-surface-300 bg-white px-3 py-2 text-body-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-surface-600 dark:bg-surface-800 dark:text-white"
                 />
                 <Button
-                  onClick={handleSavePlan}
-                  isLoading={savingPlan}
-                  disabled={planValue === selectedProvider.providerProfile.planType}
+                  onClick={handleGiftCredits}
+                  isLoading={gifting}
+                  disabled={!giftAmount}
                   className="shrink-0"
                 >
-                  Išsaugoti
+                  Dovanoti
                 </Button>
               </div>
             </div>

@@ -21,8 +21,6 @@ export interface ProviderProfileData {
   location: string | null;
   website: string | null;
   phone: string | null;
-  canSeePhone: boolean;
-  planType: string;
   badge: string | null;
   responseCount: number;
   acceptedCount: number;

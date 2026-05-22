@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { isCuid } from "@/lib/slug";
 
 /**
@@ -55,7 +54,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
             phone: true,
             website: true,
             images: true,
-            planType: true,
+            isVerified: true,
             isActive: true,
             moderationStatus: true,
             createdAt: true,
@@ -67,7 +66,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
             },
           },
         },
-        subscription: { select: { status: true } },
         _count: { select: { responses: true } },
         responses: {
           select: {
@@ -92,11 +90,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
       );
     }
 
-    const planType = getEffectivePlanType(
-      provider.providerProfile.planType || "FREE",
-      provider.subscription?.status
-    );
-    const badge = PLAN_LIMITS[planType]?.badge || null;
+    const badge = provider.providerProfile.isVerified ? "Patikimas" : null;
 
     const images: string[] = provider.providerProfile.images ?? [];
     const categories = (provider.providerProfile.categories ?? []).map((link) => ({
@@ -200,7 +194,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
       categories,
       location: provider.providerProfile.location,
       website: provider.providerProfile.website,
-      planType,
       badge,
       responseCount: provider._count.responses,
       acceptedCount,

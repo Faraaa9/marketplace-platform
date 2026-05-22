@@ -5,7 +5,6 @@ import { Phone } from "lucide-react";
 interface MessengerCTAProps {
   phone: string | null;
   providerName: string;
-  canSeePhone: boolean;
 }
 
 function formatLithuanianPhone(raw: string): string | null {
@@ -16,8 +15,8 @@ function formatLithuanianPhone(raw: string): string | null {
   return null;
 }
 
-export default function MessengerCTA({ phone, providerName, canSeePhone }: MessengerCTAProps) {
-  if (!canSeePhone || !phone) return null;
+export default function MessengerCTA({ phone, providerName }: MessengerCTAProps) {
+  if (!phone) return null;
   const formatted = formatLithuanianPhone(phone);
   if (!formatted) return null;
 

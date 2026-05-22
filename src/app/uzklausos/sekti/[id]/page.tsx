@@ -37,7 +37,7 @@ interface ResponseData {
   provider: {
     id: string;
     name: string;
-    providerProfile?: { location: string; planType?: string };
+    providerProfile?: { location: string; isVerified?: boolean };
   };
   messages: MessageData[];
 }
@@ -625,7 +625,6 @@ function ProposalCard({
   const snippet = last ? last.content : resp.message;
   const fromClient = last ? (last.senderId ?? null) !== resp.providerId : false;
   const awaiting = !isClosed && isAwaitingClientReply(resp);
-  const planType = resp.provider.providerProfile?.planType;
   const location = resp.provider.providerProfile?.location;
 
   return (
@@ -655,14 +654,7 @@ function ProposalCard({
               {resp.provider.name}
             </span>
             {resp.providerBadge && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium",
-                  planType === "PRO"
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-                    : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-                )}
-              >
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                 <Shield className="h-3 w-3" />
                 {resp.providerBadge}
               </span>

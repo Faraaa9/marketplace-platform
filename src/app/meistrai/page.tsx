@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { getServiceCategoryGroups } from "@/lib/service-categories";
 import { Users, ArrowRight, Database } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
@@ -60,12 +59,11 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             },
             location: true,
             images: true,
-            planType: true,
+            isVerified: true,
             availableForUrgent: true,
             priceFrom: true,
           },
         },
-        subscription: { select: { status: true } },
         _count: { select: { responses: true, reviewsReceived: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -160,8 +158,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
 
   // ── Map to card data ──
   const allProviders: ProviderCardData[] = providers.map((p) => {
-    const planType = getEffectivePlanType(p.providerProfile?.planType || "FREE", p.subscription?.status);
-    const badge = PLAN_LIMITS[planType]?.badge || null;
+    const badge = p.providerProfile?.isVerified ? "Patikimas" : null;
 
     const firstImage: string | null = p.providerProfile?.images?.[0] ?? null;
     const categories = (p.providerProfile?.categories ?? []).map((link) => ({
@@ -195,7 +192,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       description,
       categories,
       location: p.providerProfile?.location || null,
-      planType,
       badge,
       responseCount: p._count.responses,
       acceptedCount,

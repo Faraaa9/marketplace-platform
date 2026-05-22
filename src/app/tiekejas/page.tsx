@@ -5,10 +5,9 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Card, { CardTitle } from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import Badge from "@/components/ui/Badge";
 import { MagicCard } from "@/components/magicui/magic-card";
 import Image from "next/image";
-import { FileText, MessageCircle, TrendingUp, AlertCircle, AlertTriangle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
+import { FileText, MessageCircle, Coins, AlertCircle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
 
 interface Stats {
   userName: string | null;
@@ -17,14 +16,9 @@ interface Stats {
   matchingRequests: number;
   myResponses: number;
   categoryCount: number;
-  thisMonthResponses: number;
-  planType: string;
-  storedPlanType: string;
-  subscriptionStatus: string | null;
+  creditBalance: number;
   isActive: boolean;
   emailVerified: boolean;
-  responsesRemaining: number;
-  responsesLimit: number;
   profileCompleteness: number;
   missingProfileItems: string[];
   acceptedCount: number;
@@ -426,16 +420,6 @@ export default function ProviderDashboard() {
     setStats((prev) => prev ? { ...prev, activeStoryCount: Math.max(0, prev.activeStoryCount + delta) } : prev);
   }, []);
 
-  const handlePortal = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stripe/portal");
-      const data = await res.json();
-      if (data.success && data.data.url) {
-        window.location.href = data.data.url;
-      }
-    } catch {}
-  }, []);
-
   if (loading) return <LoadingSpinner />;
 
   if (!stats) {
@@ -547,9 +531,6 @@ export default function ProviderDashboard() {
                 Nepatvirtintas
               </span>
             )}
-            <Badge variant={stats.planType === "PRO" ? "brand" : stats.planType === "BASIC" ? "success" : "default"}>
-              {stats.planType || "FREE"}
-            </Badge>
           </div>
         </div>
       </div>
@@ -585,30 +566,6 @@ export default function ProviderDashboard() {
           <p className="text-body-sm text-red-800 dark:text-red-300">
             Jūsų paskyra sustabdyta administratoriaus. Susisiekite su mumis, jei manote, kad tai klaida.
           </p>
-        </div>
-      )}
-
-      {stats.subscriptionStatus === "PAST_DUE" && stats.storedPlanType !== "FREE" && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-red-200/60 bg-red-50 px-4 py-3 dark:border-red-800/40 dark:bg-red-500/10">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-          <p className="flex-1 text-body-sm text-red-800 dark:text-red-300">
-            Mokėjimas nepavyko — veikiate su nemokamo plano limitais.
-          </p>
-          <button onClick={handlePortal} className="text-body-sm font-medium text-red-700 underline hover:text-red-800 dark:text-red-400 shrink-0">
-            Atnaujinti →
-          </button>
-        </div>
-      )}
-
-      {stats.subscriptionStatus === "CANCELED" && stats.storedPlanType !== "FREE" && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-500/10">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-          <p className="flex-1 text-body-sm text-amber-800 dark:text-amber-300">
-            {stats.storedPlanType} planas atšauktas — veikiate su nemokamo plano limitais.
-          </p>
-          <Link href="/tiekejas/planai" className="text-body-sm font-medium text-amber-700 underline hover:text-amber-800 dark:text-amber-400 shrink-0">
-            Atnaujinti →
-          </Link>
         </div>
       )}
 
@@ -652,14 +609,14 @@ export default function ProviderDashboard() {
             </div>
           </div>
         </MagicCard>
-        <MagicCard className="p-0" gradientColor="rgba(139, 92, 246, 0.06)">
+        <MagicCard className="p-0" gradientColor="rgba(99, 102, 241, 0.06)">
           <div className="p-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-500/10">
-              <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
+              <Coins className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             </div>
             <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.thisMonthResponses}</p>
-              <p className="text-micro text-surface-500">Šį mėnesį</p>
+              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.creditBalance}</p>
+              <p className="text-micro text-surface-500">Kreditai</p>
             </div>
           </div>
         </MagicCard>
@@ -676,52 +633,28 @@ export default function ProviderDashboard() {
         </MagicCard>
       </div>
 
-      {/* Responses remaining + Profile completeness — compact combined row */}
-      {canAccessRequests && (stats.responsesRemaining !== -1 || stats.profileCompleteness < 100) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {stats.responsesRemaining !== -1 && (
-            <div className="rounded-2xl border border-surface-200/60 bg-white p-4 dark:border-surface-700/50 dark:bg-surface-900/50">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-micro font-medium text-surface-500">Likę atsakymai</p>
-                <p className="text-body-sm font-bold text-surface-900 dark:text-white">
-                  {stats.responsesRemaining}<span className="font-normal text-surface-400">/{stats.responsesLimit}</span>
-                </p>
-              </div>
-              <div className="w-full h-2 rounded-full bg-surface-100 dark:bg-surface-700 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    stats.responsesRemaining <= 2
-                      ? "bg-gradient-to-r from-red-400 to-red-500"
-                      : "bg-gradient-to-r from-brand-500 to-brand-600"
-                  }`}
-                  style={{ width: `${stats.responsesLimit > 0 ? ((stats.responsesLimit - stats.responsesRemaining) / stats.responsesLimit) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
+      {/* Profile completeness */}
+      {canAccessRequests && stats.profileCompleteness < 100 && (
+        <Link
+          href="/tiekejas/profilis"
+          className="group mb-6 block rounded-2xl border border-surface-200/60 bg-white p-4 dark:border-surface-700/50 dark:bg-surface-900/50 hover:border-brand-200 dark:hover:border-brand-800/40 transition-colors"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-micro font-medium text-surface-500">Profilis</p>
+            <p className="text-body-sm font-bold text-surface-900 dark:text-white">{stats.profileCompleteness}%</p>
+          </div>
+          <div className="w-full h-2 rounded-full bg-surface-100 dark:bg-surface-700 overflow-hidden mb-2">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500"
+              style={{ width: `${stats.profileCompleteness}%` }}
+            />
+          </div>
+          {stats.missingProfileItems.length > 0 && (
+            <p className="text-micro text-surface-400 truncate">
+              Trūksta: {stats.missingProfileItems.join(", ")}
+            </p>
           )}
-          {stats.profileCompleteness < 100 && (
-            <Link
-              href="/tiekejas/profilis"
-              className="group rounded-2xl border border-surface-200/60 bg-white p-4 dark:border-surface-700/50 dark:bg-surface-900/50 hover:border-brand-200 dark:hover:border-brand-800/40 transition-colors"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-micro font-medium text-surface-500">Profilis</p>
-                <p className="text-body-sm font-bold text-surface-900 dark:text-white">{stats.profileCompleteness}%</p>
-              </div>
-              <div className="w-full h-2 rounded-full bg-surface-100 dark:bg-surface-700 overflow-hidden mb-2">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500"
-                  style={{ width: `${stats.profileCompleteness}%` }}
-                />
-              </div>
-              {stats.missingProfileItems.length > 0 && (
-                <p className="text-micro text-surface-400 truncate">
-                  Trūksta: {stats.missingProfileItems.join(", ")}
-                </p>
-              )}
-            </Link>
-          )}
-        </div>
+        </Link>
       )}
 
       {/* Quick links */}
@@ -809,10 +742,10 @@ export default function ProviderDashboard() {
           <Card hover>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Planai</CardTitle>
-                <p className="text-body-sm text-surface-500 mt-1">Prenumerata ir limitai</p>
+                <CardTitle>Kreditai</CardTitle>
+                <p className="text-body-sm text-surface-500 mt-1">Pirkti ir peržiūrėti istoriją</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
+              <Coins className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
             </div>
           </Card>
         </Link>

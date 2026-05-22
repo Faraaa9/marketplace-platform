@@ -8,7 +8,6 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
-import { getEffectivePlanType, PLAN_LIMITS } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
 import EmptyState from "@/components/ui/EmptyState";
@@ -207,13 +206,7 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                       {provider.name}
                     </h1>
                     {provider.badge && (
-                      <span
-                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-micro font-medium ${
-                          provider.planType === "PRO"
-                            ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                            : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-                        }`}
-                      >
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                         <Shield className="h-3 w-3" />
                         {provider.badge}
                       </span>
@@ -461,7 +454,6 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
                         <MessengerCTA
                           phone={provider.phone}
                           providerName={provider.name}
-                          canSeePhone={provider.canSeePhone}
                         />
                       </>
                     ) : (
@@ -571,11 +563,10 @@ async function getProviderProfile(
             phone: true,
             website: true,
             images: true,
-            planType: true,
+            isVerified: true,
             createdAt: true,
           },
         },
-        subscription: { select: { status: true } },
         _count: { select: { responses: true } },
       },
     }),
@@ -604,8 +595,7 @@ async function getProviderProfile(
   if (!provider?.providerProfile) return null;
 
   const profile = provider.providerProfile;
-  const planType = getEffectivePlanType(profile.planType || "FREE", provider.subscription?.status);
-  const badge = PLAN_LIMITS[planType]?.badge || null;
+  const badge = profile.isVerified ? "Patikimas" : null;
   const images = sanitizeImageUrls(profile.images);
   const categories: ProviderCategory[] = (profile.categories ?? []).map((link) => ({
     id: link.category.id,
@@ -636,8 +626,6 @@ async function getProviderProfile(
     location: profile.location,
     website: profile.website,
     phone: profile.phone,
-    canSeePhone: PLAN_LIMITS[planType]?.canSeePhone ?? false,
-    planType,
     badge,
     responseCount: provider._count.responses,
     acceptedCount,

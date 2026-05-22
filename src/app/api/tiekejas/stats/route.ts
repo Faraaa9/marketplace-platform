@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { expandToMatchSet } from "@/lib/category-matching";
 
@@ -22,7 +21,6 @@ export async function GET() {
       );
     }
 
-    // Check for provider profile existence (not just role)
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: session.user.id },
       select: {
@@ -34,7 +32,7 @@ export async function GET() {
         phone: true,
         images: true,
         isActive: true,
-        planType: true,
+        creditBalance: true,
       },
     });
 
@@ -48,9 +46,7 @@ export async function GET() {
     const categoryIds = profile.categories.map((c) => c.categoryId);
     const matchSet = await expandToMatchSet(categoryIds);
 
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-
-    const [totalRequests, matchingRequests, myResponses, thisMonthResponses, user, subscription] = await Promise.all([
+    const [totalRequests, matchingRequests, myResponses, user] = await Promise.all([
       prisma.serviceRequest.count({ where: { status: "OPEN" } }),
       categoryIds.length > 0
         ? prisma.serviceRequest.count({
@@ -58,17 +54,11 @@ export async function GET() {
           })
         : Promise.resolve(0),
       prisma.response.count({ where: { providerId: session.user.id } }),
-      prisma.response.count({
-        where: { providerId: session.user.id, createdAt: { gte: startOfMonth } },
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true, email: true, emailVerified: true },
       }),
-      prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, emailVerified: true } }),
-      prisma.subscription.findUnique({ where: { userId: session.user.id }, select: { status: true } }),
     ]);
-
-    const storedPlan = profile.planType || "FREE";
-    const effectivePlan = getEffectivePlanType(storedPlan, subscription?.status);
-    const limit = PLAN_LIMITS[effectivePlan]?.responsesPerMonth ?? 3;
-    const responsesRemaining = limit === -1 ? -1 : Math.max(0, limit - thisMonthResponses);
 
     // Profile completeness
     const images: string[] = profile.images ?? [];
@@ -129,14 +119,9 @@ export async function GET() {
         matchingRequests,
         myResponses,
         categoryCount: categoryIds.length,
-        thisMonthResponses,
-        planType: effectivePlan,
-        storedPlanType: storedPlan,
-        subscriptionStatus: subscription?.status || null,
+        creditBalance: profile.creditBalance,
         isActive: profile.isActive || false,
         emailVerified: !!user?.emailVerified,
-        responsesRemaining,
-        responsesLimit: limit,
         profileCompleteness,
         missingProfileItems,
         acceptedCount,

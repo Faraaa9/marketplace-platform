@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
 
 /**
  * Public tracking endpoint — looks up by tracking token (NOT by internal ID).
@@ -45,8 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 id: true,
                 name: true,
                 image: true,
-                providerProfile: { select: { location: true, planType: true } },
-                subscription: { select: { status: true } },
+                providerProfile: { select: { location: true, isVerified: true } },
               },
             },
             messages: {
@@ -71,35 +69,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 
-    // Resolve effective plan per provider (billing-aware)
-    const resolveProviderPlan = (resp: (typeof request.responses)[number]) => {
-      const stored = resp.provider.providerProfile?.planType || "FREE";
-      const subStatus = resp.provider.subscription?.status;
-      return getEffectivePlanType(stored, subStatus);
-    };
-
-    // Sort responses: PRO first (priority listing), then BASIC, then FREE
-    const planOrder: Record<string, number> = { PRO: 0, BASIC: 1, FREE: 2 };
-    const sortedResponses = [...request.responses].sort((a, b) => {
-      const aPlan = resolveProviderPlan(a);
-      const bPlan = resolveProviderPlan(b);
-      const orderDiff = (planOrder[aPlan] ?? 2) - (planOrder[bPlan] ?? 2);
-      if (orderDiff !== 0) return orderDiff;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    // Sort responses newest first
+    const sortedResponses = [...request.responses].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
     // Build review lookup set
     const reviewedResponseIds = new Set(request.reviews.map((r) => r.responseId));
 
     // Add badge info and review status to each response for client display
-    const responsesWithBadge = sortedResponses.map((resp) => {
-      const pt = resolveProviderPlan(resp);
-      return {
-        ...resp,
-        providerBadge: PLAN_LIMITS[pt]?.badge || null,
-        hasReview: reviewedResponseIds.has(resp.id),
-      };
-    });
+    const responsesWithBadge = sortedResponses.map((resp) => ({
+      ...resp,
+      providerBadge: resp.provider.providerProfile?.isVerified ? "Patikimas" : null,
+      hasReview: reviewedResponseIds.has(resp.id),
+    }));
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { reviews: _reviews, _count, categoryRef, ...requestWithoutReviews } = request;

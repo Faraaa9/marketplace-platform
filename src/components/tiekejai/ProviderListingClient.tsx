@@ -49,7 +49,6 @@ interface ProviderDetail {
   categories: { id: string; name: string; slug: string }[];
   location: string | null;
   website: string | null;
-  planType: string;
   badge: string | null;
   responseCount: number;
   acceptedCount: number;

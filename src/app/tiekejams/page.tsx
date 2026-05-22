@@ -2,16 +2,22 @@ import type { Metadata } from "next";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
 import { LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { BorderBeam } from "@/components/magicui/border-beam";
+import { ArrowRight, Users, TrendingUp, Shield, Sparkles, Coins } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { creditsLabel } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",
-  description: "Prisijunkite prie PaslaugųRinka ir gaukite užklausas iš klientų visoje Lietuvoje. Nemokamas ir mokamas planai.",
+  description: "Prisijunkite prie PaslaugųRinka ir gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
 };
-import { ArrowRight, Check, Users, TrendingUp, Shield, Star, Crown, Sparkles, Zap } from "lucide-react";
-import { PLAN_LIMITS } from "@/lib/constants";
 
-export default function ForProvidersPage() {
+export default async function ForProvidersPage() {
+  const packs = await prisma.creditPack.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, credits: true, priceCents: true },
+  });
+
   return (
     <div>
       {/* Hero */}
@@ -91,54 +97,44 @@ export default function ForProvidersPage() {
         </div>
       </section>
 
-      {/* Plans */}
+      {/* Pricing — pay per lead */}
       <section className="relative py-24 overflow-hidden">
         <div className="relative mx-auto max-w-4xl px-4 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50 px-3 py-1 text-micro font-medium text-brand-600 mb-4 dark:border-brand-800/60 dark:bg-brand-950 dark:text-brand-400">
             Kainos
           </div>
-          <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-12">Planai</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { name: "Nemokamas", price: "€0", period: "/mėn.", icon: <Zap className="h-5 w-5 text-surface-400" />, features: [`${PLAN_LIMITS.FREE.responsesPerMonth} atsakymai/mėn.`, "El. pašto kontaktai"], highlighted: false },
-              { name: "Bazinis", price: "€29", period: "/mėn.", icon: <Star className="h-5 w-5 text-amber-500" />, features: [`${PLAN_LIMITS.BASIC.responsesPerMonth} atsakymų/mėn.`, "Telefono kontaktai", "Patikimumo ženklelis"], highlighted: true },
-              { name: "PRO", price: "€59", period: "/mėn.", icon: <Crown className="h-5 w-5 text-brand-500" />, features: ["Neriboti atsakymai", "Telefono kontaktai", "PRO ženklelis", "Prioritetinis rodymas"], highlighted: false },
-            ].map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl border p-8 transition-all duration-300 ${
-                  plan.highlighted
-                    ? "border-brand-500 bg-white shadow-elevated ring-1 ring-brand-500/50 -translate-y-2 dark:bg-surface-900 dark:border-brand-600"
-                    : "border-surface-200/60 bg-white hover:shadow-stripe dark:border-surface-700/50 dark:bg-surface-900/50"
-                }`}
-              >
-                {plan.highlighted && (
-                  <>
-                    <BorderBeam size={150} duration={8} color="#6366f1" />
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center rounded-full bg-brand-600 px-3 py-1 text-micro font-medium text-white shadow-sm">
-                        Populiariausias
-                      </span>
-                    </div>
-                  </>
-                )}
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  {plan.icon}
-                  <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{plan.name}</h3>
+          <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-3">
+            Mokate tik už tai, ką naudojate
+          </h2>
+          <p className="mx-auto mb-12 max-w-2xl text-body text-surface-500 dark:text-surface-400 leading-relaxed">
+            Registracija ir profilis — nemokami. Nauji tiekėjai gauna kelis nemokamus
+            kreditus. Vienas kreditas atrakina vieną kliento užklausą — matote
+            kontaktus ir galite atsakyti. Kreditus perkate paketais, jokių mėnesinių
+            mokesčių.
+          </p>
+          {packs.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {packs.map((pack) => (
+                <div
+                  key={pack.id}
+                  className="rounded-2xl border border-surface-200/60 bg-white p-8 dark:border-surface-700/50 dark:bg-surface-900/50"
+                >
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Coins className="h-5 w-5 text-brand-500" />
+                    <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">
+                      {pack.name}
+                    </h3>
+                  </div>
+                  <p className="text-display font-bold text-surface-900 dark:text-white">
+                    €{(pack.priceCents / 100).toFixed(2)}
+                  </p>
+                  <p className="text-body-sm text-surface-400">
+                    {pack.credits} {creditsLabel(pack.credits)}
+                  </p>
                 </div>
-                <p className="text-display font-bold text-surface-900 dark:text-white">
-                  {plan.price}<span className="text-body-sm font-normal text-surface-400">{plan.period}</span>
-                </p>
-                <ul className="mt-6 space-y-3 text-left">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-body-sm text-surface-600 dark:text-surface-400">
-                      <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <ProviderCtaLink
             className="mt-12 group inline-flex items-center rounded-2xl bg-brand-600 px-8 py-4 text-body font-semibold text-white shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             providerLabel={

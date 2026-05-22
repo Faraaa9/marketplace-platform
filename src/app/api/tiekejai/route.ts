@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getEffectivePlanType } from "@/lib/constants";
 import { buildProviderLocationFilter } from "@/lib/provider-filters";
 
 export const dynamic = "force-dynamic";
@@ -66,7 +65,9 @@ export async function GET(req: NextRequest) {
               description: true,
               location: true,
               images: true,
-              planType: true,
+              isVerified: true,
+              rating: true,
+              reviewCount: true,
               categories: {
                 select: {
                   category: { select: { id: true, name: true, slug: true } },
@@ -75,7 +76,6 @@ export async function GET(req: NextRequest) {
               },
             },
           },
-          subscription: { select: { status: true } },
           _count: { select: { responses: true } },
           reviewsReceived: {
             select: { rating: true },
@@ -88,12 +88,7 @@ export async function GET(req: NextRequest) {
       prisma.user.count({ where }),
     ]);
 
-    // Resolve effective plan and sort PRO first
     const mapped = providers.map((p) => {
-      const planType = getEffectivePlanType(
-        p.providerProfile?.planType || "FREE",
-        p.subscription?.status
-      );
       const images: string[] = p.providerProfile?.images ?? [];
       const categories = (p.providerProfile?.categories ?? []).map((link) => ({
         id: link.category.id,
@@ -108,15 +103,22 @@ export async function GET(req: NextRequest) {
         description: p.providerProfile?.description || null,
         categories,
         location: p.providerProfile?.location || null,
-        planType,
+        isVerified: p.providerProfile?.isVerified ?? false,
+        rating: p.providerProfile?.rating ?? null,
+        reviewCount: p.providerProfile?.reviewCount ?? 0,
         responseCount: p._count.responses,
         memberSince: p.createdAt,
       };
     });
 
-    // Sort: PRO first, then BASIC, then FREE
-    const planOrder: Record<string, number> = { PRO: 0, BASIC: 1, FREE: 2 };
-    mapped.sort((a, b) => (planOrder[a.planType] ?? 2) - (planOrder[b.planType] ?? 2));
+    // Sort: verified first, then by rating (null lowest), then by review count
+    mapped.sort((a, b) => {
+      if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
+      const aRating = a.rating ?? -1;
+      const bRating = b.rating ?? -1;
+      if (aRating !== bRating) return bRating - aRating;
+      return b.reviewCount - a.reviewCount;
+    });
 
     return NextResponse.json({
       success: true,

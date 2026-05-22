@@ -3,10 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, providerActivatedEmail } from "@/lib/email";
+import { grantCredits } from "@/lib/credits";
+import { creditsLabel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const VALID_PLAN_TYPES = ["FREE", "BASIC", "PRO"];
 
 export async function GET(req: NextRequest) {
   try {
@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userId, action, planType } = await req.json();
+    const { userId, action, credits, note } = await req.json();
     if (!userId || !action) {
       return NextResponse.json({ success: false, error: "Trūksta duomenų" }, { status: 400 });
     }
@@ -105,28 +105,43 @@ export async function PATCH(req: NextRequest) {
       await prisma.user.delete({ where: { id: userId } });
     }
 
-    if (action === "set-plan") {
-      if (!VALID_PLAN_TYPES.includes(planType)) {
-        return NextResponse.json({ success: false, error: "Netinkamas plano tipas" }, { status: 400 });
+    if (action === "grant-credits") {
+      const amount = Number(credits);
+      if (!Number.isInteger(amount) || amount <= 0) {
+        return NextResponse.json(
+          { success: false, error: "Kreditų skaičius turi būti teigiamas" },
+          { status: 400 },
+        );
       }
-
-      // The effective plan resolves to FREE unless a Subscription is ACTIVE
-      // (see getEffectivePlanType), so a manual grant must move both records.
-      if (planType === "FREE") {
-        await prisma.$transaction([
-          prisma.providerProfile.update({ where: { userId }, data: { planType: "FREE" } }),
-          prisma.subscription.updateMany({ where: { userId }, data: { status: "CANCELED" } }),
-        ]);
-      } else {
-        await prisma.$transaction([
-          prisma.providerProfile.update({ where: { userId }, data: { planType } }),
-          prisma.subscription.upsert({
-            where: { userId },
-            update: { planType, status: "ACTIVE" },
-            create: { userId, planType, status: "ACTIVE" },
-          }),
-        ]);
+      const profile = await prisma.providerProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+      if (!profile) {
+        return NextResponse.json(
+          { success: false, error: "Tiekėjo profilis nerastas" },
+          { status: 404 },
+        );
       }
+      const result = await grantCredits({
+        providerProfileId: profile.id,
+        amount,
+        type: "ADMIN_GRANT",
+        note:
+          typeof note === "string" && note.trim()
+            ? note.trim()
+            : "Administratoriaus dovana",
+        adminUserId: session.user.id,
+      });
+      await prisma.notification.create({
+        data: {
+          userId,
+          type: "CREDITS_GRANTED",
+          title: "Gavote kreditų",
+          body: `Administratorius pridėjo ${amount} ${creditsLabel(amount)}. Jūsų balansas: ${result.balance}.`,
+          link: "/tiekejas/uzklausos",
+        },
+      });
     }
 
     return NextResponse.json({ success: true });
