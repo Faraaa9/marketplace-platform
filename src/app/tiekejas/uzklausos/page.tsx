@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { BUDGET_OPTIONS, LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
-import { formatRelativeDate, truncate } from "@/lib/utils";
+import { formatRelativeDate, truncate, creditsLabel } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Pagination from "@/components/ui/Pagination";
 import {
@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   Wallet,
   SlidersHorizontal,
+  Coins,
+  Lock,
 } from "lucide-react";
 
 interface Request {
@@ -34,6 +36,7 @@ interface Request {
   createdAt: string;
   relevance: number;
   hasResponded: boolean;
+  isUnlocked: boolean;
   _count: { responses: number };
 }
 
@@ -52,6 +55,7 @@ function ProviderRequestsContent() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
+  const [creditBalance, setCreditBalance] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
@@ -113,6 +117,7 @@ function ProviderRequestsContent() {
           setRequests(data.data.requests);
           setTotal(data.data.total);
           setPages(data.data.pages);
+          setCreditBalance(data.data.creditBalance ?? 0);
         } else if (
           data.code === "EMAIL_NOT_VERIFIED" ||
           data.code === "ACCOUNT_NOT_ACTIVE"
@@ -181,7 +186,14 @@ function ProviderRequestsContent() {
                 Klientų užklausos
               </h1>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2.5">
+              <Link
+                href="/tiekejas/planai"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-surface-200 bg-surface-50 px-2.5 text-micro font-semibold text-surface-700 transition-colors hover:border-brand-300 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+              >
+                <Coins className="h-3.5 w-3.5 text-brand-500" />
+                {creditBalance} {creditsLabel(creditBalance)}
+              </Link>
               <ArrowDownUp className="h-3.5 w-3.5 text-surface-400" />
               <select
                 value={sort}
@@ -415,7 +427,16 @@ function ProviderRequestsContent() {
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1 text-micro font-medium text-brand-600 dark:text-brand-400 group-hover:gap-1.5 transition-all">
-                            {req.hasResponded ? "Peržiūrėti" : "Atsakyti"}
+                            {req.hasResponded ? (
+                              "Peržiūrėti"
+                            ) : req.isUnlocked ? (
+                              "Atsakyti"
+                            ) : (
+                              <>
+                                <Lock className="h-3 w-3" />
+                                Atrakinti
+                              </>
+                            )}
                             <ChevronRight className="h-3.5 w-3.5" />
                           </span>
                         </div>

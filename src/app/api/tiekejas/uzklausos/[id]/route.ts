@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { responseSchema } from "@/lib/validations";
 import { sendEmail, newResponseEmail } from "@/lib/email";
-import { PLAN_LIMITS, getEffectivePlanType } from "@/lib/constants";
+import { isLeadUnlocked } from "@/lib/credits";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
@@ -90,24 +90,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // read tracking must never break the page
     }
 
-    const [totalResponses, profile, subscription] = await Promise.all([
+    const [totalResponses, profile, unlocked] = await Promise.all([
       prisma.response.count({ where: { requestId: id } }),
       prisma.providerProfile.findUnique({
-        where: { userId: guard.userId },
+        where: { id: guard.providerProfileId },
         select: {
-          planType: true,
           categories: { select: { category: { select: { id: true, rootId: true } } } },
         },
       }),
-      prisma.subscription.findUnique({
-        where: { userId: guard.userId },
-        select: { status: true },
-      }),
+      isLeadUnlocked(guard.providerProfileId, id),
     ]);
-
-    // Plan-based contact visibility
-    const planType = getEffectivePlanType(profile?.planType || "FREE", subscription?.status);
-    const plan = PLAN_LIMITS[planType];
 
     // Eligibility check
     const providerCategories = (profile?.categories ?? []).map((c) => c.category);
@@ -132,9 +124,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       createdAt: request.createdAt,
       responses: request.responses,
       totalResponses,
-      clientEmail: plan.canSeeEmail ? request.clientEmail : null,
-      clientPhone: plan.canSeePhone ? request.clientPhone : null,
-      planType,
+      clientEmail: unlocked ? request.clientEmail : null,
+      clientPhone: unlocked ? request.clientPhone : null,
+      isUnlocked: unlocked,
+      creditBalance: guard.creditBalance,
       canRespond: eligibility.allowed,
       eligibilityCode: eligibility.code,
       eligibilityMessage: eligibility.message,
@@ -179,9 +172,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Load provider categories and check eligibility
     const profile = await prisma.providerProfile.findUnique({
-      where: { userId: guard.userId },
+      where: { id: guard.providerProfileId },
       select: {
-        planType: true,
         categories: { select: { category: { select: { id: true, rootId: true } } } },
       },
     });
@@ -199,32 +191,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    // Check plan limits (billing-aware)
-    const subscription = await prisma.subscription.findUnique({
-      where: { userId: guard.userId },
-      select: { status: true },
-    });
-    const effectivePlan = getEffectivePlanType(profile?.planType || "FREE", subscription?.status);
-    const planLimit = PLAN_LIMITS[effectivePlan]?.responsesPerMonth ?? 3;
-
-    if (planLimit !== -1) {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const monthlyCount = await prisma.response.count({
-        where: {
-          providerId: guard.userId,
-          createdAt: { gte: startOfMonth },
+    // Pay-per-lead gate: responding requires an unlocked lead.
+    const unlocked = await isLeadUnlocked(guard.providerProfileId, id);
+    if (!unlocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Atrakinkite užklausą, kad galėtumėte atsakyti.",
+          code: "LEAD_LOCKED",
         },
-      });
-
-      if (monthlyCount >= planLimit) {
-        return NextResponse.json(
-          { success: false, error: "Pasiekėte mėnesio atsakymų limitą. Atnaujinkite planą." },
-          { status: 403 }
-        );
-      }
+        { status: 403 },
+      );
     }
 
     // Check if already responded

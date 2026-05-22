@@ -17,6 +17,7 @@ import { MapPin, Clock, CalendarClock, Euro, Mail, Phone, User, Send, CheckCircl
 import Link from "next/link";
 import RequestPhotos from "@/components/requests/RequestPhotos";
 import GenerateProposalButton from "@/components/ai/GenerateProposalButton";
+import UnlockCard from "./UnlockCard";
 
 interface MessageData {
   id: string;
@@ -54,7 +55,8 @@ interface RequestData {
   createdAt: string;
   responses: ResponseData[];
   totalResponses?: number;
-  planType?: string;
+  isUnlocked?: boolean;
+  creditBalance?: number;
   canRespond?: boolean;
   eligibilityCode?: string;
   eligibilityMessage?: string;
@@ -177,23 +179,27 @@ export default function ProviderRequestDetailPage() {
           {request.clientEmail ? (
             <span className="flex items-center gap-1.5"><Mail className="h-4 w-4" />{request.clientEmail}</span>
           ) : (
-            <span className="flex items-center gap-1.5 text-surface-400"><Lock className="h-4 w-4" />El. paštas (reikia plano)</span>
+            <span className="flex items-center gap-1.5 text-surface-400"><Lock className="h-4 w-4" />El. paštas — užrakinta</span>
           )}
           {request.clientPhone ? (
             <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" />{request.clientPhone}</span>
           ) : (
-            <span className="flex items-center gap-1.5 text-surface-400"><Lock className="h-4 w-4" />Telefonas (BASIC+ planas)</span>
+            <span className="flex items-center gap-1.5 text-surface-400"><Lock className="h-4 w-4" />Telefonas — užrakinta</span>
           )}
         </div>
-        {request.planType === "FREE" && (
-          <p className="mt-3 text-micro text-surface-400">
-            <a href="/tiekejas/planai" className="text-brand-600 hover:underline dark:text-brand-400">Atnaujinkite planą</a> norėdami matyti visus kontaktinius duomenis.
-          </p>
-        )}
       </Card>
 
-      {/* Response form or eligibility warning */}
-      {!hasResponded && request.canRespond && (
+      {/* Unlock card — eligible but not yet unlocked */}
+      {!hasResponded && request.canRespond && !request.isUnlocked && (
+        <UnlockCard
+          requestId={request.id}
+          creditBalance={request.creditBalance ?? 0}
+          onUnlocked={fetchRequest}
+        />
+      )}
+
+      {/* Response form — eligible and unlocked */}
+      {!hasResponded && request.canRespond && request.isUnlocked && (
         <Card className="mb-8">
           <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1">Pateikti pasiūlymą</h3>
           {request.totalResponses != null && (

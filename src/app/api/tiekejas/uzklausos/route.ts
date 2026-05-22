@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { expandToMatchSet } from "@/lib/category-matching";
+import { getUnlockedRequestIds } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -112,13 +113,24 @@ export async function GET(req: NextRequest) {
     const pages = Math.ceil(total / perPage);
     const paginated = scored.slice((page - 1) * perPage, page * perPage);
 
+    // Mark which of the visible leads this provider has already unlocked.
+    const unlockedIds = await getUnlockedRequestIds(
+      guard.providerProfileId,
+      paginated.map((r) => r.id),
+    );
+    const requests = paginated.map((r) => ({
+      ...r,
+      isUnlocked: unlockedIds.has(r.id),
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        requests: paginated,
+        requests,
         total,
         pages,
         page,
+        creditBalance: guard.creditBalance,
         hasCategories: providerCategoryIds.length > 0,
         providerCategoryIds,
       },
