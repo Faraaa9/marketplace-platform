@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { Search, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import GrantCreditsByEmailCard from "./GrantCreditsByEmailCard";
 
 interface Provider {
   id: string;
@@ -90,6 +91,10 @@ export default function AdminProvidersPage() {
   return (
     <div className="p-6 lg:p-8">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-6">Tiekėjai</h1>
+
+      <div className="mb-6">
+        <GrantCreditsByEmailCard onGranted={fetchProviders} />
+      </div>
 
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">

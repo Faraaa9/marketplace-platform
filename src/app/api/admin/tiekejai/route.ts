@@ -70,8 +70,13 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userId, action, credits, note } = await req.json();
-    if (!userId || !action) {
+    const { userId, action, credits, note, email } = await req.json();
+    if (!action) {
+      return NextResponse.json({ success: false, error: "Trūksta duomenų" }, { status: 400 });
+    }
+    // Every action except grant-credits targets a provider by table-row id;
+    // grant-credits can instead resolve the recipient from a typed email.
+    if (action !== "grant-credits" && !userId) {
       return NextResponse.json({ success: false, error: "Trūksta duomenų" }, { status: 400 });
     }
 
@@ -113,18 +118,52 @@ export async function PATCH(req: NextRequest) {
           { status: 400 },
         );
       }
-      const profile = await prisma.providerProfile.findUnique({
-        where: { userId },
-        select: { id: true },
+
+      // The recipient is resolved either from a table-row userId or, when the
+      // admin uses the "send credits by email" form, from the typed address.
+      let recipientId: string;
+      if (typeof userId === "string" && userId) {
+        recipientId = userId;
+      } else {
+        const typedEmail = typeof email === "string" ? email.trim() : "";
+        if (!typedEmail) {
+          return NextResponse.json(
+            { success: false, error: "Įveskite tiekėjo el. paštą" },
+            { status: 400 },
+          );
+        }
+        const match = await prisma.user.findFirst({
+          where: { email: { equals: typedEmail, mode: "insensitive" } },
+          select: { id: true },
+        });
+        if (!match) {
+          return NextResponse.json(
+            { success: false, error: "Vartotojas su tokiu el. paštu nerastas" },
+            { status: 404 },
+          );
+        }
+        recipientId = match.id;
+      }
+
+      const recipient = await prisma.user.findUnique({
+        where: { id: recipientId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          providerProfile: { select: { id: true } },
+        },
       });
-      if (!profile) {
+      if (!recipient || recipient.role !== "PROVIDER" || !recipient.providerProfile) {
         return NextResponse.json(
-          { success: false, error: "Tiekėjo profilis nerastas" },
-          { status: 404 },
+          { success: false, error: "Šis el. paštas nepriklauso paslaugų tiekėjui" },
+          { status: 400 },
         );
       }
+
       const result = await grantCredits({
-        providerProfileId: profile.id,
+        providerProfileId: recipient.providerProfile.id,
         amount,
         type: "ADMIN_GRANT",
         note:
@@ -135,11 +174,21 @@ export async function PATCH(req: NextRequest) {
       });
       await prisma.notification.create({
         data: {
-          userId,
+          userId: recipient.id,
           type: "CREDITS_GRANTED",
           title: "Gavote kreditų",
           body: `Administratorius pridėjo ${amount} ${creditsLabel(amount)}. Jūsų balansas: ${result.balance}.`,
-          link: "/tiekejas/uzklausos",
+          link: "/tiekejas/planai",
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          providerName: recipient.name || recipient.email,
+          email: recipient.email,
+          granted: amount,
+          balance: result.balance,
         },
       });
     }
