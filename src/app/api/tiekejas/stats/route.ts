@@ -46,14 +46,17 @@ export async function GET() {
     const categoryIds = profile.categories.map((c) => c.categoryId);
     const matchSet = await expandToMatchSet(categoryIds);
 
-    const [totalRequests, matchingRequests, myResponses, user] = await Promise.all([
+    const [totalRequests, matchingRequests, myResponseRows, user] = await Promise.all([
       prisma.serviceRequest.count({ where: { status: "OPEN" } }),
       categoryIds.length > 0
         ? prisma.serviceRequest.count({
             where: { status: "OPEN", categoryId: { in: matchSet }, clientId: { not: session.user.id } },
           })
         : Promise.resolve(0),
-      prisma.response.count({ where: { providerId: session.user.id } }),
+      prisma.response.findMany({
+        where: { providerId: session.user.id },
+        select: { id: true, request: { select: { acceptedResponseId: true } } },
+      }),
       prisma.user.findUnique({
         where: { id: session.user.id },
         select: { name: true, email: true, emailVerified: true },
@@ -87,13 +90,13 @@ export async function GET() {
         })
       : 0;
 
-    // Accepted responses count
-    const acceptedCount = await prisma.serviceRequest.count({
-      where: {
-        acceptedResponseId: { not: null },
-        responses: { some: { providerId: session.user.id } },
-      },
-    });
+    // Total responses sent, and how many of those offers the client accepted.
+    // "Accepted" means the request's accepted response is one of this
+    // provider's own — not merely that some response on it was accepted.
+    const myResponses = myResponseRows.length;
+    const acceptedCount = myResponseRows.filter(
+      (row) => row.request.acceptedResponseId === row.id,
+    ).length;
 
     // Pending claim for this user (show pending state on dashboard)
     const pendingClaim = await prisma.claimRequest.findFirst({

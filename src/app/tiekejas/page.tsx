@@ -587,50 +587,58 @@ export default function ProviderDashboard() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MagicCard className="p-0" gradientColor="rgba(99, 102, 241, 0.06)">
-          <div className="p-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
-              <FileText className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+        <Link href="/tiekejas/uzklausos">
+          <MagicCard className="p-0" gradientColor="rgba(99, 102, 241, 0.06)">
+            <div className="p-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
+                <FileText className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              </div>
+              <div>
+                <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.matchingRequests}</p>
+                <p className="text-micro text-surface-500">Tinkamos užklausos</p>
+              </div>
             </div>
-            <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.matchingRequests}</p>
-              <p className="text-micro text-surface-500">Tinkamos užklausos</p>
+          </MagicCard>
+        </Link>
+        <Link href="/tiekejas/atsakymai">
+          <MagicCard className="p-0" gradientColor="rgba(16, 185, 129, 0.06)">
+            <div className="p-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
+                <MessageCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.myResponses}</p>
+                <p className="text-micro text-surface-500">Mano atsakymai</p>
+              </div>
             </div>
-          </div>
-        </MagicCard>
-        <MagicCard className="p-0" gradientColor="rgba(16, 185, 129, 0.06)">
-          <div className="p-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
-              <MessageCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          </MagicCard>
+        </Link>
+        <Link href="/tiekejas/planai">
+          <MagicCard className="p-0" gradientColor="rgba(99, 102, 241, 0.06)">
+            <div className="p-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
+                <Coins className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+              </div>
+              <div>
+                <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.creditBalance}</p>
+                <p className="text-micro text-surface-500">Kreditai</p>
+              </div>
             </div>
-            <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.myResponses}</p>
-              <p className="text-micro text-surface-500">Mano atsakymai</p>
+          </MagicCard>
+        </Link>
+        <Link href="/tiekejas/atsakymai?status=priimti">
+          <MagicCard className="p-0" gradientColor="rgba(16, 185, 129, 0.06)">
+            <div className="p-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.acceptedCount}</p>
+                <p className="text-micro text-surface-500">Priimti</p>
+              </div>
             </div>
-          </div>
-        </MagicCard>
-        <MagicCard className="p-0" gradientColor="rgba(99, 102, 241, 0.06)">
-          <div className="p-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950">
-              <Coins className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-            </div>
-            <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.creditBalance}</p>
-              <p className="text-micro text-surface-500">Kreditai</p>
-            </div>
-          </div>
-        </MagicCard>
-        <MagicCard className="p-0" gradientColor="rgba(16, 185, 129, 0.06)">
-          <div className="p-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-heading-2 font-bold text-surface-900 dark:text-white">{stats.acceptedCount}</p>
-              <p className="text-micro text-surface-500">Priimti</p>
-            </div>
-          </div>
-        </MagicCard>
+          </MagicCard>
+        </Link>
       </div>
 
       {/* Profile completeness */}
@@ -735,17 +743,6 @@ export default function ProviderDashboard() {
                 <p className="text-body-sm text-surface-500 mt-1">Kaip mato klientai</p>
               </div>
               <Eye className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
-            </div>
-          </Card>
-        </Link>
-        <Link href="/tiekejas/planai" className="group">
-          <Card hover>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Kreditai</CardTitle>
-                <p className="text-body-sm text-surface-500 mt-1">Pirkti ir peržiūrėti istoriją</p>
-              </div>
-              <Coins className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
             </div>
           </Card>
         </Link>
