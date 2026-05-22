@@ -6,12 +6,14 @@ interface PlatformSettingsData {
   storyEnabled: boolean;
   emailTestMode: boolean;
   emailAllowlist: string[];
+  freeStarterCredits: number;
 }
 
 const DEFAULT_SETTINGS: PlatformSettingsData = {
   storyEnabled: true,
   emailTestMode: false,
   emailAllowlist: [],
+  freeStarterCredits: 3,
 };
 
 let cached: { data: PlatformSettingsData; fetchedAt: number } | null = null;
@@ -45,13 +47,19 @@ async function getSettings(): Promise<PlatformSettingsData> {
       where: { id: "singleton" },
       update: {},
       create: { id: "singleton" },
-      select: { storyEnabled: true, emailTestMode: true, emailAllowlist: true },
+      select: {
+        storyEnabled: true,
+        emailTestMode: true,
+        emailAllowlist: true,
+        freeStarterCredits: true,
+      },
     });
 
     const data: PlatformSettingsData = {
       storyEnabled: settings.storyEnabled,
       emailTestMode: settings.emailTestMode,
       emailAllowlist: settings.emailAllowlist,
+      freeStarterCredits: settings.freeStarterCredits,
     };
     cached = { data, fetchedAt: Date.now() };
     return data;
@@ -121,4 +129,18 @@ export async function setEmailDeliverySettings(patch: {
   emailAllowlist?: string[];
 }): Promise<void> {
   await updateSettings(patch);
+}
+
+/**
+ * Number of free credits granted to a provider when they first join.
+ */
+export async function getFreeStarterCredits(): Promise<number> {
+  return (await getSettings()).freeStarterCredits;
+}
+
+/**
+ * Update the number of free starter credits new providers receive.
+ */
+export async function setFreeStarterCredits(count: number): Promise<void> {
+  await updateSettings({ freeStarterCredits: count });
 }

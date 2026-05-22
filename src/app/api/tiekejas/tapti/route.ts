@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { grantStarterCredits } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -57,19 +58,28 @@ export async function POST() {
     }
 
     // Create provider profile and update role in a transaction
-    await prisma.$transaction([
+    const [profile] = await prisma.$transaction([
       prisma.providerProfile.create({
         data: {
           userId,
           images: [],
           isActive: !!user?.emailVerified,
         },
+        select: { id: true },
       }),
       prisma.user.update({
         where: { id: userId },
         data: { role: "PROVIDER" },
       }),
     ]);
+
+    // Grant free starter credits so a new provider can try unlocking leads.
+    // Best-effort: a credit-grant hiccup must not fail provider creation.
+    try {
+      await grantStarterCredits(profile.id);
+    } catch (creditError) {
+      console.error("Starter credit grant failed:", creditError);
+    }
 
     return NextResponse.json({ success: true, data: { alreadyProvider: false } });
   } catch (error) {

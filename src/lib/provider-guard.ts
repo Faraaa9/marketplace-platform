@@ -4,7 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export type ProviderGuardResult =
-  | { authorized: true; userId: string }
+  | {
+      authorized: true;
+      userId: string;
+      providerProfileId: string;
+      creditBalance: number;
+    }
   | { authorized: false; response: NextResponse };
 
 /**
@@ -31,7 +36,7 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     }),
     prisma.providerProfile.findUnique({
       where: { userId: session.user.id },
-      select: { isActive: true },
+      select: { id: true, isActive: true, creditBalance: true },
     }),
   ]);
 
@@ -83,5 +88,10 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
-  return { authorized: true, userId: session.user.id };
+  return {
+    authorized: true,
+    userId: session.user.id,
+    providerProfileId: profile.id,
+    creditBalance: profile.creditBalance,
+  };
 }
