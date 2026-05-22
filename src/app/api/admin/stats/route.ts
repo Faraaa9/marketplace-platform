@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { isDynamicServerError } from "next/dist/client/components/hooks-server-context";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { countPendingModeration } from "@/lib/moderation/admin-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export async function GET() {
       pendingRequests,
       pendingActivation,
       pendingClaims,
+      pendingModeration,
       recentRequests,
     ] = await Promise.all([
       prisma.user.count(),
@@ -34,6 +36,7 @@ export async function GET() {
       prisma.serviceRequest.count({ where: { status: "PENDING_CONFIRMATION" } }),
       prisma.providerProfile.count({ where: { isActive: false } }),
       prisma.claimRequest.count({ where: { status: "pending" } }),
+      countPendingModeration(),
       // Get all requests from last 14 days in one query
       prisma.serviceRequest.findMany({
         where: { createdAt: { gte: fourteenDaysAgo } },
@@ -70,6 +73,7 @@ export async function GET() {
         pendingRequests,
         pendingActivation,
         pendingClaims,
+        pendingModeration,
         chartData,
       },
     });

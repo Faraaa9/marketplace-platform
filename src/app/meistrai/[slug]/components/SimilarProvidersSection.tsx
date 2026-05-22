@@ -26,6 +26,7 @@ export default async function SimilarProvidersSection({
       emailVerified: { not: null },
       providerProfile: {
         isActive: true,
+        moderationStatus: "APPROVED",
         specializations: { has: primarySpecialization },
         ...(location ? { location } : {}),
       },
@@ -43,7 +44,7 @@ export default async function SimilarProvidersSection({
         },
       },
       subscription: { select: { status: true } },
-      reviewsReceived: { select: { rating: true } },
+      reviewsReceived: { where: { moderationStatus: "APPROVED" }, select: { rating: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 3,

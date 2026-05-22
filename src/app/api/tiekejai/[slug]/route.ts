@@ -58,6 +58,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
             images: true,
             planType: true,
             isActive: true,
+            moderationStatus: true,
             createdAt: true,
           },
         },
@@ -77,6 +78,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     if (
       !provider ||
       !provider.providerProfile?.isActive ||
+      provider.providerProfile?.moderationStatus !== "APPROVED" ||
       !provider.emailVerified
     ) {
       return NextResponse.json(
@@ -151,7 +153,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
 
     // 4. Reviews
     const reviews = await prisma.review.findMany({
-      where: { providerId: provider.id },
+      where: { providerId: provider.id, moderationStatus: "APPROVED" },
       select: {
         id: true,
         rating: true,

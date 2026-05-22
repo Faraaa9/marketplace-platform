@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { providerProfileSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { moderateText } from "@/lib/moderation";
 import { publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
@@ -95,12 +96,36 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: (parsed.error.issues?.[0]?.message || "Validacijos klaida") }, { status: 400 });
     }
 
+    const moderation = await moderateText({
+      entityType: "ProviderProfile",
+      fields: {
+        description: parsed.data.description,
+        headline: parsed.data.headline,
+        services: parsed.data.services,
+      },
+      actorUserId: session.user.id,
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Tekste aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+
     const profile = await prisma.providerProfile.update({
       where: { userId: session.user.id },
       data: {
         description: sanitizeHtml(parsed.data.description),
         headline: parsed.data.headline ? sanitizeHtml(parsed.data.headline) : null,
         services: parsed.data.services ? sanitizeHtml(parsed.data.services) : null,
+        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationReason: moderation.reason,
+        moderatedAt: new Date(),
         priceFrom: parsed.data.priceFrom ?? null,
         experienceYears: parsed.data.experienceYears ?? null,
         offersInvoices: parsed.data.offersInvoices ?? false,
@@ -132,6 +157,18 @@ export async function PUT(req: NextRequest) {
         updatedAt: true,
       },
     });
+
+    if (moderation.verdict !== "ok") {
+      await prisma.notification.create({
+        data: {
+          userId: session.user.id,
+          type: "PROFILE_PENDING_REVIEW",
+          title: "Profilis peržiūrimas",
+          body: "Jūsų profilio pakeitimai gauti ir bus matomi viešai po peržiūros.",
+          link: "/tiekejas/profilis",
+        },
+      });
+    }
 
     return NextResponse.json({ success: true, data: profile });
   } catch (error) {

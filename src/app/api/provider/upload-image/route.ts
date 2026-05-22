@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { moderateImages } from "@/lib/moderation";
 import {
   getCloudinaryErrorDetails,
   getConfiguredCloudinary,
@@ -78,10 +79,36 @@ export async function POST(req: NextRequest) {
       ).end(buffer);
     });
 
+    const moderation = await moderateImages({
+      entityType: "ProviderProfile",
+      imageUrls: [result.secure_url],
+      actorUserId: session.user.id,
+    });
+    if (moderation.verdict === "reject") {
+      await cloudinary.uploader.destroy(result.public_id).catch(() => {});
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Nuotraukoje aptikta netinkamo turinio. Pasirinkite kitą nuotrauką.",
+        },
+        { status: 422 },
+      );
+    }
+
     const updatedImages: string[] = [...currentImages, result.secure_url];
     await prisma.providerProfile.update({
       where: { userId: session.user.id },
-      data: { images: updatedImages },
+      data:
+        moderation.verdict === "ok"
+          ? { images: updatedImages }
+          : {
+              images: updatedImages,
+              moderationStatus: "PENDING",
+              moderationReason: moderation.reason,
+              moderatedAt: new Date(),
+            },
     });
 
     return NextResponse.json({

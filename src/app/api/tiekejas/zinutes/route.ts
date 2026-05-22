@@ -47,7 +47,7 @@ export async function GET() {
         },
       }),
       prisma.directInquiry.findMany({
-        where: { providerId },
+        where: { providerId, moderationStatus: "APPROVED" },
         select: {
           id: true,
           description: true,

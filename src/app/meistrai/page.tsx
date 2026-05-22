@@ -49,7 +49,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   const where: Record<string, unknown> = {
     role: "PROVIDER",
     emailVerified: { not: null },
-    providerProfile: { isActive: true },
+    providerProfile: { isActive: true, moderationStatus: "APPROVED" },
   };
 
   const [providers, storyFeatureOn] = await Promise.all([
@@ -88,7 +88,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     providerIds.length > 0
       ? prisma.review.groupBy({
           by: ["providerId"],
-          where: { providerId: { in: providerIds } },
+          where: { providerId: { in: providerIds }, moderationStatus: "APPROVED" },
           _avg: { rating: true },
           _count: { _all: true },
         })
@@ -126,6 +126,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           by: ["providerId"],
           where: {
             providerId: { in: providerIds },
+            moderationStatus: "APPROVED",
             expiresAt: { gt: new Date() },
           },
           _count: true,

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { directInquirySchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { moderateText } from "@/lib/moderation";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 
@@ -105,6 +106,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const moderation = await moderateText({
+      entityType: "DirectInquiry",
+      fields: { description, budget },
+      actorUserId: senderUserId,
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Žinutėje aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 }
+      );
+    }
+    const inquiryModerationStatus = moderation.verdict === "ok" ? "APPROVED" : "PENDING";
+
     // Create inquiry
     const inquiry = await prisma.$transaction(async (tx) => {
       const createdInquiry = await tx.directInquiry.create({
@@ -116,19 +135,24 @@ export async function POST(req: NextRequest) {
           senderEmail: email,
           senderPhone: senderPhone ? sanitizeHtml(senderPhone.trim()) : null,
           senderName: session.user.name || null,
+          moderationStatus: inquiryModerationStatus,
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
           // The sender wrote this — leave it unread for the provider.
           providerLastReadAt: new Date(0),
         },
       });
 
-      await tx.notification.create({
-        data: getDirectInquiryNotificationData({
-          providerId,
-          inquiryId: createdInquiry.id,
-          senderEmail: email,
-          senderName: createdInquiry.senderName,
-        }),
-      });
+      if (inquiryModerationStatus === "APPROVED") {
+        await tx.notification.create({
+          data: getDirectInquiryNotificationData({
+            providerId,
+            inquiryId: createdInquiry.id,
+            senderEmail: email,
+            senderName: createdInquiry.senderName,
+          }),
+        });
+      }
 
       return createdInquiry;
     });

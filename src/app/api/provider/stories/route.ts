@@ -10,6 +10,7 @@ import {
 import { sanitizeHtml } from "@/lib/sanitize";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +117,23 @@ export async function POST(req: NextRequest) {
     const rawText = (formData.get("text") as string || "").trim().slice(0, MAX_TEXT_LENGTH);
     const text = rawText ? sanitizeHtml(rawText) : "";
 
+    const moderation = await moderateText({
+      entityType: "ProviderStory",
+      fields: { text: rawText },
+      actorUserId: session.user.id,
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Tekste aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+
     if (!file) {
       return NextResponse.json({ success: false, error: "Nepateikta nuotrauka" }, { status: 400 });
     }
@@ -146,6 +164,26 @@ export async function POST(req: NextRequest) {
       ).end(buffer);
     });
 
+    // Moderate the uploaded image before the story goes live.
+    const imageModeration = await moderateImages({
+      entityType: "ProviderStory",
+      imageUrls: [result.secure_url],
+      actorUserId: session.user.id,
+    });
+    const merged = mergeModeration(moderation, imageModeration);
+    if (merged.verdict === "reject") {
+      await cloudinary.uploader.destroy(result.public_id).catch(() => {});
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            merged.userMessage ??
+            "Nuotraukoje aptikta netinkamo turinio. Pakeiskite nuotrauką ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+
     // Create story record
     const story = await prisma.providerStory.create({
       data: {
@@ -153,6 +191,9 @@ export async function POST(req: NextRequest) {
         imageUrl: result.secure_url,
         imagePublicId: result.public_id,
         text: text || null,
+        moderationStatus: merged.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationReason: merged.reason,
+        moderatedAt: new Date(),
         expiresAt: new Date(Date.now() + STORY_DURATION_MS),
       },
     });

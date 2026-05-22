@@ -17,7 +17,7 @@ export default async function ReviewsSection({
   totalReviews,
 }: ReviewsSectionProps) {
   const reviews = await prisma.review.findMany({
-    where: { providerId },
+    where: { providerId, moderationStatus: "APPROVED" },
     select: {
       id: true,
       rating: true,

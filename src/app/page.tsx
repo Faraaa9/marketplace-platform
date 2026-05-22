@@ -128,7 +128,7 @@ const getHomePageData = unstable_cache(
     try {
       const [recentRequests, providerCount, requestCount, responseCount, categoryCount] = await Promise.all([
         prisma.serviceRequest.findMany({
-          where: { status: "OPEN" },
+          where: { status: "OPEN", moderationStatus: "APPROVED" },
           select: {
             id: true,
             title: true,
@@ -146,7 +146,7 @@ const getHomePageData = unstable_cache(
           where: {
             role: "PROVIDER",
             emailVerified: { not: null },
-            providerProfile: { isActive: true },
+            providerProfile: { isActive: true, moderationStatus: "APPROVED" },
           },
         }),
         prisma.serviceRequest.count(),

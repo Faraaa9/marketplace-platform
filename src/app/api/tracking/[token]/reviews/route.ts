@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { moderateText } from "@/lib/moderation";
 
 /**
  * POST /api/tracking/[token]/reviews — Guest review submission.
@@ -105,6 +106,23 @@ export async function POST(
       );
     }
 
+    const moderation = await moderateText({
+      entityType: "Review",
+      fields: { comment },
+      actorUserId: request.clientId,
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Atsiliepime aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 }
+      );
+    }
+
     const review = await prisma.review.create({
       data: {
         rating,
@@ -113,6 +131,9 @@ export async function POST(
         providerId,
         requestId: request.id,
         responseId,
+        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationReason: moderation.reason,
+        moderatedAt: new Date(),
       },
     });
 

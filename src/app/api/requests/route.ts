@@ -9,6 +9,7 @@ import { sendEmail, requestConfirmationEmail } from "@/lib/email";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,37 @@ export async function POST(req: NextRequest) {
 
     const clientId = verifiedViaAccount && userId ? userId : null;
 
+    const [textModeration, imageModeration] = await Promise.all([
+      moderateText({
+        entityType: "ServiceRequest",
+        fields: {
+          title: data.title,
+          description: data.description,
+          budget: data.budget,
+          deadline: data.deadline,
+        },
+        actorUserId: clientId,
+      }),
+      moderateImages({
+        entityType: "ServiceRequest",
+        imageUrls: data.attachmentUrls ?? [],
+        actorUserId: clientId,
+      }),
+    ]);
+    const moderation = mergeModeration(textModeration, imageModeration);
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Skelbime aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+    const moderationStatus = moderation.verdict === "ok" ? "APPROVED" : "PENDING";
+
     const request = await prisma.serviceRequest.create({
       data: {
         title: sanitizeHtml(data.title),
@@ -87,6 +119,9 @@ export async function POST(req: NextRequest) {
         deadline: sanitizeHtml(data.deadline),
         attachmentUrls: data.attachmentUrls ?? [],
         status: "OPEN",
+        moderationStatus,
+        moderationReason: moderation.reason,
+        moderatedAt: new Date(),
         contactVerifiedAt: new Date(),
         clientEmail: email,
         clientName: data.clientName,
@@ -101,24 +136,29 @@ export async function POST(req: NextRequest) {
       await prisma.requestEmailVerification.delete({ where: { email } }).catch(() => {});
     }
 
-    // The request is live immediately — refresh the public request caches now.
-    revalidateTag("requests", { expire: 0 });
+    const isPublished = moderationStatus === "APPROVED";
+
+    if (isPublished) {
+      // The request is live — refresh public caches and reach out to providers.
+      revalidateTag("requests", { expire: 0 });
+      notifyRelevantProviders(request.title, request.category, request.location, clientId).catch(
+        (error) => console.error("Provider notification error:", error),
+      );
+    }
 
     if (clientId) {
       await prisma.notification.create({
         data: {
           userId: clientId,
-          type: "REQUEST_ACTIVATED",
-          title: "Užklausa paskelbta",
-          body: `Jūsų užklausa „${request.title}" paskelbta ir perduota tiekėjams.`,
+          type: isPublished ? "REQUEST_ACTIVATED" : "REQUEST_PENDING_REVIEW",
+          title: isPublished ? "Užklausa paskelbta" : "Užklausa peržiūrima",
+          body: isPublished
+            ? `Jūsų užklausa „${request.title}" paskelbta ir perduota tiekėjams.`
+            : `Jūsų užklausa „${request.title}" gauta ir bus paskelbta po peržiūros.`,
           link: "/paskyra/uzklausos",
         },
       });
     }
-
-    notifyRelevantProviders(request.title, request.category, request.location, clientId).catch(
-      (error) => console.error("Provider notification error:", error),
-    );
 
     await sendEmail({
       to: email,

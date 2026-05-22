@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
     // Build filter — only matching specializations, exclude own requests
     const where: Record<string, unknown> = {
       status: "OPEN",
+      moderationStatus: "APPROVED",
       clientId: { not: guard.userId },
     };
     // Filter by provider specializations (only show requests they can respond to)

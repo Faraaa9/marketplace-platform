@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         deadline: true,
         attachmentUrls: true,
         status: true,
+        moderationStatus: true,
         acceptedResponseId: true,
         clientId: true,
         clientName: true,

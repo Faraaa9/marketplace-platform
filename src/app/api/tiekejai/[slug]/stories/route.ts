@@ -40,6 +40,7 @@ export async function GET(
     const stories = await prisma.providerStory.findMany({
       where: {
         providerId,
+        moderationStatus: "APPROVED",
         expiresAt: { gt: new Date() },
       },
       select: {

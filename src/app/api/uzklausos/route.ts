@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const perPage = 20;
 
-    const where: Record<string, unknown> = { status: "OPEN" };
+    const where: Record<string, unknown> = { status: "OPEN", moderationStatus: "APPROVED" };
     if (category) where.category = category;
     if (location) where.location = location;
     if (budget) where.budget = budget;

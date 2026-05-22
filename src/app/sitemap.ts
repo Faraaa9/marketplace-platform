@@ -86,6 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.providerProfile.findMany({
       where: {
         isActive: true,
+        moderationStatus: "APPROVED",
         user: { role: "PROVIDER", emailVerified: { not: null } },
       },
       select: { slug: true, updatedAt: true },

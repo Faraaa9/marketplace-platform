@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = {
       role: "PROVIDER",
       emailVerified: { not: null },
-      providerProfile: { isActive: true },
+      providerProfile: { isActive: true, moderationStatus: "APPROVED" },
     };
 
     if (search) {

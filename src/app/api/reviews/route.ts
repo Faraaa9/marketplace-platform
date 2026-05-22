@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { moderateText } from "@/lib/moderation";
 
 /**
  * POST /api/reviews — Submit a review for a provider after accepting their response.
@@ -69,6 +70,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Atsiliepimas jau pateiktas" }, { status: 409 });
     }
 
+    const moderation = await moderateText({
+      entityType: "Review",
+      fields: { comment },
+      actorUserId: session.user.id,
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Atsiliepime aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+
     const review = await prisma.review.create({
       data: {
         rating,
@@ -77,6 +95,9 @@ export async function POST(req: NextRequest) {
         providerId,
         requestId,
         responseId,
+        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationReason: moderation.reason,
+        moderatedAt: new Date(),
       },
     });
 
@@ -109,7 +130,7 @@ export async function GET(req: NextRequest) {
     }
 
     const reviews = await prisma.review.findMany({
-      where: { providerId },
+      where: { providerId, moderationStatus: "APPROVED" },
       select: {
         id: true,
         rating: true,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, FileText, Home, Settings, Shield } from "lucide-react";
+import { Users, FileText, Home, Settings, Shield, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/tiekejai", label: "Tiekėjai", icon: Users, badgeKey: "pendingActivation" as const },
   { href: "/admin/uzklausos", label: "Užklausos", icon: FileText, badgeKey: "pendingRequests" as const },
   { href: "/admin/claims", label: "Perėmimai", icon: Shield, badgeKey: "pendingClaims" as const },
+  { href: "/admin/moderacija", label: "Moderacija", icon: ShieldAlert, badgeKey: "pendingModeration" as const },
   { href: "/admin/nustatymai", label: "Nustatymai", icon: Settings, badgeKey: null },
 ];
 
@@ -18,11 +19,12 @@ interface NavBadges {
   pendingActivation: number;
   pendingRequests: number;
   pendingClaims: number;
+  pendingModeration: number;
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [badges, setBadges] = useState<NavBadges>({ pendingActivation: 0, pendingRequests: 0, pendingClaims: 0 });
+  const [badges, setBadges] = useState<NavBadges>({ pendingActivation: 0, pendingRequests: 0, pendingClaims: 0, pendingModeration: 0 });
 
   useEffect(() => {
     fetch("/api/admin/stats")
@@ -33,6 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             pendingActivation: data.data.pendingActivation || 0,
             pendingRequests: data.data.pendingRequests || 0,
             pendingClaims: data.data.pendingClaims || 0,
+            pendingModeration: data.data.pendingModeration || 0,
           });
         }
       })

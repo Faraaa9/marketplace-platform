@@ -55,7 +55,7 @@ const getBoardRequests = unstable_cache(
       });
     }
 
-    const where: Record<string, unknown> = { AND: conditions };
+    const where: Record<string, unknown> = { AND: conditions, moderationStatus: "APPROVED" };
     if (filters.category) where.category = filters.category;
     if (filters.location) where.location = filters.location;
     if (filters.budget) where.budget = filters.budget;
@@ -84,8 +84,10 @@ const getBoardRequests = unstable_cache(
         take: perPage,
       }),
       prisma.serviceRequest.count({ where }),
-      prisma.serviceRequest.count({ where: { status: "OPEN" } }),
-      prisma.serviceRequest.count({ where: { status: "OPEN", createdAt: { gte: oneDayAgo } } }),
+      prisma.serviceRequest.count({ where: { status: "OPEN", moderationStatus: "APPROVED" } }),
+      prisma.serviceRequest.count({
+        where: { status: "OPEN", moderationStatus: "APPROVED", createdAt: { gte: oneDayAgo } },
+      }),
       prisma.response.count(),
     ]);
 

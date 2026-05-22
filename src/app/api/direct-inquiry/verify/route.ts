@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
+import { moderateText } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const moderation = await moderateText({
+      entityType: "DirectInquiry",
+      fields: { description: pending.description, budget: pending.budget },
+    });
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Žinutėje aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 }
+      );
+    }
+    const inquiryModerationStatus = moderation.verdict === "ok" ? "APPROVED" : "PENDING";
+
     // Mark as verified and create real DirectInquiry in a transaction
     const inquiry = await prisma.$transaction(async (tx) => {
       // Re-check verifiedAt inside transaction to prevent race condition double-submit
@@ -122,19 +140,24 @@ export async function POST(req: NextRequest) {
           senderEmail: pending.senderEmail,
           senderPhone: pending.senderPhone,
           senderName: pending.senderName,
+          moderationStatus: inquiryModerationStatus,
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
           // The sender wrote this — leave it unread for the provider.
           providerLastReadAt: new Date(0),
         },
       });
 
-      await tx.notification.create({
-        data: getDirectInquiryNotificationData({
-          providerId: pending.providerId,
-          inquiryId: createdInquiry.id,
-          senderEmail: pending.senderEmail,
-          senderName: pending.senderName,
-        }),
-      });
+      if (inquiryModerationStatus === "APPROVED") {
+        await tx.notification.create({
+          data: getDirectInquiryNotificationData({
+            providerId: pending.providerId,
+            inquiryId: createdInquiry.id,
+            senderEmail: pending.senderEmail,
+            senderName: pending.senderName,
+          }),
+        });
+      }
 
       return createdInquiry;
     });

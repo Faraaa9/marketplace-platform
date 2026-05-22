@@ -53,6 +53,7 @@ interface RequestData {
   deadline?: string;
   attachmentUrls?: string[];
   status: string;
+  moderationStatus?: string;
   acceptedResponseId?: string;
   clientId?: string | null;
   clientName: string;
@@ -277,17 +278,25 @@ export default function TrackRequestPage() {
     CLOSED: { label: "Uždaryta", variant: "default" },
   };
   const status = statusMap[request.status] || statusMap.OPEN;
+  const displayStatus =
+    request.moderationStatus === "PENDING"
+      ? { label: "Peržiūrima", variant: "warning" as const }
+      : request.moderationStatus === "REJECTED"
+        ? { label: "Atmesta", variant: "default" as const }
+        : status;
   const verificationState = searchParams.get("verification");
   const deliveryState = searchParams.get("delivery");
   const isOpen = request.status === "OPEN";
   const isClosed = request.status === "CLOSED";
+  const isApproved =
+    request.moderationStatus !== "PENDING" && request.moderationStatus !== "REJECTED";
   const showToolbar = isOpen && request.responses.length > 3;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <Badge variant={status.variant}>{status.label}</Badge>
+          <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
           <span className="text-body-sm text-surface-500">{categoryLabel}</span>
         </div>
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">{request.title}</h1>
@@ -298,6 +307,30 @@ export default function TrackRequestPage() {
           {request.deadline && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{request.deadline}</span>}
         </div>
       </div>
+
+      {request.moderationStatus === "PENDING" && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-500/10">
+          <p className="text-body-sm font-semibold text-amber-900 dark:text-amber-200">
+            Užklausa peržiūrima
+          </p>
+          <p className="mt-0.5 text-body-sm text-amber-800 dark:text-amber-300">
+            Jūsų užklausa tikrinama prieš paskelbiant ir kol kas nematoma tiekėjams.
+            Paprastai peržiūra trunka neilgai.
+          </p>
+        </div>
+      )}
+
+      {request.moderationStatus === "REJECTED" && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-500/10">
+          <p className="text-body-sm font-semibold text-red-900 dark:text-red-200">
+            Užklausa nepaskelbta
+          </p>
+          <p className="mt-0.5 text-body-sm text-red-800 dark:text-red-300">
+            Užklausa neatitiko platformos taisyklių dėl netinkamo turinio. Suredaguokite
+            tekstą ar nuotraukas ir bandykite dar kartą.
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 p-3 text-body-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
@@ -339,7 +372,7 @@ export default function TrackRequestPage() {
       <StatusTimeline status={request.status} responseCount={request.responses.length} />
 
       {/* Provider activity — concrete transparency during the wait */}
-      {isOpen && (
+      {isOpen && isApproved && (
         <div className="mb-6 flex items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">
           <Eye className="h-4 w-4 shrink-0" />
           {request.viewCount && request.viewCount > 0 ? (
@@ -354,7 +387,7 @@ export default function TrackRequestPage() {
       )}
 
       {/* Next action guidance */}
-      {isOpen && request.responses.length === 0 && (
+      {isOpen && isApproved && request.responses.length === 0 && (
         <div className="mb-6 rounded-2xl border border-surface-200/60 bg-surface-50 p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
           <div className="flex items-center gap-2 mb-1">
             <SearchIcon className="h-4 w-4 text-surface-500 dark:text-surface-400" />

@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { serviceRequestEditSchema } from "@/lib/validations";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { isCloudinaryConfigured, getConfiguredCloudinary, publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
+import { revalidateTag } from "next/cache";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
 /**
  * Edit (PATCH) and delete (DELETE) a service request, authenticated by tracking token.
@@ -55,10 +58,51 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
       );
     }
 
+    const [textModeration, imageModeration] = await Promise.all([
+      moderateText({
+        entityType: "ServiceRequest",
+        fields: {
+          title: parsed.data.title,
+          description: parsed.data.description,
+          budget: parsed.data.budget,
+          deadline: parsed.data.deadline,
+        },
+        actorUserId: session?.user?.id ?? request.clientId,
+      }),
+      moderateImages({
+        entityType: "ServiceRequest",
+        imageUrls: parsed.data.attachmentUrls ?? [],
+        actorUserId: session?.user?.id ?? request.clientId,
+      }),
+    ]);
+    const moderation = mergeModeration(textModeration, imageModeration);
+    if (moderation.verdict === "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            moderation.userMessage ??
+            "Skelbime aptikta netinkamo turinio. Pataisykite ir bandykite dar kartą.",
+        },
+        { status: 422 },
+      );
+    }
+
     await prisma.serviceRequest.update({
       where: { id: request.id },
-      data: parsed.data,
+      data: {
+        ...parsed.data,
+        title: sanitizeHtml(parsed.data.title),
+        description: sanitizeHtml(parsed.data.description),
+        budget: sanitizeHtml(parsed.data.budget),
+        deadline: sanitizeHtml(parsed.data.deadline),
+        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationReason: moderation.reason,
+        moderatedAt: new Date(),
+      },
     });
+
+    revalidateTag("requests", { expire: 0 });
 
     return NextResponse.json({ success: true });
   } catch (error) {
