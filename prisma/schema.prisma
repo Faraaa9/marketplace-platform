@@ -86,26 +86,27 @@ model ProviderProfile {
   // ── Absorbed from SupplierRecord — Phase 2: unified provider entity ──
   // A ProviderProfile now represents ANY provider: self-created (registered)
   // or imported from the paslaugos.lt catalog (claimed or not yet).
-  displayName        String?
-  status             String    @default("claimed")     // claimed | unclaimed
-  sourceType         String    @default("self_created") // self_created | imported
-  shortSummary       String?
-  publicEmail        String?
-  heroImageUrl       String?
-  companyCode        String?
-  isVerified         Boolean   @default(false)
-  rating             Float?
-  reviewCount        Int       @default(0)
-  externalSource     String?
-  externalSourceUrl  String?
-  enrichedAt         DateTime?
-  metadataJson       String?   @db.Text
+  displayName       String?
+  status            String    @default("claimed") // claimed | unclaimed
+  sourceType        String    @default("self_created") // self_created | imported
+  shortSummary      String?
+  publicEmail       String?
+  heroImageUrl      String?
+  companyCode       String?
+  isVerified        Boolean   @default(false)
+  rating            Float?
+  reviewCount       Int       @default(0)
+  externalSource    String?
+  externalSourceUrl String?
+  enrichedAt        DateTime?
+  metadataJson      String?   @db.Text
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user          User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
   claimRequests ClaimRequest[]
+  categories    ProviderProfileCategory[]
 
   @@index([specializations], type: Gin)
   @@index([moderationStatus])
@@ -113,6 +114,22 @@ model ProviderProfile {
   @@index([sourceType])
   @@index([externalSourceUrl])
   @@map("provider_profiles")
+}
+
+model ProviderProfileCategory {
+  id                String   @id @default(cuid())
+  providerProfileId String
+  categoryId        String
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  providerProfile ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
+  category        Category        @relation(fields: [categoryId], references: [id])
+
+  @@unique([providerProfileId, categoryId])
+  @@index([providerProfileId])
+  @@index([categoryId])
+  @@map("provider_profile_categories")
 }
 
 model ServiceRequest {
@@ -124,6 +141,7 @@ model ServiceRequest {
   title                        String
   description                  String    @db.Text
   category                     String
+  categoryId                   String?
   location                     String
   budget                       String?
   deadline                     String?
@@ -140,13 +158,15 @@ model ServiceRequest {
   createdAt                    DateTime  @default(now())
   updatedAt                    DateTime  @updatedAt
 
-  client    User?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  responses Response[]
-  reviews   Review[]
-  views     RequestView[]
+  client      User?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  categoryRef Category?     @relation(fields: [categoryId], references: [id])
+  responses   Response[]
+  reviews     Review[]
+  views       RequestView[]
 
   @@index([status])
   @@index([category])
+  @@index([categoryId])
   @@index([location])
   @@index([moderationStatus, createdAt])
   @@map("service_requests")
@@ -409,12 +429,14 @@ model Category {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  parent          Category?              @relation("CategoryTree", fields: [parentId], references: [id])
-  children        Category[]             @relation("CategoryTree")
-  root            Category?              @relation("CategoryRoot", fields: [rootId], references: [id])
-  rootDescendants Category[]             @relation("CategoryRoot")
+  parent          Category?                 @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[]                @relation("CategoryTree")
+  root            Category?                 @relation("CategoryRoot", fields: [rootId], references: [id])
+  rootDescendants Category[]                @relation("CategoryRoot")
   aliases         CategoryAlias[]
   supplierLinks   SupplierCategoryLink[]
+  serviceRequests ServiceRequest[]
+  providerLinks   ProviderProfileCategory[]
 
   @@index([parentId])
   @@index([rootId])
