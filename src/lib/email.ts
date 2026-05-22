@@ -301,6 +301,22 @@ export function requestCodeVerificationEmail(code: string) {
   };
 }
 
+export function changeEmailVerificationEmail(code: string) {
+  return {
+    subject: `${code} — patvirtinkite naują el. paštą — PaslaugųRinka`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Patvirtinkite naują el. paštą</h2>
+        <p>Gavome prašymą pakeisti jūsų paskyros el. paštą į šį adresą. Įveskite šį kodą profilio lange, kad pakeitimą užbaigtumėte:</p>
+        <div style="margin: 24px 0; text-align: center;">
+          <span style="display: inline-block; padding: 16px 32px; background: #f3f4f6; border-radius: 12px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827;">${code}</span>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">Kodas galioja 10 minučių. Jei neprašėte el. pašto pakeitimo, ignoruokite šį laišką — jūsų paskyra liks nepakeista.</p>
+      </div>
+    `,
+  };
+}
+
 // ── Claim emails (Lithuanian) ────────────────────────────────────────
 
 export function claimVerificationEmail(supplierName: string, verifyUrl: string) {
