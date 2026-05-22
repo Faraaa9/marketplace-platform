@@ -59,3 +59,25 @@ export async function getServiceCategoryNameMap(): Promise<Map<string, string>> 
   }
   return map;
 }
+
+/**
+ * Resolve a `?category=` URL param to a curated Category id. Accepts a curated
+ * category/root slug, or a legacy SERVICE_CATEGORIES code via a CategoryAlias
+ * (so old indexed `?category=<code>` URLs keep resolving). Returns the
+ * category id, or null if unresolvable.
+ */
+export async function resolveCategoryParam(param: string): Promise<string | null> {
+  if (!param) return null;
+
+  const bySlug = await prisma.category.findUnique({
+    where: { slug: param },
+    select: { id: true },
+  });
+  if (bySlug) return bySlug.id;
+
+  const alias = await prisma.categoryAlias.findFirst({
+    where: { aliasSlug: param },
+    select: { categoryId: true },
+  });
+  return alias?.categoryId ?? null;
+}

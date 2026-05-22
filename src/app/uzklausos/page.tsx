@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
-import { getServiceCategoryGroups } from "@/lib/service-categories";
+import { getServiceCategoryGroups, resolveCategoryParam } from "@/lib/service-categories";
 import { expandToMatchSet } from "@/lib/category-matching";
 import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
@@ -59,15 +59,13 @@ const getBoardRequests = unstable_cache(
 
     const where: Record<string, unknown> = { AND: conditions, moderationStatus: "APPROVED" };
     if (filters.category) {
-      // `?category=<slug>` — resolve to a curated category. A root slug
-      // expands to its children so the board shows the whole branch.
-      const matched = await prisma.category.findUnique({
-        where: { slug: filters.category },
-        select: { id: true },
-      });
-      where.categoryId = matched
-        ? { in: await expandToMatchSet([matched.id]) }
-        : { in: [] as string[] };
+      // `?category=<slug>` — resolve a curated slug or a legacy code (via
+      // CategoryAlias). A root slug expands to its children so the board
+      // shows the whole branch.
+      const categoryId = await resolveCategoryParam(filters.category);
+      where.categoryId = {
+        in: categoryId ? await expandToMatchSet([categoryId]) : ([] as string[]),
+      };
     }
     if (filters.location) where.location = filters.location;
     if (filters.budget) where.budget = filters.budget;

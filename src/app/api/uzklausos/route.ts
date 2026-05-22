@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { expandToMatchSet } from "@/lib/category-matching";
+import { resolveCategoryParam } from "@/lib/service-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -16,18 +17,13 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = { status: "OPEN", moderationStatus: "APPROVED" };
     if (category) {
-      // `?category=<slug>` — resolve the slug to a curated category. A root
-      // slug expands to its children so the board shows the whole branch.
-      const matched = await prisma.category.findUnique({
-        where: { slug: category },
-        select: { id: true },
-      });
-      if (matched) {
-        where.categoryId = { in: await expandToMatchSet([matched.id]) };
-      } else {
-        // Unknown category slug — return an empty result rather than ignoring it.
-        where.categoryId = { in: [] as string[] };
-      }
+      // `?category=<slug>` — resolve a curated slug or a legacy code (via
+      // CategoryAlias). A root slug expands to its children so the board
+      // shows the whole branch; an unknown value yields an empty result.
+      const categoryId = await resolveCategoryParam(category);
+      where.categoryId = {
+        in: categoryId ? await expandToMatchSet([categoryId]) : ([] as string[]),
+      };
     }
     if (location) where.location = location;
     if (budget) where.budget = budget;
