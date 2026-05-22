@@ -294,8 +294,8 @@ export default async function HomePage() {
             kurio tikrai reikia
           </h1>
           <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760] dark:text-surface-300">
-            Aprašyk, ko tau reikia, ir gauk pasiūlymų iš patikrintų specialistų
-            visoje Lietuvoje.
+            Aprašyk paprastais žodžiais, ko reikia, ir gauk pasiūlymų iš
+            specialistų visoje Lietuvoje.
           </p>
           <div className="mt-9 flex w-full justify-center">
             <HeroSearch />
