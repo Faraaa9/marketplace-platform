@@ -27,7 +27,7 @@ export const serviceRequestSchema = z.object({
   attachmentUrls: z.array(z.string().url().includes("res.cloudinary.com")).max(5, "Daugiausia 5 nuotraukos").optional(),
   clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
   clientEmail: z.string().email("Neteisingas el. pašto formatas"),
-  clientPhone: z.string().optional(),
+  clientPhone: z.string().trim().min(6, "Nurodykite telefono numerį").max(30, "Telefono numeris per ilgas"),
   createAccount: z.boolean().optional(),
   password: z.string().optional(),
   honeypot: z.string().optional(),

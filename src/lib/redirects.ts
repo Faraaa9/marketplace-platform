@@ -11,16 +11,21 @@ export interface UserMenuLink {
 
 export function getUserMenuLinks(role?: string): UserMenuLink[] {
   if (role === "ADMIN") {
-    return [{ href: "/admin", label: "Admin panelė" }];
+    return [
+      { href: "/paskyra/profilis", label: "Profilis" },
+      { href: "/admin", label: "Admin panelė" },
+    ];
   }
   if (role === "PROVIDER") {
     return [
+      { href: "/paskyra/profilis", label: "Profilis" },
       { href: "/tiekejas", label: "Valdymo panelė" },
       { href: "/tiekejas/zinutes", label: "Žinutės" },
       { href: "/paskyra/uzklausos", label: "Mano užklausos" },
     ];
   }
   return [
+    { href: "/paskyra/profilis", label: "Profilis" },
     { href: "/paskyra/uzklausos", label: "Mano užklausos" },
     { href: "/tapti-tiekeju", label: "Tapti tiekėju" },
   ];

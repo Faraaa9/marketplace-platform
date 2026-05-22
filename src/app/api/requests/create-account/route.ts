@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const request = await prisma.serviceRequest.findUnique({
       where: { trackingToken },
-      select: { contactVerifiedAt: true, clientEmail: true, clientName: true },
+      select: { contactVerifiedAt: true, clientEmail: true, clientName: true, clientPhone: true },
     });
     if (!request) {
       return NextResponse.json(
@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
         role: "CLIENT",
         // Email already proven via the verified request — skip re-verification.
         emailVerified: new Date(),
+        phone: request.clientPhone,
+        phoneVerifiedAt: request.clientPhone ? new Date() : null,
       },
       select: { id: true },
     });

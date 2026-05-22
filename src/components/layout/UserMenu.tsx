@@ -62,8 +62,9 @@ export default function UserMenu() {
           className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl border border-[#DBD6CB] bg-white shadow-lg shadow-black/5"
         >
           <div className="border-b border-[#EAE6DD] px-4 py-3">
-            <p className="truncate text-sm font-semibold text-[#26231F]">{name}</p>
-            {email && <p className="truncate text-xs text-[#8A8478]">{email}</p>}
+            <p className="truncate text-sm font-normal text-[#26231F]">
+              {email || "Paskyra"}
+            </p>
           </div>
           <div className="py-1.5">
             {links.map((link) => (

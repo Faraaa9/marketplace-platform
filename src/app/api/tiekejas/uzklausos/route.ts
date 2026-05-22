@@ -50,7 +50,11 @@ export async function GET(req: NextRequest) {
       clientId: { not: guard.userId },
       categoryId: { in: filterIds },
     };
-    if (location) where.location = location;
+    // "Visa Lietuva" is the nationwide tag — as a filter it means "all
+    // locations", and a specific city must also surface nationwide requests.
+    if (location && location !== "Visa Lietuva") {
+      where.location = { in: [location, "Visa Lietuva"] };
+    }
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },

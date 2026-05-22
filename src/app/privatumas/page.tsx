@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         <p>Jūsų duomenys saugomi saugiuose serveriuose. Mokėjimo duomenis apdoroja Stripe pagal PCI DSS standartus.</p>
 
         <h2 className="text-heading-2 font-semibold text-surface-900 dark:text-white">Jūsų teisės</h2>
-        <p>Turite teisę prašyti prieigos prie savo duomenų, juos ištaisyti arba ištrinti. Kreipkitės el. paštu info@paslaugurinka.lt.</p>
+        <p>Turite teisę prašyti prieigos prie savo duomenų, juos ištaisyti arba ištrinti. Kreipkitės el. paštu info@send.paslaugurinka.lt.</p>
 
         <p className="text-body-sm text-surface-400">Paskutinį kartą atnaujinta: 2026-04-07</p>
       </div>

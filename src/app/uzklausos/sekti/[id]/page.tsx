@@ -15,7 +15,7 @@ import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import Link from "next/link";
 import RequestPhotos from "@/components/requests/RequestPhotos";
-import { ChevronDown, MapPin, Clock, CalendarClock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, MapPin, Clock, CalendarClock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star, Pencil, Trash2, ArrowUpRight } from "lucide-react";
 
 interface MessageData {
   id: string;
@@ -291,14 +291,27 @@ export default function TrackRequestPage() {
   const isClosed = request.status === "CLOSED";
   const isApproved =
     request.moderationStatus !== "PENDING" && request.moderationStatus !== "REJECTED";
+  const publicRequestHref = `/uzklausos?search=${encodeURIComponent(request.title)}&open=${encodeURIComponent(request.id)}#uzklausa-${request.id}`;
   const showToolbar = isOpen && request.responses.length > 3;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
-          <span className="text-body-sm text-surface-500">{categoryLabel}</span>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
+            <span className="truncate text-body-sm text-surface-500">{categoryLabel}</span>
+          </div>
+          {isApproved && (
+            <Link
+              href={publicRequestHref}
+              aria-label="Atidaryti viešą skelbimą"
+              title="Atidaryti viešą skelbimą"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-surface-200/80 bg-white/70 text-surface-500 shadow-sm transition-all hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-surface-700 dark:bg-surface-900/70 dark:text-surface-300 dark:hover:bg-surface-800"
+            >
+              <ArrowUpRight className="h-4.5 w-4.5" />
+            </Link>
+          )}
         </div>
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">{request.title}</h1>
         <div className="mt-3 flex flex-wrap gap-4 text-body-sm text-surface-500">

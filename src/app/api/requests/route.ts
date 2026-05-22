@@ -8,6 +8,8 @@ import { serviceRequestSchema } from "@/lib/validations";
 import { sendEmail, requestConfirmationEmail } from "@/lib/email";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { normalizePhoneNumber } from "@/lib/phone";
+import { PHONE_VERIFICATION_VALID_MS } from "@/lib/phone-verification";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
@@ -43,6 +45,13 @@ export async function POST(req: NextRequest) {
       );
     }
     const data = parsed.data;
+    const phone = normalizePhoneNumber(data.clientPhone);
+    if (!phone) {
+      return NextResponse.json(
+        { success: false, error: "Patikrinkite telefono numerį, pvz. +3706..." },
+        { status: 400 },
+      );
+    }
 
     // Honeypot — bots fill this hidden field; humans never see it. Return a
     // plausible fake payload so the bot does not learn the submission failed.
@@ -63,7 +72,10 @@ export async function POST(req: NextRequest) {
     const verifiedViaAccount = !!userId && sessionEmail === email;
     let consumeVerification = false;
     if (!verifiedViaAccount) {
-      const verification = await prisma.requestEmailVerification.findUnique({ where: { email } });
+      const verification = await prisma.requestEmailVerification.findUnique({
+        where: { email },
+        select: { verifiedAt: true },
+      });
       const verified =
         !!verification?.verifiedAt &&
         verification.verifiedAt.getTime() > Date.now() - VERIFICATION_VALID_MS;
@@ -77,6 +89,33 @@ export async function POST(req: NextRequest) {
     }
 
     const clientId = verifiedViaAccount && userId ? userId : null;
+    let consumePhoneVerification = false;
+
+    let verifiedViaAccountPhone = false;
+    if (clientId) {
+      const user = await prisma.user.findUnique({
+        where: { id: clientId },
+        select: { phone: true, phoneVerifiedAt: true },
+      });
+      verifiedViaAccountPhone = user?.phone === phone && !!user.phoneVerifiedAt;
+    }
+
+    if (!verifiedViaAccountPhone) {
+      const phoneVerification = await prisma.phoneVerification.findUnique({
+        where: { phone },
+        select: { verifiedAt: true },
+      });
+      const phoneVerified =
+        !!phoneVerification?.verifiedAt &&
+        phoneVerification.verifiedAt.getTime() > Date.now() - PHONE_VERIFICATION_VALID_MS;
+      if (!phoneVerified) {
+        return NextResponse.json(
+          { success: false, error: "Patvirtinkite telefono numerį prieš skelbdami." },
+          { status: 403 },
+        );
+      }
+      consumePhoneVerification = true;
+    }
 
     // Resolve the chosen curated category. `categoryId` drives matching; the
     // legacy `category` String column (NOT NULL) is set to the category slug.
@@ -139,15 +178,32 @@ export async function POST(req: NextRequest) {
         contactVerifiedAt: new Date(),
         clientEmail: email,
         clientName: data.clientName,
-        clientPhone: data.clientPhone ? sanitizeHtml(data.clientPhone) : null,
+        clientPhone: sanitizeHtml(phone),
         clientId,
         trackingToken: crypto.randomBytes(32).toString("hex"),
       },
+      select: {
+        title: true,
+        categoryId: true,
+        location: true,
+        trackingToken: true,
+      },
     });
+
+    if (clientId) {
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { phone: sanitizeHtml(phone), phoneVerifiedAt: new Date() },
+        select: { id: true },
+      });
+    }
 
     // One-time use — drop the verification record once consumed.
     if (consumeVerification) {
       await prisma.requestEmailVerification.delete({ where: { email } }).catch(() => {});
+    }
+    if (consumePhoneVerification) {
+      await prisma.phoneVerification.delete({ where: { phone } }).catch(() => {});
     }
 
     const isPublished = moderationStatus === "APPROVED";
@@ -171,6 +227,7 @@ export async function POST(req: NextRequest) {
             : `Jūsų užklausa „${request.title}" gauta ir bus paskelbta po peržiūros.`,
           link: "/paskyra/uzklausos",
         },
+        select: { id: true },
       });
     }
 

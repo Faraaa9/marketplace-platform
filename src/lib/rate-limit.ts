@@ -115,6 +115,8 @@ export const RATE_LIMITS = {
   aiProposal: { maxRequests: 15, windowMs: 60 * 60 * 1000 },    // 15 per hour (AI pasiūlymo juodraštis)
   aiTranscribe: { maxRequests: 30, windowMs: 60 * 60 * 1000 },  // 30 per hour (balso diktavimas)
   requestCode: { maxRequests: 8, windowMs: 60 * 60 * 1000 },    // 8 per hour (užklausos el. pašto kodas)
+  phoneCode: { maxRequests: 6, windowMs: 60 * 60 * 1000 },      // 6 per hour (telefono SMS kodas)
+  phoneVerify: { maxRequests: 20, windowMs: 10 * 60 * 1000 },   // 20 per 10 min (SMS kodo tikrinimas)
   guestMessages: { maxRequests: 3, windowMs: 60 * 1000 },       // 3 per minute
   directInquiry: { maxRequests: 5, windowMs: 60 * 60 * 1000 },  // 5 per hour (sender)
   directInquiryGuest: { maxRequests: 3, windowMs: 60 * 60 * 1000 }, // 3 per hour (guest)

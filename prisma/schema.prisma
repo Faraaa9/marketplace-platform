@@ -14,6 +14,8 @@ model User {
   password      String?
   role          String    @default("CLIENT")
   emailVerified DateTime?
+  phone         String?
+  phoneVerifiedAt DateTime?
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -383,6 +385,23 @@ model RequestEmailVerification {
   @@map("request_email_verifications")
 }
 
+model PhoneVerification {
+  id          String    @id @default(cuid())
+  phone       String    @unique
+  codeHash    String
+  userId      String?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  resendCount Int       @default(0)
+  lastSentAt  DateTime  @default(now())
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@map("phone_verifications")
+}
+
 model PlatformSettings {
   id                 String   @id @default("singleton")
   storyEnabled       Boolean  @default(true)
@@ -676,8 +695,7 @@ model InboundEmail {
   htmlBody        String?  @db.Text
   status          String   @default("INBOX") // INBOX | ROUTED | IGNORED
   routedMessageId String? // Message.id when status = ROUTED
-
-  createdAt DateTime @default(now())
+  createdAt       DateTime @default(now())
 
   @@index([status, createdAt])
   @@index([createdAt])

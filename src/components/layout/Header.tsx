@@ -33,7 +33,6 @@ export default function Header() {
 
   const menuLinks = getUserMenuLinks(session?.user?.role);
   const userEmail = session?.user?.email ?? "";
-  const userName = session?.user?.name?.trim() || userEmail.split("@")[0] || "Vartotojas";
 
   const solid = scrolled || mobileOpen;
 
@@ -144,10 +143,9 @@ export default function Header() {
               ) : (
                 <>
                   <div className="px-3 py-2">
-                    <p className="truncate text-sm font-semibold text-[#26231F] dark:text-surface-100">{userName}</p>
-                    {userEmail && (
-                      <p className="truncate text-xs text-[#8A8478] dark:text-surface-400">{userEmail}</p>
-                    )}
+                    <p className="truncate text-sm font-normal text-[#26231F] dark:text-surface-100">
+                      {userEmail || "Paskyra"}
+                    </p>
                   </div>
                   {menuLinks.map((link) => (
                     <Link

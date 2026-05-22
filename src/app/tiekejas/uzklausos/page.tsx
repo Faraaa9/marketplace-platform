@@ -24,6 +24,7 @@ import {
   SlidersHorizontal,
   Coins,
   Lock,
+  LockOpen,
 } from "lucide-react";
 
 interface Request {
@@ -176,39 +177,33 @@ function ProviderRequestsContent() {
   if (search) activeFilters.push({ key: "search", label: `„${search}"` });
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      {/* Page header — compact */}
-      <div className="border-b border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
-                Klientų užklausos
-              </h1>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Link
-                href="/tiekejas/planai"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-surface-200 bg-surface-50 px-2.5 text-micro font-semibold text-surface-700 transition-colors hover:border-brand-300 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
-              >
-                <Coins className="h-3.5 w-3.5 text-brand-500" />
-                {creditBalance} {creditsLabel(creditBalance)}
-              </Link>
-              <ArrowDownUp className="h-3.5 w-3.5 text-surface-400" />
-              <select
-                value={sort}
-                onChange={(e) => updateFilter("sort", e.target.value)}
-                className="h-8 rounded-lg border border-surface-200 bg-surface-50 px-2 pr-7 text-micro font-medium text-surface-600 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_6px_center] bg-no-repeat"
-              >
-                <option value="relevance">Atitinkančios</option>
-                <option value="newest">Naujausios</option>
-              </select>
-            </div>
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
+        {/* Page header */}
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
+            Klientų užklausos
+          </h1>
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/tiekejas/planai"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-surface-200 bg-surface-50 px-2.5 text-micro font-semibold text-surface-700 transition-colors hover:border-brand-300 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+            >
+              <Coins className="h-3.5 w-3.5 text-brand-500" />
+              {creditBalance} {creditsLabel(creditBalance)}
+            </Link>
+            <ArrowDownUp className="h-3.5 w-3.5 text-surface-400" />
+            <select
+              value={sort}
+              onChange={(e) => updateFilter("sort", e.target.value)}
+              className="h-8 rounded-lg border border-surface-200 bg-surface-50 px-2 pr-7 text-micro font-medium text-surface-600 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_6px_center] bg-no-repeat"
+            >
+              <option value="relevance">Atitinkančios</option>
+              <option value="newest">Naujausios</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5">
         {/* Search + filter trigger */}
         <div className="mb-5 space-y-2">
           <div className="flex items-center gap-2">
@@ -262,14 +257,14 @@ function ProviderRequestsContent() {
                 </div>
                 <div className="overflow-y-auto flex-1 px-5 pb-5 space-y-4">
                   <FilterSelects category={category} location={location} categoryGroups={categoryGroups} onUpdate={updateFilter} />
-                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
+                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} />
                 </div>
               </div>
               {/* Desktop inline panel */}
               <div className="hidden sm:block rounded-xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
                 <div className="flex items-end gap-3">
                   <FilterSelects category={category} location={location} categoryGroups={categoryGroups} onUpdate={updateFilter} />
-                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} onApply={() => setFiltersOpen(false)} />
+                  <FilterActions hasFilters={hasFilters} onClear={() => { clearFilters(); setFiltersOpen(false); }} />
                 </div>
               </div>
             </>
@@ -357,29 +352,52 @@ function ProviderRequestsContent() {
                             : "border-surface-200/60 dark:border-surface-700/50"
                       } ${req.hasResponded ? "opacity-75 hover:opacity-100" : ""}`}
                     >
-                      {/* Top: category + status badges */}
-                      <div className="flex items-center gap-2 mb-2">
-                        {req.categoryRef && (
-                          <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
-                            {req.categoryRef.name}
-                          </span>
-                        )}
-                        {isNewRequest && !req.hasResponded && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-micro font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                            <Zap className="h-3 w-3" />
-                            Nauja
-                          </span>
-                        )}
-                        {req.relevance >= 2 && !req.hasResponded && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-micro font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                            <Star className="h-3 w-3" />
-                            Jums tinka
-                          </span>
-                        )}
-                        {req.hasResponded && (
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-surface-100 px-2 py-1 text-micro font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Atsakyta
+                      {/* Top: category + status badges (left), budget (right) */}
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {req.categoryRef && (
+                            <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
+                              {req.categoryRef.name}
+                            </span>
+                          )}
+                          {!req.isUnlocked ? (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2 py-1 text-micro font-semibold text-white dark:bg-brand-500">
+                              <Lock className="h-3 w-3" />
+                              Užrakinta
+                            </span>
+                          ) : !req.hasResponded ? (
+                            <span
+                              role="img"
+                              aria-label="Atrakinta"
+                              title="Atrakinta"
+                              className="inline-flex items-center"
+                            >
+                              <LockOpen className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                            </span>
+                          ) : null}
+                          {isNewRequest && !req.hasResponded && (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-micro font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                              <Zap className="h-3 w-3" />
+                              Nauja
+                            </span>
+                          )}
+                          {req.relevance >= 2 && !req.hasResponded && (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-micro font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                              <Star className="h-3 w-3" />
+                              Jums tinka
+                            </span>
+                          )}
+                          {req.hasResponded && (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-surface-100 px-2 py-1 text-micro font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Atsakyta
+                            </span>
+                          )}
+                        </div>
+                        {req.budget && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-surface-50 px-2 py-1 text-micro font-bold text-surface-700 ring-1 ring-inset ring-surface-200/80 dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700">
+                            <Wallet className="h-3 w-3 text-surface-400" />
+                            {budgetLabel(req.budget)}
                           </span>
                         )}
                       </div>
@@ -394,7 +412,7 @@ function ProviderRequestsContent() {
                         {truncate(req.description, 160)}
                       </p>
 
-                      {/* Footer: meta left, budget+CTA right */}
+                      {/* Footer: meta left, CTA right */}
                       <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-surface-100 dark:border-surface-800">
                         <div className="flex items-center gap-3 text-micro text-surface-400 dark:text-surface-500">
                           <span className="inline-flex items-center gap-1">
@@ -419,27 +437,19 @@ function ProviderRequestsContent() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          {req.budget && (
-                            <span className="hidden sm:inline-flex items-center gap-1 rounded-lg bg-surface-50 px-2 py-1 text-micro font-bold text-surface-700 dark:bg-surface-800 dark:text-surface-200">
-                              <Wallet className="h-3 w-3 text-surface-400" />
-                              {budgetLabel(req.budget)}
-                            </span>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-micro font-medium text-brand-600 dark:text-brand-400 group-hover:gap-1.5 transition-all">
+                          {req.hasResponded ? (
+                            "Peržiūrėti"
+                          ) : req.isUnlocked ? (
+                            "Atsakyti"
+                          ) : (
+                            <>
+                              <Lock className="h-3 w-3" />
+                              Atrakinti
+                            </>
                           )}
-                          <span className="inline-flex items-center gap-1 text-micro font-medium text-brand-600 dark:text-brand-400 group-hover:gap-1.5 transition-all">
-                            {req.hasResponded ? (
-                              "Peržiūrėti"
-                            ) : req.isUnlocked ? (
-                              "Atsakyti"
-                            ) : (
-                              <>
-                                <Lock className="h-3 w-3" />
-                                Atrakinti
-                              </>
-                            )}
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </span>
-                        </div>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </span>
                       </div>
                     </article>
                   </Link>
@@ -494,8 +504,8 @@ function FilterSelects({
       <div className="flex-1 min-w-0">
         <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Miestas</label>
         <select value={location} onChange={(e) => onUpdate("location", e.target.value)} className={filterSelectClass}>
-          <option value="">Visi</option>
-          {LITHUANIAN_CITIES.map((c) => (
+          <option value="">Visa Lietuva</option>
+          {LITHUANIAN_CITIES.filter((c) => c !== "Visa Lietuva").map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
@@ -507,21 +517,15 @@ function FilterSelects({
 function FilterActions({
   hasFilters,
   onClear,
-  onApply,
 }: {
   hasFilters: boolean;
   onClear: () => void;
-  onApply: () => void;
 }) {
+  if (!hasFilters) return null;
   return (
-    <div className="flex items-center gap-2 sm:flex-col sm:gap-1.5 pt-4 sm:pt-0">
-      {hasFilters && (
-        <button type="button" onClick={onClear} className="flex-1 sm:flex-none h-10 rounded-xl border border-surface-200 px-4 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 whitespace-nowrap">
-          Išvalyti
-        </button>
-      )}
-      <button type="button" onClick={onApply} className="flex-1 sm:flex-none h-10 rounded-xl bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors whitespace-nowrap">
-        Uždaryti
+    <div className="flex items-center pt-4 sm:pt-0">
+      <button type="button" onClick={onClear} className="flex-1 sm:flex-none h-10 rounded-xl border border-surface-200 px-4 text-body-sm font-medium text-surface-600 hover:bg-surface-50 transition-colors dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800 whitespace-nowrap">
+        Išvalyti
       </button>
     </div>
   );

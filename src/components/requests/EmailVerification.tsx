@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, Mail } from "lucide-react";
-import Input from "@/components/ui/Input";
+import { Check, Loader2, Mail, Send } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface EmailVerificationProps {
@@ -185,26 +184,37 @@ export default function EmailVerification({
   // ── Email entry ──
   return (
     <div>
-      <Input
-        id="clientEmail"
-        label="El. paštas"
-        type="email"
-        placeholder="jusu@pastas.lt"
-        value={email}
-        onChange={(e) => onEmailChange(e.target.value)}
-      />
-      {error && <p className="mt-1.5 text-micro text-red-500 dark:text-red-400">{error}</p>}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={sendCode}
-        disabled={!emailValid}
-        isLoading={sending}
-        className="mt-2"
+      <label
+        htmlFor="clientEmail"
+        className="mb-1.5 block text-body-sm font-medium text-surface-700 dark:text-surface-300"
       >
-        {sending ? "Siunčiama…" : "Patvirtinti el. paštą"}
-      </Button>
+        El. paštas
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="clientEmail"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="jusu@pastas.lt"
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          className="h-11 min-w-0 flex-1 rounded-xl border border-surface-200 bg-white px-3.5 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100 dark:placeholder:text-surface-500"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={sendCode}
+          disabled={!emailValid}
+          isLoading={sending}
+          className="h-11 min-w-[112px] shrink-0 px-3"
+        >
+          {!sending && <Send className="h-4 w-4" />}
+          {sending ? "Siunčiama…" : "Patvirtinti"}
+        </Button>
+      </div>
+      {error && <p className="mt-1.5 text-micro text-red-500 dark:text-red-400">{error}</p>}
       <p className="mt-1.5 text-micro text-surface-400">
         Atsiųsime 6 skaitmenų kodą — jį įvedus galėsi paskelbti skelbimą.
       </p>

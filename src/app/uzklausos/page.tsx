@@ -24,8 +24,8 @@ interface PageProps {
     category?: string;
     location?: string;
     search?: string;
-    budget?: string;
     sort?: string;
+    open?: string;
   }>;
 }
 
@@ -33,7 +33,7 @@ const getBoardRequests = unstable_cache(
   async (
     page: number,
     perPage: number,
-    filters: { category: string; location: string; search: string; budget: string; sort: string }
+    filters: { category: string; location: string; search: string; sort: string }
   ) => {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -68,7 +68,6 @@ const getBoardRequests = unstable_cache(
       };
     }
     if (filters.location) where.location = filters.location;
-    if (filters.budget) where.budget = filters.budget;
 
     const orderBy: Record<string, string> = { createdAt: "desc" };
 
@@ -126,15 +125,15 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const category = params.category || "";
   const location = params.location || "";
   const search = params.search || "";
-  const budget = params.budget || "";
   const sort = params.sort || "newest";
+  const openRequestId = params.open || "";
   const perPage = 20;
 
   const now = new Date();
 
   const [{ requests, total, totalActive, newToday, totalProviderResponses }, categoryGroups] =
     await Promise.all([
-      getBoardRequests(page, perPage, { category, location, search, budget, sort }),
+      getBoardRequests(page, perPage, { category, location, search, sort }),
       getServiceCategoryGroups(),
     ]);
 
@@ -150,20 +149,18 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
-  const hasFilters = category || location || search || budget;
+  const hasFilters = category || location || search;
 
   function buildUrl(overrides: Record<string, string>) {
     const p = new URLSearchParams();
     const newCategory = overrides.category ?? category;
     const newLocation = overrides.location ?? location;
     const newSearch = overrides.search ?? search;
-    const newBudget = overrides.budget ?? budget;
     const newSort = overrides.sort ?? sort;
     const newPage = overrides.page ?? "1";
     if (newCategory) p.set("category", newCategory);
     if (newLocation) p.set("location", newLocation);
     if (newSearch) p.set("search", newSearch);
-    if (newBudget) p.set("budget", newBudget);
     if (newSort && newSort !== "newest") p.set("sort", newSort);
     if (newPage !== "1") p.set("page", newPage);
     const qs = p.toString();
@@ -262,11 +259,9 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           activeCategory={category}
           activeLocation={location}
           activeSearch={search}
-          activeBudget={budget}
           activeSort={sort}
           categoryGroups={categoryGroups}
           cities={[...LITHUANIAN_CITIES]}
-          budgets={BUDGET_OPTIONS.map((b) => ({ value: b.value, label: b.label }))}
           sortOptions={SORT_OPTIONS}
           totalResults={total}
         />
@@ -280,6 +275,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
               const competition = competitionLevel(r._count.responses);
               const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
+              const isOpenedRequest = openRequestId === r.id;
               const ctaHref = isOwnRequest
                 ? `/uzklausos/sekti/${r.trackingToken}`
                 : userRole === "PROVIDER"
@@ -287,13 +283,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                   : userRole
                     ? `/tapti-tiekeju`
                     : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`;
-              const ctaLabel = isOwnRequest ? "Jūsų užklausa" : "Pateikti pasiūlymą";
+              const ctaLabel = isOwnRequest ? "Valdyti užklausą" : "Pateikti pasiūlymą";
               const ctaTone = isOwnRequest
                 ? "bg-[#ebe3cc] text-[#6c5d3c] hover:bg-[#e1d8bd] shadow-[0_2.5px_0_#c7ba92]"
                 : `text-white ${CTA_TONES[i % CTA_TONES.length]}`;
 
               return (
-                <article key={r.id} className="paper-note">
+                <article id={`uzklausa-${r.id}`} key={r.id} className="paper-note scroll-mt-24">
                   <div className="paper-note__shadow">
                     <div className="paper-note__sheet px-6 pb-8 pt-11 sm:px-9">
                       {/* category + competition */}
@@ -332,8 +328,8 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       </h3>
 
                       {/* description */}
-                      <p className="mt-2 text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
-                        {truncate(r.description, 150)}
+                      <p className="mt-2 whitespace-pre-wrap text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
+                        {isOpenedRequest ? r.description : truncate(r.description, 150)}
                       </p>
 
                       {/* attachment photos */}

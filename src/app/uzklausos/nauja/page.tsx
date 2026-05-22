@@ -13,6 +13,7 @@ import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmailVerification from "@/components/requests/EmailVerification";
+import PhoneVerification from "@/components/requests/PhoneVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import PhotoUpload from "@/components/requests/PhotoUpload";
 import CategorySelect from "@/components/requests/CategorySelect";
@@ -81,6 +82,9 @@ function NewRequestForm() {
   const [aiLoading, setAiLoading] = useState(cameFromHero);
   const [aiFailed, setAiFailed] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [accountPhone, setAccountPhone] = useState("");
+  const [accountPhoneVerifiedAt, setAccountPhoneVerifiedAt] = useState<string | null>(null);
   const [attemptedPublish, setAttemptedPublish] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
@@ -146,6 +150,42 @@ function NewRequestForm() {
       }));
     }
   }, [status, session]);
+
+  // Load account phone because NextAuth's lightweight session does not carry
+  // the client profile fields.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/paskyra/profilis");
+        const data = await res.json().catch(() => null);
+        if (cancelled || !res.ok || !data?.success) return;
+        const nextAccountPhone = data.data?.phone || "";
+        const nextAccountPhoneVerifiedAt = data.data?.phoneVerifiedAt || null;
+        setAccountPhone(nextAccountPhone);
+        setAccountPhoneVerifiedAt(nextAccountPhoneVerifiedAt);
+        setForm((current) => {
+          const nextPhone = current.clientPhone || nextAccountPhone;
+          return { ...current, clientPhone: nextPhone };
+        });
+      } catch {
+        // Phone can still be entered manually.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !accountPhone) return;
+    if (accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone) {
+      setPhoneVerified(true);
+    } else if (form.clientPhone.trim() !== accountPhone) {
+      setPhoneVerified(false);
+    }
+  }, [isLoggedIn, accountPhone, accountPhoneVerifiedAt, form.clientPhone]);
 
   // Load the grouped curated categories for the picker.
   useEffect(() => {
@@ -235,6 +275,7 @@ function NewRequestForm() {
   const titleOk = form.title.trim().length >= 5;
   const descOk = form.description.trim().length >= 20;
   const nameOk = form.clientName.trim().length >= 2;
+  const phoneOk = form.clientPhone.trim().length >= 6;
 
   const missingListing: string[] = [];
   if (!titleOk) missingListing.push("pavadinimą");
@@ -245,7 +286,7 @@ function NewRequestForm() {
   if (!form.deadline.trim()) missingListing.push("terminą");
 
   const emailOk = emailVerified || isLoggedIn;
-  const ready = missingListing.length === 0 && nameOk && emailOk;
+  const ready = missingListing.length === 0 && nameOk && phoneOk && phoneVerified && emailOk;
 
   // When the dictated listing already passes, collapse the editor to a single
   // "Redaguoti skelbimą" affordance — nothing to fix, so don't show the form.
@@ -255,6 +296,8 @@ function NewRequestForm() {
   const publishHint = (() => {
     const gaps = [...missingListing];
     if (!nameOk) gaps.push("vardą");
+    if (!phoneOk) gaps.push("telefoną");
+    if (phoneOk && !phoneVerified) gaps.push("patvirtintą telefoną");
     if (gaps.length > 0) return `Dar reikia užpildyti: ${gaps.join(", ")}`;
     if (!emailOk) return "Prisijunk arba patvirtink el. paštą, kad galėtum paskelbti";
     return "";
@@ -480,11 +523,24 @@ function NewRequestForm() {
                 onBeforeSignIn={persistDraft}
               />
               <p className="mt-1.5 text-micro text-surface-400">
-                Greičiausias būdas — el. paštas patvirtinamas iškart, kodo siųsti nereikia.
+                Google iškart patvirtina el. paštą. Telefoną nurodyk žemiau.
               </p>
+              <div className="mt-3">
+                <PhoneVerificationField
+                  phone={form.clientPhone}
+                  onPhoneChange={(value) => update("clientPhone", value)}
+                  verified={phoneVerified}
+                  onVerifiedChange={setPhoneVerified}
+                  onVerified={(verifiedPhone, verifiedAt) => {
+                    setAccountPhone(verifiedPhone);
+                    setAccountPhoneVerifiedAt(verifiedAt);
+                  }}
+                  error={showErrors && !phoneOk ? "Įvesk telefono numerį" : undefined}
+                />
+              </div>
               <div className="my-4 flex items-center gap-3">
                 <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
-                <span className="text-micro text-surface-400">arba užpildyk ranka</span>
+                <span className="text-micro text-surface-400">arba su el. paštu</span>
                 <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
               </div>
             </div>
@@ -505,14 +561,19 @@ function NewRequestForm() {
               onVerifiedChange={setEmailVerified}
             />
           )}
-          <Input
-            id="clientPhone"
-            label="Telefonas (neprivaloma)"
-            type="tel"
-            placeholder="+370..."
-            value={form.clientPhone}
-            onChange={(e) => update("clientPhone", e.target.value)}
-          />
+          {isLoggedIn && (
+            <PhoneVerificationField
+              phone={form.clientPhone}
+              onPhoneChange={(value) => update("clientPhone", value)}
+              verified={phoneVerified}
+              onVerifiedChange={setPhoneVerified}
+              onVerified={(verifiedPhone, verifiedAt) => {
+                setAccountPhone(verifiedPhone);
+                setAccountPhoneVerifiedAt(verifiedAt);
+              }}
+              error={showErrors && !phoneOk ? "Įvesk telefono numerį" : undefined}
+            />
+          )}
           {/* Honeypot — hidden from humans, bait for bots */}
           <input
             type="text"
@@ -572,5 +633,33 @@ function PreviewSkeleton() {
         <div className="h-44 animate-pulse rounded-2xl bg-surface-100 dark:bg-surface-800" />
       </div>
     </div>
+  );
+}
+
+function PhoneVerificationField({
+  phone,
+  onPhoneChange,
+  verified,
+  onVerifiedChange,
+  onVerified,
+  error,
+}: {
+  phone: string;
+  onPhoneChange: (value: string) => void;
+  verified: boolean;
+  onVerifiedChange: (value: boolean) => void;
+  onVerified?: (phone: string, phoneVerifiedAt: string) => void;
+  error?: string;
+}) {
+  return (
+    <PhoneVerification
+      phone={phone}
+      onPhoneChange={onPhoneChange}
+      verified={verified}
+      onVerifiedChange={onVerifiedChange}
+      onVerified={onVerified}
+      error={error}
+      helper="Telefonas privalomas. Kodą atsiųsime SMS žinute."
+    />
   );
 }
