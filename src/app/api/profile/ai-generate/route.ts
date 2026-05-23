@@ -3,12 +3,36 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { load } from "cheerio";
-import { chromium } from "playwright";
+import { chromium as playwrightCore } from "playwright-core";
 import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
 import { rateLimitAsync } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const isProduction = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+
+async function launchBrowser() {
+  if (isProduction) {
+    const sparticuzChromium = (await import("@sparticuz/chromium")).default;
+    return playwrightCore.launch({
+      args: sparticuzChromium.args,
+      executablePath: await sparticuzChromium.executablePath(),
+      headless: true,
+    });
+  }
+  const { chromium: playwrightFull } = await import("playwright");
+  return playwrightFull.launch({
+    headless: true,
+    channel: "chromium",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-features=IsolateOrigins,site-per-process",
+    ],
+  });
+}
 
 interface AIGenerateRequest {
   // URL mode (existing)
@@ -46,16 +70,7 @@ interface AIResult {
 async function fetchAndScrape(url: string): Promise<ScrapedData> {
   let browser;
   try {
-    browser = await chromium.launch({
-      headless: true,
-      channel: "chromium",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-blink-features=AutomationControlled",
-        "--disable-features=IsolateOrigins,site-per-process",
-      ],
-    }).catch((err: Error) => {
+    browser = await launchBrowser().catch((err: Error) => {
       throw new Error(`Browser launch failed: ${err.message}`);
     });
 
