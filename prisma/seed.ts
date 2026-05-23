@@ -868,7 +868,6 @@ async function main() {
 
   // ── Responses + Reviews for demo providers ──
   let reviewCount = 0;
-  const clientNames = ["Agnė", "Domas", "Simona", "Paulius", "Laura", "Marius", "Giedrė", "Jonas", "Kristina", "Valdas"];
 
   for (const demoUser of demoUsers) {
     const templates = REVIEW_TEMPLATES[demoUser.category] || REVIEW_TEMPLATES["statyba"];

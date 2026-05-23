@@ -89,7 +89,6 @@ export default function ClaimAccountStep({
   }
 
   if (created || accountExists) {
-    const resolvedPath = nextPath || dashboardPath;
     const isPending = claimStatus !== "approved";
 
     return (

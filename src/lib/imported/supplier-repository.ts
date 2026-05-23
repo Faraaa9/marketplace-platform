@@ -88,6 +88,7 @@ export async function findBySlug(slug: string) {
  * Category-based lookup is disabled until ProviderProfile gains category
  * links in a later phase. Returns an empty result so callers stay stable.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function findByCategory(_categorySlug: string, _opts: { limit?: number; offset?: number } = {}) {
   return { items: [] as Array<Record<string, never>>, total: 0 };
 }

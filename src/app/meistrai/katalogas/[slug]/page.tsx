@@ -5,7 +5,6 @@ import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
-  ArrowLeft,
   Building2,
   Database,
   Edit,

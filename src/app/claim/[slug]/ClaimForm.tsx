@@ -12,7 +12,7 @@ interface ClaimFormProps {
 
 type VerificationMethod = "email" | "manual";
 
-export default function ClaimForm({ supplierSlug, supplierName }: ClaimFormProps) {
+export default function ClaimForm({ supplierSlug }: ClaimFormProps) {
   const [email, setEmail] = useState("");
   const [method, setMethod] = useState<VerificationMethod>("email");
   const [evidence, setEvidence] = useState("");

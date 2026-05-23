@@ -67,6 +67,7 @@ export async function getUserManagedSuppliers(userId: string) {
  * Kept as an export (and intentionally `async`) so `auth.ts` keeps importing
  * it without changes.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function attachIdentityToUserByEmail(
   _email: string,
   _userId: string

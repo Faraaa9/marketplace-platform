@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { load } from "cheerio";
 import { chromium } from "playwright";
 import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
-import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
+import { rateLimitAsync } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

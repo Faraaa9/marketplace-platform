@@ -51,7 +51,6 @@ export default function LoadingProgressBar() {
       if (anchor.target === "_blank") return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
-      const currentUrl = `${pathname}?${searchParams.toString()}`;
       // Only start if navigating to a different URL
       if (href === pathname && !anchor.search) return;
 
