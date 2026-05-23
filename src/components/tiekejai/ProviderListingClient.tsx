@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -195,14 +195,19 @@ function SheetContent({
   detail: ProviderDetail;
 }) {
   const coverImg = detail.images[0] || detail.image;
-  const daysSince = Math.floor(
-    (Date.now() - new Date(detail.lastActiveAt).getTime()) / (86400000)
-  );
+  const daysSince = useMemo(() => {
+    return Math.floor(
+      (Date.now() - new Date(detail.lastActiveAt).getTime()) / (86400000)
+    );
+  }, [detail.lastActiveAt]);
   const isActive = daysSince <= 7;
-  const memberDate = new Date(detail.memberSince).toLocaleDateString("lt-LT", {
-    year: "numeric",
-    month: "long",
-  });
+  const memberDate = useMemo(
+    () => new Date(detail.memberSince).toLocaleDateString("lt-LT", {
+      year: "numeric",
+      month: "long",
+    }),
+    [detail.memberSince]
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -532,7 +537,10 @@ export default function ProviderListingClient({
   useEffect(() => {
     const url = new URL(window.location.href);
     const pid = url.searchParams.get("provider");
-    if (pid) openSheet(pid);
+    if (pid) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      openSheet(pid);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

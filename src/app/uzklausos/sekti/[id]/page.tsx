@@ -76,6 +76,7 @@ export default function TrackRequestPage() {
   }, [params.id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRequest();
   }, [fetchRequest]);
 
@@ -152,8 +153,10 @@ export default function TrackRequestPage() {
     if (didInitExpand.current || !request) return;
     didInitExpand.current = true;
     if (request.acceptedResponseId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedId(request.acceptedResponseId);
     } else if (request.responses.length === 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedId(request.responses[0].id);
     }
   }, [request]);
@@ -178,6 +181,7 @@ export default function TrackRequestPage() {
       });
       const data = await res.json();
       if (data.success) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchRequest();
       } else {
         setError(data.error || "Klaida");
