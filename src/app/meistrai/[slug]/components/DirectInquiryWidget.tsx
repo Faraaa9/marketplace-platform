@@ -83,6 +83,7 @@ export default function DirectInquiryWidget({
     if (searchParams.get("inquiry") !== "1") return;
     const saved = loadInquiryForm(providerId);
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInquiryForm({
         description: saved.description,
         budget: saved.budget,

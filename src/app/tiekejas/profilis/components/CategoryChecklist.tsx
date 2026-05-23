@@ -22,6 +22,7 @@ export default function CategoryChecklist({
 
   useEffect(() => {
     if (selectedIds.length === 0 || groups.length === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenRoots((prev) => {
       const next = new Set(prev);
       for (const group of groups) {
