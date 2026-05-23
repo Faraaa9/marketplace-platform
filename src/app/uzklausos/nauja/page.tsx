@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, ArrowRight, Check, Sparkles, Pencil } from "lucide-react";
+import { Loader2, ArrowRight, Check, Sparkles, Pencil, ImagePlus, X, Paperclip, AlertCircle } from "lucide-react";
+import Image from "next/image";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { saveGuestRequest } from "@/lib/guest-request";
 import { saveListingDraft, loadListingDraft, clearListingDraft } from "@/lib/listing-draft";
+import { useImageUpload } from "@/lib/use-image-upload";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
@@ -15,8 +18,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmailVerification from "@/components/requests/EmailVerification";
 import PhoneVerification from "@/components/requests/PhoneVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
-import PhotoUpload from "@/components/requests/PhotoUpload";
-import CategorySelect from "@/components/requests/CategorySelect";
+import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
@@ -89,8 +91,27 @@ function NewRequestForm() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [contactsEditorOpen, setContactsEditorOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isLoggedIn = status === "authenticated" && !!session?.user;
+
+  const {
+    uploading: photosUploading,
+    error: photoError,
+    dragOver: photoDragOver,
+    uploadFiles: uploadPhotos,
+    dropHandlers: photoDropHandlers,
+  } = useImageUpload({
+    currentCount: form.attachmentUrls.length,
+    onUploaded: (urls) => {
+      setForm((f) => ({ ...f, attachmentUrls: [...f.attachmentUrls, ...urls] }));
+    },
+  });
+
+  function removePhoto(url: string) {
+    setForm((f) => ({ ...f, attachmentUrls: f.attachmentUrls.filter((u) => u !== url) }));
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -208,18 +229,51 @@ function NewRequestForm() {
     };
   }, []);
 
-  // Restore the dictated listing after returning from a Google sign-in redirect.
+  // Restore the dictated listing after returning from a Google sign-in redirect
+  // OR restore from draft if the hero search query param was lost.
   useEffect(() => {
-    if (searchParams.get("restored") !== "1") return;
+    const restored = searchParams.get("restored") === "1";
     const draft = loadListingDraft();
     if (draft) {
+      // Only copy fields with real content so we don't wipe values the session
+      // has already pre-filled (e.g. clientName from Google).
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm((f) => ({ ...f, ...draft }));
+      setForm((f) => {
+        const next = { ...f };
+        if (draft.title) next.title = draft.title;
+        if (draft.description) next.description = draft.description;
+        if (draft.categoryId) next.categoryId = draft.categoryId;
+        if (draft.location) next.location = draft.location;
+        if (draft.budget) next.budget = draft.budget;
+        if (draft.deadline) next.deadline = draft.deadline;
+        if (draft.attachmentUrls.length > 0) next.attachmentUrls = draft.attachmentUrls;
+        if (draft.clientName) next.clientName = draft.clientName;
+        if (draft.clientEmail) next.clientEmail = draft.clientEmail;
+        if (draft.clientPhone) next.clientPhone = draft.clientPhone;
+        return next;
+      });
+      clearListingDraft();
+      if (restored) router.replace("/uzklausos/nauja");
     }
-    clearListingDraft();
-    router.replace("/uzklausos/nauja");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Save initial description immediately when arriving from hero search.
+  useEffect(() => {
+    if (!cameFromHero || !initialDescription) return;
+    persistDraft();
+  }, [cameFromHero, initialDescription]);
+
+  // Auto-save the form when coming from hero search, so it survives page reloads.
+  useEffect(() => {
+    if (!cameFromHero) return;
+    const timer = setTimeout(() => {
+      if (form.description.trim().length > 0) {
+        persistDraft();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [form.description, cameFromHero]);
 
   // Run AI extraction once when arriving from the hero box.
   useEffect(() => {
@@ -293,19 +347,24 @@ function NewRequestForm() {
   if (!form.deadline.trim()) missingListing.push("terminą");
 
   const emailOk = emailVerified || isLoggedIn;
-  const ready = missingListing.length === 0 && nameOk && phoneOk && emailOk;
+  const hasContact = emailOk || phoneOk;
+  const ready = missingListing.length === 0 && nameOk && hasContact;
 
   // When the dictated listing already passes, collapse the editor to a single
   // "Redaguoti skelbimą" affordance — nothing to fix, so don't show the form.
   const listingComplete = missingListing.length === 0;
   const showEditor = editorOpen || !listingComplete;
 
+  // Logged-in users get name + verified email for free from Google, so the
+  // contacts block can collapse the same way the listing block does.
+  const contactsComplete = isLoggedIn && nameOk && hasContact;
+  const showContactsEditor = contactsEditorOpen || !contactsComplete;
+
   const publishHint = (() => {
     const gaps = [...missingListing];
     if (!nameOk) gaps.push("vardą");
-    if (!phoneOk) gaps.push("telefoną");
+    if (!hasContact) gaps.push("el. pašto arba telefono");
     if (gaps.length > 0) return `Dar reikia užpildyti: ${gaps.join(", ")}`;
-    if (!emailOk) return "Prisijunk arba patvirtink el. paštą, kad galėtum paskelbti";
     return "";
   })();
 
@@ -371,6 +430,7 @@ function NewRequestForm() {
         location={form.location}
         budget={form.budget}
         deadline={form.deadline}
+        attachmentUrls={form.attachmentUrls}
       />
 
       {/* ── Complete & fix ── */}
@@ -404,56 +464,127 @@ function NewRequestForm() {
             error={showErrors && !titleOk ? "Bent 5 simboliai" : undefined}
           />
           <div>
-            <Textarea
-              id="description"
-              label="Aprašymas"
-              placeholder="Aprašyk, ko reikia — ką padaryti, mastai, medžiagos..."
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-              autoResize
-              error={showErrors && !descOk ? "Bent 20 simbolių" : undefined}
-            />
-            <ImproveDescriptionButton
-              value={form.description}
-              onChange={(value) => update("description", value)}
-              onMeta={(meta) => {
-                setForm((prev) => {
-                  const resolved = resolveAiCategory(meta.category);
-                  return {
-                    ...prev,
-                    categoryId: prev.categoryId || resolved,
-                    title: prev.title || meta.title,
-                    location: prev.location || meta.location,
-                  };
-                });
-                // If categories have not loaded yet, retry resolution later.
-                if (meta.category && categoryGroups.length === 0) {
-                  setPendingAiCategory(meta.category);
-                }
-              }}
-              targetId="description"
-              category={categoryLabel}
-              title={form.title}
-              tone="form"
-              className="mt-2"
-            />
-          </div>
-          <div>
-            <p className="mb-2 text-body-sm font-medium text-surface-700 dark:text-surface-300">
-              Nuotraukos <span className="font-normal text-surface-400">(neprivaloma)</span>
+            <div
+              {...photoDropHandlers}
+              className={`relative rounded-xl transition-colors ${
+                photoDragOver ? "ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-surface-900" : ""
+              }`}
+            >
+              <Textarea
+                id="description"
+                label="Aprašymas"
+                placeholder="Aprašyk, ko reikia — ką padaryti, mastai, medžiagos..."
+                value={form.description}
+                onChange={(e) => update("description", e.target.value)}
+                autoResize
+                error={showErrors && !descOk ? "Bent 20 simbolių" : undefined}
+              />
+              {photoDragOver && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-brand-50/90 dark:bg-brand-950/60">
+                  <div className="flex items-center gap-2 text-body-sm font-medium text-brand-700 dark:text-brand-300">
+                    <ImagePlus className="h-5 w-5" /> Įmesk nuotraukas čia
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {form.attachmentUrls.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {form.attachmentUrls.map((url, i) => (
+                  <div
+                    key={url}
+                    className="group relative h-20 w-20 overflow-hidden rounded-lg border border-surface-200 dark:border-surface-700"
+                  >
+                    <Image
+                      src={optimizeCloudinaryUrl(url, { width: 160, height: 160, crop: "fill" })}
+                      alt={`Nuotrauka ${i + 1}`}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(url)}
+                      aria-label="Pašalinti nuotrauką"
+                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {photosUploading && (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-surface-300 dark:border-surface-600">
+                    <Loader2 className="h-5 w-5 animate-spin text-surface-400" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <ImproveDescriptionButton
+                value={form.description}
+                onChange={(value) => update("description", value)}
+                onMeta={(meta) => {
+                  setForm((prev) => {
+                    const resolved = resolveAiCategory(meta.category);
+                    return {
+                      ...prev,
+                      categoryId: prev.categoryId || resolved,
+                      title: prev.title || meta.title,
+                      location: prev.location || meta.location,
+                    };
+                  });
+                  if (meta.category && categoryGroups.length === 0) {
+                    setPendingAiCategory(meta.category);
+                  }
+                }}
+                targetId="description"
+                category={categoryLabel}
+                title={form.title}
+                tone="form"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={photosUploading || form.attachmentUrls.length >= 5}
+                className="inline-flex items-center gap-1.5 text-body-sm font-medium text-surface-600 transition-colors hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-surface-400 dark:hover:text-brand-400"
+              >
+                {photosUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Paperclip className="h-4 w-4" />
+                )}
+                Pridėti nuotraukų
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = e.target.files ? Array.from(e.target.files) : [];
+                  void uploadPhotos(files);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            <p className="mt-1.5 text-micro text-surface-400">
+              Nuotraukas gali pertempti tiesiai į aprašymą. Iki 5 nuotraukų, kiekviena iki 25 MB.
             </p>
-            <PhotoUpload
-              value={form.attachmentUrls}
-              onChange={(urls) => update("attachmentUrls", urls)}
-            />
+            {photoError && (
+              <p className="mt-1 text-micro text-red-500 dark:text-red-400">{photoError}</p>
+            )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <CategorySelect
+            <GroupedCategoryPicker
               id="categoryId"
               label="Kategorija"
               groups={categoryGroups}
               value={form.categoryId}
               onChange={(v) => update("categoryId", v)}
+              mode="id"
+              required
               error={showErrors && !form.categoryId ? "Privaloma" : undefined}
             />
             <Input
@@ -506,6 +637,35 @@ function NewRequestForm() {
       )}
 
       {/* ── Contacts ── */}
+      {!showContactsEditor ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <div className="flex min-w-0 items-start gap-2">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+            <div className="min-w-0">
+              <span className="block text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
+                Kontaktai paruošti — gali skelbti
+              </span>
+              <span className="mt-0.5 flex items-center gap-1.5 text-micro text-surface-500 dark:text-surface-400">
+                {form.clientPhone.trim() ? (
+                  <>Telefonas: {form.clientPhone}</>
+                ) : (
+                  <>
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                    Telefonas nepridėtas
+                  </>
+                )}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setContactsEditorOpen(true)}
+            className="inline-flex shrink-0 items-center gap-1.5 text-body-sm font-medium text-brand-600 underline-offset-2 transition-colors hover:text-brand-700 hover:underline dark:text-brand-400 dark:hover:text-brand-300"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Redaguoti
+          </button>
+        </div>
+      ) : (
       <div className="mt-4 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
         <h2 className="mb-4 text-body-sm font-semibold text-surface-900 dark:text-white">Kontaktai</h2>
         <div className="space-y-4">
@@ -529,7 +689,7 @@ function NewRequestForm() {
                 onBeforeSignIn={persistDraft}
               />
               <p className="mt-1.5 text-micro text-surface-400">
-                Google iškart patvirtina el. paštą. Telefoną nurodyk žemiau.
+                Google iškart patvirtina el. paštą. Telefonas – neprivalomas.
               </p>
               <div className="mt-3">
                 <PhoneVerificationField
@@ -541,7 +701,7 @@ function NewRequestForm() {
                     setAccountPhone(verifiedPhone);
                     setAccountPhoneVerifiedAt(verifiedAt);
                   }}
-                  error={showErrors && !phoneOk ? "Įvesk telefono numerį" : undefined}
+                  error={showErrors && !hasContact ? "Įvesk el. paštą arba telefoną" : undefined}
                 />
               </div>
               <div className="my-4 flex items-center gap-3">
@@ -577,7 +737,7 @@ function NewRequestForm() {
                 setAccountPhone(verifiedPhone);
                 setAccountPhoneVerifiedAt(verifiedAt);
               }}
-              error={showErrors && !phoneOk ? "Įvesk telefono numerį" : undefined}
+              error={showErrors && !hasContact ? "Įvesk telefoną" : undefined}
             />
           )}
           {/* Honeypot — hidden from humans, bait for bots */}
@@ -593,6 +753,7 @@ function NewRequestForm() {
           />
         </div>
       </div>
+      )}
 
       {error && (
         <div className="mt-4 rounded-xl bg-red-50 p-3 text-body-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
@@ -665,7 +826,7 @@ function PhoneVerificationField({
       onVerifiedChange={onVerifiedChange}
       onVerified={onVerified}
       error={error}
-      helper="Telefonas privalomas. SMS kodas — neprivalomas."
+      helper="Telefonas neprivalomas. SMS kodas — neprivalomas."
     />
   );
 }
