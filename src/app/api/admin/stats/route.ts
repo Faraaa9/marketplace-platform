@@ -7,6 +7,28 @@ import { countPendingModeration } from "@/lib/moderation/admin-actions";
 
 export const dynamic = "force-dynamic";
 
+type DayBucket = { date: string; label: string; count: number };
+
+function buildDayBuckets(rows: { createdAt: Date }[]): DayBucket[] {
+  const dayCounts = new Map<string, number>();
+  for (let i = 13; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    dayCounts.set(date.toISOString().split("T")[0], 0);
+  }
+  for (const row of rows) {
+    const key = row.createdAt.toISOString().split("T")[0];
+    if (dayCounts.has(key)) {
+      dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
+    }
+  }
+  return Array.from(dayCounts.entries()).map(([date, count]) => ({
+    date,
+    label: new Date(date).toLocaleDateString("lt-LT", { month: "short", day: "numeric" }),
+    count,
+  }));
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -28,6 +50,9 @@ export async function GET() {
       pendingClaims,
       pendingModeration,
       recentRequests,
+      recentResponses,
+      recentUsers,
+      recentProviders,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "PROVIDER" } }),
@@ -37,31 +62,28 @@ export async function GET() {
       prisma.providerProfile.count({ where: { isActive: false } }),
       prisma.claimRequest.count({ where: { status: "pending" } }),
       countPendingModeration(),
-      // Get all requests from last 14 days in one query
       prisma.serviceRequest.findMany({
         where: { createdAt: { gte: fourteenDaysAgo } },
         select: { createdAt: true },
       }),
+      prisma.response.findMany({
+        where: { createdAt: { gte: fourteenDaysAgo } },
+        select: { createdAt: true },
+      }),
+      prisma.user.findMany({
+        where: { createdAt: { gte: fourteenDaysAgo } },
+        select: { createdAt: true },
+      }),
+      prisma.user.findMany({
+        where: { createdAt: { gte: fourteenDaysAgo }, role: "PROVIDER" },
+        select: { createdAt: true },
+      }),
     ]);
 
-    // Build chart data from the batch query
-    const dayCounts = new Map<string, number>();
-    for (let i = 13; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      dayCounts.set(date.toISOString().split("T")[0], 0);
-    }
-    for (const req of recentRequests) {
-      const key = req.createdAt.toISOString().split("T")[0];
-      if (dayCounts.has(key)) {
-        dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
-      }
-    }
-    const chartData = Array.from(dayCounts.entries()).map(([date, count]) => ({
-      date,
-      label: new Date(date).toLocaleDateString("lt-LT", { month: "short", day: "numeric" }),
-      count,
-    }));
+    const chartData = buildDayBuckets(recentRequests);
+    const usersChart = buildDayBuckets(recentUsers);
+    const providersChart = buildDayBuckets(recentProviders);
+    const responsesChart = buildDayBuckets(recentResponses);
 
     return NextResponse.json({
       success: true,
@@ -75,6 +97,9 @@ export async function GET() {
         pendingClaims,
         pendingModeration,
         chartData,
+        usersChart,
+        providersChart,
+        responsesChart,
       },
     });
   } catch (error) {

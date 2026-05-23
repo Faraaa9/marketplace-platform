@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Sparkline from "@/components/ui/Sparkline";
 import { Users, FileText, MessageCircle, UserCheck, AlertTriangle, Clock } from "lucide-react";
 
 interface ChartDay {
@@ -20,6 +21,104 @@ interface Stats {
   pendingRequests: number;
   pendingActivation: number;
   chartData: ChartDay[];
+  usersChart: ChartDay[];
+  providersChart: ChartDay[];
+  responsesChart: ChartDay[];
+}
+
+function RequestsChart({ data }: { data: ChartDay[] }) {
+  const width = 600;
+  const height = 180;
+  const padding = { top: 16, right: 8, bottom: 28, left: 8 };
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+  const max = Math.max(...data.map((d) => d.count), 1);
+  const stepX = data.length > 1 ? innerW / (data.length - 1) : 0;
+
+  const points = data.map((d, i) => {
+    const x = padding.left + i * stepX;
+    const y = padding.top + innerH - (d.count / max) * innerH;
+    return { x, y, count: d.count, label: d.label };
+  });
+
+  const linePath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+    .join(" ");
+  const areaPath =
+    `${linePath} L${points[points.length - 1].x.toFixed(2)},${padding.top + innerH} ` +
+    `L${padding.left.toFixed(2)},${padding.top + innerH} Z`;
+
+  // 4 horizontal grid lines (incl. baseline)
+  const gridY = Array.from({ length: 4 }, (_, i) => padding.top + (innerH * i) / 3);
+
+  return (
+    <div className="relative">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="block w-full h-48"
+        aria-hidden="true"
+      >
+        {gridY.map((y, i) => (
+          <line
+            key={i}
+            x1={padding.left}
+            x2={width - padding.right}
+            y1={y}
+            y2={y}
+            className="stroke-surface-200 dark:stroke-surface-700"
+            strokeWidth={1}
+            strokeDasharray={i === gridY.length - 1 ? undefined : "2 4"}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        <path d={areaPath} className="fill-brand-500/15" />
+        <path
+          d={linePath}
+          className="stroke-brand-500"
+          fill="none"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        {points.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={p.count > 0 ? 3.5 : 2}
+            className={p.count > 0 ? "fill-brand-500" : "fill-surface-300 dark:fill-surface-600"}
+          />
+        ))}
+      </svg>
+      {/* Overlay labels — positioned in % so they stay aligned over the SVG */}
+      <div className="pointer-events-none absolute inset-0">
+        {points.map((p, i) => {
+          const leftPct = (p.x / width) * 100;
+          const topPct = (p.y / height) * 100;
+          return (
+            <div key={i}>
+              {p.count > 0 && (
+                <span
+                  className="absolute -translate-x-1/2 -translate-y-full pb-1 text-[11px] font-medium text-surface-700 dark:text-surface-200"
+                  style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+                >
+                  {p.count}
+                </span>
+              )}
+              <span
+                className="absolute -translate-x-1/2 whitespace-nowrap text-[10px] text-surface-400"
+                style={{ left: `${leftPct}%`, bottom: 4 }}
+              >
+                {p.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function AdminDashboard() {
@@ -36,14 +135,49 @@ export default function AdminDashboard() {
   if (loading) return <LoadingSpinner />;
   if (!stats) return null;
 
-  const maxCount = Math.max(...stats.chartData.map((d) => d.count), 1);
   const hasActions = stats.pendingActivation > 0 || stats.pendingRequests > 0;
 
   const statCards = [
-    { label: "Naudotojai", value: stats.totalUsers, icon: Users, bgClass: "bg-brand-50 dark:bg-brand-500/10", iconClass: "text-brand-600 dark:text-brand-400" },
-    { label: "Tiekėjai", value: stats.totalProviders, icon: UserCheck, bgClass: "bg-emerald-50 dark:bg-emerald-500/10", iconClass: "text-emerald-600 dark:text-emerald-400" },
-    { label: "Užklausos", value: stats.totalRequests, icon: FileText, bgClass: "bg-violet-50 dark:bg-violet-500/10", iconClass: "text-violet-600 dark:text-violet-400" },
-    { label: "Atsakymai", value: stats.totalResponses, icon: MessageCircle, bgClass: "bg-amber-50 dark:bg-amber-500/10", iconClass: "text-amber-600 dark:text-amber-400" },
+    {
+      label: "Naudotojai",
+      value: stats.totalUsers,
+      icon: Users,
+      bgClass: "bg-brand-50 dark:bg-brand-500/10",
+      iconClass: "text-brand-600 dark:text-brand-400",
+      strokeClass: "stroke-brand-500",
+      fillClass: "fill-brand-500/10",
+      series: stats.usersChart.map((d) => d.count),
+    },
+    {
+      label: "Tiekėjai",
+      value: stats.totalProviders,
+      icon: UserCheck,
+      bgClass: "bg-emerald-50 dark:bg-emerald-500/10",
+      iconClass: "text-emerald-600 dark:text-emerald-400",
+      strokeClass: "stroke-emerald-500",
+      fillClass: "fill-emerald-500/10",
+      series: stats.providersChart.map((d) => d.count),
+    },
+    {
+      label: "Užklausos",
+      value: stats.totalRequests,
+      icon: FileText,
+      bgClass: "bg-violet-50 dark:bg-violet-500/10",
+      iconClass: "text-violet-600 dark:text-violet-400",
+      strokeClass: "stroke-violet-500",
+      fillClass: "fill-violet-500/10",
+      series: stats.chartData.map((d) => d.count),
+    },
+    {
+      label: "Atsakymai",
+      value: stats.totalResponses,
+      icon: MessageCircle,
+      bgClass: "bg-amber-50 dark:bg-amber-500/10",
+      iconClass: "text-amber-600 dark:text-amber-400",
+      strokeClass: "stroke-amber-500",
+      fillClass: "fill-amber-500/10",
+      series: stats.responsesChart.map((d) => d.count),
+    },
   ];
 
   return (
@@ -100,27 +234,26 @@ export default function AdminDashboard() {
                 <p className="text-micro text-surface-500">{stat.label}</p>
               </div>
             </div>
+            <Sparkline
+              data={stat.series}
+              strokeClassName={stat.strokeClass}
+              fillClassName={stat.fillClass}
+              className="mt-4 h-10 w-full"
+              height={32}
+            />
           </Card>
         ))}
       </div>
 
-      {/* Bar chart */}
+      {/* Užklausos per 14 dienų — line + area chart */}
       <Card>
-        <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-6">Užklausos per 14 dienų</h3>
-        <div className="flex items-end gap-1.5 h-48">
-          {stats.chartData.map((day) => (
-            <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-              <span className="text-micro text-surface-500">{day.count}</span>
-              <div
-                className="w-full bg-gradient-to-t from-brand-600 to-brand-400 rounded-t-md min-h-[4px] transition-all"
-                style={{ height: `${(day.count / maxCount) * 100}%` }}
-              />
-              <span className="text-[10px] text-surface-400 rotate-[-45deg] origin-top-left whitespace-nowrap">
-                {day.label}
-              </span>
-            </div>
-          ))}
+        <div className="mb-6 flex items-baseline justify-between gap-3">
+          <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">Užklausos per 14 dienų</h3>
+          <span className="text-micro text-surface-500">
+            Viso: {stats.chartData.reduce((sum, d) => sum + d.count, 0)}
+          </span>
         </div>
+        <RequestsChart data={stats.chartData} />
       </Card>
     </div>
   );
