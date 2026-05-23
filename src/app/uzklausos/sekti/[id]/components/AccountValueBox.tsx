@@ -93,7 +93,7 @@ export default function AccountValueBox({
       return (
         <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-500/10">
           <p className="text-body-sm text-emerald-700 dark:text-emerald-400">
-            Užklausa priskirta jūsų paskyrai. Dabar ją matysite skiltyje &bdquo;Mano užklausos&ldquo;.
+            Užklausa priskirta jūsų paskyrai. Dabar ją matysite skiltyje &bdquo;Mano užklausos".
           </p>
         </div>
       );
@@ -105,7 +105,7 @@ export default function AccountValueBox({
           Priskirti šią užklausą savo paskyrai?
         </h3>
         <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-3">
-          Tada ją matysite &bdquo;Mano užklausos&ldquo; skiltyje ir nereikės saugoti nuorodos.
+          Tada ją matysite &bdquo;Mano užklausos" skiltyje ir nereikės saugoti nuorodos.
         </p>
         {claimError && (
           <p className="text-body-sm text-red-600 dark:text-red-400 mb-2">{claimError}</p>

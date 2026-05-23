@@ -67,7 +67,7 @@ export default function RecentRequestBanner() {
             Turite neseniai pateiktą užklausą
           </p>
           <p className="text-micro text-surface-500 dark:text-surface-400 mt-0.5 truncate">
-            &ldquo;{request.title}&rdquo;
+            "{request.title}"
           </p>
           <Link
             href={`/uzklausos/sekti/${request.token}`}

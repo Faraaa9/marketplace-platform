@@ -389,7 +389,7 @@ function SheetContent({
                 </div>
                 {detail.reviews[0].comment && (
                   <p className="text-sm text-surface-600 dark:text-surface-300 line-clamp-3 leading-relaxed">
-                    &ldquo;{detail.reviews[0].comment}&rdquo;
+                    "{detail.reviews[0].comment}"
                   </p>
                 )}
                 <p className="mt-1.5 text-xs text-surface-400">
