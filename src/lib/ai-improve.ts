@@ -35,12 +35,14 @@ function buildSystemPrompt(categoryList: string): string {
 Grąžink TIK galiojantį JSON objektą su laukais:
 {"improvedDescription": "...", "title": "...", "category": "...", "location": "...", "budget": "...", "deadline": "...", "recommendations": [{"prompt": "...", "field": "..."}]}
 
-"improvedDescription" — sutvarkytas kliento aprašymas:
+"improvedDescription" — sutvarkytas kliento aprašymas. PRIVALU grąžinti šį lauką su turinio:
 - Ištaisyk rašybos ir gramatikos klaidas, rašyk taisyklinga, natūralia lietuvių kalba.
 - Sutvarkyk struktūrą: jei yra keli atskiri dalykai — išdėstyk trumpais punktais (kiekvienas iš naujos eilutės, pradžioje „- "). Jei mintis viena — palik tvarkingą sakinį ar du.
 - Glaustai — ne ilgiau nei originalas (daugiausia 1800 simbolių).
 - NEIŠGALVOK faktų. Nenaudok detalių, kurių klientas nepaminėjo. Remkis tik kliento pateikta informacija.
+- Jei žodis atrodo nestandartinis arba nežinomas, palik jį tokį pat, bet paprašyk kliento patikslinti recommendations dalyje.
 - Nepridėk pasisveikinimų, parašų ar komentarų.
+- Jei aprašymas jau gerai sutvarktas, grąžink jo struktūruotą versiją su punktais.
 
 "title" — trumpas, konkretus užklausos pavadinimas lietuvių kalba (3–8 žodžiai, daugiausia 70 simbolių). Pvz. „Trinkelių klojimas kieme".
 
@@ -90,15 +92,22 @@ function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionRe
   let obj: unknown;
   try {
     obj = JSON.parse(cleaned);
-  } catch {
+  } catch (err) {
+    console.error("AI JSON parse failed:", { raw: raw.slice(0, 200), error: String(err) });
     return null;
   }
-  if (!obj || typeof obj !== "object") return null;
+  if (!obj || typeof obj !== "object") {
+    console.error("AI response not an object:", { raw: raw.slice(0, 200) });
+    return null;
+  }
   const record = obj as Record<string, unknown>;
 
   const improvedDescription =
     typeof record.improvedDescription === "string" ? record.improvedDescription.trim() : "";
-  if (!improvedDescription) return null;
+  if (!improvedDescription) {
+    console.error("AI improvedDescription empty or missing", { record: JSON.stringify(record).slice(0, 200) });
+    return null;
+  }
 
   const title = typeof record.title === "string" ? record.title.trim().slice(0, 90) : "";
 

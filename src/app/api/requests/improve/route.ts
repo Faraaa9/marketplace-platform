@@ -39,12 +39,19 @@ export async function POST(req: NextRequest) {
           { status: 504 }
         );
       }
+      if (error.message === "AI_EMPTY_RESPONSE" || error.message === "AI_REQUEST_FAILED") {
+        console.warn("AI improve failed:", { errorMsg: error.message });
+        return NextResponse.json(
+          { success: false, error: "AI nepavyko sutvarkyti aprašymo — užpildykite laukus patys." },
+          { status: 422 }
+        );
+      }
       return NextResponse.json(
         { success: false, error: "Nepavyko patobulinti aprašymo. Bandykite vėliau." },
         { status: 502 }
       );
     }
-    console.error("AI improve route klaida:", error);
+    console.error("AI improve route error:", error);
     return NextResponse.json(
       { success: false, error: "Nepavyko patobulinti aprašymo" },
       { status: 500 }

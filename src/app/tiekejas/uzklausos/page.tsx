@@ -8,6 +8,7 @@ import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { formatRelativeDate, truncate, creditsLabel } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Pagination from "@/components/ui/Pagination";
+import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 import {
   MapPin,
   Clock,
@@ -491,18 +492,15 @@ function FilterSelects({
 }) {
   return (
     <>
-      <div className="flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0">
         <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Kategorija</label>
-        <select value={category} onChange={(e) => onUpdate("category", e.target.value)} className={filterSelectClass}>
-          <option value="">Visos</option>
-          {categoryGroups.map((group) => (
-            <optgroup key={group.root.id} label={group.root.name}>
-              {group.categories.map((c) => (
-                <option key={c.id} value={c.slug}>{c.name}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <GroupedCategoryPicker
+          groups={categoryGroups}
+          value={category}
+          onChange={(v) => onUpdate("category", v)}
+          mode="slug"
+          placeholder="Visos kategorijos"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <label className="text-caption font-medium text-surface-500 dark:text-surface-400 mb-1.5 block">Miestas</label>

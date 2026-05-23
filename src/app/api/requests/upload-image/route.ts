@@ -8,7 +8,7 @@ import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 /**
  * Image upload for service-request attachments.
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Leidžiami tik paveikslėliai" }, { status: 400 });
     }
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ success: false, error: "Failas per didelis (max 5MB)" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Failas per didelis (max 25MB)" }, { status: 400 });
     }
 
     const cloudinary = getConfiguredCloudinary();

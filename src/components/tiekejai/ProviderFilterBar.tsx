@@ -16,6 +16,7 @@ import {
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
+import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 
 interface FilterBarProps {
   filters: ProviderFilters;
@@ -40,9 +41,7 @@ export default function ProviderFilterBar({
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
   const locationRef = useRef<HTMLDivElement>(null);
-  const categoryRef = useRef<HTMLDivElement>(null);
 
   const [mobileLocation, setMobileLocation] = useState(location);
   const [mobileCategory, setMobileCategory] = useState(category);
@@ -93,25 +92,9 @@ export default function ProviderFilterBar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [locationOpen]);
 
-  useEffect(() => {
-    if (!categoryOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
-        setCategoryOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [categoryOpen]);
-
   function selectLocation(city: string) {
     onChange({ location: location === city ? "" : city });
     setLocationOpen(false);
-  }
-
-  function selectCategory(value: string) {
-    onChange({ category: category === value ? "" : value });
-    setCategoryOpen(false);
   }
 
   function applyMobileFilters() {
@@ -212,60 +195,15 @@ export default function ProviderFilterBar({
             )}
           </div>
 
-          {/* Category chip / dropdown */}
-          <div className="relative" ref={categoryRef}>
-            <button
-              onClick={() => setCategoryOpen(!categoryOpen)}
-              className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
-                category
-                  ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                  : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-              }`}
-            >
-              <Tag className="h-3.5 w-3.5" />
-              {activeCategoryLabel || "Kategorija"}
-              {category ? (
-                <span
-                  onClick={(e) => { e.stopPropagation(); onChange({ category: "" }); }}
-                  className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
-                >
-                  <X className="h-3 w-3" />
-                </span>
-              ) : (
-                <ChevronDown className={`h-3.5 w-3.5 text-surface-400 transition-transform ${categoryOpen ? "rotate-180" : ""}`} />
-              )}
-            </button>
-
-            {categoryOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1.5 max-h-80 w-64 overflow-y-auto rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
-                {categoryGroups.length === 0 ? (
-                  <p className="px-3 py-2 text-body-sm text-surface-400">Kraunama…</p>
-                ) : (
-                  categoryGroups.map((group) => (
-                    <div key={group.root.id} className="mb-1 last:mb-0">
-                      <p className="px-3 pt-2 pb-1 text-micro font-semibold uppercase tracking-wider text-surface-400">
-                        {group.root.name}
-                      </p>
-                      {group.categories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => selectCategory(cat.slug)}
-                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
-                            category === cat.slug
-                              ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                              : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-                          }`}
-                        >
-                          {category === cat.slug && <Check className="h-3.5 w-3.5 shrink-0" />}
-                          {cat.name}
-                        </button>
-                      ))}
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
+          {/* Category chip / dropdown — unified across the app */}
+          <GroupedCategoryPicker
+            groups={categoryGroups}
+            value={category}
+            onChange={(v) => onChange({ category: v })}
+            mode="slug"
+            variant="chip"
+            placeholder="Kategorija"
+          />
 
           <div className="h-5 w-px bg-surface-200 dark:bg-surface-700" />
 

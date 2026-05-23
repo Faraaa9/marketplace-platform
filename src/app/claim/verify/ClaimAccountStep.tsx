@@ -63,7 +63,6 @@ export default function ClaimAccountStep({
       }
 
       const redirectTo = data.data?.nextPath || dashboardPath;
-      setNextPath(redirectTo);
 
       if (data.data?.accountStatus === "created") {
         const signInResult = await signIn("credentials", {

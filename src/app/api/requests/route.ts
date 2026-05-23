@@ -45,8 +45,10 @@ export async function POST(req: NextRequest) {
       );
     }
     const data = parsed.data;
-    const phone = normalizePhoneNumber(data.clientPhone);
-    if (!phone) {
+    // Phone is optional — only validate format if the user actually provided one.
+    const rawPhone = data.clientPhone?.trim() ?? "";
+    const phone = rawPhone ? normalizePhoneNumber(rawPhone) : null;
+    if (rawPhone && !phone) {
       return NextResponse.json(
         { success: false, error: "Patikrinkite telefono numerį, pvz. +3706..." },
         { status: 400 },
@@ -91,30 +93,34 @@ export async function POST(req: NextRequest) {
     const clientId = verifiedViaAccount && userId ? userId : null;
     let consumePhoneVerification = false;
 
-    let verifiedViaAccountPhone = false;
-    if (clientId) {
-      const user = await prisma.user.findUnique({
-        where: { id: clientId },
-        select: { phone: true, phoneVerifiedAt: true },
-      });
-      verifiedViaAccountPhone = user?.phone === phone && !!user.phoneVerifiedAt;
-    }
-
-    if (!verifiedViaAccountPhone) {
-      const phoneVerification = await prisma.phoneVerification.findUnique({
-        where: { phone },
-        select: { verifiedAt: true },
-      });
-      const phoneVerified =
-        !!phoneVerification?.verifiedAt &&
-        phoneVerification.verifiedAt.getTime() > Date.now() - PHONE_VERIFICATION_VALID_MS;
-      if (!phoneVerified) {
-        return NextResponse.json(
-          { success: false, error: "Patvirtinkite telefono numerį prieš skelbdami." },
-          { status: 403 },
-        );
+    // Phone verification only runs when the user actually provided a number —
+    // a verified email already satisfies the contact requirement.
+    if (phone) {
+      let verifiedViaAccountPhone = false;
+      if (clientId) {
+        const user = await prisma.user.findUnique({
+          where: { id: clientId },
+          select: { phone: true, phoneVerifiedAt: true },
+        });
+        verifiedViaAccountPhone = user?.phone === phone && !!user.phoneVerifiedAt;
       }
-      consumePhoneVerification = true;
+
+      if (!verifiedViaAccountPhone) {
+        const phoneVerification = await prisma.phoneVerification.findUnique({
+          where: { phone },
+          select: { verifiedAt: true },
+        });
+        const phoneVerified =
+          !!phoneVerification?.verifiedAt &&
+          phoneVerification.verifiedAt.getTime() > Date.now() - PHONE_VERIFICATION_VALID_MS;
+        if (!phoneVerified) {
+          return NextResponse.json(
+            { success: false, error: "Patvirtinkite telefono numerį prieš skelbdami." },
+            { status: 403 },
+          );
+        }
+        consumePhoneVerification = true;
+      }
     }
 
     // Resolve the chosen curated category. `categoryId` drives matching; the
@@ -178,7 +184,7 @@ export async function POST(req: NextRequest) {
         contactVerifiedAt: new Date(),
         clientEmail: email,
         clientName: data.clientName,
-        clientPhone: sanitizeHtml(phone),
+        clientPhone: phone ? sanitizeHtml(phone) : null,
         clientId,
         trackingToken: crypto.randomBytes(32).toString("hex"),
       },
@@ -190,7 +196,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (clientId) {
+    // Only push the (verified) phone onto the account when it was actually
+    // submitted — otherwise we'd nuke whatever phone the user already had.
+    if (clientId && phone) {
       await prisma.user.update({
         where: { id: clientId },
         data: { phone: sanitizeHtml(phone), phoneVerifiedAt: new Date() },
@@ -202,7 +210,7 @@ export async function POST(req: NextRequest) {
     if (consumeVerification) {
       await prisma.requestEmailVerification.delete({ where: { email } }).catch(() => {});
     }
-    if (consumePhoneVerification) {
+    if (consumePhoneVerification && phone) {
       await prisma.phoneVerification.delete({ where: { phone } }).catch(() => {});
     }
 

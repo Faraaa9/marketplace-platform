@@ -3,9 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUp, Loader2, Mic, Users } from "lucide-react";
+import Image from "next/image";
+import { ArrowUp, Loader2, Mic, Users, Paperclip, X, ImagePlus } from "lucide-react";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 import { useVoiceRecorder } from "@/lib/use-voice-recorder";
+import { useImageUpload } from "@/lib/use-image-upload";
+import { saveListingDraft, loadListingDraft } from "@/lib/listing-draft";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 
 // The box starts ~3 rows tall, grows with the text, and only starts
 // scrolling once it reaches the cap (safety limit so it can't grow forever).
@@ -17,6 +21,27 @@ export default function HeroSearch() {
   const router = useRouter();
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // When the user hits "next" while still recording/transcribing, we need to
+  // finish the voice flow first and only then navigate.
+  const pendingSubmitRef = useRef(false);
+  const [waitingForTranscript, setWaitingForTranscript] = useState(false);
+  const [attachments, setAttachments] = useState<string[]>([]);
+
+  const {
+    uploading: photosUploading,
+    error: photoError,
+    dragOver: photoDragOver,
+    uploadFiles: uploadPhotos,
+    dropHandlers: photoDropHandlers,
+  } = useImageUpload({
+    currentCount: attachments.length,
+    onUploaded: (urls) => setAttachments((prev) => [...prev, ...urls]),
+  });
+
+  function removeAttachment(url: string) {
+    setAttachments((prev) => prev.filter((u) => u !== url));
+  }
 
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
@@ -49,13 +74,89 @@ export default function HeroSearch() {
     onTranscript: handleTranscript,
   });
 
-  function submit() {
-    const text = value.trim();
+  function goToNext(text: string) {
+    const trimmed = text.trim();
+    // Photos can't ride along in the URL — stash them in the draft so the
+    // preview page picks them up via its existing draft-restore flow.
+    if (attachments.length > 0) {
+      saveListingDraft({
+        title: "",
+        description: trimmed,
+        categoryId: "",
+        location: "",
+        budget: "",
+        deadline: "",
+        attachmentUrls: attachments,
+        clientName: "",
+        clientEmail: "",
+        clientPhone: "",
+      });
+    }
     // The preview page runs the AI extraction and shows the editable listing.
     router.push(
-      text ? `/uzklausos/nauja?description=${encodeURIComponent(text)}` : "/uzklausos/nauja",
+      trimmed ? `/uzklausos/nauja?description=${encodeURIComponent(trimmed)}` : "/uzklausos/nauja",
     );
   }
+
+  function submit() {
+    if (waitingForTranscript) return;
+    // If the mic is still recording or transcribing, finish that first so the
+    // dictated text actually makes it into the URL.
+    if (status === "recording" || status === "transcribing") {
+      pendingSubmitRef.current = true;
+      setWaitingForTranscript(true);
+      if (status === "recording") toggle();
+      return;
+    }
+    goToNext(value);
+  }
+
+  // Complete a deferred submit once transcription has finished.
+  useEffect(() => {
+    if (status !== "idle" || !pendingSubmitRef.current) return;
+    pendingSubmitRef.current = false;
+    setWaitingForTranscript(false);
+    goToNext(value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, value]);
+
+  // If transcription failed, drop the pending submit so the user can retry.
+  useEffect(() => {
+    if (error && pendingSubmitRef.current) {
+      pendingSubmitRef.current = false;
+      setWaitingForTranscript(false);
+    }
+  }, [error]);
+
+  // Restore previously uploaded attachments after a hard refresh — otherwise
+  // the user loses the photos they just dragged in.
+  useEffect(() => {
+    const draft = loadListingDraft();
+    if (!draft || draft.attachmentUrls.length === 0) return;
+    setAttachments(draft.attachmentUrls);
+    if (draft.description) {
+      setValue((current) => (current ? current : draft.description));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist attachments (and accompanying description) the moment they change,
+  // so they survive a refresh without waiting for the user to hit "next".
+  useEffect(() => {
+    if (attachments.length === 0) return;
+    saveListingDraft({
+      title: "",
+      description: value,
+      categoryId: "",
+      location: "",
+      budget: "",
+      deadline: "",
+      attachmentUrls: attachments,
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+    });
+  }, [attachments, value]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -66,7 +167,14 @@ export default function HeroSearch() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="relative rounded-[1.75rem] border border-[#D8D2C6] bg-[#FBFAF6] shadow-[0_18px_48px_-20px_rgba(40,35,30,0.28)] transition-colors focus-within:border-[#C5B7A4] dark:border-surface-700 dark:bg-surface-900 dark:focus-within:border-surface-600">
+      <div
+        {...photoDropHandlers}
+        className={`relative rounded-[1.75rem] border bg-[#FBFAF6] shadow-[0_18px_48px_-20px_rgba(40,35,30,0.28)] transition-colors focus-within:border-[#C5B7A4] dark:bg-surface-900 dark:focus-within:border-surface-600 ${
+          photoDragOver
+            ? "border-[#C25E3A] ring-2 ring-[#C25E3A]/30"
+            : "border-[#D8D2C6] dark:border-surface-700"
+        }`}
+      >
         <textarea
           ref={textareaRef}
           id="hero-description"
@@ -89,6 +197,14 @@ export default function HeroSearch() {
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-[1.75rem] bg-gradient-to-t from-[#FBFAF6] from-[70%] to-transparent dark:from-surface-900"
         />
+
+        {photoDragOver && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[1.75rem] bg-[#FBFAF6]/95 dark:bg-surface-900/95">
+            <div className="flex items-center gap-2 text-body font-medium text-[#C25E3A] dark:text-brand-400">
+              <ImagePlus className="h-6 w-6" /> Įmesk nuotraukas čia
+            </div>
+          </div>
+        )}
 
         {isSupported && (
           <button
@@ -125,13 +241,83 @@ export default function HeroSearch() {
 
         <button
           type="button"
-          onClick={submit}
-          aria-label="Tęsti"
-          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={photosUploading || attachments.length >= 5}
+          aria-label="Pridėti nuotraukų"
+          className={`absolute bottom-4 grid h-10 w-10 place-items-center rounded-full border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] transition-all hover:scale-105 hover:bg-[#E9E4D9] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700 ${
+            isSupported ? "left-16" : "left-4"
+          }`}
         >
-          <ArrowUp className="h-5 w-5" />
+          {photosUploading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Paperclip className="h-5 w-5" />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = e.target.files ? Array.from(e.target.files) : [];
+            void uploadPhotos(files);
+            e.target.value = "";
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={submit}
+          aria-label={waitingForTranscript ? "Laukiu atpažinimo" : "Tęsti"}
+          aria-busy={waitingForTranscript}
+          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95 disabled:hover:scale-100"
+        >
+          {waitingForTranscript ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <ArrowUp className="h-5 w-5" />
+          )}
         </button>
       </div>
+
+      {attachments.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2 px-1">
+          {attachments.map((url, i) => (
+            <div
+              key={url}
+              className="group relative h-16 w-16 overflow-hidden rounded-lg border border-[#D8D2C6] dark:border-surface-700"
+            >
+              <Image
+                src={optimizeCloudinaryUrl(url, { width: 128, height: 128, crop: "fill" })}
+                alt={`Nuotrauka ${i + 1}`}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => removeAttachment(url)}
+                aria-label="Pašalinti nuotrauką"
+                className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-surface-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-2 px-1 text-xs text-[#9A958B] dark:text-surface-500">
+        Patarimas: nuotraukas gali pertempti tiesiai į šį langą. Iki 5, kiekviena iki 25 MB.
+      </p>
+
+      {photoError && (
+        <p role="alert" className="mt-1 px-1 text-sm text-[#B4451F] dark:text-red-400">
+          {photoError}
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-2 px-1 text-sm text-[#B4451F] dark:text-red-400">

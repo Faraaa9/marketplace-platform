@@ -11,7 +11,7 @@ interface PhotoUploadProps {
   maxPhotos?: number;
 }
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 
 /** Multi-photo uploader for the service-request form. Uploads to Cloudinary
  *  via /api/requests/upload-image and manages a list of image URLs. */
@@ -44,7 +44,7 @@ export default function PhotoUpload({ value, onChange, maxPhotos = 5 }: PhotoUpl
         continue;
       }
       if (file.size > MAX_SIZE) {
-        setError(`„${file.name}" per didelis (max 5 MB)`);
+        setError(`„${file.name}" per didelis (max 25 MB)`);
         continue;
       }
       try {
@@ -146,7 +146,7 @@ export default function PhotoUpload({ value, onChange, maxPhotos = 5 }: PhotoUpl
 
       {error && <p className="mt-2 text-body-sm text-red-600 dark:text-red-400">{error}</p>}
       <p className="mt-2 text-micro text-surface-400">
-        Iki {maxPhotos} nuotraukų, kiekviena iki 5 MB. Nuotraukos padeda tiekėjams tiksliau įkainoti.
+        Iki {maxPhotos} nuotraukų, kiekviena iki 25 MB. Nuotraukos padeda tiekėjams tiksliau įkainoti.
       </p>
     </div>
   );

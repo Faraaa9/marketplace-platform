@@ -1,4 +1,6 @@
-import { MapPin, Wallet, CalendarClock, MessageSquare } from "lucide-react";
+import Image from "next/image";
+import { MapPin, Wallet, CalendarClock, MessageSquare, Paperclip } from "lucide-react";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 
 interface ListingPreviewProps {
   title: string;
@@ -7,6 +9,7 @@ interface ListingPreviewProps {
   location: string;
   budget: string;
   deadline: string;
+  attachmentUrls?: string[];
   showNewBadge?: boolean;
   responseCount?: number;
   className?: string;
@@ -20,6 +23,7 @@ export default function ListingPreview({
   location,
   budget,
   deadline,
+  attachmentUrls = [],
   showNewBadge = true,
   responseCount = 0,
   className = "",
@@ -52,6 +56,30 @@ export default function ListingPreview({
               </span>
             )}
           </p>
+          {attachmentUrls.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {attachmentUrls.slice(0, 5).map((url, i) => (
+                <div
+                  key={url}
+                  className="relative h-14 w-14 overflow-hidden rounded-md border border-[#d8cda6] dark:border-surface-700"
+                >
+                  <Image
+                    src={optimizeCloudinaryUrl(url, { width: 112, height: 112, crop: "fill" })}
+                    alt={`Nuotrauka ${i + 1}`}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+              <span className="inline-flex items-center gap-1 text-[0.78rem] text-surface-500 dark:text-surface-400">
+                <Paperclip className="h-3.5 w-3.5" />
+                {attachmentUrls.length === 1
+                  ? "1 nuotrauka"
+                  : `${attachmentUrls.length} nuotraukos`}
+              </span>
+            </div>
+          )}
           <div className="mt-5 border-t border-[#d8cda6] dark:border-surface-700/70" />
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.8rem] text-surface-600 dark:text-surface-300">
             {location && (
