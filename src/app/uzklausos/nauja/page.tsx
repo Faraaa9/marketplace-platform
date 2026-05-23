@@ -829,7 +829,7 @@ function PhoneVerificationField({
       onVerifiedChange={onVerifiedChange}
       onVerified={onVerified}
       error={error}
-      helper="Telefonas neprivalomas. SMS kodas — neprivalomas."
+      helper="Telefonas neprivalomas."
     />
   );
 }
