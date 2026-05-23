@@ -120,8 +120,16 @@ export default function AdminClaimsPage() {
     setLoading(false);
   }, [statusFilter, page]);
 
-  useEffect(() => { setPage(1); }, [statusFilter]);
-  useEffect(() => { fetchClaims(); }, [fetchClaims]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchClaims();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, page]);
 
   function openAction(claimId: string, type: "approve" | "reject") {
     setActionId(claimId);

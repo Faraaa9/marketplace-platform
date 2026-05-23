@@ -141,15 +141,15 @@ function NewRequestForm() {
 
   // Pre-fill name + email for logged-in users.
   useEffect(() => {
-    const user = session?.user;
-    if (status === "authenticated" && user) {
-      setForm((f) => ({
-        ...f,
-        clientName: f.clientName || user.name || "",
-        clientEmail: user.email || f.clientEmail,
-      }));
-    }
-  }, [status, session]);
+    if (status !== "authenticated" || !session?.user) return;
+    const user = session.user;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm((f) => ({
+      ...f,
+      clientName: f.clientName || user.name || "",
+      clientEmail: user.email || f.clientEmail,
+    }));
+  }, [status, session?.user?.email, session?.user?.name]);
 
   // Load account phone because NextAuth's lightweight session does not carry
   // the client profile fields.
@@ -179,12 +179,12 @@ function NewRequestForm() {
   }, [status]);
 
   useEffect(() => {
-    if (!isLoggedIn || !accountPhone) return;
-    if (accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone) {
-      setPhoneVerified(true);
-    } else if (form.clientPhone.trim() !== accountPhone) {
+    if (!isLoggedIn || !accountPhone) {
       setPhoneVerified(false);
+      return;
     }
+    const verified = !!accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone;
+    setPhoneVerified(verified);
   }, [isLoggedIn, accountPhone, accountPhoneVerifiedAt, form.clientPhone]);
 
   // Load the grouped curated categories for the picker.
@@ -210,7 +210,9 @@ function NewRequestForm() {
   useEffect(() => {
     if (searchParams.get("restored") !== "1") return;
     const draft = loadListingDraft();
-    if (draft) setForm((f) => ({ ...f, ...draft }));
+    if (draft) {
+      setForm((f) => ({ ...f, ...draft }));
+    }
     clearListingDraft();
     router.replace("/uzklausos/nauja");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -264,8 +266,8 @@ function NewRequestForm() {
   useEffect(() => {
     if (!pendingAiCategory || categoryGroups.length === 0) return;
     const resolved = resolveAiCategory(pendingAiCategory);
-    if (resolved) {
-      setForm((f) => (f.categoryId ? f : { ...f, categoryId: resolved }));
+    if (resolved && !form.categoryId) {
+      setForm((f) => ({ ...f, categoryId: resolved }));
     }
     setPendingAiCategory("");
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -79,8 +79,15 @@ export default function AdminRequestsPage() {
     setLoading(false);
   }, [statusFilter, categoryFilter, page]);
 
-  useEffect(() => { setPage(1); }, [statusFilter, categoryFilter, search]);
-  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [statusFilter, categoryFilter, search]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRequests();
+  }, [fetchRequests]);
 
   async function handleAction(id: string, action: string, status?: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti?")) return;

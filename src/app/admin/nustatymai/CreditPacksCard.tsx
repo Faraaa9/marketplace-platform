@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useCallback, type FormEvent } from "react";
 import Card from "@/components/ui/Card";
 import { Coins, Plus, Trash2 } from "lucide-react";
 
@@ -34,7 +34,7 @@ export default function CreditPacksCard() {
   const [newPrice, setNewPrice] = useState("");
   const [adding, setAdding] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/packs");
       const data = await res.json();
@@ -56,11 +56,11 @@ export default function CreditPacksCard() {
     } catch {
       setError("Nepavyko užkrauti paketų");
     }
-  }
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   function editDraft(id: string, field: keyof Draft, value: string) {
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));

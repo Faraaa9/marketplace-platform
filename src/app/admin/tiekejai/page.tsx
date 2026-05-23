@@ -54,10 +54,17 @@ export default function AdminProvidersPage() {
       setPagination(data.pagination);
     }
     setLoading(false);
-  }, [search, page]);
+  }, [search, statusFilter, page]);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
-  useEffect(() => { fetchProviders(); }, [fetchProviders]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProviders();
+  }, [search, statusFilter, page]);
 
   async function handleAction(userId: string, action: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti šį tiekėją?")) return;

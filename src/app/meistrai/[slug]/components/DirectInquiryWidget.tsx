@@ -76,7 +76,7 @@ export default function DirectInquiryWidget({
     openFromHash();
     window.addEventListener("hashchange", openFromHash);
     return () => window.removeEventListener("hashchange", openFromHash);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function DirectInquiryWidget({
   useEffect(() => {
     if (!isMessageModalOpen) return;
     openInquiryForm();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isMessageModalOpen]);
 
   const isSidebar = variant === "sidebar";

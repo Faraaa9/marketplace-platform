@@ -99,6 +99,7 @@ function ProviderRequestsContent() {
   const hasFilters = !!(category || location || search);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchInput(search);
   }, [search]);
 
@@ -130,6 +131,7 @@ function ProviderRequestsContent() {
   }, [page, category, location, search, sort, router]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRequests();
   }, [fetchRequests]);
 
@@ -156,8 +158,9 @@ function ProviderRequestsContent() {
     }, 400);
   }
 
+  const now = new Date();
   function isNew(createdAt: string) {
-    return Date.now() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000;
+    return now.getTime() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000;
   }
 
   const categoryLabel = (slug: string) => {

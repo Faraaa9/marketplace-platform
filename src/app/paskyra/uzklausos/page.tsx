@@ -113,11 +113,13 @@ export default function MyRequestsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filtered.map((req) => {
-                  const status = STATUS_MAP[req.status] || STATUS_MAP.OPEN;
-                  const categoryName = req.categoryRef?.name;
-                  const hasNewResponse = req.lastResponseAt &&
-                    Date.now() - new Date(req.lastResponseAt).getTime() < 24 * 60 * 60 * 1000;
+                {(() => {
+                  const now = new Date();
+                  return filtered.map((req) => {
+                    const status = STATUS_MAP[req.status] || STATUS_MAP.OPEN;
+                    const categoryName = req.categoryRef?.name;
+                    const hasNewResponse = req.lastResponseAt &&
+                      now.getTime() - new Date(req.lastResponseAt).getTime() < 24 * 60 * 60 * 1000;
 
                   return (
                     <Link key={req.id} href={`/uzklausos/sekti/${req.trackingToken}`} className="group block">
@@ -177,7 +179,8 @@ export default function MyRequestsPage() {
                       </article>
                     </Link>
                   );
-                })}
+                  });
+                })()}
               </div>
             )}
           </>

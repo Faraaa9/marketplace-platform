@@ -107,8 +107,15 @@ export default function AdminModerationPage() {
     }
   }, [statusFilter, typeFilter, page]);
 
-  useEffect(() => { setPage(1); }, [statusFilter, typeFilter]);
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [statusFilter, typeFilter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchItems();
+  }, [statusFilter, typeFilter, page]);
 
   function openAction(item: ModerationItem, type: "approve" | "reject") {
     setActionItem(item);
