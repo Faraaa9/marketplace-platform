@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { load } from "cheerio";
 import { chromium } from "playwright";
 import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
+import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -470,6 +471,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Rate limit: max 3 generations per user per 24h
+    const rl = await rateLimitAsync(
+      `ai-profile:user:${session.user.email}`,
+      { maxRequests: 3, windowMs: 24 * 60 * 60 * 1000 }
+    );
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Jūs šiandien jau perdaug kartų panaudojote šią funkciją. Bandykite rytoj." },
+        { status: 429 }
+      );
+    }
+
     const body = (await req.json()) as AIGenerateRequest;
     const { source } = body;
 
@@ -704,12 +717,30 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Profile generation error:", error);
+
+    // Safe error messages - never leak raw error details to client
+    let clientMessage = "Profilio generavimas nepavyko. Bandykite vėliau.";
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes("Timeout")) {
+        clientMessage = "Šaltinis per ilgai atsiliepė. Pabandykite kitą URL arba turėkite kantrybės.";
+        statusCode = 408;
+      } else if (error.message.includes("Invalid URL") || error.message.includes("ENOTFOUND")) {
+        clientMessage = "URL'as neteisingas arba nepasiekiamas. Patikrinkite ir bandykite iš naujo.";
+        statusCode = 400;
+      } else if (error.message.includes("OpenRouter error")) {
+        clientMessage = "Nepavyko sugeneruoti turinio. Bandykite dar kartą.";
+        statusCode = 503;
+      } else if (error.message.includes("Failed to fetch URL")) {
+        clientMessage = "Nepavyko nuskaityti šaltinio. Gali būti, kad puslapis blokuoja automatinį skaitymą.";
+        statusCode = 400;
+      }
+    }
+
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Profile generation failed",
-      },
-      { status: 500 }
+      { error: clientMessage },
+      { status: statusCode }
     );
   }
 }

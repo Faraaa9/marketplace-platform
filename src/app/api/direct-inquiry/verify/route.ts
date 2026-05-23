@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 import { moderateText } from "@/lib/moderation";
+import { directInquiryCodeMatches } from "@/lib/email-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -66,14 +67,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Increment attempts
-    await prisma.pendingDirectInquiry.update({
-      where: { id: pendingId },
-      data: { attempts: { increment: 1 } },
-    });
-
     // Check code
-    if (pending.code !== code.trim()) {
+    if (!directInquiryCodeMatches(pending.providerId, code.trim(), pending.code)) {
+      await prisma.pendingDirectInquiry.update({
+        where: { id: pendingId },
+        data: { attempts: { increment: 1 } },
+      });
+
       const remaining = pending.maxAttempts - pending.attempts - 1;
       return NextResponse.json(
         {
@@ -86,6 +86,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Increment attempts
+    await prisma.pendingDirectInquiry.update({
+      where: { id: pendingId },
+      data: { attempts: { increment: 1 } },
+    });
 
     // Rate limit per provider before creating inquiry
     const providerRl = await rateLimitAsync(

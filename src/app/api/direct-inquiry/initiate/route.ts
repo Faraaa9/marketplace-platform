@@ -4,6 +4,7 @@ import { directInquirySchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { sendEmail, directInquiryVerificationEmail } from "@/lib/email";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { hashDirectInquiryCode } from "@/lib/email-verification";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -126,6 +127,7 @@ export async function POST(req: NextRequest) {
 
     // Create pending inquiry with verification code
     const code = generateCode();
+    const codeHash = hashDirectInquiryCode(providerId, code);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const pending = await prisma.pendingDirectInquiry.create({
@@ -136,7 +138,7 @@ export async function POST(req: NextRequest) {
         senderEmail,
         senderPhone: senderPhone ? sanitizeHtml(senderPhone.trim()) : null,
         senderName: senderName ? sanitizeHtml(senderName.trim()) : null,
-        code,
+        code: codeHash,
         expiresAt,
       },
     });

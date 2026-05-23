@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
+import { emailVerificationCodeMatches } from "@/lib/email-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -61,12 +62,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.requestEmailVerification.update({
-      where: { email },
-      data: { attempts: { increment: 1 } },
-    });
+    if (!emailVerificationCodeMatches(email, code, record.code)) {
+      await prisma.requestEmailVerification.update({
+        where: { email },
+        data: { attempts: { increment: 1 } },
+      });
 
-    if (record.code !== code) {
       const remaining = record.maxAttempts - record.attempts - 1;
       return NextResponse.json(
         {
@@ -80,6 +81,11 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    await prisma.requestEmailVerification.update({
+      where: { email },
+      data: { attempts: { increment: 1 } },
+    });
 
     await prisma.requestEmailVerification.update({
       where: { email },

@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, requestCodeVerificationEmail } from "@/lib/email";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
+import { hashEmailVerificationCode } from "@/lib/email-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -69,13 +70,14 @@ export async function POST(req: NextRequest) {
     }
 
     const code = crypto.randomInt(100000, 999999).toString();
+    const codeHash = hashEmailVerificationCode(email, code);
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
     await prisma.requestEmailVerification.upsert({
       where: { email },
-      create: { email, code, expiresAt },
+      create: { email, code: codeHash, expiresAt },
       update: {
-        code,
+        code: codeHash,
         expiresAt,
         attempts: 0,
         verifiedAt: null,
