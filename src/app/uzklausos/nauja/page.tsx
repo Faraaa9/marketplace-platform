@@ -229,31 +229,34 @@ function NewRequestForm() {
     };
   }, []);
 
-  // Restore the dictated listing after returning from a Google sign-in redirect
-  // OR restore from draft if the hero search query param was lost.
+  // Restore the dictated listing after returning from a Google sign-in redirect.
+  // Only restore if explicitly allowed (restored=1 for OAuth flow).
+  // Otherwise always start with a clean form to avoid stale data.
   useEffect(() => {
     const restored = searchParams.get("restored") === "1";
-    const draft = loadListingDraft();
-    if (draft) {
-      // Only copy fields with real content so we don't wipe values the session
-      // has already pre-filled (e.g. clientName from Google).
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm((f) => {
-        const next = { ...f };
-        if (draft.title) next.title = draft.title;
-        if (draft.description) next.description = draft.description;
-        if (draft.categoryId) next.categoryId = draft.categoryId;
-        if (draft.location) next.location = draft.location;
-        if (draft.budget) next.budget = draft.budget;
-        if (draft.deadline) next.deadline = draft.deadline;
-        if (draft.attachmentUrls.length > 0) next.attachmentUrls = draft.attachmentUrls;
-        if (draft.clientName) next.clientName = draft.clientName;
-        if (draft.clientEmail) next.clientEmail = draft.clientEmail;
-        if (draft.clientPhone) next.clientPhone = draft.clientPhone;
-        return next;
-      });
-      clearListingDraft();
-      if (restored) router.replace("/uzklausos/nauja");
+    if (restored) {
+      const draft = loadListingDraft();
+      if (draft) {
+        // Only copy fields with real content so we don't wipe values the session
+        // has already pre-filled (e.g. clientName from Google).
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setForm((f) => {
+          const next = { ...f };
+          if (draft.title) next.title = draft.title;
+          if (draft.description) next.description = draft.description;
+          if (draft.categoryId) next.categoryId = draft.categoryId;
+          if (draft.location) next.location = draft.location;
+          if (draft.budget) next.budget = draft.budget;
+          if (draft.deadline) next.deadline = draft.deadline;
+          if (draft.attachmentUrls.length > 0) next.attachmentUrls = draft.attachmentUrls;
+          if (draft.clientName) next.clientName = draft.clientName;
+          if (draft.clientEmail) next.clientEmail = draft.clientEmail;
+          if (draft.clientPhone) next.clientPhone = draft.clientPhone;
+          return next;
+        });
+        clearListingDraft();
+      }
+      router.replace("/uzklausos/nauja");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
