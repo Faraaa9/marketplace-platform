@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["@sparticuz/chromium", "playwright-core"],
+  outputFileTracingIncludes: {
+    "/api/profile/ai-generate": [
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
+  },
   images: {
     qualities: [75, 80, 90],
     remotePatterns: [

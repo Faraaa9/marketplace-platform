@@ -10,14 +10,31 @@ import { rateLimitAsync } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const isProduction = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+function isServerlessEnv(): boolean {
+  return (
+    process.env.VERCEL === "1" ||
+    !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    !!process.env.LAMBDA_TASK_ROOT ||
+    process.env.NODE_ENV === "production"
+  );
+}
 
 async function launchBrowser() {
-  if (isProduction) {
+  const serverless = isServerlessEnv();
+  console.log("Browser launch env:", {
+    serverless,
+    VERCEL: process.env.VERCEL,
+    NODE_ENV: process.env.NODE_ENV,
+    AWS_LAMBDA: !!process.env.AWS_LAMBDA_FUNCTION_NAME,
+  });
+
+  if (serverless) {
     const sparticuzChromium = (await import("@sparticuz/chromium")).default;
+    const execPath = await sparticuzChromium.executablePath();
+    console.log("Serverless chromium path:", execPath);
     return playwrightCore.launch({
       args: sparticuzChromium.args,
-      executablePath: await sparticuzChromium.executablePath(),
+      executablePath: execPath,
       headless: true,
     });
   }
