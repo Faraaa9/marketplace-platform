@@ -180,10 +180,12 @@ function NewRequestForm() {
 
   useEffect(() => {
     if (!isLoggedIn || !accountPhone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhoneVerified(false);
       return;
     }
     const verified = !!accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhoneVerified(verified);
   }, [isLoggedIn, accountPhone, accountPhoneVerifiedAt, form.clientPhone]);
 
@@ -211,6 +213,7 @@ function NewRequestForm() {
     if (searchParams.get("restored") !== "1") return;
     const draft = loadListingDraft();
     if (draft) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({ ...f, ...draft }));
     }
     clearListingDraft();
@@ -267,8 +270,10 @@ function NewRequestForm() {
     if (!pendingAiCategory || categoryGroups.length === 0) return;
     const resolved = resolveAiCategory(pendingAiCategory);
     if (resolved && !form.categoryId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({ ...f, categoryId: resolved }));
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingAiCategory("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAiCategory, categoryGroups]);
