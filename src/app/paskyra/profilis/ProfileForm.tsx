@@ -42,7 +42,9 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
     return () => clearTimeout(t);
   }, [resetCooldown]);
 
-  const dirty = name.trim() !== (profile.name ?? "") || phone.trim() !== (profile.phone ?? "");
+  const dirty =
+    name.trim() !== (profile.name ?? "").trim() ||
+    phone.trim() !== (profile.phone ?? "").trim();
   const phoneVerified =
     !phoneVerificationCleared && !!profile.phoneVerifiedAt && phone.trim() === (profile.phone ?? "");
   const emailVerified = !!profile.emailVerified;
@@ -150,6 +152,7 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
                   setError("");
                 }}
                 placeholder="Jonas"
+                autoComplete="name"
               />
 
               <ProfileEmailEditor
@@ -209,7 +212,11 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
                 type="button"
                 onClick={saveProfile}
                 isLoading={saving}
-                disabled={!dirty || name.trim().length < 2 || phone.trim().length < 6}
+                disabled={
+                  !dirty ||
+                  name.trim().length < 2 ||
+                  (phone.trim().length > 0 && phone.trim().length < 6)
+                }
                 className="w-full sm:w-auto"
               >
                 Išsaugoti profilį

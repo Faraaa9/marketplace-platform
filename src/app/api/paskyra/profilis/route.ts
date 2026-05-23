@@ -10,7 +10,16 @@ export const dynamic = "force-dynamic";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Vardas turi būti bent 2 simbolių").max(100),
-  phone: z.string().trim().min(6, "Nurodykite telefono numerį").max(30, "Telefono numeris per ilgas"),
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Telefono numeris per ilgas")
+    .optional()
+    .default("")
+    .refine(
+      (value) => value.length === 0 || value.length >= 6,
+      "Nurodykite telefono numerį",
+    ),
 });
 
 const userSelect = {
@@ -72,21 +81,25 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Profilis nerastas" }, { status: 404 });
     }
 
-    const phone = normalizePhoneNumber(parsed.data.phone);
-    if (!phone) {
-      return NextResponse.json(
-        { success: false, error: "Įveskite numerį tarptautiniu formatu, pvz. +3706..." },
-        { status: 400 },
-      );
+    const rawPhone = parsed.data.phone ?? "";
+    let phone: string | null = null;
+    if (rawPhone.length > 0) {
+      phone = normalizePhoneNumber(rawPhone);
+      if (!phone) {
+        return NextResponse.json(
+          { success: false, error: "Įveskite numerį tarptautiniu formatu, pvz. +3706..." },
+          { status: 400 },
+        );
+      }
     }
 
-    const phoneChanged = existing.phone !== phone;
+    const phoneChanged = (existing.phone ?? null) !== phone;
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         name: sanitizeHtml(parsed.data.name),
-        phone: sanitizeHtml(phone),
+        phone: phone ? sanitizeHtml(phone) : null,
         phoneVerifiedAt: phoneChanged ? null : undefined,
       },
       select: userSelect,
