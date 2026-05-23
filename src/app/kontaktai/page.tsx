@@ -8,9 +8,7 @@ export const metadata: Metadata = {
 };
 import { authOptions } from "@/lib/auth";
 import Card from "@/components/ui/Card";
-import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
-import Button from "@/components/ui/Button";
+import ContactForm from "./ContactForm";
 
 export default async function ContactPage() {
   const session = await getServerSession(authOptions);
@@ -49,16 +47,7 @@ export default async function ContactPage() {
 
       <Card>
         <h2 className="text-heading-2 font-semibold text-surface-900 dark:text-white mb-6">Parašykite mums</h2>
-        <form className="space-y-5">
-          {!isLoggedIn && (
-            <>
-              <Input id="contact-name" label="Vardas" placeholder="Jūsų vardas" />
-              <Input id="contact-email" label="El. paštas" type="email" placeholder="jusu@pastas.lt" />
-            </>
-          )}
-          <Textarea id="contact-message" label="Žinutė" placeholder="Jūsų žinutė..." />
-          <Button type="submit">Siųsti</Button>
-        </form>
+        <ContactForm isLoggedIn={isLoggedIn} />
       </Card>
     </div>
   );

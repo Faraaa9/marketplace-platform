@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // TODO: Set STRIPE_SECRET_KEY in .env.local
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
-  apiVersion: "2023-10-16",
+  apiVersion: "2026-04-22.dahlia",
 });
 
 /**

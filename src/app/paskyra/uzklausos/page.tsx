@@ -41,7 +41,7 @@ const FILTER_TABS: { value: StatusFilter; label: string }[] = [
 export default function MyRequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<StatusFilter>("ALL");
+  const [filter, setFilter] = useState<StatusFilter>("OPEN");
 
   useEffect(() => {
     fetch("/api/paskyra/uzklausos")
