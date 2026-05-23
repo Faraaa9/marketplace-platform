@@ -44,6 +44,7 @@ export default function MultiStoryViewer({
   // Render into document.body via portal — avoids stacking/containing-block
   // issues from ancestors (e.g. sticky header, transforms).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

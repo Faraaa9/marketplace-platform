@@ -16,6 +16,7 @@ export default function RecentRequestBanner() {
 
     // Don't show for logged-in users — they have "Mano užklausos"
     if (session) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRequest(null);
       return;
     }

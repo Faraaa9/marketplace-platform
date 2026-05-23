@@ -67,6 +67,7 @@ export default function ProviderFilterBar({
       .find((c) => c.slug === category)?.name ?? "";
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileLocation(location);
     setMobileCategory(category);
     setMobileActive(active);

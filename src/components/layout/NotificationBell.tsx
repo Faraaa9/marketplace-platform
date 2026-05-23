@@ -50,6 +50,7 @@ export default function NotificationBell() {
 
   // Fetch on mount + re-fetch on window focus / visibility change + light fallback interval
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
 
     const handleFocus = () => fetchNotifications();
