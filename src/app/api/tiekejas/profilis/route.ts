@@ -125,6 +125,24 @@ export async function PUT(req: NextRequest) {
     // Curated categories, max 6, de-duplicated, order preserved.
     const categoryIds = [...new Set(parsed.data.categoryIds)].slice(0, 6);
 
+    // Resolve the new moderation status. "reject" already returned above.
+    // - "ok"               → APPROVED
+    // - "review" via AI    → PENDING (genuine flag, admin will review)
+    // - "review" via fallback (AI down) → keep current status so an infra
+    //   blip doesn't silently hide already-approved profiles.
+    const currentProfile = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { moderationStatus: true },
+    });
+    let nextModerationStatus: string;
+    if (moderation.verdict === "ok") {
+      nextModerationStatus = "APPROVED";
+    } else if (moderation.source === "ai_fallback") {
+      nextModerationStatus = currentProfile?.moderationStatus || "APPROVED";
+    } else {
+      nextModerationStatus = "PENDING";
+    }
+
     const profile = await prisma.$transaction(async (tx) => {
       const updated = await tx.providerProfile.update({
         where: { userId: session.user.id },
@@ -132,7 +150,7 @@ export async function PUT(req: NextRequest) {
           description: sanitizeHtml(parsed.data.description),
           headline: parsed.data.headline ? sanitizeHtml(parsed.data.headline) : null,
           services: parsed.data.services ? sanitizeHtml(parsed.data.services) : null,
-          moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+          moderationStatus: nextModerationStatus,
           moderationReason: moderation.reason,
           moderatedAt: new Date(),
           priceFrom: parsed.data.priceFrom ?? null,

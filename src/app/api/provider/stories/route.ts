@@ -184,6 +184,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Resolve moderation status. Stories live only 24h, so if the AI
+    // moderation infra is down (ai_fallback) we'd rather show the story
+    // than silently hide it for the full TTL. "reject" already exited above.
+    const storyStatus =
+      merged.verdict === "ok"
+        ? "APPROVED"
+        : merged.source === "ai_fallback"
+          ? "APPROVED"
+          : "PENDING";
+
     // Create story record
     const story = await prisma.providerStory.create({
       data: {
@@ -191,7 +201,7 @@ export async function POST(req: NextRequest) {
         imageUrl: result.secure_url,
         imagePublicId: result.public_id,
         text: text || null,
-        moderationStatus: merged.verdict === "ok" ? "APPROVED" : "PENDING",
+        moderationStatus: storyStatus,
         moderationReason: merged.reason,
         moderatedAt: new Date(),
         expiresAt: new Date(Date.now() + STORY_DURATION_MS),
