@@ -632,7 +632,7 @@ export default function ProviderProfilePage() {
                 </div>
               )}
               <p className="text-micro text-surface-300 dark:text-surface-600 mt-1.5">
-                Iki 5MB · {5 - images.length} iš 5 liko
+                Iki 5MB · galite pridėti dar {5 - images.length}
               </p>
             </div>
           )}
