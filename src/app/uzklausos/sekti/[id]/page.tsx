@@ -156,7 +156,7 @@ export default function TrackRequestPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedId(request.acceptedResponseId);
     } else if (request.responses.length === 1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setExpandedId(request.responses[0].id);
     }
   }, [request]);
@@ -181,7 +181,7 @@ export default function TrackRequestPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         fetchRequest();
       } else {
         setError(data.error || "Klaida");

@@ -185,7 +185,7 @@ function NewRequestForm() {
       return;
     }
     const verified = !!accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setPhoneVerified(verified);
   }, [isLoggedIn, accountPhone, accountPhoneVerifiedAt, form.clientPhone]);
 
@@ -273,7 +273,7 @@ function NewRequestForm() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({ ...f, categoryId: resolved }));
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setPendingAiCategory("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAiCategory, categoryGroups]);
