@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    qualities: [75, 80, 90],
     remotePatterns: [
       {
         protocol: "https",
@@ -13,6 +14,42 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "paslaugos-img.dgn.lt",
+      },
+      {
+        protocol: "https",
+        hostname: "api.dicebear.com",
+      },
+      {
+        protocol: "https",
+        hostname: "paslaugos.lt",
+      },
+      {
+        protocol: "https",
+        hostname: "*.paslaugos.lt",
+      },
+      {
+        protocol: "https",
+        hostname: "*.licdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "media.licdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh4.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh5.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh6.googleusercontent.com",
       },
     ],
   },
@@ -75,7 +112,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://paslaugos-img.dgn.lt; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://paslaugos-img.dgn.lt https://api.dicebear.com https://paslaugos.lt https://*.paslaugos.lt https://media.licdn.com https://*.licdn.com https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';",
           },
         ],
       },

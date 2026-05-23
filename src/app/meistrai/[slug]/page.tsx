@@ -17,11 +17,11 @@ import MessengerCTA from "./components/MessengerCTA";
 import ReviewsSection from "./components/ReviewsSection";
 import SimilarProvidersSection from "./components/SimilarProvidersSection";
 import StoryAvatarButton from "./components/StoryAvatarButton";
-import WorkHighlightsStrip from "./components/WorkHighlightsStrip";
 import StickyBottomBar from "./components/StickyBottomBar";
 import ContactButton from "./components/ContactButton";
 import HeroInfoCard from "./components/HeroInfoCard";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
+import WorkImageGallery from "./components/WorkImageGallery";
 import type { ProviderProfileData, StoryData } from "./components/types";
 import {
   ArrowLeft,
@@ -55,6 +55,7 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ welcome?: string }>;
 }
 
 interface ProviderCategory {
@@ -68,8 +69,12 @@ type ProviderProfileWithCategories = ProviderProfileData & {
   categories: ProviderCategory[];
 };
 
-export default async function PublicProviderProfilePage({ params }: PageProps) {
+export default async function PublicProviderProfilePage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
+  const { welcome } = await searchParams;
   const lookup = await resolveProvider(slug);
 
   // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
@@ -140,6 +145,26 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
       <JsonLd schema={breadcrumbSchema} />
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        {welcome === "1" && (
+          <div className="mb-6 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-amber-50 p-6 dark:border-brand-800 dark:from-brand-950 dark:to-amber-950">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
+                <Award className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-heading-3 font-bold text-surface-900 dark:text-white">
+                  Tavo profilis paruoštas!
+                </h2>
+                <p className="mt-1 text-body-sm text-surface-700 dark:text-surface-300">
+                  Šitaip tave matys klientai. Pasidalink savo profilio nuoroda,
+                  arba <Link href="/tiekejas/profilis" className="font-medium text-brand-700 underline dark:text-brand-300">redaguok detales</Link>{" "}
+                  jei kažkas netinka.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Link
           href="/meistrai"
           className="mb-8 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
@@ -191,8 +216,8 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
 
             {/* Profile info overlapping cover */}
             <div className="px-6 sm:px-8 pb-6 sm:pb-8">
-              <div className="relative z-10 -mt-14 flex items-start gap-4 sm:gap-5">
-                <div className="shrink-0 rounded-full bg-white p-1 shadow-[0_4px_16px_rgba(0,0,0,0.1)] ring-1 ring-surface-200/70 dark:bg-surface-900 dark:ring-surface-700/70">
+              <div className="relative z-10 -mt-[35px] flex items-start gap-4 sm:-mt-[39px] sm:gap-5">
+                <div className="shrink-0 rounded-full">
                   <StoryAvatarButton
                     stories={stories}
                     providerName={provider.name}
@@ -325,33 +350,13 @@ export default async function PublicProviderProfilePage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* ── Work Highlights + Masonry Gallery ── */}
+          {/* ── Work Highlights + Masonry Gallery (shared lightbox) ── */}
           {provider.images.length > 1 && (
             <div className="rounded-3xl bg-white p-6 sm:p-8 dark:bg-surface-900/50">
-              {/* Instagram-style story circles */}
-              <WorkHighlightsStrip images={provider.images} providerName={provider.name} />
-
-              <h2 className="mt-6 mb-4 text-heading-3 font-semibold text-surface-900 dark:text-white">
-                Darbų pavyzdžiai
-              </h2>
-              <div className="columns-2 sm:columns-3 gap-3 space-y-3">
-                {provider.images.slice(1).map((img, i) => (
-                  <div
-                    key={`${img}-${i}`}
-                    className="break-inside-avoid overflow-hidden rounded-2xl bg-surface-100 dark:bg-surface-800"
-                  >
-                    <Image
-                      src={img}
-                      alt={`${provider.name} darbas ${i + 2}`}
-                      width={400}
-                      height={i % 3 === 0 ? 500 : i % 3 === 1 ? 300 : 400}
-                      quality={90}
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 220px"
-                      className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
+              <WorkImageGallery
+                images={provider.images}
+                providerName={provider.name}
+              />
             </div>
           )}
 

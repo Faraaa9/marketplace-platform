@@ -3,96 +3,264 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { load } from "cheerio";
+import { chromium } from "playwright";
+import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 interface AIGenerateRequest {
-  url: string;
-  source: "services_lt" | "linkedin";
-}
-
-interface AIGenerateResponse {
-  description: string;
-  categories: Array<{ id: string; name: string; selected: boolean }>;
+  // URL mode (existing)
+  url?: string;
+  source: "services_lt" | "linkedin" | "scratch";
+  // Scratch mode (new)
+  businessName?: string;
+  servicesText?: string;
+  location?: string;
+  experienceYears?: number;
   phone?: string;
-  avatarUrl: string;
-  sourceData: {
-    title?: string;
-    companyName?: string;
-    rawText: string;
-  };
 }
 
-async function fetchAndScrape(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+interface ScrapedData {
+  text: string;
+  images: string[];
+  ogImage?: string;
+  title?: string;
+}
 
+interface AIResult {
+  description: string;
+  headline: string;
+  categoryNames: string[];
+  phone?: string;
+  location?: string;
+  services?: string;
+  experienceYears?: number;
+  priceFrom?: number;
+  offersInvoices?: boolean;
+  availableForUrgent?: boolean;
+  imagePrompt?: string;
+}
+
+async function fetchAndScrape(url: string): Promise<ScrapedData> {
+  let browser;
   try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
-      signal: controller.signal,
+    browser = await chromium.launch({
+      headless: true,
+      channel: "chromium",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-blink-features=AutomationControlled",
+        "--disable-features=IsolateOrigins,site-per-process",
+      ],
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const html = await response.text();
+    const context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      viewport: { width: 1280, height: 800 },
+      locale: "lt-LT",
+      extraHTTPHeaders: {
+        "Accept-Language": "lt-LT,lt;q=0.9,en-US;q=0.8,en;q=0.7",
+      },
+    });
+
+    const page = await context.newPage();
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await page.waitForTimeout(2000);
+
+    const html = await page.content();
     const $ = load(html);
 
-    $("script, style, nav, footer").remove();
-    const text = $.text();
+    // Extract OG image
+    const ogImage =
+      $('meta[property="og:image"]').attr("content") ||
+      $('meta[name="twitter:image"]').attr("content");
 
-    return text.split(/\s+/).slice(0, 3000).join(" ");
+    const title =
+      $('meta[property="og:title"]').attr("content") || $("title").text();
+
+    // Extract all reasonable images
+    const baseUrl = new URL(url);
+    const images: string[] = [];
+    const seen = new Set<string>();
+
+    if (ogImage) {
+      const absUrl = new URL(ogImage, baseUrl).toString();
+      images.push(absUrl);
+      seen.add(absUrl);
+    }
+
+    function addImage(rawSrc: string | undefined): boolean {
+      if (!rawSrc) return false;
+      try {
+        const absUrl = new URL(rawSrc, baseUrl).toString();
+        if (seen.has(absUrl)) return false;
+        if (absUrl.startsWith("data:")) return false;
+        if (/icon|logo|sprite|avatar|pixel|favicon|emoji/i.test(absUrl))
+          return false;
+        // Skip badge/award images (paslaugos.lt patikimiausias badge etc.)
+        if (/badge|patikim|certificat|seal/i.test(absUrl)) return false;
+        // Skip OTHER people's review images (paslaugos.lt has reviewer photos on the page)
+        if (/\/review_/i.test(absUrl)) return false;
+        // Skip ad/promo banners
+        if (/banner|advert|promo|sidebar/i.test(absUrl)) return false;
+        seen.add(absUrl);
+        images.push(absUrl);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    // 1. Prefer <a href> wrapping <img> — usually points to full-size image
+    $("a").each((_, el) => {
+      const href = $(el).attr("href");
+      if (!href) return;
+      if (!/\.(jpe?g|png|webp|gif)(\?|$)/i.test(href)) return;
+      // Only if it contains an img inside (real gallery anchor)
+      if ($(el).find("img").length === 0) return;
+      addImage(href);
+    });
+
+    // 2. Then try <img> with high-quality attributes
+    $("img").each((_, el) => {
+      // Prefer larger versions if present
+      const src =
+        $(el).attr("data-zoom-image") ||
+        $(el).attr("data-large") ||
+        $(el).attr("data-original") ||
+        $(el).attr("data-full") ||
+        $(el).attr("data-src") ||
+        $(el).attr("src") ||
+        $(el).attr("data-lazy");
+
+      // Check srcset for the largest variant
+      const srcset = $(el).attr("srcset");
+      if (srcset) {
+        // Pick last (usually largest) URL from srcset
+        const parts = srcset.split(",").map((s) => s.trim());
+        const last = parts[parts.length - 1]?.split(/\s+/)[0];
+        if (last && addImage(last)) return;
+      }
+
+      addImage(src);
+    });
+
+    // 3. Heuristic: replace common thumbnail path patterns with full-size
+    // paslaugos.lt uses /thumbs/ for thumbnails and /uploads/ for full size
+    const upgraded = images.map((u) =>
+      u
+        .replace(/\/thumbs?\//g, "/uploads/")
+        .replace(/_thumb\./g, ".")
+        .replace(/-thumb\./g, ".")
+        .replace(/_small\./g, ".")
+        .replace(/-150x\d+\./g, ".")
+        .replace(/-300x\d+\./g, ".")
+    );
+    images.length = 0;
+    for (const u of upgraded) {
+      if (!images.includes(u)) images.push(u);
+    }
+
+    // Remove non-content elements before text extraction
+    $("script, style, nav, footer, header, noscript, iframe").remove();
+    const text = $("body").text().replace(/\s+/g, " ").trim();
+
+    const finalImages = images.slice(0, 8);
+    console.log(`Scraped ${finalImages.length} images from ${url}:`);
+    finalImages.forEach((img, i) => console.log(`  [${i}] ${img}`));
+
+    return {
+      text: text.slice(0, 6000),
+      images: finalImages,
+      ogImage,
+      title,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Timeout")) {
+      throw new Error(
+        "Šaltinio puslapis užtruko per ilgai. Pabandykite kitą URL."
+      );
+    }
+    throw new Error(
+      `Šaltinio puslapis neatsako. Galimai puslapis blokuoja automatinį skaitymą. ${
+        error instanceof Error ? error.message : ""
+      }`
+    );
   } finally {
-    clearTimeout(timeoutId);
+    if (browser) await browser.close();
   }
 }
 
 async function generateWithClaude(
-  scraped: string,
-  url: string
-): Promise<{
-  description: string;
-  categoryNames: string[];
-  phone?: string;
-}> {
+  scraped: ScrapedData,
+  url: string,
+  availableCategories: string[]
+): Promise<AIResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const prompt = `You are a profile writer for a Lithuanian service marketplace. Based on the following website content, generate a professional profile for a service provider.
+  const prompt = `Tu esi profesionalus copywriter'is paslaugų rinkai Lietuvoje. Analizuok puslapio turinį ir sukurk paskyrą paslaugų teikėjui.
 
-Website: ${url}
-Content: ${scraped.slice(0, 2000)}
+Šaltinis: ${url}
+Pavadinimas: ${scraped.title || "(nežinoma)"}
+Turinys: ${scraped.text.slice(0, 4000)}
 
-Generate:
-1. A compelling profile description (150-250 words in Lithuanian) that summarizes their services and expertise
-2. Up to 6 relevant service categories from this list: "Konstruktyvinės paslaugos", "Santechnika", "Elektrika", "Dažymas", "Stogo darbai", "Langai ir durys", "Aplinkos sutvarkymas", "Nekilnojamojo turto paslaugos", "Lyginimas", "Baldų gamyba", "Medžio darbai", "Statyba", "Teisės paslaugos", "Mokymas ir konsultavimas", "Dizainas", "Fotografija", "Vertimas", "IT paslaugos", "Buhalterija ir apskaita", "Marketingas ir reklama"
-3. Any phone number found (Lithuanian format: +370XXXXXXXXX or local 6-8 digits)
+Galimos kategorijos (PARINKK TIK IŠ ŠIO SĄRAŠO, tiksli rašyba):
+${availableCategories.map((c) => `- ${c}`).join("\n")}
 
-Return as JSON:
+Sukurk:
+1. headline — trumpas, įsimintinas titulas (max 80 simboliu, lietuvių kalba). Pvz: "Patikimas santechnikas Vilniuje — 15 metų patirtis"
+2. description — profesionalų, įtaigų aprašymą (200-300 žodžių lietuvių kalba). Aprašyk paslaugas, patirtį, kuo išsiskiria. NE generinis — naudok konkretus faktus iš šaltinio. Be klišių.
+3. categories — iki 6 tinkamiausių kategorijų iš sąrašo viršuje (naudok TIKSLIUS pavadinimus)
+4. phone — telefono numeris JEI rastas. Formatas: "+370XXXXXXXX" arba "8XXXXXXXX" (vienas numeris, ne array)
+5. location — miestas/regionas Lietuvoje, jei nurodytas (pvz. "Vilnius", "Kaunas, Klaipėda")
+6. services — konkretus paslaugų sąrašas po vieną į eilutę (markdown bullet su • simboliu), pvz: "• Vamzdžių keitimas\n• Čiaupų montavimas\n• Šildymo sistemų remontas". Sudaryk iš šaltinio teksto.
+7. experienceYears — patirtis metais kaip skaičius (integer). Pvz., jei šaltinis mini "5 metų patirtis" → 5. Jei nerasta — null.
+8. priceFrom — minimaliame kaina už paslaugą eurais kaip skaičius. Jei nerasta — null.
+9. offersInvoices — ar išrašo PVM sąskaitas-faktūras (true/false). Pagal nutylėjimą jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
+10. availableForUrgent — ar atlieka skubius darbus (true/false). Jei mini "skubus", "tą pačią dieną", "24/7" → true.
+
+Grąžink TIK JSON (be markdown, be code fence):
 {
+  "headline": "...",
   "description": "...",
-  "categories": ["category1", "category2"],
-  "phone": "+370..."
+  "categories": ["kategorija1", "kategorija2"],
+  "phone": "+370...",
+  "location": "Vilnius",
+  "services": "• Paslauga 1\n• Paslauga 2",
+  "experienceYears": 5,
+  "priceFrom": 30,
+  "offersInvoices": true,
+  "availableForUrgent": false
 }`;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "anthropic/claude-haiku-4.5",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    }),
-  });
+  const response = await fetch(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Grąžini TIK galiojantį JSON. Be markdown, be code fences. Visi tekstai turi būti tinkamai escape'inti (kabutės, eilutės).",
+          },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.5,
+        max_tokens: 1500,
+      }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -102,137 +270,438 @@ Return as JSON:
   const data = await response.json();
   const content = data.choices[0].message.content;
 
-  // Extract JSON from response
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Failed to extract JSON from response");
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error("Claude raw response:", content);
+      throw new Error("AI grąžino netinkamą atsakymą. Bandykite dar kartą.");
+    }
+    parsed = JSON.parse(jsonMatch[0]);
+  }
 
-  const parsed = JSON.parse(jsonMatch[0]);
+  // Normalize phone to single string
+  let phone: string | undefined;
+  if (Array.isArray(parsed.phone)) {
+    phone = parsed.phone[0];
+  } else if (typeof parsed.phone === "string" && parsed.phone.trim()) {
+    phone = parsed.phone.trim();
+  }
+
   return {
+    headline: parsed.headline || "",
     description: parsed.description || "",
     categoryNames: Array.isArray(parsed.categories)
       ? parsed.categories.slice(0, 6)
       : [],
-    phone: parsed.phone,
+    phone,
+    location:
+      typeof parsed.location === "string" ? parsed.location : undefined,
+    services:
+      typeof parsed.services === "string" ? parsed.services : undefined,
+    experienceYears:
+      typeof parsed.experienceYears === "number"
+        ? parsed.experienceYears
+        : undefined,
+    priceFrom:
+      typeof parsed.priceFrom === "number" ? parsed.priceFrom : undefined,
+    offersInvoices:
+      typeof parsed.offersInvoices === "boolean"
+        ? parsed.offersInvoices
+        : undefined,
+    availableForUrgent:
+      typeof parsed.availableForUrgent === "boolean"
+        ? parsed.availableForUrgent
+        : undefined,
   };
 }
 
-async function generateAvatar(
-  name: string,
-  _description: string
-): Promise<string> {
+async function generateFromScratch(
+  input: {
+    businessName: string;
+    servicesText: string;
+    location?: string;
+    experienceYears?: number;
+    phone?: string;
+  },
+  availableCategories: string[]
+): Promise<AIResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "openai/dall-e-3",
-      prompt: `Professional avatar for ${name}. Clean, trustworthy, premium marketplace style. Simple background.`,
-      size: "256x256",
-      quality: "standard",
-      n: 1,
-    }),
-  });
+  const prompt = `Tu esi profesionalus copywriter'is paslaugų rinkai Lietuvoje. Sukurk paskyrą paslaugų teikėjui iš pateiktos bazinės informacijos.
+
+Bazinė info:
+- Vardas/įmonė: ${input.businessName}
+- Teikiamos paslaugos (vartotojo aprašyme): ${input.servicesText}
+${input.location ? `- Lokacija: ${input.location}` : ""}
+${input.experienceYears ? `- Patirtis: ${input.experienceYears} metų` : ""}
+${input.phone ? `- Telefonas: ${input.phone}` : ""}
+
+Galimos kategorijos (PARINK TIK IŠ ŠIO SĄRAŠO, tiksli rašyba):
+${availableCategories.map((c) => `- ${c}`).join("\n")}
+
+Sukurk:
+1. headline — trumpas, įsimintinas titulas (max 80 simbolių, lietuvių kalba). Naudok faktus iš vartotojo input'o.
+2. description — profesionalų, įtaigų aprašymą (180-280 žodžių lietuvių k.). Išskleisk vartotojo trumpą aprašymą į pilną, įtaigų tekstą. Pabrėžk patirtį, kokybę, profesionalumą. NE generinis, NE klišės.
+3. categories — iki 6 tinkamiausių kategorijų iš sąrašo (TIKSLŪS pavadinimai)
+4. services — struktūrizuotas paslaugų sąrašas po bulletais (• simbolis). Iš vartotojo įvesto teksto sukurk normalų listą.
+5. priceFrom — bazinė kaina eurais, jei galima išvesti iš teksto, kitaip null
+6. offersInvoices — jei mini PVM/sąskaitos → true, kitaip false
+7. availableForUrgent — jei mini skubų/skubūs darbai → true, kitaip false
+8. imagePrompt — ANGLIŠKAI prompt'as profesionalios pagrindinės nuotraukos generavimui. Vaizduoja paslaugų teikėją realioje darbo aplinkoje. PHOTOREALISTIC, ne iliustracija, ne cartoon. Pavyzdys elektrikui: "Professional Lithuanian male electrician at work, wearing safety helmet and work uniform, holding electrical tools, installing wiring in a modern apartment, natural lighting, photorealistic, high quality, candid photo, no logos, no text". Adaptuok pagal specialybę.
+
+Grąžink TIK JSON (be markdown):
+{
+  "headline": "...",
+  "description": "...",
+  "categories": ["..."],
+  "services": "• Paslauga 1\\n• Paslauga 2",
+  "priceFrom": null,
+  "offersInvoices": false,
+  "availableForUrgent": false,
+  "imagePrompt": "Professional photo of..."
+}`;
+
+  const response = await fetch(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages: [
+          {
+            role: "system",
+            content: "Grąžini TIK galiojantį JSON. Be markdown, be code fences.",
+          },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.6,
+        max_tokens: 1500,
+      }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.json();
-    console.error("Avatar generation failed:", error);
-    return "";
+    throw new Error(`OpenRouter error: ${JSON.stringify(error)}`);
   }
 
   const data = await response.json();
-  return data.data[0]?.url || "";
+  const content = data.choices[0].message.content;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("AI grąžino netinkamą atsakymą");
+    parsed = JSON.parse(jsonMatch[0]);
+  }
+
+  return {
+    headline: parsed.headline || "",
+    description: parsed.description || "",
+    categoryNames: Array.isArray(parsed.categories)
+      ? parsed.categories.slice(0, 6)
+      : [],
+    phone: input.phone, // user-provided
+    location: input.location, // user-provided
+    services: typeof parsed.services === "string" ? parsed.services : undefined,
+    experienceYears: input.experienceYears, // user-provided
+    priceFrom:
+      typeof parsed.priceFrom === "number" ? parsed.priceFrom : undefined,
+    offersInvoices:
+      typeof parsed.offersInvoices === "boolean"
+        ? parsed.offersInvoices
+        : undefined,
+    availableForUrgent:
+      typeof parsed.availableForUrgent === "boolean"
+        ? parsed.availableForUrgent
+        : undefined,
+    imagePrompt:
+      typeof parsed.imagePrompt === "string" ? parsed.imagePrompt : undefined,
+  };
 }
 
-async function getAllCategories(): Promise<
-  Array<{ id: string; name: string }>
-> {
-  try {
-    const categories = await prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      take: 100,
-    });
-    return categories;
-  } catch {
-    return [];
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[ąčęėįšųūž]/g, (c) => {
+      const map: Record<string, string> = {
+        ą: "a",
+        č: "c",
+        ę: "e",
+        ė: "e",
+        į: "i",
+        š: "s",
+        ų: "u",
+        ū: "u",
+        ž: "z",
+      };
+      return map[c] || c;
+    })
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+async function ensureUniqueSlug(base: string): Promise<string> {
+  let slug = base || "meistras";
+  let suffix = 0;
+  while (await prisma.providerProfile.findUnique({ where: { slug } })) {
+    suffix += 1;
+    slug = `${base}-${suffix}`;
   }
+  return slug;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json()) as AIGenerateRequest;
-    const { url, source } = body;
+    const { source } = body;
 
-    if (!url || !source) {
+    if (!source) {
       return NextResponse.json(
-        { error: "Missing url or source" },
+        { error: "Missing source" },
         { status: 400 }
       );
     }
 
-    // Validate URL
-    try {
-      new URL(url);
-    } catch {
-      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    const isScratchMode = source === "scratch";
+
+    if (!isScratchMode && !body.url) {
+      return NextResponse.json({ error: "Missing url" }, { status: 400 });
     }
 
-    console.log(`Generating profile from ${source}: ${url}`);
+    if (isScratchMode) {
+      if (!body.businessName?.trim() || !body.servicesText?.trim()) {
+        return NextResponse.json(
+          { error: "Trūksta privalomų laukų (vardas ir paslaugos)" },
+          { status: 400 }
+        );
+      }
+    } else {
+      try {
+        new URL(body.url!);
+      } catch {
+        return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+      }
+    }
 
-    // Scrape content
-    const scraped = await fetchAndScrape(url);
-    if (!scraped) {
-      return NextResponse.json(
-        { error: "Failed to fetch URL content" },
-        { status: 400 }
+    // 1. Scrape (only in URL mode)
+    let scraped: ScrapedData = { text: "", images: [] };
+    if (!isScratchMode) {
+      console.log(`AI profile generation from ${source}: ${body.url}`);
+      scraped = await fetchAndScrape(body.url!);
+      if (!scraped.text) {
+        return NextResponse.json(
+          { error: "Failed to fetch URL content" },
+          { status: 400 }
+        );
+      }
+    } else {
+      console.log(
+        `AI profile generation from scratch: ${body.businessName}`
       );
     }
 
-    // Generate with Claude
-    const claudeResult = await generateWithClaude(scraped, url);
+    // 2. Generate with Claude
+    const allCategories = await prisma.category.findMany({
+      where: { depth: { lte: 1 } },
+      select: { id: true, name: true },
+      orderBy: [{ depth: "asc" }, { name: "asc" }],
+      take: 80,
+    });
 
-    // Get all categories from DB
-    const allCategories = await getAllCategories();
+    const aiResult = isScratchMode
+      ? await generateFromScratch(
+          {
+            businessName: body.businessName!,
+            servicesText: body.servicesText!,
+            location: body.location,
+            experienceYears: body.experienceYears,
+            phone: body.phone,
+          },
+          allCategories.map((c) => c.name)
+        )
+      : await generateWithClaude(
+          scraped,
+          body.url!,
+          allCategories.map((c) => c.name)
+        );
 
-    // Match category names to IDs
-    const selectedCategories = allCategories.filter((cat) =>
-      claudeResult.categoryNames.some(
-        (name) => name.toLowerCase() === cat.name.toLowerCase()
+    // 3. Match categories
+    const selectedCategoryIds = allCategories
+      .filter((cat) =>
+        aiResult.categoryNames.some(
+          (name) =>
+            name.toLowerCase().trim() === cat.name.toLowerCase().trim()
+        )
       )
+      .map((c) => c.id);
+
+    // 4. Get user and ensure PROVIDER role
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { providerProfile: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Ensure PROVIDER role + emailVerified so the public profile is visible.
+    // Authenticated users with AI-generated profiles are considered verified —
+    // they completed the signup auth flow.
+    if (user.role !== "PROVIDER" || !user.emailVerified) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: "PROVIDER",
+          emailVerified: user.emailVerified ?? new Date(),
+        },
+      });
+    }
+
+    // 5. Save everything
+    const baseSlug = slugify(
+      (isScratchMode ? body.businessName : null) ||
+        user.name ||
+        session.user.email.split("@")[0] ||
+        "meistras"
     );
 
-    // Generate avatar
-    const userName = session.user.name || "Service Provider";
-    const avatarUrl = await generateAvatar(userName, claudeResult.description);
+    let providerProfile = user.providerProfile;
 
-    const categoriesWithSelection = allCategories.map((cat) => ({
-      ...cat,
-      selected: selectedCategories.some((sel) => sel.id === cat.id),
-    }));
+    // Crop watermarks from scraped images and upload to our Cloudinary
+    const imagesToSave =
+      scraped.images.length > 0
+        ? await processImagesBatch(scraped.images, {
+            folder: "provider-imports",
+          })
+        : [];
+    let heroImageProcessed = scraped.ogImage
+      ? (await processImagesBatch([scraped.ogImage]))[0]
+      : null;
 
-    const result: AIGenerateResponse = {
-      description: claudeResult.description,
-      categories: categoriesWithSelection,
-      phone: claudeResult.phone,
-      avatarUrl: avatarUrl || "",
-      sourceData: {
-        rawText: scraped.slice(0, 500),
+    // Scratch mode — generate a hero image with AI if Claude provided a prompt
+    if (
+      isScratchMode &&
+      aiResult.imagePrompt &&
+      imagesToSave.length === 0
+    ) {
+      console.log(`Generating AI image: ${aiResult.imagePrompt.slice(0, 100)}`);
+      const aiImage = await generateAIImage(aiResult.imagePrompt, {
+        folder: "provider-ai-generated",
+        width: 1024,
+        height: 768,
+      });
+      if (aiImage) {
+        imagesToSave.push(aiImage);
+        heroImageProcessed = aiImage;
+      }
+    }
+
+    if (!providerProfile) {
+      const slug = await ensureUniqueSlug(baseSlug);
+      providerProfile = await prisma.providerProfile.create({
+        data: {
+          userId: user.id,
+          slug,
+          description: aiResult.description,
+          headline: aiResult.headline,
+          phone: aiResult.phone || null,
+          location: aiResult.location || null,
+          services: aiResult.services || null,
+          experienceYears: aiResult.experienceYears ?? null,
+          priceFrom: aiResult.priceFrom ?? null,
+          offersInvoices: aiResult.offersInvoices ?? false,
+          availableForUrgent: aiResult.availableForUrgent ?? false,
+          images: imagesToSave,
+          heroImageUrl: heroImageProcessed || imagesToSave[0] || null,
+          externalSource: source,
+          externalSourceUrl: isScratchMode ? null : body.url,
+          enrichedAt: new Date(),
+          isActive: true,
+          status: "claimed",
+          sourceType: "self_created",
+          displayName: isScratchMode ? body.businessName : null,
+        },
+      });
+    } else {
+      providerProfile = await prisma.providerProfile.update({
+        where: { id: providerProfile.id },
+        data: {
+          slug: providerProfile.slug || baseSlug,
+          description: aiResult.description,
+          headline: aiResult.headline,
+          phone: aiResult.phone || providerProfile.phone,
+          location: aiResult.location || providerProfile.location,
+          services: aiResult.services || providerProfile.services,
+          experienceYears:
+            aiResult.experienceYears ?? providerProfile.experienceYears,
+          priceFrom: aiResult.priceFrom ?? providerProfile.priceFrom,
+          offersInvoices:
+            aiResult.offersInvoices ?? providerProfile.offersInvoices,
+          availableForUrgent:
+            aiResult.availableForUrgent ?? providerProfile.availableForUrgent,
+          images:
+            imagesToSave.length > 0 ? imagesToSave : providerProfile.images,
+          heroImageUrl: isScratchMode
+            ? providerProfile.heroImageUrl
+            : heroImageProcessed ||
+              imagesToSave[0] ||
+              providerProfile.heroImageUrl,
+          externalSource: source,
+          externalSourceUrl: isScratchMode
+            ? providerProfile.externalSourceUrl
+            : body.url,
+          enrichedAt: new Date(),
+          isActive: true,
+          displayName: isScratchMode
+            ? body.businessName || providerProfile.displayName
+            : providerProfile.displayName,
+        },
+      });
+    }
+
+    // 6. Replace categories
+    await prisma.providerProfileCategory.deleteMany({
+      where: { providerProfileId: providerProfile.id },
+    });
+
+    for (const categoryId of selectedCategoryIds) {
+      await prisma.providerProfileCategory.create({
+        data: { providerProfileId: providerProfile.id, categoryId },
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      profileId: providerProfile.id,
+      slug: providerProfile.slug,
+      summary: {
+        headline: aiResult.headline,
+        descriptionLength: aiResult.description.length,
+        categoriesCount: selectedCategoryIds.length,
+        imagesCount: imagesToSave.length,
+        hasPhone: Boolean(aiResult.phone),
+        hasLocation: Boolean(aiResult.location),
       },
-    };
-
-    return NextResponse.json(result);
+    });
   } catch (error) {
     console.error("Profile generation error:", error);
     return NextResponse.json(

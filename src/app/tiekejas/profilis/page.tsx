@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import Input from "@/components/ui/Input";
@@ -21,6 +22,7 @@ interface ProviderImage {
 }
 
 export default function ProviderProfilePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -41,7 +43,8 @@ export default function ProviderProfilePage() {
     emailVerified: boolean;
     isActive: boolean;
     userId: string | null;
-  }>({ userName: null, userEmail: null, emailVerified: false, isActive: false, userId: null });
+    slug: string | null;
+  }>({ userName: null, userEmail: null, emailVerified: false, isActive: false, userId: null, slug: null });
   const [form, setForm] = useState({
     description: "",
     headline: "",
@@ -85,6 +88,7 @@ export default function ProviderProfilePage() {
             emailVerified: profileData.data.emailVerified ?? false,
             isActive: profileData.data.isActive ?? false,
             userId: profileData.data.userId || null,
+            slug: profileData.data.slug || null,
           });
         }
         if (storiesData.success) {
@@ -98,7 +102,48 @@ export default function ProviderProfilePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleSave() {
+  async function handleToggleVisibility() {
+    const newValue = !account.isActive;
+    setAccount((prev) => ({ ...prev, isActive: newValue }));
+    try {
+      const res = await fetch("/api/tiekejas/profilis", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newValue }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setAccount((prev) => ({ ...prev, isActive: !newValue }));
+        setError(data.error || "Nepavyko atnaujinti matomumo");
+      }
+    } catch {
+      setAccount((prev) => ({ ...prev, isActive: !newValue }));
+      setError("Nepavyko atnaujinti matomumo");
+    }
+  }
+
+  async function handleDeleteProfile() {
+    const confirmed = window.confirm(
+      "Ar tikrai norite ištrinti savo profilį? Šis veiksmas negali būti atšauktas. Bus pašalintas viešasis profilis ir visos paslaugos, bet jūsų paskyra liks aktyvi kaip kliento."
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/api/tiekejas/profilis", {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push("/");
+      } else {
+        setError(data.error || "Nepavyko ištrinti profilio");
+      }
+    } catch {
+      setError("Nepavyko ištrinti profilio");
+    }
+  }
+
+  async function handleSave(opts?: { andViewPublic?: boolean }) {
     setSaving(true);
     setError("");
     setSaved(false);
@@ -114,7 +159,13 @@ export default function ProviderProfilePage() {
           setForm((prev) => ({ ...prev, categoryIds: data.data.categoryIds }));
         }
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        if (opts?.andViewPublic && account.slug) {
+          router.push(`/meistrai/${account.slug}`);
+          return;
+        }
+        // Default: after save, return to the provider dashboard
+        router.push("/tiekejas");
+        return;
       } else {
         setError(data.error || "Klaida");
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -240,6 +291,27 @@ export default function ProviderProfilePage() {
       <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-5">
         Užpildykite profilį — klientai matys jūsų informaciją prieš kreipdamiesi.
       </p>
+
+      {/* AI profile generation CTA */}
+      {completeness.percent < 100 && (
+        <Link
+          href="/meistrai/kurti-profili"
+          className="group mb-5 flex items-center gap-3 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-amber-50 p-4 transition-all hover:border-brand-300 hover:shadow-md dark:border-brand-800 dark:from-brand-950 dark:to-amber-950"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-body-sm font-semibold text-surface-900 dark:text-white">
+              Greičiau — užpildyk su AI ✨
+            </p>
+            <p className="text-micro text-surface-600 dark:text-surface-400">
+              Įklijuok savo paslaugos.lt arba LinkedIn nuorodą — AI per 15 sek. užpildys viską už tave.
+            </p>
+          </div>
+          <ChevronDown className="h-5 w-5 shrink-0 -rotate-90 text-brand-600 dark:text-brand-400 transition-transform group-hover:translate-x-1" />
+        </Link>
+      )}
 
       {/* Profile completeness + Account — combined compact header */}
       <div className="mb-5 rounded-2xl border border-surface-200/60 bg-white p-4 dark:border-surface-700/50 dark:bg-surface-900/50">
@@ -496,7 +568,7 @@ export default function ProviderProfilePage() {
               <p className="text-micro text-surface-400 mb-3">Klientai dažniau renkasi tiekėjus su realiais darbų pavyzdžiais.</p>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                 {images.slice(1).map((img, i) => (
-                  <div key={img.publicId} className={`relative group aspect-square rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 ${deletingId === img.publicId ? "opacity-50" : ""}`}>
+                  <div key={img.publicId || img.url || i} className={`relative group aspect-square rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 ${deletingId === img.publicId ? "opacity-50" : ""}`}>
                     <Image src={img.url} alt={`Darbas ${i + 1}`} fill className="object-cover" sizes="150px" />
                     <button
                       onClick={() => handleDeleteImage(img.publicId)}
@@ -632,12 +704,93 @@ export default function ProviderProfilePage() {
             />
           </div>
         </Card>
+
+        {/* Visibility + Danger zone */}
+        <Card>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-body font-semibold text-surface-900 dark:text-white mb-1">
+                Profilio matomumas
+              </h3>
+              <p className="text-micro text-surface-400">
+                Valdyk, ar tavo profilis matomas klientams paieškoje.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleVisibility}
+              className="w-full flex items-center justify-between rounded-xl border border-surface-200 dark:border-surface-700 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                    account.isActive
+                      ? "bg-emerald-100 dark:bg-emerald-900/40"
+                      : "bg-surface-100 dark:bg-surface-800"
+                  }`}
+                >
+                  <Eye
+                    className={`h-4 w-4 ${
+                      account.isActive
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-surface-400"
+                    }`}
+                  />
+                </div>
+                <div className="text-left">
+                  <p className="text-body-sm font-medium text-surface-900 dark:text-white">
+                    {account.isActive ? "Viešas profilis" : "Paslėptas"}
+                  </p>
+                  <p className="text-micro text-surface-400">
+                    {account.isActive
+                      ? "Klientai mato tavo profilį ir gali susisiekti"
+                      : "Profilis paslėptas — niekas nemato"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle switch */}
+              <div
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  account.isActive
+                    ? "bg-emerald-500"
+                    : "bg-surface-300 dark:bg-surface-600"
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    account.isActive ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </button>
+
+            <div className="border-t border-surface-200 dark:border-surface-700 pt-4">
+              <h3 className="text-body font-semibold text-red-600 dark:text-red-400 mb-1">
+                Pavojaus zona
+              </h3>
+              <p className="text-micro text-surface-400 mb-3">
+                Ištrina tavo paslaugų teikėjo profilį. Paskyra liks aktyvi kaip
+                kliento.
+              </p>
+              <button
+                type="button"
+                onClick={handleDeleteProfile}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 dark:border-red-800 bg-white dark:bg-surface-900 px-3 py-2 text-body-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+              >
+                <X className="h-4 w-4" />
+                Ištrinti profilį
+              </button>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Sticky save bar */}
       <div className="fixed bottom-0 left-0 right-0 z-10 px-4 pb-4 pt-2 pointer-events-none">
-        <div className="mx-auto max-w-2xl pointer-events-auto">
-          <div className="rounded-2xl border border-surface-200/60 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/95 flex items-center justify-between">
+        <div className="mx-auto max-w-3xl pointer-events-auto">
+          <div className="rounded-2xl border border-surface-200/60 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/95 flex items-center justify-between gap-2">
             <p className="text-micro text-surface-400 hidden sm:block">
               {saved ? (
                 <span className="text-emerald-600 dark:text-emerald-400 font-medium">Pakeitimai išsaugoti</span>
@@ -645,9 +798,26 @@ export default function ProviderProfilePage() {
                 "Nepamirškite išsaugoti pakeitimų"
               )}
             </p>
-            <Button onClick={handleSave} isLoading={saving} className="ml-auto">
-              {saved ? <><Check className="h-4 w-4 mr-1.5" /> Išsaugota</> : <><Save className="h-4 w-4 mr-1.5" /> Išsaugoti</>}
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              {account.slug && account.isActive && (
+                <Link
+                  href={`/meistrai/${account.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-2 text-body-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                >
+                  <Eye className="h-4 w-4" />
+                  Peržiūrėti
+                </Link>
+              )}
+              <Button onClick={() => handleSave()} isLoading={saving}>
+                {saved ? (
+                  <><Check className="h-4 w-4 mr-1.5" /> Išsaugota</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-1.5" /> Išsaugoti</>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

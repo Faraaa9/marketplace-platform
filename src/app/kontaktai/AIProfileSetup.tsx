@@ -1,409 +1,484 @@
 "use client";
 
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import {
+  Sparkles,
+  Globe,
+  ScanText,
+  Brain,
+  Image as ImageIcon,
+  Tag,
+  CheckCircle2,
+  Link2,
+  PencilLine,
+} from "lucide-react";
 
-interface Category {
-  id: string;
-  name: string;
-  selected: boolean;
+interface LoadingStep {
+  icon: typeof Globe;
+  label: string;
+  funFact: string;
 }
 
-interface GeneratedProfile {
-  description: string;
-  categories: Category[];
-  phone?: string;
-  avatarUrl: string;
-  sourceData: {
-    title?: string;
-    companyName?: string;
-    rawText: string;
-  };
-}
+const LOADING_STEPS_URL: LoadingStep[] = [
+  {
+    icon: Globe,
+    label: "Atveriam tavo nuorodą...",
+    funFact: "Robotas pučia dulkes nuo monitoriaus 🤖",
+  },
+  {
+    icon: ScanText,
+    label: "Skaitome turinį...",
+    funFact: "Žodžių daugiau nei rytinėje kavoje ☕",
+  },
+  {
+    icon: Brain,
+    label: "AI galvoja...",
+    funFact: "Krypsta antakiu, mąsto giliai 🧠",
+  },
+  {
+    icon: ImageIcon,
+    label: "Rūšiuojame nuotraukas...",
+    funFact: "Ieškom geriausios pozos 📸",
+  },
+  {
+    icon: Tag,
+    label: "Parenkam kategorijas...",
+    funFact: "Tinkamiausios paslaugos jūsų darbui 🏷️",
+  },
+  {
+    icon: CheckCircle2,
+    label: "Saugome profilį...",
+    funFact: "Tuoj viskas bus paruošta ✨",
+  },
+];
+
+const LOADING_STEPS_SCRATCH: LoadingStep[] = [
+  {
+    icon: ScanText,
+    label: "Analizuojam tavo aprašymą...",
+    funFact: "AI uosto žodyną 📖",
+  },
+  {
+    icon: Brain,
+    label: "AI rašo profesionalų aprašymą...",
+    funFact: "Klaviatūros klavišai dega ⌨️",
+  },
+  {
+    icon: Tag,
+    label: "Parenkam kategorijas...",
+    funFact: "Suderinam tinkamiausias 🏷️",
+  },
+  {
+    icon: ImageIcon,
+    label: "Piešiam tavo darbo nuotrauką...",
+    funFact: "AI vis dar nesupranta kodėl reikia mokytis pieštis 🎨",
+  },
+  {
+    icon: CheckCircle2,
+    label: "Saugome profilį...",
+    funFact: "Beveik atlikta ✨",
+  },
+];
+
+const STEP_INTERVALS_URL = [2000, 2500, 5000, 3000, 2000, 2500];
+const STEP_INTERVALS_SCRATCH = [1500, 4000, 2000, 6000, 2000];
+
+const ENCOURAGEMENT_MESSAGES = [
+  "Beveik atlikta...",
+  "Šedevras gimsta...",
+  "Verta palaukti — bus gražu",
+  "Kiekvienas geras dalykas užtruko",
+  "Robotas dar suka ratu...",
+];
+
+type Mode = "url" | "scratch";
 
 export function AIProfileSetup() {
   const router = useRouter();
-  const [step, setStep] = useState<"input" | "preview" | "confirm">("input");
+  const [mode, setMode] = useState<Mode>("url");
+
+  // URL mode state
   const [url, setUrl] = useState("");
   const [source, setSource] = useState<"services_lt" | "linkedin">(
     "services_lt"
   );
+
+  // Scratch mode state
+  const [businessName, setBusinessName] = useState("");
+  const [servicesText, setServicesText] = useState("");
+  const [scratchLocation, setScratchLocation] = useState("");
+  const [scratchExperience, setScratchExperience] = useState("");
+  const [scratchPhone, setScratchPhone] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<GeneratedProfile | null>(null);
-  const [editedProfile, setEditedProfile] = useState<GeneratedProfile | null>(
-    null
-  );
-  const [regenerateCount, setRegenerateCount] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const [overtimeMessageIdx, setOvertimeMessageIdx] = useState(0);
 
-  const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUrl(e.target.value);
-    setError("");
-  };
+  const loadingSteps = mode === "url" ? LOADING_STEPS_URL : LOADING_STEPS_SCRATCH;
+  const stepIntervals = mode === "url" ? STEP_INTERVALS_URL : STEP_INTERVALS_SCRATCH;
 
-  const handleSourceChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSource(e.target.value as "services_lt" | "linkedin");
-  };
-
-  const handleGenerateClick = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) {
-      setError("Prašau nurodykite URL");
+  useEffect(() => {
+    if (!loading) {
+      setActiveStep(0);
+      setOvertimeMessageIdx(0);
       return;
     }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/profile/ai-generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, source }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Nepavyko sugeneruoti profilio");
+    let cancelled = false;
+    function advance(stepIdx: number) {
+      if (cancelled) return;
+      if (stepIdx >= loadingSteps.length) {
+        const interval = setInterval(() => {
+          if (cancelled) return clearInterval(interval);
+          setOvertimeMessageIdx((i) => (i + 1) % ENCOURAGEMENT_MESSAGES.length);
+        }, 2500);
+        return;
       }
-
-      const data: GeneratedProfile = await response.json();
-      setProfile(data);
-      setEditedProfile(JSON.parse(JSON.stringify(data)));
-      setStep("preview");
-      setRegenerateCount(0);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Nepavyko sugeneruoti profilio"
-      );
-    } finally {
-      setLoading(false);
+      setActiveStep(stepIdx);
+      const delay = stepIntervals[stepIdx] ?? 2000;
+      setTimeout(() => advance(stepIdx + 1), delay);
     }
-  };
-
-  const handleRegenerate = async () => {
-    if (regenerateCount >= 2) {
-      setError(
-        "Pasiekėte regeneravimo limitą (3 kartai per dieną). Bandykite vėliau."
-      );
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/profile/ai-generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, source }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Nepavyko sugeneruoti profilio");
-      }
-
-      const data: GeneratedProfile = await response.json();
-      setProfile(data);
-      setEditedProfile(JSON.parse(JSON.stringify(data)));
-      setRegenerateCount(regenerateCount + 1);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Nepavyko sugeneruoti profilio"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCategoryToggle = (categoryId: string) => {
-    if (!editedProfile) return;
-    const updated = {
-      ...editedProfile,
-      categories: editedProfile.categories.map((cat) =>
-        cat.id === categoryId ? { ...cat, selected: !cat.selected } : cat
-      ),
+    advance(0);
+    return () => {
+      cancelled = true;
     };
-    setEditedProfile(updated);
-  };
+  }, [loading, loadingSteps.length, stepIntervals]);
 
-  const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    if (!editedProfile) return;
-    setEditedProfile({
-      ...editedProfile,
-      description: e.target.value,
-    });
-  };
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
 
-  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!editedProfile) return;
-    setEditedProfile({
-      ...editedProfile,
-      phone: e.target.value,
-    });
-  };
-
-  const handleConfirm = async () => {
-    if (!editedProfile) return;
+    if (mode === "url") {
+      if (!url.trim()) {
+        setError("Prašau nurodykite URL");
+        return;
+      }
+    } else {
+      if (!businessName.trim()) {
+        setError("Įveskite savo vardą arba įmonės pavadinimą");
+        return;
+      }
+      if (!servicesText.trim()) {
+        setError("Aprašykite kokias paslaugas teikiate");
+        return;
+      }
+    }
 
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch("/api/paskyra/profile-complete", {
+      const body =
+        mode === "url"
+          ? { url, source }
+          : {
+              source: "scratch" as const,
+              businessName: businessName.trim(),
+              servicesText: servicesText.trim(),
+              location: scratchLocation.trim() || undefined,
+              experienceYears: scratchExperience
+                ? parseInt(scratchExperience, 10)
+                : undefined,
+              phone: scratchPhone.trim() || undefined,
+            };
+
+      const response = await fetch("/api/profile/ai-generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: editedProfile.description,
-          categoryIds: editedProfile.categories
-            .filter((c) => c.selected)
-            .map((c) => c.id),
-          phone: editedProfile.phone,
-          image: editedProfile.avatarUrl,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Nepavyko išsaugoti profilio");
+        throw new Error(data.error || "Nepavyko sugeneruoti profilio");
       }
 
-      router.push("/meistrai");
+      const result = await response.json();
+      if (result.slug) {
+        router.push(`/meistrai/${result.slug}?welcome=1`);
+      } else {
+        router.push("/tiekejas/profilis");
+      }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Nepavyko išsaugoti profilio"
+        err instanceof Error ? err.message : "Nepavyko sugeneruoti profilio"
       );
-    } finally {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    const overtime = activeStep >= loadingSteps.length - 1;
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="space-y-8">
+          <div className="text-center">
+            <div className="relative inline-flex items-center justify-center w-20 h-20 mb-4">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 animate-pulse" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 opacity-50 blur-xl animate-pulse" />
+              <Sparkles className="relative w-10 h-10 text-white animate-pulse" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              {overtime
+                ? ENCOURAGEMENT_MESSAGES[overtimeMessageIdx]
+                : loadingSteps[activeStep]?.label || "Tuoj baigsim..."}
+            </h2>
+            <p className="text-gray-500 italic">
+              {loadingSteps[Math.min(activeStep, loadingSteps.length - 1)]?.funFact}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50 space-y-3">
+            {loadingSteps.map((step, idx) => {
+              const Icon = step.icon;
+              const done = idx < activeStep;
+              const current = idx === activeStep;
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-center gap-3 transition-all duration-300 ${
+                    done
+                      ? "opacity-100"
+                      : current
+                        ? "opacity-100 scale-[1.02]"
+                        : "opacity-40"
+                  }`}
+                >
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                      done
+                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
+                        : current
+                          ? "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400"
+                          : "bg-surface-100 text-surface-400 dark:bg-surface-800"
+                    }`}
+                  >
+                    {done ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : current ? (
+                      <Icon className="h-5 w-5 animate-pulse" />
+                    ) : (
+                      <Icon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-body-sm font-medium ${
+                        done
+                          ? "text-emerald-700 dark:text-emerald-300 line-through decoration-emerald-400/50"
+                          : current
+                            ? "text-surface-900 dark:text-white"
+                            : "text-surface-500 dark:text-surface-400"
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+                  </div>
+                  {current && (
+                    <div className="flex gap-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="text-center text-xs text-gray-400">
+            Nereikia atnaujinti puslapio — profilis išsisaugos automatiškai
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      {step === "input" && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">
-              Greitai sukurti profilį
-            </h2>
-            <p className="text-gray-600">
-              Nurodykite savo paslaugos.lt ar LinkedIn profilį, o mes sudarysime
-              pilnumą jūsų paskyrą
-            </p>
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-100 mb-4">
+            <Sparkles className="w-8 h-8 text-orange-600" />
           </div>
-
-          <form onSubmit={handleGenerateClick} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Šaltinis</label>
-              <select
-                value={source}
-                onChange={handleSourceChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="services_lt">paslaugos.lt profilis</option>
-                <option value="linkedin">LinkedIn profilis</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Profilio URL
-              </label>
-              <input
-                type="url"
-                value={url}
-                onChange={handleUrlChange}
-                placeholder="https://paslaugos.lt/..."
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50"
-            >
-              {loading ? "Sugeneruojama..." : "Sugeneruoti profilį"}
-            </button>
-          </form>
+          <h2 className="text-3xl font-bold mb-3">
+            Sukurk profilį per kelias sekundes
+          </h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            AI sukurs profilį už tave — pasirink kaip pradedi.
+          </p>
         </div>
-      )}
 
-      {step === "preview" && editedProfile && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">Peržiūrėti profilį</h2>
-            <p className="text-gray-600">
-              Patikrinkite ir redaguokite sugeneruotą informaciją
-            </p>
-          </div>
+        {/* Mode toggle */}
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("url");
+              setError("");
+            }}
+            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+              mode === "url"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Link2 className="w-4 h-4" />
+            Iš URL
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("scratch");
+              setError("");
+            }}
+            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+              mode === "scratch"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <PencilLine className="w-4 h-4" />
+            Nuo nulio
+          </button>
+        </div>
 
-          <div className="border rounded-lg p-6 space-y-6">
-            {/* Avatar */}
-            {editedProfile.avatarUrl && (
-              <div className="flex justify-center">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-orange-500">
-                  <Image
-                    src={editedProfile.avatarUrl}
-                    alt="Avatar"
-                    fill
-                    className="object-cover"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === "url" ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Šaltinis
+                </label>
+                <select
+                  value={source}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                    setSource(e.target.value as "services_lt" | "linkedin")
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="services_lt">paslaugos.lt profilis</option>
+                  <option value="linkedin">LinkedIn profilis</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Profilio URL
+                </label>
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setError("");
+                  }}
+                  placeholder={
+                    source === "services_lt"
+                      ? "https://paslaugos.lt/..."
+                      : "https://linkedin.com/in/..."
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Vardas arba įmonės pavadinimas <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => {
+                    setBusinessName(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Pvz. Tomas Kazlauskas arba UAB Statybos meistrai"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Kokias paslaugas teikiate? <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={servicesText}
+                  onChange={(e) => {
+                    setServicesText(e.target.value);
+                    setError("");
+                  }}
+                  rows={4}
+                  placeholder="Trumpai aprašyk, ką dirbi. Pvz.: Santechnikos darbai — vamzdžių keitimas, šildymo sistemų montavimas, čiaupų remontas. Dirbu Vilniuje ir aplink, taip pat skubūs darbai."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Nesirūpink rašyba — AI viską sutvarkys.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Miestas
+                  </label>
+                  <input
+                    type="text"
+                    value={scratchLocation}
+                    onChange={(e) => setScratchLocation(e.target.value)}
+                    placeholder="Vilnius"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Patirtis (metais)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={scratchExperience}
+                    onChange={(e) => setScratchExperience(e.target.value)}
+                    placeholder="5"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
               </div>
-            )}
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Aprašymas</label>
-              <textarea
-                value={editedProfile.description}
-                onChange={handleDescriptionChange}
-                rows={6}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 font-sm"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Telefonas
-              </label>
-              <input
-                type="tel"
-                value={editedProfile.phone || ""}
-                onChange={handlePhoneChange}
-                placeholder="+370... arba (8-6)"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-
-            {/* Categories */}
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Kategorijos (išrinkite reikalingas)
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {editedProfile.categories.map((cat) => (
-                  <label key={cat.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={cat.selected}
-                      onChange={() => handleCategoryToggle(cat.id)}
-                      className="w-4 h-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm">{cat.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep("input")}
-              className="flex-1 px-4 py-2 border rounded-lg font-medium hover:bg-gray-50"
-            >
-              Grįžti
-            </button>
-            <button
-              onClick={handleRegenerate}
-              disabled={loading || regenerateCount >= 2}
-              className="flex-1 px-4 py-2 border border-orange-500 text-orange-500 rounded-lg font-medium hover:bg-orange-50 disabled:opacity-50"
-            >
-              {loading
-                ? "Regeneruojama..."
-                : `Regeneruoti (${3 - regenerateCount})`}
-            </button>
-            <button
-              onClick={() => setStep("confirm")}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50"
-            >
-              Tęsti
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === "confirm" && editedProfile && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">Patvirtinti profilį</h2>
-            <p className="text-gray-600">
-              Jūsų profilis yra paruoštas. Patvirtinkite, kad jis sukurtinas.
-            </p>
-          </div>
-
-          <div className="border rounded-lg p-6 bg-gray-50">
-            <div className="space-y-4 text-sm">
               <div>
-                <span className="font-medium">Aprašymas:</span>
-                <p className="text-gray-600 mt-1 line-clamp-3">
-                  {editedProfile.description}
-                </p>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Telefonas (neprivaloma)
+                </label>
+                <input
+                  type="tel"
+                  value={scratchPhone}
+                  onChange={(e) => setScratchPhone(e.target.value)}
+                  placeholder="+370..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
               </div>
-              <div>
-                <span className="font-medium">Kategorijos:</span>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {editedProfile.categories
-                    .filter((c) => c.selected)
-                    .map((cat) => (
-                      <span
-                        key={cat.id}
-                        className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs"
-                      >
-                        {cat.name}
-                      </span>
-                    ))}
-                </div>
-              </div>
-              {editedProfile.phone && (
-                <div>
-                  <span className="font-medium">Telefonas:</span>
-                  <p className="text-gray-600">{editedProfile.phone}</p>
-                </div>
-              )}
-            </div>
-          </div>
+            </>
+          )}
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
             </div>
           )}
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep("preview")}
-              className="flex-1 px-4 py-2 border rounded-lg font-medium hover:bg-gray-50"
-            >
-              Grįžti redaguoti
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50"
-            >
-              {loading ? "Kuriama..." : "Sukurti profilį"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          >
+            <Sparkles className="w-5 h-5" />
+            Sukurti profilį su AI
+          </button>
+        </form>
+
+        <div className="text-center text-sm text-gray-500">
+          Po sugeneravimo galėsi viską redaguoti savo profilyje
         </div>
-      )}
+      </div>
     </div>
   );
 }

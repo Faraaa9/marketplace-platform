@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Card, { CardTitle } from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -390,17 +391,25 @@ function getNextAction(stats: Stats): { label: string; description: string; href
 }
 
 export default function ProviderDashboard() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadInbox, setUnreadInbox] = useState(0);
   const [storyModalOpen, setStoryModalOpen] = useState(false);
+  const [notProvider, setNotProvider] = useState(false);
 
   useEffect(() => {
     fetch("/api/tiekejas/stats")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (r.status === 403) {
+          setNotProvider(true);
+          return null;
+        }
+        return r.json();
+      })
       .then((data) => {
-        if (data.success) {
+        if (data?.success) {
           setStats(data.data);
 
           if (data.data.emailVerified && data.data.isActive) {
@@ -421,6 +430,37 @@ export default function ProviderDashboard() {
   }, []);
 
   if (loading) return <LoadingSpinner />;
+
+  if (notProvider) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100 mb-6">
+          <Sparkles className="h-8 w-8 text-brand-600" />
+        </div>
+        <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white mb-3">
+          Tu neturi paslaugų teikėjo profilio
+        </h1>
+        <p className="text-body text-surface-500 dark:text-surface-400 mb-6">
+          Sukurk profilį per kelias sekundes — užteks įklijuoti savo paslaugos.lt ar LinkedIn nuorodą.
+        </p>
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={() => router.push("/meistrai/kurti-profili")}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+          >
+            <Sparkles className="h-4 w-4" />
+            Sukurti profilį su AI
+          </button>
+          <button
+            onClick={() => router.push("/")}
+            className="inline-flex items-center gap-2 rounded-lg border border-surface-200 dark:border-surface-700 px-4 py-2.5 text-body-sm font-medium text-surface-700 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+          >
+            Į pradžią
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!stats) {
     return (

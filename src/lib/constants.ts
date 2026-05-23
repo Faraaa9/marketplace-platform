@@ -1,4 +1,4 @@
-export const APP_NAME = "PaslaugųRinka";
+export const APP_NAME = "Paslaugų rinka";
 
 export const BUDGET_OPTIONS = [
   { value: "iki-100", label: "Iki €100" },

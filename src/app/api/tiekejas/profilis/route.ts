@@ -43,6 +43,7 @@ export async function GET() {
           planType: true,
           planExpiresAt: true,
           images: true,
+          slug: true,
           createdAt: true,
           updatedAt: true,
           categories: {
@@ -159,6 +160,7 @@ export async function PUT(req: NextRequest) {
           planType: true,
           planExpiresAt: true,
           images: true,
+          slug: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -230,5 +232,89 @@ export async function PUT(req: NextRequest) {
   } catch (error) {
     console.error("Update profile error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const isActive = Boolean(body?.isActive);
+
+    const existing = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const updated = await prisma.providerProfile.update({
+      where: { id: existing.id },
+      data: { isActive },
+      select: { id: true, isActive: true },
+    });
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("Toggle profile error:", error);
+    return NextResponse.json(
+      { success: false, error: "Klaida" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const existing = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Profile not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.providerProfileCategory.deleteMany({
+      where: { providerProfileId: existing.id },
+    });
+    await prisma.providerProfile.delete({ where: { id: existing.id } });
+
+    // Demote user back to CLIENT
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { role: "CLIENT" },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete profile error:", error);
+    return NextResponse.json(
+      { success: false, error: "Klaida" },
+      { status: 500 }
+    );
   }
 }

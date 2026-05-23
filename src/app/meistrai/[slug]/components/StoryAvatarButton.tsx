@@ -32,9 +32,9 @@ export default function StoryAvatarButton({
           setStoryIndex(0);
           openStory(stories[0]?.id ?? null);
         }}
-        className={`shrink-0 rounded-full p-[3px] transition-all ${
+        className={`shrink-0 rounded-full transition-all ${
           hasStories
-            ? "cursor-pointer bg-gradient-to-tr from-brand-500 via-violet-500 to-amber-400"
+            ? "cursor-pointer p-[3px] bg-gradient-to-tr from-brand-700 via-brand-400 to-brand-600 bg-[length:200%_200%] animate-gradient hover:scale-[1.03]"
             : "cursor-default bg-transparent"
         }`}
         disabled={!hasStories}
@@ -42,7 +42,7 @@ export default function StoryAvatarButton({
       >
         <div
           className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 sm:h-[72px] sm:w-[72px] dark:from-brand-950 dark:to-surface-800 ${
-            hasStories ? "ring-2 ring-white dark:ring-surface-900" : ""
+            hasStories ? "ring-[1.5px] ring-white dark:ring-surface-900" : ""
           }`}
         >
           {providerImage ? (

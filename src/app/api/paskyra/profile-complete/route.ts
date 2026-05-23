@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = (await req.json()) as CompleteProfileRequest;
-    const { description, categoryIds, phone, image } = body;
+    const { description, categoryIds, image } = body;
 
     if (!description || !categoryIds.length) {
       return NextResponse.json(
@@ -26,6 +26,14 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Defensive: phone must be a single string or null
+    const phone =
+      Array.isArray(body.phone)
+        ? body.phone[0] || null
+        : typeof body.phone === "string"
+        ? body.phone
+        : null;
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -37,13 +45,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Generate slug from user name if profile has no slug
+    const baseSlug = (user.name || session.user.email!.split("@")[0])
+      .toLowerCase()
+      .replace(/[ąčęėįšųūž]/g, (c) => {
+        const map: Record<string, string> = {
+          ą: "a",
+          č: "c",
+          ę: "e",
+          ė: "e",
+          į: "i",
+          š: "s",
+          ų: "u",
+          ū: "u",
+          ž: "z",
+        };
+        return map[c] || c;
+      })
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60);
+
     // Create or update provider profile
     let providerProfile = user.providerProfile;
 
     if (!providerProfile) {
+      // Ensure unique slug
+      let slug = baseSlug;
+      let suffix = 0;
+      while (
+        await prisma.providerProfile.findUnique({ where: { slug } })
+      ) {
+        suffix += 1;
+        slug = `${baseSlug}-${suffix}`;
+      }
+
       providerProfile = await prisma.providerProfile.create({
         data: {
           userId: user.id,
+          slug,
           description,
           phone: phone || null,
           images: image ? [image] : [],
@@ -56,6 +96,7 @@ export async function POST(req: NextRequest) {
       providerProfile = await prisma.providerProfile.update({
         where: { id: providerProfile.id },
         data: {
+          slug: providerProfile.slug || baseSlug,
           description,
           phone: phone || null,
           images: image ? [image] : providerProfile.images,
@@ -81,6 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       profileId: providerProfile.id,
+      slug: providerProfile.slug,
     });
   } catch (error) {
     console.error("Profile completion error:", error);

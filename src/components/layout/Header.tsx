@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, X, LogOut } from "lucide-react";
-import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import GlobalStoriesStrip from "@/components/stories/GlobalStoriesStrip";
 import { getUserMenuLinks } from "@/lib/redirects";
 
 const NAV_LINKS = [
@@ -47,18 +47,10 @@ export default function Header() {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex h-[72px] items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <span
-              className="grid h-8 w-8 place-items-center bg-[#C25E3A] text-[13px] font-bold text-white"
-              style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
-            >
-              P
-            </span>
-            <span className="text-[17px] font-semibold tracking-tight text-[#26231F] dark:text-surface-50">
-              {APP_NAME}
-            </span>
-          </Link>
+          {/* Logo + Global stories strip */}
+          <div className="min-w-0 flex-1 md:flex-initial">
+            <GlobalStoriesStrip />
+          </div>
 
           {/* Center nav — identical on every page */}
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 md:flex lg:gap-8">

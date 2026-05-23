@@ -31,10 +31,10 @@ export default async function CreateProviderProfilePage() {
     redirect("/prisijungti");
   }
 
-  // If user already has a provider profile, redirect to their profile
-  if (user.providerProfile) {
-    redirect(`/paskyra/profilis`);
-  }
+  // TODO: laikinas testavimo režimas — atstatyti pries production
+  // if (user.providerProfile) {
+  //   redirect(`/paskyra/profilis`);
+  // }
 
   // Ensure user has PROVIDER role
   if (user.role !== "PROVIDER") {
@@ -45,7 +45,7 @@ export default async function CreateProviderProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 py-12">
+    <div className="min-h-screen py-12">
       <AIProfileSetup />
     </div>
   );
