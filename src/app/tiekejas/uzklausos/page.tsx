@@ -344,7 +344,7 @@ function ProviderRequestsContent() {
                     className="group block"
                   >
                     <article
-                      className={`relative rounded-2xl border bg-white p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 dark:bg-surface-900 ${
+                      className={`relative rounded-2xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card dark:bg-surface-900 ${
                         req.hasResponded
                           ? "border-surface-200/40 dark:border-surface-700/30"
                           : isNewRequest

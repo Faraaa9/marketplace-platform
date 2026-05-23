@@ -121,7 +121,7 @@ export default function MyRequestsPage() {
 
                   return (
                     <Link key={req.id} href={`/uzklausos/sekti/${req.trackingToken}`} className="group block">
-                      <article className={`relative rounded-2xl border bg-white p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 dark:bg-surface-900 ${
+                      <article className={`relative rounded-2xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card dark:bg-surface-900 ${
                         hasNewResponse
                           ? "border-brand-200 dark:border-brand-800/60"
                           : "border-surface-200/60 dark:border-surface-700/50"

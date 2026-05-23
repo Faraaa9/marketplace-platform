@@ -2,67 +2,43 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { clearGuestRequest } from "@/lib/guest-request";
-import { formatRelativeDate, cn } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
-import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import Link from "next/link";
 import RequestPhotos from "@/components/requests/RequestPhotos";
-import { ChevronDown, MapPin, Clock, CalendarClock, Euro, MessageCircle, Send, CheckCircle, XCircle, Shield, UserPlus, Eye, Bell, Zap, Mail, Search as SearchIcon, Handshake, Lock, Star, Pencil, Trash2, ArrowUpRight } from "lucide-react";
-
-interface MessageData {
-  id: string;
-  content: string;
-  createdAt: string;
-  senderId?: string | null;
-  senderName?: string;
-  sender?: { name: string };
-}
-
-interface ResponseData {
-  id: string;
-  providerId: string;
-  message: string;
-  price?: number;
-  createdAt: string;
-  providerBadge?: string | null;
-  hasReview?: boolean;
-  provider: {
-    id: string;
-    name: string;
-    providerProfile?: { location: string; isVerified?: boolean };
-  };
-  messages: MessageData[];
-}
-
-interface RequestData {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  budget?: string;
-  deadline?: string;
-  attachmentUrls?: string[];
-  status: string;
-  moderationStatus?: string;
-  acceptedResponseId?: string;
-  clientId?: string | null;
-  clientName: string;
-  createdAt: string;
-  viewCount?: number;
-  responses: ResponseData[];
-}
-
-type SortMode = "newest" | "price-asc" | "price-desc" | "active";
-type FilterMode = "all" | "awaiting";
+import {
+  MapPin,
+  Clock,
+  CalendarClock,
+  Euro,
+  MessageCircle,
+  XCircle,
+  Eye,
+  Search as SearchIcon,
+  Handshake,
+  Pencil,
+  Trash2,
+  ArrowUpRight,
+} from "lucide-react";
+import ProposalCard from "./components/ProposalCard";
+import AccountValueBox from "./components/AccountValueBox";
+import { FilterChip, BookmarkReminder, StatusTimeline } from "./components/TrackingHelpers";
+import {
+  type RequestData,
+  type SortMode,
+  type FilterMode,
+  isAwaitingClientReply,
+  lastActivityAt,
+  comparePrice,
+} from "./components/types";
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "newest", label: "Naujausi" },
@@ -72,28 +48,6 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
 ];
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
-
-function lastMessageOf(resp: ResponseData): MessageData | undefined {
-  return resp.messages[resp.messages.length - 1];
-}
-
-/** True when the provider sent the last word — the client still owes a reply. */
-function isAwaitingClientReply(resp: ResponseData): boolean {
-  const last = lastMessageOf(resp);
-  const lastSenderId = last ? last.senderId ?? null : resp.providerId;
-  return lastSenderId === resp.providerId;
-}
-
-function lastActivityAt(resp: ResponseData): string {
-  return lastMessageOf(resp)?.createdAt ?? resp.createdAt;
-}
-
-function comparePrice(a: ResponseData, b: ResponseData, dir: "asc" | "desc"): number {
-  if (a.price == null && b.price == null) return 0;
-  if (a.price == null) return 1;
-  if (b.price == null) return -1;
-  return dir === "asc" ? a.price - b.price : b.price - a.price;
-}
 
 export default function TrackRequestPage() {
   const params = useParams();
@@ -150,9 +104,6 @@ export default function TrackRequestPage() {
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const didInitExpand = useRef(false);
 
-  // Transform server messages once per fetch so ThreadChat hydration stays
-  // referentially stable: a fresh array every render would re-trigger
-  // hydration and drop messages sent during the session.
   const messagesByResponse = useMemo(() => {
     const map: Record<string, ThreadMessage[]> = {};
     for (const resp of request?.responses ?? []) {
@@ -197,7 +148,6 @@ export default function TrackRequestPage() {
     return list;
   }, [request, sortMode, filterMode]);
 
-  // Auto-open the accepted proposal, or the only one, on first load.
   useEffect(() => {
     if (didInitExpand.current || !request) return;
     didInitExpand.current = true;
@@ -269,8 +219,6 @@ export default function TrackRequestPage() {
   }
   if (!request) return null;
 
-  // The tracking API returns `category` already resolved to the curated
-  // category display name.
   const categoryLabel = request.category;
   const statusMap: Record<string, { label: string; variant: "warning" | "brand" | "default" }> = {
     PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
@@ -382,10 +330,8 @@ export default function TrackRequestPage() {
         </div>
       )}
 
-      {/* Status timeline */}
       <StatusTimeline status={request.status} responseCount={request.responses.length} />
 
-      {/* Provider activity — concrete transparency during the wait */}
       {isOpen && isApproved && (
         <div className="mb-6 flex items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">
           <Eye className="h-4 w-4 shrink-0" />
@@ -400,7 +346,6 @@ export default function TrackRequestPage() {
         </div>
       )}
 
-      {/* Next action guidance */}
       {isOpen && isApproved && request.responses.length === 0 && (
         <div className="mb-6 rounded-2xl border border-surface-200/60 bg-surface-50 p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
           <div className="flex items-center gap-2 mb-1">
@@ -448,13 +393,10 @@ export default function TrackRequestPage() {
         )}
       </Card>
 
-      {/* Account value / claim — context-aware */}
       <AccountValueBox clientId={request.clientId} trackingToken={params.id as string} onClaimed={fetchRequest} />
 
-      {/* Bookmark reminder for anonymous users */}
       <BookmarkReminder />
 
-      {/* Request management actions */}
       {!isClosed && (
         <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
           {isOpen && (
@@ -570,561 +512,6 @@ export default function TrackRequestPage() {
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full px-3 py-1.5 text-body-sm font-medium transition-colors",
-        active
-          ? "bg-brand-600 text-white"
-          : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ProposalCard({
-  resp,
-  isAccepted,
-  isOpen,
-  isClosed,
-  expanded,
-  mounted,
-  onToggle,
-  acceptLoading,
-  onAccept,
-  initialMessages,
-  clientName,
-  clientId,
-  requestId,
-  trackingToken,
-  sendMessage,
-  onReviewSubmitted,
-}: {
-  resp: ResponseData;
-  isAccepted: boolean;
-  isOpen: boolean;
-  isClosed: boolean;
-  expanded: boolean;
-  mounted: boolean;
-  onToggle: () => void;
-  acceptLoading: boolean;
-  onAccept: () => void;
-  initialMessages: ThreadMessage[];
-  clientName: string;
-  clientId?: string | null;
-  requestId: string;
-  trackingToken: string;
-  sendMessage: (responseId: string, content: string) => Promise<ThreadMessage>;
-  onReviewSubmitted: () => void;
-}) {
-  const last = lastMessageOf(resp);
-  const snippet = last ? last.content : resp.message;
-  const fromClient = last ? (last.senderId ?? null) !== resp.providerId : false;
-  const awaiting = !isClosed && isAwaitingClientReply(resp);
-  const location = resp.provider.providerProfile?.location;
-
-  return (
-    <Card
-      className={cn(
-        "p-4",
-        isAccepted && "border-emerald-500 ring-2 ring-emerald-500",
-        !expanded && "transition-shadow hover:shadow-stripe",
-      )}
-    >
-      {/* Collapsed row — always visible, toggles the conversation */}
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        className="flex w-full items-start gap-3 text-left"
-      >
-        <ChevronDown
-          className={cn(
-            "mt-1 h-4 w-4 shrink-0 text-surface-400 transition-transform duration-200",
-            expanded && "rotate-180",
-          )}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-body font-medium text-surface-900 dark:text-white">
-              {resp.provider.name}
-            </span>
-            {resp.providerBadge && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                <Shield className="h-3 w-3" />
-                {resp.providerBadge}
-              </span>
-            )}
-            {isAccepted && <Badge variant="success">Priimtas</Badge>}
-          </div>
-          {!expanded && (
-            <p className="mt-0.5 truncate text-body-sm text-surface-500 dark:text-surface-400">
-              {fromClient && <span className="text-surface-400 dark:text-surface-500">Jūs: </span>}
-              {snippet}
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          {resp.price != null && (
-            <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">
-              &euro;{resp.price}
-            </span>
-          )}
-          {!expanded && (
-            <span className="text-micro text-surface-400">
-              {formatRelativeDate(lastActivityAt(resp))}
-            </span>
-          )}
-          {!expanded && awaiting && (
-            <span className="flex items-center gap-1 text-micro font-medium text-brand-600 dark:text-brand-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-              Laukia atsakymo
-            </span>
-          )}
-        </div>
-      </button>
-
-      {/* Expanded — full proposal text + actions */}
-      {expanded && (
-        <div className="mt-4 border-t border-surface-200/60 pt-4 dark:border-surface-700">
-          {location && (
-            <p className="mb-2 text-body-sm text-surface-500 dark:text-surface-400">{location}</p>
-          )}
-          <div className="flex flex-col items-start gap-0.5">
-            <div className="max-w-[80%] rounded-2xl rounded-bl-md bg-surface-50 px-3.5 py-2 text-body-sm text-surface-700 whitespace-pre-wrap break-words dark:bg-surface-800 dark:text-surface-200">
-              {resp.message}
-            </div>
-            <span className="px-1 text-micro text-surface-400">
-              {formatRelativeDate(resp.createdAt)}
-            </span>
-          </div>
-
-          {isOpen && (
-            <div className="mt-3">
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => {
-                  if (confirm(`Ar tikrai norite priimti ${resp.provider.name} pasiūlymą?`)) {
-                    onAccept();
-                  }
-                }}
-                isLoading={acceptLoading}
-              >
-                <CheckCircle className="h-4 w-4 mr-1.5" />
-                Priimti pasiūlymą
-              </Button>
-            </div>
-          )}
-
-          {isAccepted && !resp.hasReview && (
-            <ReviewForm
-              requestId={requestId}
-              responseId={resp.id}
-              providerName={resp.provider.name}
-              trackingToken={trackingToken}
-              clientId={clientId}
-              onSubmitted={onReviewSubmitted}
-            />
-          )}
-
-          {isAccepted && resp.hasReview && (
-            <div className="mt-3 flex items-center gap-1.5 text-body-sm text-emerald-600 dark:text-emerald-400">
-              <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
-              Atsiliepimas pateiktas
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Conversation — mounted on first open, then kept alive but hidden when
-          collapsed so in-session messages and the Realtime subscription survive. */}
-      {mounted && (
-        <div className={expanded ? "" : "hidden"}>
-          <ThreadChat
-            threadId={resp.id}
-            threadKind="response"
-            initialMessages={initialMessages}
-            currentSenderName={clientName}
-            viewerRole="client"
-            providerId={resp.providerId}
-            sendMessage={sendMessage}
-            placeholder="Rašyti žinutę tiekėjui..."
-            disabled={isClosed}
-          />
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function AccountValueBox({ clientId, trackingToken, onClaimed }: { clientId?: string | null; trackingToken: string; onClaimed: () => void }) {
-  const { data: session } = useSession();
-  const [claiming, setClaiming] = useState(false);
-  const [claimed, setClaimed] = useState(false);
-  const [claimError, setClaimError] = useState("");
-  const [password, setPassword] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState("");
-  const [accountExists, setAccountExists] = useState(false);
-
-  // Already attached to an account — nothing to show
-  if (clientId) return null;
-
-  async function handleCreateAccount() {
-    if (password.length < 8) {
-      setCreateError("Slaptažodis turi būti bent 8 simbolių");
-      return;
-    }
-    setCreating(true);
-    setCreateError("");
-    setAccountExists(false);
-    try {
-      const res = await fetch("/api/requests/create-account", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackingToken, password }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        clearGuestRequest();
-        await signIn("credentials", {
-          email: data.data.email,
-          password,
-          callbackUrl: "/paskyra/uzklausos",
-        });
-      } else if (data.code === "ACCOUNT_EXISTS") {
-        setAccountExists(true);
-        setCreateError(data.error || "Su šiuo el. paštu paskyra jau yra.");
-      } else {
-        setCreateError(data.error || "Nepavyko sukurti paskyros");
-      }
-    } catch {
-      setCreateError("Klaida");
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function handleClaim() {
-    setClaiming(true);
-    setClaimError("");
-    try {
-      const res = await fetch("/api/requests/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackingToken }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        clearGuestRequest();
-        setClaimed(true);
-        onClaimed();
-      } else {
-        setClaimError(data.error || "Nepavyko priskirti");
-      }
-    } catch {
-      setClaimError("Klaida");
-    } finally {
-      setClaiming(false);
-    }
-  }
-
-  // Logged-in user viewing unclaimed request → offer to claim
-  if (session) {
-    if (claimed) {
-      return (
-        <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-500/10">
-          <p className="text-body-sm text-emerald-700 dark:text-emerald-400">
-            Užklausa priskirta jūsų paskyrai. Dabar ją matysite skiltyje &bdquo;Mano užklausos&ldquo;.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
-        <h3 className="text-body font-semibold text-surface-900 dark:text-white mb-1">
-          Priskirti šią užklausą savo paskyrai?
-        </h3>
-        <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-3">
-          Tada ją matysite &bdquo;Mano užklausos&ldquo; skiltyje ir nereikės saugoti nuorodos.
-        </p>
-        {claimError && (
-          <p className="text-body-sm text-red-600 dark:text-red-400 mb-2">{claimError}</p>
-        )}
-        <Button size="sm" onClick={handleClaim} isLoading={claiming}>
-          Priskirti prie mano paskyros
-        </Button>
-      </div>
-    );
-  }
-
-  // Anonymous user → value prop + inline, pre-verified account creation
-  return (
-    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
-      <div className="flex items-center gap-2 mb-3">
-        <UserPlus className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-        <h3 className="text-body font-semibold text-surface-900 dark:text-white">Sukurti nemokamą paskyrą</h3>
-      </div>
-      <ul className="space-y-2 mb-4">
-        {[
-          { icon: <Eye className="h-3.5 w-3.5" />, text: "Visos užklausos vienoje vietoje" },
-          { icon: <Bell className="h-3.5 w-3.5" />, text: "Pranešimai apie naujus pasiūlymus" },
-          { icon: <Zap className="h-3.5 w-3.5" />, text: "Matysite, kiek tiekėjų peržiūrėjo užklausą" },
-        ].map((item) => (
-          <li key={item.text} className="flex items-center gap-2.5 text-body-sm text-surface-600 dark:text-surface-400">
-            <span className="text-brand-500">{item.icon}</span>
-            {item.text}
-          </li>
-        ))}
-      </ul>
-      <p className="mb-2 text-micro text-surface-500 dark:text-surface-400">
-        Paskyra bus sukurta el. paštui, kurį nurodėte užklausoje — pakartotinai jo tvirtinti nereikės.
-      </p>
-      <div className="space-y-2.5">
-        <input
-          type="password"
-          placeholder="Slaptažodis (bent 8 simboliai)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleCreateAccount(); }}
-          className="h-10 w-full rounded-xl border border-surface-200 bg-white px-3.5 text-body-sm text-surface-900 placeholder:text-surface-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100"
-        />
-        <Button size="sm" onClick={handleCreateAccount} isLoading={creating}>
-          <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-          Sukurti paskyrą
-        </Button>
-      </div>
-      {createError && (
-        <p className="mt-2 text-body-sm text-red-600 dark:text-red-400">
-          {createError}
-          {accountExists && (
-            <>
-              {" "}
-              <Link href="/prisijungti" className="font-medium underline">Prisijungti</Link>
-            </>
-          )}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function BookmarkReminder() {
-  const { data: session } = useSession();
-  if (session) return null;
-
-  return (
-    <div className="mb-6 rounded-xl bg-surface-50 border border-surface-200/60 px-4 py-3 dark:bg-surface-800/50 dark:border-surface-700/50">
-      <p className="text-micro text-surface-500 dark:text-surface-400">
-        <span className="font-medium text-surface-600 dark:text-surface-300">Patarimas:</span>{" "}
-        Išsaugokite šį puslapį (bookmark), kad lengvai sugrįžtumėte prie savo užklausos.
-      </p>
-    </div>
-  );
-}
-
-function StatusTimeline({ status, responseCount }: { status: string; responseCount: number }) {
-  const steps = [
-    { key: "PENDING_CONFIRMATION", label: "Patvirtinimas", icon: <Mail className="h-4 w-4" /> },
-    { key: "OPEN", label: "Pasiūlymų laukimas", icon: <SearchIcon className="h-4 w-4" /> },
-    { key: "IN_PROGRESS", label: "Vykdoma", icon: <Handshake className="h-4 w-4" /> },
-    { key: "CLOSED", label: "Uždaryta", icon: <Lock className="h-4 w-4" /> },
-  ];
-
-  const statusOrder = ["PENDING_CONFIRMATION", "OPEN", "IN_PROGRESS", "CLOSED"];
-  const currentIndex = statusOrder.indexOf(status);
-
-  return (
-    <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
-      <div className="flex items-center justify-between">
-        {steps.map((step, i) => {
-          const isCompleted = i < currentIndex;
-          const isCurrent = i === currentIndex;
-
-          return (
-            <div key={step.key} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
-                    isCompleted
-                      ? "bg-brand-500 text-white"
-                      : isCurrent
-                        ? "bg-brand-600 text-white ring-4 ring-brand-100 dark:ring-brand-900/50"
-                        : "bg-surface-100 text-surface-400 dark:bg-surface-800"
-                  }`}
-                >
-                  {isCompleted ? <CheckCircle className="h-4 w-4" /> : step.icon}
-                </div>
-                <span
-                  className={`mt-1.5 text-micro font-medium text-center ${
-                    isCurrent
-                      ? "text-brand-600 dark:text-brand-400"
-                      : isCompleted
-                        ? "text-surface-500 dark:text-surface-400"
-                        : "text-surface-400"
-                  }`}
-                >
-                  {step.label}
-                </span>
-                {isCurrent && step.key === "OPEN" && responseCount > 0 && (
-                  <span className="mt-0.5 text-micro text-brand-600 dark:text-brand-400 font-semibold">
-                    {responseCount} pasiūl.
-                  </span>
-                )}
-              </div>
-              {i < steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 rounded-full ${
-                    i < currentIndex
-                      ? "bg-brand-500 dark:bg-brand-700"
-                      : "bg-surface-200 dark:bg-surface-700"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function ReviewForm({
-  requestId,
-  responseId,
-  providerName,
-  trackingToken,
-  clientId,
-  onSubmitted,
-}: {
-  requestId: string;
-  responseId: string;
-  providerName: string;
-  trackingToken: string;
-  clientId?: string | null;
-  onSubmitted: () => void;
-}) {
-  const { data: session } = useSession();
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [reviewError, setReviewError] = useState("");
-
-  async function handleSubmit() {
-    if (rating === 0) {
-      setReviewError("Pasirinkite įvertinimą");
-      return;
-    }
-    setSubmitting(true);
-    setReviewError("");
-    try {
-      // Logged-in user who owns the request → use session-auth endpoint
-      // Guest (no session or no clientId) → use tracking token endpoint
-      const useSessionEndpoint = session?.user?.id && clientId === session.user.id;
-      const url = useSessionEndpoint
-        ? "/api/reviews"
-        : `/api/tracking/${trackingToken}/reviews`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, responseId, rating, comment }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSubmitted(true);
-        onSubmitted();
-      } else {
-        setReviewError(data.error || "Klaida");
-      }
-    } catch {
-      setReviewError("Klaida pateikiant atsiliepimą");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (submitted) {
-    return (
-      <div className="mt-4 rounded-xl border border-emerald-200/60 bg-emerald-50 p-4 dark:border-emerald-800/40 dark:bg-emerald-500/10">
-        <p className="text-body-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-          <Star className="h-4 w-4 fill-emerald-500 text-emerald-500" />
-          Ačiū už atsiliepimą!
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4 rounded-xl border border-brand-200/60 bg-brand-50/30 p-4 dark:border-brand-800/40 dark:bg-brand-950/30">
-      <p className="text-body-sm font-medium text-surface-900 dark:text-white mb-3">
-        Įvertinkite {providerName}
-      </p>
-
-      {/* Star rating */}
-      <div className="flex gap-1 mb-3">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            onMouseEnter={() => setHoveredRating(star)}
-            onMouseLeave={() => setHoveredRating(0)}
-            className="p-0.5 transition-transform hover:scale-110"
-          >
-            <Star
-              className={`h-7 w-7 transition-colors ${
-                star <= (hoveredRating || rating)
-                  ? "fill-amber-400 text-amber-400"
-                  : "text-surface-300 dark:text-surface-600"
-              }`}
-            />
-          </button>
-        ))}
-        {rating > 0 && (
-          <span className="ml-2 text-body-sm text-surface-500 self-center">
-            {rating}/5
-          </span>
-        )}
-      </div>
-
-      {/* Comment */}
-      <textarea
-        placeholder="Palikite komentarą (neprivaloma)..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        rows={2}
-        className="w-full rounded-xl border border-surface-200 bg-white px-3 py-2 text-body-sm text-surface-900 placeholder:text-surface-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-all dark:border-surface-700 dark:bg-surface-800 dark:text-white mb-3"
-      />
-
-      {reviewError && (
-        <p className="text-body-sm text-red-600 dark:text-red-400 mb-2">{reviewError}</p>
-      )}
-
-      <Button size="sm" onClick={handleSubmit} isLoading={submitting} disabled={rating === 0}>
-        <Star className="h-3.5 w-3.5 mr-1" />
-        Pateikti atsiliepimą
-      </Button>
     </div>
   );
 }

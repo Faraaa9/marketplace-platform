@@ -62,27 +62,37 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const allRequests = await prisma.serviceRequest.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        categoryId: true,
-        categoryRef: { select: { id: true, name: true } },
-        location: true,
-        budget: true,
-        status: true,
-        createdAt: true,
-        _count: { select: { responses: true } },
-        responses: {
-          where: { providerId: guard.userId },
-          select: { id: true },
-          take: 1,
+    // Hard limit to bound Node-side scoring/sorting work. With the lead-unlock
+    // model providers see at most ~500 open leads at once — beyond that we'd
+    // need DB-side scoring (CASE WHEN ordering + count() separately).
+    const MAX_SCORED_LEADS = 500;
+
+    // Run total count + paginated fetch in parallel.
+    const [total, allRequests] = await Promise.all([
+      prisma.serviceRequest.count({ where }),
+      prisma.serviceRequest.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          categoryId: true,
+          categoryRef: { select: { id: true, name: true } },
+          location: true,
+          budget: true,
+          status: true,
+          createdAt: true,
+          _count: { select: { responses: true } },
+          responses: {
+            where: { providerId: guard.userId },
+            select: { id: true },
+            take: 1,
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+        take: MAX_SCORED_LEADS,
+      }),
+    ]);
 
     // Score relevance + mark responded.
     const providerMatch = new Set(providerMatchSet);
@@ -113,7 +123,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const total = scored.length;
     const pages = Math.ceil(total / perPage);
     const paginated = scored.slice((page - 1) * perPage, page * perPage);
 
