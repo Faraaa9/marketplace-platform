@@ -69,6 +69,7 @@ function StoryModal({
   // Fetch stories when modal opens
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingStories(true);
     setError("");
     fetch("/api/provider/stories")
