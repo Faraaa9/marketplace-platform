@@ -85,6 +85,7 @@ export default function LoadingProgressBar() {
     if (phase !== "loading") return;
 
     clearTimers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgress(100);
     setPhase("completing");
 

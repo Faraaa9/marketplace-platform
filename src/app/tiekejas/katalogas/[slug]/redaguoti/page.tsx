@@ -32,7 +32,7 @@ interface FormState {
 }
 
 export default function SupplierEditPage() {
-  const { data: session, status: sessionStatus } = useSession();
+  const { status: sessionStatus } = useSession();
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;

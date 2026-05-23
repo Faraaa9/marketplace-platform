@@ -9,7 +9,6 @@ import { formatRelativeDate, truncate } from "@/lib/utils";
 import { BUDGET_OPTIONS } from "@/lib/constants";
 import {
   getServiceCategoryGroups,
-  getServiceCategoryNameMap,
 } from "@/lib/service-categories";
 import {
   Accordion,
@@ -18,7 +17,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Zap, Sparkles, ArrowRight, MapPin, Clock,
+  Sparkles, ArrowRight, MapPin, Clock,
   MessageSquare, FileText, Users, ShieldCheck, Check, Package, Maximize2, Search, Tag,
 } from "lucide-react";
 

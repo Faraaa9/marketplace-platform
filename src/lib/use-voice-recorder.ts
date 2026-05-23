@@ -156,6 +156,7 @@ export function useVoiceRecorder({
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSupported(detectSupport());
     return () => {
       unmountedRef.current = true;
