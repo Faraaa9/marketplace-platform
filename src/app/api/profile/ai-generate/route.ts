@@ -55,6 +55,8 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
         "--disable-blink-features=AutomationControlled",
         "--disable-features=IsolateOrigins,site-per-process",
       ],
+    }).catch((err: Error) => {
+      throw new Error(`Browser launch failed: ${err.message}`);
     });
 
     const context = await browser.newContext({
@@ -180,15 +182,26 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
       title,
     };
   } catch (error) {
-    if (error instanceof Error && error.message.includes("Timeout")) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Scrape error details:", { errorMsg, url });
+
+    if (errorMsg.includes("Timeout")) {
       throw new Error(
         "Šaltinio puslapis užtruko per ilgai. Pabandykite kitą URL."
       );
     }
+    if (errorMsg.includes("Browser launch failed")) {
+      throw new Error(
+        "Serverio klaida: negali paleisti naršyklės. Bandykite vėliau."
+      );
+    }
+    if (errorMsg.includes("ENOTFOUND") || errorMsg.includes("ERR_NAME_NOT_RESOLVED")) {
+      throw new Error(
+        "URL'as neteisingas arba nepasiekiamas. Patikrinkite ir bandykite iš naujo."
+      );
+    }
     throw new Error(
-      `Šaltinio puslapis neatsako. Galimai puslapis blokuoja automatinį skaitymą. ${
-        error instanceof Error ? error.message : ""
-      }`
+      `Šaltinio puslapis neatsako. Galimai puslapis blokuoja automatinį skaitymą.`
     );
   } finally {
     if (browser) await browser.close();
@@ -261,11 +274,26 @@ Grąžink TIK JSON (be markdown, be code fence):
         max_tokens: 1500,
       }),
     }
-  );
+  ).catch((err: Error) => {
+    throw new Error(`OpenRouter network error: ${err.message}`);
+  });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenRouter error: ${JSON.stringify(error)}`);
+    let errorDetail = "";
+    try {
+      const error = await response.json();
+      errorDetail = JSON.stringify(error).slice(0, 200);
+    } catch {
+      errorDetail = `HTTP ${response.status}`;
+    }
+    console.error("OpenRouter API error (generateWithClaude):", {
+      status: response.status,
+      errorDetail,
+    });
+    if (response.status === 429) {
+      throw new Error("AI servisas per apkrautas. Bandykite per kelias minutes.");
+    }
+    throw new Error(`OpenRouter error (${response.status})`);
   }
 
   const data = await response.json();
@@ -388,11 +416,26 @@ Grąžink TIK JSON (be markdown):
         max_tokens: 1500,
       }),
     }
-  );
+  ).catch((err: Error) => {
+    throw new Error(`OpenRouter network error: ${err.message}`);
+  });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenRouter error: ${JSON.stringify(error)}`);
+    let errorDetail = "";
+    try {
+      const error = await response.json();
+      errorDetail = JSON.stringify(error).slice(0, 200);
+    } catch {
+      errorDetail = `HTTP ${response.status}`;
+    }
+    console.error("OpenRouter API error (generateFromScratch):", {
+      status: response.status,
+      errorDetail,
+    });
+    if (response.status === 429) {
+      throw new Error("AI servisas per apkrautas. Bandykite per kelias minutes.");
+    }
+    throw new Error(`OpenRouter error (${response.status})`);
   }
 
   const data = await response.json();
@@ -465,6 +508,7 @@ async function ensureUniqueSlug(base: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  let isScratchMode = false;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -493,7 +537,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isScratchMode = source === "scratch";
+    isScratchMode = source === "scratch";
 
     if (!isScratchMode && !body.url) {
       return NextResponse.json({ error: "Missing url" }, { status: 400 });
@@ -716,26 +760,45 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Profile generation error:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : "";
+
+    console.error("Profile generation error:", {
+      message: errorMsg,
+      stack: errorStack,
+      mode: isScratchMode ? "scratch" : "url",
+    });
 
     // Safe error messages - never leak raw error details to client
     let clientMessage = "Profilio generavimas nepavyko. Bandykite vėliau.";
     let statusCode = 500;
 
-    if (error instanceof Error) {
-      if (error.message.includes("Timeout")) {
-        clientMessage = "Šaltinis per ilgai atsiliepė. Pabandykite kitą URL arba turėkite kantrybės.";
-        statusCode = 408;
-      } else if (error.message.includes("Invalid URL") || error.message.includes("ENOTFOUND")) {
-        clientMessage = "URL'as neteisingas arba nepasiekiamas. Patikrinkite ir bandykite iš naujo.";
-        statusCode = 400;
-      } else if (error.message.includes("OpenRouter error")) {
+    if (errorMsg.includes("Timeout")) {
+      clientMessage = "Šaltinis per ilgai atsiliepė. Pabandykite kitą URL arba turėkite kantrybės.";
+      statusCode = 408;
+    } else if (errorMsg.includes("Invalid URL") || errorMsg.includes("ENOTFOUND") || errorMsg.includes("ERR_NAME_NOT_RESOLVED")) {
+      clientMessage = "URL'as neteisingas arba nepasiekiamas. Patikrinkite ir bandykite iš naujo.";
+      statusCode = 400;
+    } else if (errorMsg.includes("OpenRouter error")) {
+      if (errorMsg.includes("429")) {
+        clientMessage = "AI servisas per apkrautas. Bandykite per kelias minutes.";
+        statusCode = 429;
+      } else {
         clientMessage = "Nepavyko sugeneruoti turinio. Bandykite dar kartą.";
         statusCode = 503;
-      } else if (error.message.includes("Failed to fetch URL")) {
-        clientMessage = "Nepavyko nuskaityti šaltinio. Gali būti, kad puslapis blokuoja automatinį skaitymą.";
-        statusCode = 400;
       }
+    } else if (errorMsg.includes("Browser launch failed")) {
+      clientMessage = "Serverio klaida. Bandykite vėliau.";
+      statusCode = 503;
+    } else if (errorMsg.includes("Failed to fetch URL") || errorMsg.includes("blokuoja")) {
+      clientMessage = "Nepavyko nuskaityti šaltinio. Gali būti, kad puslapis blokuoja automatinį skaitymą.";
+      statusCode = 400;
+    } else if (errorMsg.includes("network error")) {
+      clientMessage = "Tinklo klaida. Patikrinkite savo interneto ryšį ir bandykite dar kartą.";
+      statusCode = 502;
+    } else if (errorMsg.includes("Unique constraint")) {
+      clientMessage = "Profilis su tokiu vardu jau egzistuoja. Pabandykite kitą pavadinimą.";
+      statusCode = 400;
     }
 
     return NextResponse.json(
