@@ -286,7 +286,7 @@ function NewRequestForm() {
   if (!form.deadline.trim()) missingListing.push("terminą");
 
   const emailOk = emailVerified || isLoggedIn;
-  const ready = missingListing.length === 0 && nameOk && phoneOk && phoneVerified && emailOk;
+  const ready = missingListing.length === 0 && nameOk && phoneOk && emailOk;
 
   // When the dictated listing already passes, collapse the editor to a single
   // "Redaguoti skelbimą" affordance — nothing to fix, so don't show the form.
@@ -297,7 +297,6 @@ function NewRequestForm() {
     const gaps = [...missingListing];
     if (!nameOk) gaps.push("vardą");
     if (!phoneOk) gaps.push("telefoną");
-    if (phoneOk && !phoneVerified) gaps.push("patvirtintą telefoną");
     if (gaps.length > 0) return `Dar reikia užpildyti: ${gaps.join(", ")}`;
     if (!emailOk) return "Prisijunk arba patvirtink el. paštą, kad galėtum paskelbti";
     return "";
@@ -659,7 +658,7 @@ function PhoneVerificationField({
       onVerifiedChange={onVerifiedChange}
       onVerified={onVerified}
       error={error}
-      helper="Telefonas privalomas. Kodą atsiųsime SMS žinute."
+      helper="Telefonas privalomas. SMS kodas — neprivalomas."
     />
   );
 }

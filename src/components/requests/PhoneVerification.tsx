@@ -26,7 +26,7 @@ export default function PhoneVerification({
   onVerified,
   error,
   label = "Telefonas",
-  helper = "Atsiųsime 6 skaitmenų SMS kodą — jį įvedus galėsi skelbti.",
+  helper = "Atsiųsime SMS kodą. Kodą galima praleisti.",
   inputId = "clientPhone",
 }: PhoneVerificationProps) {
   const [step, setStep] = useState<"edit" | "code">("edit");
@@ -163,7 +163,7 @@ export default function PhoneVerification({
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Tikrinama…
           </p>
         )}
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between">
           <button
             type="button"
             onClick={() => {
@@ -175,18 +175,33 @@ export default function PhoneVerification({
           >
             Keisti telefoną
           </button>
-          <button
-            type="button"
-            disabled={resendIn > 0 || sending}
-            onClick={sendCode}
-            className="text-micro font-medium text-brand-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-surface-400 disabled:no-underline dark:text-brand-400"
-          >
-            {sending
-              ? "Siunčiama…"
-              : resendIn > 0
-                ? `Siųsti dar kartą (${resendIn}s)`
-                : "Siųsti dar kartą"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                onPhoneChange(phone.trim());
+                onVerifiedChange(false);
+                setStep("edit");
+                setCode("");
+                setLocalError("");
+              }}
+              className="text-micro text-surface-400 underline-offset-2 hover:text-surface-600 hover:underline dark:hover:text-surface-200"
+            >
+              Praleisti kodą
+            </button>
+            <button
+              type="button"
+              disabled={resendIn > 0 || sending}
+              onClick={sendCode}
+              className="text-micro font-medium text-brand-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:text-surface-400 disabled:no-underline dark:text-brand-400"
+            >
+              {sending
+                ? "Siunčiama…"
+                : resendIn > 0
+                  ? `Siųsti dar kartą (${resendIn}s)`
+                  : "Siųsti dar kartą"}
+            </button>
+          </div>
         </div>
       </div>
     );
