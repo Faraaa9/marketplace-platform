@@ -639,23 +639,26 @@ function NewRequestForm() {
       {/* ── Contacts ── */}
       {!showContactsEditor ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="flex min-w-0 items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
-            <div className="min-w-0">
-              <span className="block text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex min-w-0 items-start gap-2">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+              <span className="text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
                 Kontaktai paruošti — gali skelbti
               </span>
-              <span className="mt-0.5 flex items-center gap-1.5 text-micro text-surface-500 dark:text-surface-400">
-                {form.clientPhone.trim() ? (
-                  <>Telefonas: {form.clientPhone}</>
-                ) : (
-                  <>
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                    Telefonas nepridėtas
-                  </>
-                )}
-              </span>
             </div>
+            {!form.clientPhone.trim() && (
+              <div className="flex items-center gap-1.5">
+                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="text-micro text-surface-500 dark:text-surface-400">
+                  Telefonas nepridėtas
+                </span>
+              </div>
+            )}
+            {form.clientPhone.trim() && (
+              <span className="text-micro text-surface-500 dark:text-surface-400">
+                Telefonas: {form.clientPhone}
+              </span>
+            )}
           </div>
           <button
             type="button"
