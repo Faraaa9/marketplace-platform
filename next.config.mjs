@@ -4,6 +4,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/api/profile/ai-generate": [
       "./node_modules/@sparticuz/chromium/**/*",
+      "./node_modules/playwright-core/**/*",
     ],
   },
   images: {
