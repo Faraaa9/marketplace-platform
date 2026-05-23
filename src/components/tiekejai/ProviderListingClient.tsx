@@ -197,6 +197,7 @@ function SheetContent({
   const coverImg = detail.images[0] || detail.image;
   const daysSince = useMemo(() => {
     return Math.floor(
+      // eslint-disable-next-line react-hooks/purity
       (Date.now() - new Date(detail.lastActiveAt).getTime()) / (86400000)
     );
   }, [detail.lastActiveAt]);
