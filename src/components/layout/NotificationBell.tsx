@@ -16,7 +16,8 @@ interface Notification {
   createdAt: string;
 }
 
-const FALLBACK_INTERVAL_MS = 90_000; // 90s fallback instead of 30s
+const POLL_INTERVAL_MS = 180_000; // 3 min while tab is visible
+const REFETCH_DEBOUNCE_MS = 10_000; // ignore focus/visibility refetches within this window
 
 export default function NotificationBell() {
   const { status } = useSession();
@@ -27,9 +28,11 @@ export default function NotificationBell() {
   const [hasNewSinceLastOpen, setHasNewSinceLastOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const prevUnreadRef = useRef(0);
+  const lastFetchAtRef = useRef(0);
 
   const fetchNotifications = useCallback(async () => {
     if (status !== "authenticated") return;
+    lastFetchAtRef.current = Date.now();
     try {
       const res = await fetch("/api/notifications");
       if (res.ok) {
@@ -48,26 +51,51 @@ export default function NotificationBell() {
     } catch {}
   }, [status, setUnreadCount]);
 
-  // Fetch on mount + re-fetch on window focus / visibility change + light fallback interval
+  // Pause polling when the tab is hidden — saves serverless invocations
+  // for users keeping the site in a background tab.
   useEffect(() => {
+    if (status !== "authenticated") return;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const startInterval = () => {
+      if (interval) return;
+      interval = setInterval(fetchNotifications, POLL_INTERVAL_MS);
+    };
+    const stopInterval = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const debouncedFetch = () => {
+      if (Date.now() - lastFetchAtRef.current < REFETCH_DEBOUNCE_MS) return;
+      fetchNotifications();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        debouncedFetch();
+        startInterval();
+      } else {
+        stopInterval();
+      }
+    };
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
+    if (document.visibilityState === "visible") startInterval();
 
-    const handleFocus = () => fetchNotifications();
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") fetchNotifications();
-    };
-
-    window.addEventListener("focus", handleFocus);
+    window.addEventListener("focus", debouncedFetch);
     document.addEventListener("visibilitychange", handleVisibility);
-    const interval = setInterval(fetchNotifications, FALLBACK_INTERVAL_MS);
 
     return () => {
-      window.removeEventListener("focus", handleFocus);
+      stopInterval();
+      window.removeEventListener("focus", debouncedFetch);
       document.removeEventListener("visibilitychange", handleVisibility);
-      clearInterval(interval);
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, status]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

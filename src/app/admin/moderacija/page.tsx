@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
@@ -22,6 +23,7 @@ interface ModerationItem {
   moderationReason: string | null;
   submittedBy: string;
   createdAt: string;
+  previewImageUrl?: string | null;
 }
 
 interface Pagination {
@@ -259,6 +261,27 @@ export default function AdminModerationPage() {
                   </div>
                 )}
               </div>
+
+              {/* Image preview (stories, etc.) */}
+              {item.previewImageUrl && (
+                <div className="mt-3 flex justify-start">
+                  <a
+                    href={item.previewImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block overflow-hidden rounded-xl border border-surface-200/60 dark:border-surface-700/50 hover:opacity-90 transition-opacity"
+                  >
+                    <Image
+                      src={item.previewImageUrl}
+                      alt="Turinio peržiūra"
+                      width={180}
+                      height={320}
+                      className="h-auto w-[180px] object-cover"
+                      unoptimized
+                    />
+                  </a>
+                </div>
+              )}
 
               {/* Flagged text */}
               <div className="mt-3 max-h-36 overflow-y-auto whitespace-pre-wrap rounded-xl bg-surface-50 p-3 text-body-sm text-surface-700 dark:bg-surface-800/50 dark:text-surface-300">

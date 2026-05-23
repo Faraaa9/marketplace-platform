@@ -34,6 +34,7 @@ export interface ModerationQueueItem {
   moderationReason: string | null;
   submittedBy: string;
   createdAt: string;
+  previewImageUrl?: string | null;
 }
 
 const PER_TYPE_FETCH_CAP = 200;
@@ -111,6 +112,7 @@ async function fetchByType(
       select: {
         id: true,
         text: true,
+        imageUrl: true,
         moderationStatus: true,
         moderationReason: true,
         createdAt: true,
@@ -127,6 +129,7 @@ async function fetchByType(
       moderationReason: r.moderationReason,
       submittedBy: r.provider?.name || r.provider?.email || "—",
       createdAt: r.createdAt.toISOString(),
+      previewImageUrl: r.imageUrl,
     }));
   }
 
