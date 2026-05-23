@@ -82,7 +82,7 @@ export default function RootLayout({
     <html lang="lt" suppressHydrationWarning>
       <body className={`${inter.className} ${lora.variable} min-h-screen flex flex-col text-surface-900 dark:text-surface-100`}>
         {/* Applies the saved theme before paint so dark mode never flashes light */}
-        <script src="/theme-init.js" />
+        <script src="/theme-init.js" async />
         {/* Site-wide fixed grid background — identical on every page, constant on scroll; dark-aware via .layout-grid */}
         <div aria-hidden className="layout-grid fixed inset-0 -z-10" />
         <Providers>
