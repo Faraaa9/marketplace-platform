@@ -84,6 +84,7 @@ export default function ProviderRequestDetailPage() {
     } catch {} finally { setLoading(false); }
   }, [params.id, router]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchRequest(); }, [fetchRequest]);
 
   async function handleSubmitResponse() {

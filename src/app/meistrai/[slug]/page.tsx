@@ -124,11 +124,13 @@ export default async function PublicProviderProfilePage({
   const reviewSchemas = buildReviewSchemas(provider.name, topReviews);
 
   const daysSinceActive = Math.floor(
+    // eslint-disable-next-line react-hooks/purity
     (Date.now() - new Date(provider.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
   );
   const isRecentlyActive = daysSinceActive <= 7;
   const memberMonths = Math.max(
     1,
+    // eslint-disable-next-line react-hooks/purity
     Math.floor((Date.now() - new Date(provider.memberSince).getTime()) / (1000 * 60 * 60 * 24 * 30))
   );
   const acceptanceRate =

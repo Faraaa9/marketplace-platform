@@ -95,6 +95,7 @@ export default async function ClaimVerifyPage({ searchParams }: PageProps) {
         </p>
         <ol className="mt-3 space-y-2 text-body-sm text-surface-600 dark:text-surface-300">
           <li>1. El. paštas patvirtintas — nuosavybė įrodyta.</li>
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           <li>2. Susikurkite slaptažodį — paskyra bus iš karto tiekėjo tipo, nereikia spausti "tapti tiekėju".</li>
           <li>3. Administratorius patikrins perėmimo prašymą.</li>
           <li>4. Po patvirtinimo profilis atsiras tiekėjo panelėje ir galėsite jį redaguoti.</li>

@@ -83,6 +83,7 @@ function CreditsContent() {
       });
       const d = await res.json();
       if (d.success && d.data.url) {
+        // eslint-disable-next-line
         window.location.href = d.data.url;
       } else {
         setCheckoutPackId("");

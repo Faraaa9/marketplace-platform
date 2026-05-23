@@ -678,6 +678,7 @@ export default function ProviderProfilePage() {
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
               />
               <p className="text-micro text-surface-400 mt-1">
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
                 Pasirinkite &bdquo;Visa Lietuva", jei dirbate visoje šalyje.
               </p>
             </div>

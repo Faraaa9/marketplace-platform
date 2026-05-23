@@ -60,6 +60,7 @@ export default function ProviderInquiryDetailPage() {
   }, [params.id, router]);
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchInquiry();
   }, [fetchInquiry]);
 

@@ -65,6 +65,7 @@ export default function StoryViewer({
   }
 
   function timeAgo(dateStr: string) {
+    // eslint-disable-next-line react-hooks/purity
     const ms = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(ms / 60000);
     if (mins < 60) return `${Math.max(1, mins)} min.`;

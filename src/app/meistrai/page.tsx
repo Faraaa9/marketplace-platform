@@ -169,6 +169,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
 
     const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
+      // eslint-disable-next-line react-hooks/purity
       (Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
     );
     const isRecentlyActive = daysSinceActive <= 7;

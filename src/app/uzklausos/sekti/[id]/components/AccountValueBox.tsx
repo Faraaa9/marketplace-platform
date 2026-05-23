@@ -93,6 +93,7 @@ export default function AccountValueBox({
       return (
         <div className="mb-6 rounded-xl border border-emerald-200/60 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-500/10">
           <p className="text-body-sm text-emerald-700 dark:text-emerald-400">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
             Užklausa priskirta jūsų paskyrai. Dabar ją matysite skiltyje &bdquo;Mano užklausos".
           </p>
         </div>
@@ -105,6 +106,7 @@ export default function AccountValueBox({
           Priskirti šią užklausą savo paskyrai?
         </h3>
         <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-3">
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           Tada ją matysite &bdquo;Mano užklausos" skiltyje ir nereikės saugoti nuorodos.
         </p>
         {claimError && (

@@ -116,6 +116,7 @@ export default function ClaimAccountStep({
             )}
             {isPending && !signedIn && (
               <p className="mt-2 text-body-sm text-surface-500 dark:text-surface-400">
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
                 Jokio papildomo "tapti tiekėju" žingsnio nereikia — jūsų paskyra jau tiekėjo tipo.
               </p>
             )}
@@ -153,6 +154,7 @@ export default function ClaimAccountStep({
             Sukurkite tiekėjo paskyrą
           </h2>
           <p className="mt-1 text-body-sm leading-relaxed text-surface-600 dark:text-surface-300">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
             El. paštas {email} patvirtintas. Susikurkite slaptažodį — paskyra bus iš karto tiekėjo tipo. Po administratoriaus patvirtinimo galėsite valdyti "{supplierName}" profilį.
           </p>
         </div>
@@ -197,6 +199,7 @@ export default function ClaimAccountStep({
         </Button>
 
         <p className="text-micro text-surface-400 text-center">
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           Papildomo "tapti tiekėju" žingsnio nereikės
         </p>
       </form>

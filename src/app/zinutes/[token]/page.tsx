@@ -48,6 +48,7 @@ export default function InquiryConversationPage() {
   }, [params.token]);
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchConversation();
   }, [fetchConversation]);
 

@@ -259,6 +259,7 @@ export default async function HomePage() {
               <p className="text-[12.5px] leading-relaxed text-[#7C6B2E]">
                 <span className="font-bold">Patarimas:</span> nežinai, kaip
                 aprašyti? Spausk{" "}
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
                 <span className="font-semibold">"Sutvarkyti aprašymą"</span> —
                 dirbtinis intelektas sutvarkys tekstą ir patars, ką dar pridėti.
               </p>

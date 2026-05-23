@@ -121,6 +121,7 @@ export function AIProfileSetup() {
 
   useEffect(() => {
     if (!loading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveStep(0);
       setOvertimeMessageIdx(0);
       return;

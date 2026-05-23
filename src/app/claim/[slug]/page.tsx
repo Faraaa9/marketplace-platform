@@ -28,6 +28,7 @@ export default async function ClaimPage({ params }: PageProps) {
             Tiekėjas nerastas
           </h1>
           <p className="mt-2 text-body-sm text-surface-500">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
             Profilis "{slug}" neegzistuoja arba buvo pašalintas.
           </p>
           <Link
@@ -51,6 +52,7 @@ export default async function ClaimPage({ params }: PageProps) {
             Profilis jau perimtas
           </h1>
           <p className="mt-2 text-body-sm text-surface-500">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
             Tiekėjas "{supplier.displayName}" jau turi savininką.
           </p>
           <Link

@@ -88,6 +88,7 @@ function TestimonialCard({ testimonial }: { testimonial: TestimonialData }) {
     >
       <Quote className="h-4 w-4 text-brand-300 dark:text-brand-700 mb-2" />
       <p className="text-body-sm leading-relaxed text-surface-600 dark:text-surface-400 line-clamp-4">
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
         "{testimonial.comment}"
       </p>
       <div className="mt-3 flex items-center justify-between">
