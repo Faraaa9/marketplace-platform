@@ -6,6 +6,7 @@ import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 interface Notification {
   id: string;
@@ -16,11 +17,37 @@ interface Notification {
   createdAt: string;
 }
 
-const POLL_INTERVAL_MS = 180_000; // 3 min while tab is visible
-const REFETCH_DEBOUNCE_MS = 10_000; // ignore focus/visibility refetches within this window
+/** Shape of a row from the `notifications` table delivered by Supabase Realtime. */
+interface NotificationRow {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  link: string | null;
+  createdAt: string | Date;
+}
+
+const REFETCH_DEBOUNCE_MS = 10_000; // safety-net refetch on focus is debounced this hard
+
+function normalizeRow(row: NotificationRow): Notification {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    isRead: row.isRead,
+    link: row.link ?? undefined,
+    createdAt:
+      typeof row.createdAt === "string"
+        ? row.createdAt
+        : new Date(row.createdAt).toISOString(),
+  };
+}
 
 export default function NotificationBell() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const unreadCount = useUIStore((s) => s.unreadNotificationCount);
   const setUnreadCount = useUIStore((s) => s.setUnreadNotificationCount);
@@ -51,51 +78,81 @@ export default function NotificationBell() {
     } catch {}
   }, [status, setUnreadCount]);
 
-  // Pause polling when the tab is hidden — saves serverless invocations
-  // for users keeping the site in a background tab.
+  // Subscribe to Supabase Realtime for instant notification delivery (no polling).
+  // Falls back gracefully if Supabase env vars are missing — initial hydration
+  // from /api/notifications still works, and focus refetch keeps things fresh.
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !userId) return;
 
-    let interval: ReturnType<typeof setInterval> | null = null;
+    // 1. Load existing notifications on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
 
-    const startInterval = () => {
-      if (interval) return;
-      interval = setInterval(fetchNotifications, POLL_INTERVAL_MS);
-    };
-    const stopInterval = () => {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
-      }
-    };
+    // 2. Open a Realtime channel scoped to this user.
+    const supabase = getSupabaseBrowser();
+    const channel = supabase
+      ?.channel(`notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `userId=eq.${userId}`,
+        },
+        (payload) => {
+          const incoming = normalizeRow(payload.new as NotificationRow);
+          setNotifications((prev) => {
+            if (prev.some((n) => n.id === incoming.id)) return prev;
+            return [incoming, ...prev].slice(0, 10);
+          });
+          if (!incoming.isRead) {
+            const next = useUIStore.getState().unreadNotificationCount + 1;
+            prevUnreadRef.current = next;
+            setUnreadCount(next);
+            setHasNewSinceLastOpen(true);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `userId=eq.${userId}`,
+        },
+        (payload) => {
+          const updated = normalizeRow(payload.new as NotificationRow);
+          setNotifications((prev) => {
+            const next = prev.map((n) => (n.id === updated.id ? updated : n));
+            const unread = next.filter((n) => !n.isRead).length;
+            prevUnreadRef.current = unread;
+            setUnreadCount(unread);
+            return next;
+          });
+        },
+      )
+      .subscribe();
 
+    // 3. Safety net: if Realtime drops or misses an event, refetch when the
+    // user returns to the tab. Debounced so rapid focus toggles don't pile up.
     const debouncedFetch = () => {
       if (Date.now() - lastFetchAtRef.current < REFETCH_DEBOUNCE_MS) return;
       fetchNotifications();
     };
-
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        debouncedFetch();
-        startInterval();
-      } else {
-        stopInterval();
-      }
+      if (document.visibilityState === "visible") debouncedFetch();
     };
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchNotifications();
-    if (document.visibilityState === "visible") startInterval();
-
     window.addEventListener("focus", debouncedFetch);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      stopInterval();
+      if (channel && supabase) supabase.removeChannel(channel);
       window.removeEventListener("focus", debouncedFetch);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [fetchNotifications, status]);
+  }, [fetchNotifications, status, userId, setUnreadCount]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
