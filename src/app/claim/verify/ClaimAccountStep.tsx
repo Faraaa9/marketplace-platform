@@ -31,7 +31,6 @@ export default function ClaimAccountStep({
   const [error, setError] = useState("");
   const [created, setCreated] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [nextPath, setNextPath] = useState<string | null>(null);
 
   const dashboardPath = claimStatus === "approved" ? "/tiekejas/katalogas" : "/tiekejas";
 

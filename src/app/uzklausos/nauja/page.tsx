@@ -149,7 +149,7 @@ function NewRequestForm() {
       clientName: f.clientName || user.name || "",
       clientEmail: user.email || f.clientEmail,
     }));
-  }, [status, session?.user?.email, session?.user?.name]);
+  }, [status, session?.user]);
 
   // Load account phone because NextAuth's lightweight session does not carry
   // the client profile fields.

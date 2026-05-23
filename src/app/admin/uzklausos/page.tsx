@@ -77,7 +77,7 @@ export default function AdminRequestsPage() {
       setPagination(data.pagination);
     }
     setLoading(false);
-  }, [statusFilter, categoryFilter, page]);
+  }, [statusFilter, categoryFilter, page, search]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

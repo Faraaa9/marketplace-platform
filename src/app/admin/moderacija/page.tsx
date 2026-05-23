@@ -115,7 +115,7 @@ export default function AdminModerationPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchItems();
-  }, [statusFilter, typeFilter, page]);
+  }, [statusFilter, typeFilter, page, fetchItems]);
 
   function openAction(item: ModerationItem, type: "approve" | "reject") {
     setActionItem(item);

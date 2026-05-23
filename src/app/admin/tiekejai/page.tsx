@@ -64,7 +64,7 @@ export default function AdminProvidersPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProviders();
-  }, [search, statusFilter, page]);
+  }, [search, statusFilter, page, fetchProviders]);
 
   async function handleAction(userId: string, action: string) {
     if (action === "delete" && !confirm("Ar tikrai norite ištrinti šį tiekėją?")) return;
