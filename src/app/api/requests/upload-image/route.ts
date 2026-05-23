@@ -58,7 +58,15 @@ export async function POST(req: NextRequest) {
         .upload_stream(
           {
             folder: "marketplace/requests",
-            transformation: [{ width: 1600, height: 1600, crop: "limit", quality: "auto" }],
+            transformation: [
+              {
+                width: 1600,
+                height: 1600,
+                crop: "limit",
+                quality: "auto",
+                fetch_format: "auto",
+              },
+            ],
           },
           (error, result) => {
             if (error || !result) reject(error || new Error("Upload failed"));

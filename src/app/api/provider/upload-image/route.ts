@@ -70,7 +70,15 @@ export async function POST(req: NextRequest) {
       cloudinary.uploader.upload_stream(
         {
           folder: `marketplace/providers/${session.user.id}`,
-          transformation: [{ width: 800, height: 800, crop: "limit", quality: "auto" }],
+          transformation: [
+            {
+              width: 800,
+              height: 800,
+              crop: "limit",
+              quality: "auto",
+              fetch_format: "auto",
+            },
+          ],
         },
         (error, result) => {
           if (error || !result) reject(error || new Error("Upload failed"));
