@@ -30,4 +30,6 @@ export interface ProviderProfileData {
   totalReviews: number;
   lastActiveAt: string;
   memberSince: string;
+  moderationStatus: string;
+  moderationReason: string | null;
 }

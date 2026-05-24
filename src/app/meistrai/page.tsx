@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServiceCategoryGroups } from "@/lib/service-categories";
+import type { ServiceCategoryItem } from "@/lib/service-categories";
 import { Users, ArrowRight, Database } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { isStoryEnabled } from "@/lib/platform-settings";
@@ -77,9 +78,15 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   // `?category=` is validated against the curated depth-1 category slugs —
   // these are the only values the provider category filter can match.
   const validCategorySlugs = new Set(
-    categoryGroups.flatMap((group) =>
-      group.categories.map((category) => category.slug),
-    ),
+    categoryGroups.flatMap((group) => {
+      const slugs: string[] = [];
+      function add(category: ServiceCategoryItem) {
+        slugs.push(category.slug);
+        for (const child of category.children ?? []) add(child);
+      }
+      add(group.root);
+      return slugs;
+    }),
   );
   const rawCategory = params.category ?? "";
   const initialFilters: ProviderFilters = {
@@ -169,7 +176,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
 
     const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
-      // eslint-disable-next-line react-hooks/purity
       (Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
     );
     const isRecentlyActive = daysSinceActive <= 7;

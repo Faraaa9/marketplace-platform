@@ -15,8 +15,9 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown } from "lucide-react";
 import SectionHeader from "./components/SectionHeader";
 import CategoryChecklist from "./components/CategoryChecklist";
+import CategorySuggestions from "@/components/ai/CategorySuggestions";
 
-const MAX_CATEGORIES = 6;
+const MAX_CATEGORIES = 20;
 
 interface ProviderImage {
   url: string;
@@ -189,6 +190,19 @@ export default function ProviderProfilePage() {
       return { ...prev, categoryIds: [...prev.categoryIds, id] };
     });
   }
+
+  function addSuggestedCategory(id: string) {
+    setForm((prev) => {
+      if (prev.categoryIds.includes(id)) return prev;
+      if (prev.categoryIds.length >= MAX_CATEGORIES) return prev;
+      return { ...prev, categoryIds: [...prev.categoryIds, id] };
+    });
+  }
+
+  const suggestionText = useMemo(
+    () => [form.services, form.description, form.headline].filter(Boolean).join("\n\n"),
+    [form.services, form.description, form.headline],
+  );
 
   async function uploadFile(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -447,8 +461,18 @@ export default function ProviderProfilePage() {
                 </span>
               </div>
               <p className="text-micro text-surface-400 mb-2">
-                Pasirinkite iki {MAX_CATEGORIES} sričių, kuriose dirbate — pagal jas gausite tinkamas užklausas.
+                Pasirinkite konkrečias paslaugas, kurias teikiate — pagal jas gausite tinkamas užklausas.
               </p>
+              <div className="mb-2">
+                <CategorySuggestions
+                  mode="provider"
+                  text={suggestionText}
+                  title={form.headline}
+                  selectedIds={form.categoryIds}
+                  onSelect={(suggestion) => addSuggestedCategory(suggestion.id)}
+                  maxReached={form.categoryIds.length >= MAX_CATEGORIES}
+                />
+              </div>
               <CategoryChecklist
                 groups={categoryGroups}
                 selectedIds={form.categoryIds}
@@ -827,4 +851,3 @@ export default function ProviderProfilePage() {
     </div>
   );
 }
-

@@ -1,5 +1,5 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
-import { getServiceCategoryGroups } from "@/lib/service-categories";
+import { getFlatServiceCategories } from "@/lib/service-categories";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini handles Lithuanian grammar/nuance best of the OpenRouter models.
@@ -13,19 +13,56 @@ const REQUEST_TIMEOUT_MS = 30_000;
  * root) and the valid-slug set used to validate the model's answer. The
  * taxonomy lives in the DB, so this resolves at call time.
  */
-async function getCategoryPromptData(): Promise<{ list: string; validSlugs: Set<string> }> {
-  const groups = await getServiceCategoryGroups();
-  const validSlugs = new Set<string>();
-  const lines: string[] = [];
-  for (const group of groups) {
-    const items = group.categories
-      .map((c) => {
-        validSlugs.add(c.slug);
-        return `${c.slug} (${c.name})`;
-      })
-      .join(", ");
-    if (items) lines.push(`${group.root.name}: ${items}`);
+const normalizeForMatch = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ");
+
+function scoreCategory(query: string, haystack: string, depth = 0): number {
+  const normalizedHaystack = normalizeForMatch(haystack);
+  const tokens = normalizeForMatch(query)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3);
+  let score = depth >= 2 ? 3 : 0;
+  for (const token of tokens) {
+    if (normalizedHaystack.includes(token)) score += token.length;
   }
+  if (tokens.length > 0 && normalizedHaystack.includes(tokens.join(" "))) score += 20;
+  return score;
+}
+
+async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ list: string; validSlugs: Set<string> }> {
+  const categories = await getFlatServiceCategories();
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const query = `${input.title ?? ""} ${input.category ?? ""} ${input.description}`;
+
+  const candidates = categories
+    .filter((category) => (category.depth ?? 0) > 0)
+    .map((category) => {
+      const names: string[] = [category.name];
+      let parent = category.parentId ? byId.get(category.parentId) : undefined;
+      while (parent) {
+        names.unshift(parent.name);
+        parent = parent.parentId ? byId.get(parent.parentId) : undefined;
+      }
+      const breadcrumb = names.join(" > ");
+      return {
+        category,
+        breadcrumb,
+        score: scoreCategory(query, breadcrumb, category.depth),
+      };
+    })
+    .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
+    .slice(0, 140);
+
+  const validSlugs = new Set<string>();
+  const lines = candidates.map(({ category, breadcrumb }) => {
+    validSlugs.add(category.slug);
+    return `${category.slug} (${breadcrumb})`;
+  });
   return { list: lines.join("\n"), validSlugs };
 }
 
@@ -147,7 +184,7 @@ export async function improveDescription(
     throw new AiImproveError("AI_NOT_CONFIGURED");
   }
 
-  const { list: categoryList, validSlugs } = await getCategoryPromptData();
+  const { list: categoryList, validSlugs } = await getCategoryPromptData(input);
   const systemPrompt = buildSystemPrompt(categoryList);
 
   const context: string[] = [];

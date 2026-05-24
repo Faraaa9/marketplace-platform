@@ -20,6 +20,7 @@ import PhoneVerification from "@/components/requests/PhoneVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
+import CategorySuggestions from "@/components/ai/CategorySuggestions";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function NewRequestPage() {
@@ -580,6 +581,15 @@ function NewRequestForm() {
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2 flex flex-col gap-2">
+              <CategorySuggestions
+                mode="request"
+                text={form.description}
+                title={form.title}
+                selectedIds={form.categoryId ? [form.categoryId] : []}
+                onSelect={(suggestion) => update("categoryId", suggestion.id)}
+              />
+            </div>
             <GroupedCategoryPicker
               id="categoryId"
               label="Kategorija"

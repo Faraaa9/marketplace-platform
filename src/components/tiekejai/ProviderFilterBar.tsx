@@ -60,10 +60,18 @@ export default function ProviderFilterBar({
   }, []);
 
   const activeFilterCount = [location, category, active, urgent, top].filter(Boolean).length;
-  const activeCategoryLabel =
-    categoryGroups
-      .flatMap((g) => g.categories)
-      .find((c) => c.slug === category)?.name ?? "";
+  const activeCategoryLabel = (() => {
+    for (const group of categoryGroups) {
+      const stack = [group.root];
+      while (stack.length > 0) {
+        const item = stack.shift();
+        if (!item) continue;
+        if (item.slug === category) return item.name;
+        stack.push(...(item.children ?? []));
+      }
+    }
+    return "";
+  })();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -350,22 +358,34 @@ export default function ProviderFilterBar({
                         <p className="mb-2 text-micro font-semibold uppercase tracking-wider text-surface-400">
                           {group.root.name}
                         </p>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
                           {group.categories.map((cat) => {
                             const isActive = mobileCategory === cat.slug;
                             return (
-                              <button
-                                key={cat.id}
-                                onClick={() => setMobileCategory(isActive ? "" : cat.slug)}
-                                className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-all ${
-                                  isActive
-                                    ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
-                                    : "bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300"
-                                }`}
-                              >
-                                <Tag className="h-3.5 w-3.5 shrink-0" />
-                                <span className="truncate">{cat.name}</span>
-                              </button>
+                              <div key={cat.id}>
+                                <MobileCategoryButton
+                                  name={cat.name}
+                                  childCount={cat.childCount}
+                                  active={isActive}
+                                  onClick={() => setMobileCategory(isActive ? "" : cat.slug)}
+                                />
+                                {(cat.children?.length ?? 0) > 0 && (
+                                  <div className="mt-1 grid grid-cols-2 gap-1.5 pl-3">
+                                    {cat.children?.map((child) => {
+                                      const childActive = mobileCategory === child.slug;
+                                      return (
+                                        <MobileCategoryButton
+                                          key={child.id}
+                                          name={child.name}
+                                          active={childActive}
+                                          compact
+                                          onClick={() => setMobileCategory(childActive ? "" : child.slug)}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
@@ -433,6 +453,47 @@ export default function ProviderFilterBar({
 }
 
 // ─── Sub-components ────────────────────────────────────────────────
+
+function MobileCategoryButton({
+  name,
+  childCount,
+  active,
+  onClick,
+  compact = false,
+}: {
+  name: string;
+  childCount?: number;
+  active: boolean;
+  onClick: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-xl px-3 text-left font-medium transition-all ${
+        compact ? "py-2 text-caption" : "py-2.5 text-body-sm"
+      } ${
+        active
+          ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
+          : "bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300"
+      }`}
+    >
+      <Tag className="h-3.5 w-3.5 shrink-0" />
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      {typeof childCount === "number" && childCount > 0 && (
+        <span
+          className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+            active
+              ? "bg-white/20 text-white"
+              : "bg-white text-surface-400 dark:bg-surface-700 dark:text-surface-300"
+          }`}
+        >
+          {childCount}
+        </span>
+      )}
+    </button>
+  );
+}
 
 function FilterToggle({
   active,

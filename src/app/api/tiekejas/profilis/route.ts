@@ -122,8 +122,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Curated categories, max 6, de-duplicated, order preserved.
-    const categoryIds = [...new Set(parsed.data.categoryIds)].slice(0, 6);
+    // Curated service categories, de-duplicated, order preserved.
+    const categoryIds = [...new Set(parsed.data.categoryIds)].slice(0, 20);
 
     // Resolve the new moderation status. "reject" already returned above.
     // - "ok"               → APPROVED

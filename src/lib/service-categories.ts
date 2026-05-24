@@ -4,6 +4,12 @@ export interface ServiceCategoryItem {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
+  rootId?: string | null;
+  depth?: number;
+  path?: string;
+  childCount?: number;
+  children?: ServiceCategoryItem[];
 }
 
 export interface ServiceCategoryGroup {
@@ -11,33 +17,91 @@ export interface ServiceCategoryGroup {
   categories: ServiceCategoryItem[];
 }
 
+const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
+
+type CategoryRow = {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  rootId: string | null;
+  depth: number;
+  path: string;
+  sortOrder: number;
+};
+
+async function loadServiceCategoryRows(): Promise<CategoryRow[]> {
+  const preferred = await prisma.category.findMany({
+    where: { pageType: "service", externalSource: TAXONOMY_SOURCE, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      parentId: true,
+      rootId: true,
+      depth: true,
+      path: true,
+      sortOrder: true,
+    },
+    orderBy: [{ depth: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+
+  if (preferred.length > 0) return preferred;
+
+  return prisma.category.findMany({
+    where: { pageType: "service", isActive: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      parentId: true,
+      rootId: true,
+      depth: true,
+      path: true,
+      sortOrder: true,
+    },
+    orderBy: [{ depth: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+}
+
 /**
- * The curated "service" taxonomy that drives the request flow: the 9 roots,
- * each with its depth-1 categories (`pageType="service"`). Roots are group
- * headers — users pick a depth-1 category (1 per request, up to 6 per
- * provider). Ordered by `sortOrder`.
+ * The service taxonomy that drives request/provider flows. Newer data is a
+ * 3-level tree: root -> subcategory -> concrete service. The legacy 2-level
+ * shape is still accepted as a fallback, so older screens do not crash while
+ * the UI is being migrated.
  */
 export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]> {
-  const categories = await prisma.category.findMany({
-    where: { pageType: "service", isActive: true },
-    select: { id: true, name: true, slug: true, rootId: true, sortOrder: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const rows = await loadServiceCategoryRows();
+  const byParent = new Map<string | null, CategoryRow[]>();
+  for (const row of rows) {
+    const key = row.parentId ?? null;
+    const list = byParent.get(key) ?? [];
+    list.push(row);
+    byParent.set(key, list);
+  }
 
-  const rootIds = [
-    ...new Set(categories.map((c) => c.rootId).filter((id): id is string => !!id)),
-  ];
-  const roots = await prisma.category.findMany({
-    where: { id: { in: rootIds } },
-    select: { id: true, name: true, slug: true, sortOrder: true },
-  });
-  roots.sort((a, b) => a.sortOrder - b.sortOrder);
+  function toItem(row: CategoryRow): ServiceCategoryItem {
+    const children = (byParent.get(row.id) ?? []).map(toItem);
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      parentId: row.parentId,
+      rootId: row.rootId,
+      depth: row.depth,
+      path: row.path,
+      childCount: children.length,
+      children,
+    };
+  }
+
+  const roots = rows
+    .filter((row) => row.depth === 0 || row.parentId === null)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "lt"));
 
   return roots.map((root) => ({
-    root: { id: root.id, name: root.name, slug: root.slug },
-    categories: categories
-      .filter((c) => c.rootId === root.id)
-      .map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
+    root: toItem(root),
+    categories: (byParent.get(root.id) ?? []).map(toItem),
   }));
 }
 
@@ -49,15 +113,26 @@ export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]
 export async function getServiceCategoryNameMap(): Promise<Map<string, string>> {
   const groups = await getServiceCategoryGroups();
   const map = new Map<string, string>();
+  function add(item: ServiceCategoryItem) {
+    map.set(item.id, item.name);
+    map.set(item.slug, item.name);
+    for (const child of item.children ?? []) add(child);
+  }
   for (const g of groups) {
-    map.set(g.root.id, g.root.name);
-    map.set(g.root.slug, g.root.name);
-    for (const c of g.categories) {
-      map.set(c.id, c.name);
-      map.set(c.slug, c.name);
-    }
+    add(g.root);
   }
   return map;
+}
+
+export async function getFlatServiceCategories(): Promise<ServiceCategoryItem[]> {
+  const groups = await getServiceCategoryGroups();
+  const out: ServiceCategoryItem[] = [];
+  function walk(item: ServiceCategoryItem) {
+    out.push(item);
+    for (const child of item.children ?? []) walk(child);
+  }
+  for (const group of groups) walk(group.root);
+  return out;
 }
 
 /**

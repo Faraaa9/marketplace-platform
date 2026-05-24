@@ -6,6 +6,7 @@ import { load } from "cheerio";
 import { chromium as playwrightCore } from "playwright-core";
 import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
 import { rateLimitAsync } from "@/lib/rate-limit";
+import { moderateText } from "@/lib/moderation";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -652,6 +653,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // 4b. Moderate generated content. Mirrors src/app/api/tiekejas/profilis/route.ts:
+    // ok → APPROVED, ai_fallback → keep current status (so an infra blip doesn't
+    // silently hide a profile), anything else → PENDING. We avoid hard-rejecting
+    // here because the content came from our own AI, not the user — if our AI
+    // produces something the moderator flags as "reject", queue it for human review
+    // rather than blocking the user from a profile they didn't write.
+    const moderation = await moderateText({
+      entityType: "ProviderProfile",
+      fields: {
+        description: aiResult.description,
+        headline: aiResult.headline,
+        services: aiResult.services,
+      },
+      actorUserId: user.id,
+    });
+    let nextModerationStatus: string;
+    if (moderation.verdict === "ok") {
+      nextModerationStatus = "APPROVED";
+    } else if (moderation.source === "ai_fallback") {
+      nextModerationStatus =
+        user.providerProfile?.moderationStatus === "REJECTED"
+          ? "PENDING"
+          : user.providerProfile?.moderationStatus || "APPROVED";
+    } else {
+      nextModerationStatus = "PENDING";
+    }
+
     // Ensure PROVIDER role + emailVerified so the public profile is visible.
     // Authenticated users with AI-generated profiles are considered verified —
     // they completed the signup auth flow.
@@ -728,6 +756,9 @@ export async function POST(req: NextRequest) {
           status: "claimed",
           sourceType: "self_created",
           displayName: isScratchMode ? body.businessName : null,
+          moderationStatus: nextModerationStatus,
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
         },
       });
     } else {
@@ -763,6 +794,9 @@ export async function POST(req: NextRequest) {
           displayName: isScratchMode
             ? body.businessName || providerProfile.displayName
             : providerProfile.displayName,
+          moderationStatus: nextModerationStatus,
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
         },
       });
     }

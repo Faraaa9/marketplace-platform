@@ -12,6 +12,7 @@
     "db:seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:studio": "prisma studio",
     "import:categories": "node scripts/import-categories.js",
+    "import:paslaugurinka-taxonomy": "node scripts/import-paslaugurinka-taxonomy.js --reset-curated",
     "import:suppliers": "node scripts/import-suppliers.js",
     "enrich:suppliers": "node scripts/enrich-suppliers.js"
   },

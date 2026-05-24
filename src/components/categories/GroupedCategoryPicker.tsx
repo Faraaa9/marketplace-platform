@@ -4,6 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search, Tag, X } from "lucide-react";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 
+type PickerNode = {
+  id: string;
+  name: string;
+  slug: string;
+  childCount?: number;
+  children?: PickerNode[];
+};
+
 /** Diacritic-insensitive match so "statyba" finds "Statybą". */
 const normalize = (value: string) =>
   value
@@ -67,10 +75,12 @@ export default function GroupedCategoryPicker({
   // Flat lookup `value -> displayName` so the trigger always renders the right label.
   const labelByValue = useMemo(() => {
     const map = new Map<string, string>();
+    function add(cat: PickerNode) {
+      map.set(mode === "id" ? cat.id : cat.slug, cat.name);
+      for (const child of cat.children ?? []) add(child);
+    }
     for (const group of groups) {
-      for (const cat of group.categories) {
-        map.set(mode === "id" ? cat.id : cat.slug, cat.name);
-      }
+      add(group.root);
     }
     return map;
   }, [groups, mode]);
@@ -276,8 +286,12 @@ export function CategoryPickerBody({
   const [query, setQuery] = useState("");
 
   const activeGroupId = useMemo(() => {
+    function hasActive(cat: PickerNode) {
+      if ((mode === "id" ? cat.id : cat.slug) === activeValue) return true;
+      return (cat.children ?? []).some(hasActive);
+    }
     for (const group of groups) {
-      if (group.categories.some((cat) => (mode === "id" ? cat.id : cat.slug) === activeValue)) {
+      if (hasActive(group.root)) {
         return group.root.id;
       }
     }
@@ -302,13 +316,18 @@ export function CategoryPickerBody({
 
   const matches = useMemo(() => {
     if (!isSearching) return [];
-    const out: { id: string; name: string; slug: string; group: string }[] = [];
+    const out: { id: string; name: string; slug: string; group: string; breadcrumb: string; childCount?: number }[] = [];
+    function visit(cat: PickerNode, group: string, parents: string[], groupHit: boolean) {
+      const breadcrumb = [...parents, cat.name].join(" / ");
+      if (groupHit || normalize(cat.name).includes(q) || normalize(breadcrumb).includes(q)) {
+        out.push({ id: cat.id, name: cat.name, slug: cat.slug, group, breadcrumb, childCount: cat.childCount });
+      }
+      for (const child of cat.children ?? []) visit(child, group, [...parents, cat.name], groupHit);
+    }
     for (const group of groups) {
       const groupHit = normalize(group.root.name).includes(q);
       for (const cat of group.categories) {
-        if (groupHit || normalize(cat.name).includes(q)) {
-          out.push({ ...cat, group: group.root.name });
-        }
+        visit(cat, group.root.name, [group.root.name], groupHit);
       }
     }
     return out;
@@ -360,7 +379,8 @@ export function CategoryPickerBody({
                   <CategoryRow
                     key={cat.id}
                     name={cat.name}
-                    hint={cat.group}
+                    hint={cat.breadcrumb || cat.group}
+                    childCount={cat.childCount}
                     isSelected={activeValue === v}
                     onClick={() => onSelect(v)}
                   />
@@ -401,12 +421,30 @@ export function CategoryPickerBody({
                       {group.categories.map((cat) => {
                         const v = mode === "id" ? cat.id : cat.slug;
                         return (
-                          <CategoryRow
-                            key={cat.id}
-                            name={cat.name}
-                            isSelected={activeValue === v}
-                            onClick={() => onSelect(v)}
-                          />
+                          <div key={cat.id}>
+                            <CategoryRow
+                              name={cat.name}
+                              childCount={cat.childCount}
+                              isSelected={activeValue === v}
+                              onClick={() => onSelect(v)}
+                            />
+                            {(cat.children?.length ?? 0) > 0 && (
+                              <div className="ml-4 border-l border-surface-100 pl-2 dark:border-surface-800">
+                                {cat.children?.map((child) => {
+                                  const childValue = mode === "id" ? child.id : child.slug;
+                                  return (
+                                    <CategoryRow
+                                      key={child.id}
+                                      name={child.name}
+                                      isSelected={activeValue === childValue}
+                                      onClick={() => onSelect(childValue)}
+                                      compact
+                                    />
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -424,13 +462,17 @@ export function CategoryPickerBody({
 function CategoryRow({
   name,
   hint,
+  childCount,
   isSelected,
   onClick,
+  compact = false,
 }: {
   name: string;
   hint?: string;
+  childCount?: number;
   isSelected: boolean;
   onClick: () => void;
+  compact?: boolean;
 }) {
   return (
     <button
@@ -441,10 +483,15 @@ function CategoryRow({
         isSelected
           ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
           : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-      }`}
+      } ${compact ? "py-1.5" : "py-2.5"}`}
     >
       <span className="min-w-0 flex-1 truncate text-caption font-medium">{name}</span>
-      {hint && <span className="shrink-0 text-[0.7rem] text-surface-400">{hint}</span>}
+      {typeof childCount === "number" && childCount > 0 && (
+        <span className="shrink-0 rounded-full bg-surface-100 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+          {childCount}
+        </span>
+      )}
+      {hint && <span className="min-w-0 max-w-[11rem] truncate text-[0.7rem] text-surface-400">{hint}</span>}
       {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
     </button>
   );

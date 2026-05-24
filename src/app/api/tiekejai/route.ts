@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildProviderLocationFilter } from "@/lib/provider-filters";
+import { expandToMatchSet } from "@/lib/category-matching";
 
 export const dynamic = "force-dynamic";
 
@@ -32,15 +33,16 @@ export async function GET(req: NextRequest) {
     }
 
     if (category) {
-      // ?category=<slug> — providers whose curated categories include it.
+      // ?category=<slug> — providers whose service categories match that branch.
       const picked = await prisma.category.findUnique({
         where: { slug: category },
         select: { id: true },
       });
+      const matchSet = picked ? await expandToMatchSet([picked.id]) : [];
       where.providerProfile = {
         ...(where.providerProfile as Record<string, unknown>),
-        categories: picked
-          ? { some: { categoryId: picked.id } }
+        categories: matchSet.length > 0
+          ? { some: { categoryId: { in: matchSet } } }
           : { some: { categoryId: "__none__" } },
       };
     }

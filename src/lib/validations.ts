@@ -65,6 +65,16 @@ export const improveDescriptionSchema = z.object({
   title: z.string().max(150).optional(),
 });
 
+export const categorySuggestionsSchema = z.object({
+  mode: z.enum(["request", "provider"]),
+  text: z
+    .string()
+    .min(10, "Parašykite bent kelis žodžius")
+    .max(4000, "Tekstas per ilgas (daugiausia 4000 simbolių)"),
+  title: z.string().max(200).optional().or(z.literal("")),
+  limit: z.number().int().min(3).max(8).optional(),
+});
+
 export const transcribeAudioSchema = z.object({
   audio: z
     .string()
@@ -89,7 +99,7 @@ export const providerProfileSchema = z.object({
   experienceYears: z.number().int().min(0).max(99).nullable().optional(),
   offersInvoices: z.boolean().optional(),
   availableForUrgent: z.boolean().optional(),
-  categoryIds: z.array(z.string()).min(1, "Pasirinkite bent vieną kategoriją").max(6, "Daugiausia 6 kategorijos"),
+  categoryIds: z.array(z.string()).min(1, "Pasirinkite bent vieną kategoriją").max(20, "Daugiausia 20 paslaugų"),
   location: z.string().min(1, "Pasirinkite miestą"),
   phone: z.string().optional(),
   website: z.string().url("Neteisingas URL formatas").optional().or(z.literal("")),
@@ -109,6 +119,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
 export type ServiceRequestEditInput = z.infer<typeof serviceRequestEditSchema>;
 export type ImproveDescriptionInput = z.infer<typeof improveDescriptionSchema>;
+export type CategorySuggestionsInput = z.infer<typeof categorySuggestionsSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;

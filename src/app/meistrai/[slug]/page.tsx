@@ -33,6 +33,7 @@ import {
 } from "./components/ProfileUiHelpers";
 import type { ProviderProfileData, StoryData } from "./components/types";
 import {
+  AlertTriangle,
   ArrowLeft,
   Award,
   Calendar,
@@ -117,6 +118,21 @@ export default async function PublicProviderProfilePage({
     );
   }
 
+  // Owners can preview their own PENDING/REJECTED profile (so the welcome-flow
+  // redirect always lands somewhere useful, and they can see why moderation
+  // blocked it). Everyone else only sees APPROVED.
+  const viewerIsOwner = session?.user?.id === provider.id;
+  if (provider.moderationStatus !== "APPROVED" && !viewerIsOwner) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <EmptyState
+          title="Tiekėjas nerastas"
+          description="Šis profilis neegzistuoja arba yra neaktyvus."
+        />
+      </div>
+    );
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
   const profileUrl = `${baseUrl}/meistrai/${resolvedSlug}`;
   const localBusinessSchema = buildLocalBusinessSchema(provider, profileUrl);
@@ -137,8 +153,10 @@ export default async function PublicProviderProfilePage({
     provider.responseCount > 0
       ? Math.round((provider.acceptedCount / provider.responseCount) * 100)
       : null;
-  const isSelf = session?.user?.id === provider.id;
+  const isSelf = viewerIsOwner;
   const isDemo = provider.name.includes("(DEMO)") || provider.name.includes("(TEST)");
+  const ownerCanSeeModerationBanner =
+    viewerIsOwner && provider.moderationStatus !== "APPROVED";
   const profileDescription =
     provider.description ||
     (isDemo
@@ -151,6 +169,56 @@ export default async function PublicProviderProfilePage({
       <JsonLd schema={breadcrumbSchema} />
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        {ownerCanSeeModerationBanner && (
+          <div
+            className={`mb-6 rounded-2xl border p-5 ${
+              provider.moderationStatus === "REJECTED"
+                ? "border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/40"
+                : "border-amber-200 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/40"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  provider.moderationStatus === "REJECTED"
+                    ? "bg-red-600 text-white"
+                    : "bg-amber-500 text-white"
+                }`}
+              >
+                {provider.moderationStatus === "REJECTED" ? (
+                  <AlertTriangle className="h-5 w-5" />
+                ) : (
+                  <Clock className="h-5 w-5" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-body-md font-semibold text-surface-900 dark:text-white">
+                  {provider.moderationStatus === "REJECTED"
+                    ? "Profilis atmestas — klientams nematomas"
+                    : "Profilis peržiūrimas — klientams kol kas nematomas"}
+                </h2>
+                <p className="mt-1 text-body-sm text-surface-700 dark:text-surface-300">
+                  {provider.moderationStatus === "REJECTED"
+                    ? "Tu šį puslapį matai, bet klientams jis paslėptas. Pataisyk turinį ir išsaugok — siųsime peržiūrai iš naujo."
+                    : "Tu šį puslapį matai iškart, klientai pamatys po administratorių peržiūros."}
+                  {provider.moderationReason ? (
+                    <>
+                      {" "}
+                      <span className="font-medium">Priežastis:</span>{" "}
+                      {provider.moderationReason}
+                    </>
+                  ) : null}{" "}
+                  <Link
+                    href="/tiekejas/profilis"
+                    className="font-medium text-brand-700 underline dark:text-brand-300"
+                  >
+                    Redaguoti profilį
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {welcome === "1" && (
           <div className="mb-6 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-amber-50 p-6 dark:border-brand-800 dark:from-brand-950 dark:to-amber-950">
             <div className="flex items-start gap-4">
@@ -546,13 +614,16 @@ async function resolveProvider(
 async function getProviderProfile(
   id: string,
 ): Promise<ProviderProfileWithCategories | null> {
+  // Fetch without the moderationStatus filter so the owner can preview their own
+  // PENDING/REJECTED profile. The page handler filters non-APPROVED away for
+  // anonymous viewers.
   const [provider, reviewSummary, recentResponses, acceptedRows] = await Promise.all([
     prisma.user.findFirst({
       where: {
         id,
         role: "PROVIDER",
         emailVerified: { not: null },
-        providerProfile: { isActive: true, moderationStatus: "APPROVED" },
+        providerProfile: { isActive: true },
       },
       select: {
         id: true,
@@ -578,6 +649,8 @@ async function getProviderProfile(
             images: true,
             isVerified: true,
             createdAt: true,
+            moderationStatus: true,
+            moderationReason: true,
           },
         },
         _count: { select: { responses: true } },
@@ -648,6 +721,8 @@ async function getProviderProfile(
     totalReviews: reviewSummary._count._all,
     lastActiveAt: (recentResponses[0]?.createdAt || profile.createdAt).toISOString(),
     memberSince: provider.createdAt.toISOString(),
+    moderationStatus: profile.moderationStatus,
+    moderationReason: profile.moderationReason,
   };
 }
 
