@@ -119,7 +119,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://paslaugos-img.dgn.lt https://api.dicebear.com https://paslaugos.lt https://*.paslaugos.lt https://media.licdn.com https://*.licdn.com https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://paslaugos-img.dgn.lt https://api.dicebear.com https://paslaugos.lt https://*.paslaugos.lt https://media.licdn.com https://*.licdn.com https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';",
           },
         ],
       },
