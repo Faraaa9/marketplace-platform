@@ -47,7 +47,7 @@ AS $$
         AND EXISTS (
           SELECT 1 FROM public.direct_inquiries di
           WHERE di.id = msg_direct_inquiry_id
-            AND (di."senderId" = uid OR di."providerId" = uid)
+            AND (di."senderUserId" = uid OR di."providerId" = uid)
         )
       )
     )
