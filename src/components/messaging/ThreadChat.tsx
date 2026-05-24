@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Send, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
+import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
 import Button from "@/components/ui/Button";
 
 /** Shape of a row from the `messages` table delivered by Supabase Realtime. */
@@ -97,42 +97,53 @@ export default function ThreadChat({
   // Subscribe to Realtime inserts for this thread. Falls back gracefully
   // (no live updates) when Supabase env vars are missing — initial hydration
   // from the server still works.
+  //
+  // We await a signed JWT first so RLS on `messages` resolves the viewer to a
+  // thread participant; without it the broker drops every payload.
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
 
     const filterColumn = threadKind === "response" ? "responseId" : "directInquiryId";
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
-      .channel(`messages-${threadId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `${filterColumn}=eq.${threadId}`,
-        },
-        (payload) => {
-          const row = payload.new as MessageRow;
-          appendMessageIfNew(threadId, {
-            id: row.id,
-            content: row.content,
-            createdAt:
-              typeof row.createdAt === "string"
-                ? row.createdAt
-                : new Date(row.createdAt).toISOString(),
-            senderId: row.senderId,
-            senderName: row.senderName,
-            sender: row.senderName ? { name: row.senderName } : null,
-            status: "sent",
-          });
-        },
-      )
-      .subscribe();
+    (async () => {
+      await authenticateRealtime();
+      if (cancelled) return;
+
+      channel = supabase
+        .channel(`messages-${threadId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `${filterColumn}=eq.${threadId}`,
+          },
+          (payload) => {
+            const row = payload.new as MessageRow;
+            appendMessageIfNew(threadId, {
+              id: row.id,
+              content: row.content,
+              createdAt:
+                typeof row.createdAt === "string"
+                  ? row.createdAt
+                  : new Date(row.createdAt).toISOString(),
+              senderId: row.senderId,
+              senderName: row.senderName,
+              sender: row.senderName ? { name: row.senderName } : null,
+              status: "sent",
+            });
+          },
+        )
+        .subscribe();
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, [threadId, threadKind, appendMessageIfNew]);
 

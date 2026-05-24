@@ -6,7 +6,7 @@ import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
+import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
 
 interface Notification {
   id: string;
@@ -81,6 +81,9 @@ export default function NotificationBell() {
   // Subscribe to Supabase Realtime for instant notification delivery (no polling).
   // Falls back gracefully if Supabase env vars are missing — initial hydration
   // from /api/notifications still works, and focus refetch keeps things fresh.
+  //
+  // We await a signed JWT first so RLS on `notifications` resolves the viewer;
+  // without it the broker drops every payload (anon role has no SELECT policy).
   useEffect(() => {
     if (status !== "authenticated" || !userId) return;
 
@@ -88,54 +91,7 @@ export default function NotificationBell() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
 
-    // 2. Open a Realtime channel scoped to this user.
-    const supabase = getSupabaseBrowser();
-    const channel = supabase
-      ?.channel(`notifications-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `userId=eq.${userId}`,
-        },
-        (payload) => {
-          const incoming = normalizeRow(payload.new as NotificationRow);
-          setNotifications((prev) => {
-            if (prev.some((n) => n.id === incoming.id)) return prev;
-            return [incoming, ...prev].slice(0, 10);
-          });
-          if (!incoming.isRead) {
-            const next = useUIStore.getState().unreadNotificationCount + 1;
-            prevUnreadRef.current = next;
-            setUnreadCount(next);
-            setHasNewSinceLastOpen(true);
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "notifications",
-          filter: `userId=eq.${userId}`,
-        },
-        (payload) => {
-          const updated = normalizeRow(payload.new as NotificationRow);
-          setNotifications((prev) => {
-            const next = prev.map((n) => (n.id === updated.id ? updated : n));
-            const unread = next.filter((n) => !n.isRead).length;
-            prevUnreadRef.current = unread;
-            setUnreadCount(unread);
-            return next;
-          });
-        },
-      )
-      .subscribe();
-
-    // 3. Safety net: if Realtime drops or misses an event, refetch when the
+    // 2. Safety net: if Realtime drops or misses an event, refetch when the
     // user returns to the tab. Debounced so rapid focus toggles don't pile up.
     const debouncedFetch = () => {
       if (Date.now() - lastFetchAtRef.current < REFETCH_DEBOUNCE_MS) return;
@@ -147,7 +103,64 @@ export default function NotificationBell() {
     window.addEventListener("focus", debouncedFetch);
     document.addEventListener("visibilitychange", handleVisibility);
 
+    // 3. Open a Realtime channel scoped to this user (after JWT auth).
+    const supabase = getSupabaseBrowser();
+    let cancelled = false;
+    let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null = null;
+
+    (async () => {
+      if (!supabase) return;
+      await authenticateRealtime();
+      if (cancelled) return;
+
+      channel = supabase
+        .channel(`notifications-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `userId=eq.${userId}`,
+          },
+          (payload) => {
+            const incoming = normalizeRow(payload.new as NotificationRow);
+            setNotifications((prev) => {
+              if (prev.some((n) => n.id === incoming.id)) return prev;
+              return [incoming, ...prev].slice(0, 10);
+            });
+            if (!incoming.isRead) {
+              const next = useUIStore.getState().unreadNotificationCount + 1;
+              prevUnreadRef.current = next;
+              setUnreadCount(next);
+              setHasNewSinceLastOpen(true);
+            }
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "notifications",
+            filter: `userId=eq.${userId}`,
+          },
+          (payload) => {
+            const updated = normalizeRow(payload.new as NotificationRow);
+            setNotifications((prev) => {
+              const next = prev.map((n) => (n.id === updated.id ? updated : n));
+              const unread = next.filter((n) => !n.isRead).length;
+              prevUnreadRef.current = unread;
+              setUnreadCount(unread);
+              return next;
+            });
+          },
+        )
+        .subscribe();
+    })();
+
     return () => {
+      cancelled = true;
       if (channel && supabase) supabase.removeChannel(channel);
       window.removeEventListener("focus", debouncedFetch);
       document.removeEventListener("visibilitychange", handleVisibility);
