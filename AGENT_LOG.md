@@ -17,6 +17,149 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 01:10 — Claude
+
+**Commit:** `1e68293` — feat(auth): auto-sign-in original tab after email verification · lokalus
+
+**Pakeitimai:** 7 files changed, 325 insertions(+), 19 deletions(-)
+
+**Failai:**
+- prisma/schema.prisma
+- src/app/(auth)/patvirtinti/page.tsx
+- src/app/(auth)/registruotis/page.tsx
+- src/app/api/auth/check-verified/route.ts
+- src/app/api/auth/register/route.ts
+- src/components/marketing/ProviderCtaLink.tsx
+- src/lib/auth.ts
+
+**Toliau:** PRIES DEPLOY paleisti `npm run db:push` — schema turi naują
+`PendingSignInToken` modelį (lentelė `pending_signin_tokens`). Be jos
+registracija failint po `/api/auth/register` insert'o. Token TTL 30 min,
+polling kas 3s — koreguoti jei reikia. Manuelis QA: (1) anonimui spausti
+"Tapti meistu" → turi nuvesti į /registruotis?intent=provider;
+(2) baigti registraciją; (3) atidaryti email patvirtinimą inkognito
+tabe; (4) originalus tabas turi per ~3s auto-prisijungti ir nukreipti
+į /tapti-tiekeju.
+
+
+## 2026-05-26 01:02 — Claude
+
+**Commit:** `ebe05af` — fix(auth): guard /tiekejas/* with server-side role check · lokalus
+
+**Pakeitimai:** 1 file changed, 22 insertions(+)
+
+**Failai:**
+- src/app/tiekejas/layout.tsx
+
+**Toliau:** Server layout uždaro /tiekejas/* subroute'us — ADMIN/PROVIDER
+praeina, kiti → redirect /tapti-tiekeju. Pastaba: /admin/layout.tsx dar
+yra "use client" be sesijos patikrinimo, tad ten ta pati spraga. Vertėtų
+pridėti analogišką server-side guard'ą, bet nėra blokeris šiam deploy'ui.
+
+
+## 2026-05-25 23:10 — Claude
+
+**Commit:** `74536df` — Replace 'Aktyvus' filter with presence-based 3-state segmented control · lokalus
+
+**Pakeitimai:** 5 files changed, 148 insertions(+), 31 deletions(-)
+
+**Failai:**
+- src/app/meistrai/page.tsx
+- src/components/tiekejai/ProviderFilterBar.tsx
+- src/components/tiekejai/ProviderListingClient.tsx
+- src/components/tiekejai/ProvidersExperience.tsx
+- src/lib/provider-filters.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-25 22:55 — Claude
+
+**Commit:** `c3e14a1` — Make presence pills more transparent on /meistrai cards · lokalus
+
+**Pakeitimai:** 1 file changed, 4 insertions(+), 4 deletions(-)
+
+**Failai:**
+- src/components/tiekejai/ProviderListingClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-25 22:52 — Claude
+
+**Commit:** `b3732ee` — Add provider presence to /meistrai listing cards + polish avatar dot · lokalus
+
+**Pakeitimai:** 7 files changed, 264 insertions(+), 11 deletions(-)
+
+**Failai:**
+- src/app/meistrai/[slug]/components/StoryAvatarButton.tsx (mano — taškas mažesnis + tarpukas nuo avataro)
+- src/app/meistrai/page.tsx (mano — `select` praplėstas su `lastSeenAt`, mapinasi į `presenceLevel`)
+- src/components/tiekejai/ProviderFilterBar.tsx (Codex WIP — grid/list toggle UI)
+- src/components/tiekejai/ProviderListingClient.tsx (mano + Codex — `PresenceDot` helper + abi (list + grid) atvaizdavimo pakopos)
+- src/components/tiekejai/ProvidersExperience.tsx (Codex WIP — view state + localStorage)
+- src/lib/presence.ts (mano — online slenkstis 2→5 min, naujas `getPresenceLevel` su 3 pakopomis)
+- src/lib/provider-filters.ts (mano — `presenceLevel` laukas `ProviderCardData`)
+
+**Toliau:**
+- Push'inti `b3732ee` + `f27c9c8` į origin/main.
+- 3 pakopų strategija kortelėje: žalias = <5 min, neutralus pilkas = <24h, nieko = senesnis. Profilis naudoja tą patį 5 min slenkstį "Prisijungęs dabar".
+- Jei norėsis ateityje pakeisti slenksčius — viskas viename faile `src/lib/presence.ts` (`ONLINE_THRESHOLD_MS` + `RECENT_THRESHOLD_MS`).
+- Realiame DB visi `lastSeenAt` dabar `NULL`, užsipildys per NextAuth JWT callback (60s throttle) kai vartotojai prisijungs / atidarys autorizuotus puslapius.
+
+**Pastabos kitam agentui:**
+- Šitas commit'as **įtraukė Codex grid/list view toggle WIP** (3 tiekejai/ failai) — buvo neįmanoma atskirti, nes `PresenceDot` helper'is gyvena `ProviderListingClient.tsx`, o tas WIP įveda `view` propą per `ProvidersExperience → ProviderFilterBar + ProviderListingClient`. Build praeina, viskas suderinta. Jei norėjai dar tobulinti view toggle prieš commit'ą, dabar pakeitimai jau `b3732ee` viduje — daryk follow-up commit'ą virš jo.
+- Likusi neliečiama Codex WIP working tree'je: `src/app/uzklausos/page.tsx`, `src/app/globals.css`, `public/theme-init.js`, `src/components/uzklausos/{RequestFilterBar,DensityToggle}.tsx`. Nelietau.
+
+
+## 2026-05-25 22:32 — Claude
+
+**Commit:** `f27c9c8` — Add provider presence indicator to /meistrai/[slug] · lokalus
+
+**Pakeitimai:** 6 files changed, 142 insertions(+), 44 deletions(-)
+
+**Failai:**
+- prisma/schema.prisma
+- src/app/meistrai/[slug]/components/StoryAvatarButton.tsx
+- src/app/meistrai/[slug]/components/types.ts
+- src/app/meistrai/[slug]/page.tsx
+- src/lib/auth.ts
+- src/lib/presence.ts
+
+**Toliau:**
+- Push'inti `f27c9c8` į origin/main (lokalus commit, dar nestumtas).
+- DB jau turi `lastSeenAt` stulpelį (pridėtas per `npm run db:push`),
+  bet pradžiai jis null visiems vartotojams — užpildysis savaime per
+  NextAuth jwt callback'ą kai kas nors prisijungs / atidarys autorizuotą
+  puslapį (1× per minutę throttle).
+- Online tik dingsta po ~2 min nuo paskutinio `getServerSession` —
+  jei norima realaus presence (window focus / blur), reikės atskiro
+  heartbeat endpoint'o; dabartinis variantas yra "aktyvus prieš mažiau
+  nei 2 min nuo paskutinio server-rendered puslapio".
+- Pill rodomas tik `/meistrai/[slug]` puslapyje. Provider listing
+  kortelės (`/meistrai`) kol kas presence nerodo — jei norima, prisidėti
+  į `ProviderCard` ar lygiavertį komponentą.
+
+**Pastabos kitam agentui:**
+- Working tree turi nekomituotų pakeitimų kituose failuose (uzklausos,
+  ProviderListing, theme-init, globals.css, +DensityToggle.tsx) — tai
+  Codex / kito Claude'o WIP. Nelietau.
+- Dev Prisma client cachuoja schemos snapshotą — keičiant `schema.prisma`
+  ir leidžiant per Turbopack, gali tekti restart'inti dev serverį, kad
+  naujas client'as įsikrautų (matomas kaip "Unknown field" Prisma error).
+
+
+## 2026-05-25 16:26 — Claude
+
+**Commit:** `6fdfa3e` — log: fill in Toliau for 2c9e101 (confirms hook works end-to-end) · lokalus
+
+**Pakeitimai:** 1 file changed, 15 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-25 16:25 — Claude
 
 **Commit:** `2c9e101` — Fix agent-log-entry.sh on BSD awk (macOS) + flesh out journal entry · lokalus
