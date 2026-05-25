@@ -12,7 +12,7 @@ import {
 } from "@/lib/provider-filters";
 
 const PER_PAGE = 20;
-const FILTER_PARAM_KEYS = ["search", "location", "category", "active", "urgent", "top"];
+const FILTER_PARAM_KEYS = ["search", "location", "category", "presence", "active", "urgent", "top"];
 const VIEW_STORAGE_KEY = "meistrai-view";
 export type ProvidersView = "grid" | "list";
 
@@ -65,7 +65,7 @@ export default function ProvidersExperience({
       if (filters.search) url.searchParams.set("search", filters.search);
       if (filters.location) url.searchParams.set("location", filters.location);
       if (filters.category) url.searchParams.set("category", filters.category);
-      if (filters.active) url.searchParams.set("active", "1");
+      if (filters.presence !== "all") url.searchParams.set("presence", filters.presence);
       if (filters.urgent) url.searchParams.set("urgent", "1");
       if (filters.top) url.searchParams.set("top", "1");
       const qs = url.searchParams.toString();
@@ -107,8 +107,10 @@ export default function ProvidersExperience({
         totalPages={totalPages}
         hasActiveFilters={hasActiveProviderFilters(filters)}
         view={view}
+        presence={filters.presence}
         onPageChange={handlePageChange}
         onClearFilters={handleClearFilters}
+        onPresenceChange={(next) => handleFiltersChange({ presence: next })}
       />
     </>
   );

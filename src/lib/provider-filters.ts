@@ -29,11 +29,13 @@ export interface ProviderCardData {
   avgResponseTimeHours: number | null;
 }
 
+export type PresenceFilter = "all" | "online" | "today";
+
 export interface ProviderFilters {
   search: string;
   location: string;
   category: string;
-  active: boolean;
+  presence: PresenceFilter;
   urgent: boolean;
   top: boolean;
 }
@@ -42,7 +44,7 @@ export const EMPTY_PROVIDER_FILTERS: ProviderFilters = {
   search: "",
   location: "",
   category: "",
-  active: false,
+  presence: "all",
   urgent: false,
   top: false,
 };
@@ -54,7 +56,7 @@ export function hasActiveProviderFilters(filters: ProviderFilters): boolean {
     filters.search ||
       filters.location ||
       filters.category ||
-      filters.active ||
+      filters.presence !== "all" ||
       filters.urgent ||
       filters.top,
   );
@@ -144,7 +146,8 @@ export function filterAndSortProviders(
       return false;
     }
     if (filters.urgent && !p.availableForUrgent) return false;
-    if (filters.active && !p.isRecentlyActive) return false;
+    if (filters.presence === "online" && p.presenceLevel !== "online") return false;
+    if (filters.presence === "today" && p.presenceLevel === null) return false;
     if (filters.top && (p.avgRating === null || p.avgRating < TOP_RATING_THRESHOLD)) {
       return false;
     }

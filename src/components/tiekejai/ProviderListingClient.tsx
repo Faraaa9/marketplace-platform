@@ -18,7 +18,7 @@ import {
   FileCheck,
   Globe,
 } from "lucide-react";
-import type { ProviderCardData } from "@/lib/provider-filters";
+import type { PresenceFilter, ProviderCardData } from "@/lib/provider-filters";
 import type { ProvidersView } from "./ProvidersExperience";
 
 /* ═══════════════════════════════════════════════════════
@@ -31,8 +31,10 @@ interface ProviderListingClientProps {
   totalPages: number;
   hasActiveFilters: boolean;
   view: ProvidersView;
+  presence: PresenceFilter;
   onPageChange: (page: number) => void;
   onClearFilters: () => void;
+  onPresenceChange: (next: PresenceFilter) => void;
 }
 
 interface ProviderDetail {
@@ -483,8 +485,10 @@ export default function ProviderListingClient({
   totalPages,
   hasActiveFilters,
   view,
+  presence,
   onPageChange,
   onClearFilters,
+  onPresenceChange,
 }: ProviderListingClientProps) {
 
   /* ── Sheet state ── */
@@ -859,17 +863,31 @@ export default function ProviderListingClient({
             <Search className="h-6 w-6 text-surface-400" />
           </div>
           <p className="text-body font-semibold text-surface-700 dark:text-surface-300">
-            {hasActiveFilters
-              ? "Tiekėjų pagal pasirinktus filtrus nerasta"
-              : "Tiekėjų kol kas nėra"}
+            {presence === "online"
+              ? "Šiuo metu nei vienas meistras nėra prisijungęs"
+              : hasActiveFilters
+                ? "Tiekėjų pagal pasirinktus filtrus nerasta"
+                : "Tiekėjų kol kas nėra"}
           </p>
           <p className="mt-1.5 text-body-sm text-surface-400 max-w-md mx-auto">
-            {hasActiveFilters
-              ? "Pabandykite pakeisti filtrus arba peržiūrėti visus tiekėjus"
-              : "Platforma dar tik auga. Paskelbkite užklausą — ji bus matoma visiems būsimiems tiekėjams."}
+            {presence === "online"
+              ? "Išplėskite paiešką į meistrus, kurie buvo aktyvūs per pastarą parą — dauguma greitai atsako į užklausas."
+              : hasActiveFilters
+                ? "Pabandykite pakeisti filtrus arba peržiūrėti visus tiekėjus"
+                : "Platforma dar tik auga. Paskelbkite užklausą — ji bus matoma visiems būsimiems tiekėjams."}
           </p>
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {hasActiveFilters && (
+            {presence === "online" && (
+              <button
+                type="button"
+                onClick={() => onPresenceChange("today")}
+                className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-white/85" aria-hidden />
+                Rodyti aktyvius šiandien
+              </button>
+            )}
+            {hasActiveFilters && presence !== "online" && (
               <button
                 type="button"
                 onClick={onClearFilters}

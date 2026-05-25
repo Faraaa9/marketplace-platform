@@ -8,7 +8,6 @@ import {
   MapPin,
   SlidersHorizontal,
   Zap,
-  Clock,
   Star,
   ChevronDown,
   Tag,
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
-import type { ProviderFilters } from "@/lib/provider-filters";
+import type { PresenceFilter, ProviderFilters } from "@/lib/provider-filters";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 import type { ProvidersView } from "./ProvidersExperience";
 
@@ -44,7 +43,7 @@ export default function ProviderFilterBar({
   onClear,
   onViewChange,
 }: FilterBarProps) {
-  const { search, location, category, active, urgent, top } = filters;
+  const { search, location, category, presence, urgent, top } = filters;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
@@ -52,7 +51,7 @@ export default function ProviderFilterBar({
 
   const [mobileLocation, setMobileLocation] = useState(location);
   const [mobileCategory, setMobileCategory] = useState(category);
-  const [mobileActive, setMobileActive] = useState(active);
+  const [mobilePresence, setMobilePresence] = useState<PresenceFilter>(presence);
   const [mobileUrgent, setMobileUrgent] = useState(urgent);
   const [mobileTop, setMobileTop] = useState(top);
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
@@ -66,7 +65,13 @@ export default function ProviderFilterBar({
       .catch(() => {});
   }, []);
 
-  const activeFilterCount = [location, category, active, urgent, top].filter(Boolean).length;
+  const activeFilterCount = [
+    location,
+    category,
+    presence !== "all" ? presence : "",
+    urgent,
+    top,
+  ].filter(Boolean).length;
   const activeCategoryLabel = (() => {
     for (const group of categoryGroups) {
       const stack = [group.root];
@@ -84,10 +89,10 @@ export default function ProviderFilterBar({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileLocation(location);
     setMobileCategory(category);
-    setMobileActive(active);
+    setMobilePresence(presence);
     setMobileUrgent(urgent);
     setMobileTop(top);
-  }, [location, category, active, urgent, top]);
+  }, [location, category, presence, urgent, top]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -116,7 +121,7 @@ export default function ProviderFilterBar({
     onChange({
       location: mobileLocation,
       category: mobileCategory,
-      active: mobileActive,
+      presence: mobilePresence,
       urgent: mobileUrgent,
       top: mobileTop,
     });
@@ -126,7 +131,7 @@ export default function ProviderFilterBar({
   function clearMobileFilters() {
     setMobileLocation("");
     setMobileCategory("");
-    setMobileActive(false);
+    setMobilePresence("all");
     setMobileUrgent(false);
     setMobileTop(false);
     onClear();
@@ -222,10 +227,17 @@ export default function ProviderFilterBar({
 
           <div className="h-5 w-px bg-surface-200 dark:bg-surface-700" />
 
-          {/* Toggle chips */}
-          <FilterToggle active={active} onClick={() => onChange({ active: !active })} icon={<Clock className="h-3.5 w-3.5" />}>
-            Aktyvus
-          </FilterToggle>
+          {/* Presence segmented control */}
+          <PresenceChip
+            level="online"
+            active={presence === "online"}
+            onClick={() => onChange({ presence: presence === "online" ? "all" : "online" })}
+          />
+          <PresenceChip
+            level="today"
+            active={presence === "today"}
+            onClick={() => onChange({ presence: presence === "today" ? "all" : "today" })}
+          />
           <FilterToggle active={urgent} onClick={() => onChange({ urgent: !urgent })} icon={<Zap className="h-3.5 w-3.5" />}>
             Skubūs
           </FilterToggle>
@@ -290,7 +302,12 @@ export default function ProviderFilterBar({
               <div className="h-3.5 w-px bg-surface-200 dark:bg-surface-700" />
               {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
               {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
-              {active && <ActiveChip label="Aktyvus" onRemove={() => onChange({ active: false })} />}
+              {presence !== "all" && (
+                <ActiveChip
+                  label={presence === "online" ? "Online dabar" : "Šiandien"}
+                  onRemove={() => onChange({ presence: "all" })}
+                />
+              )}
               {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
               {top && <ActiveChip label="Top" onRemove={() => onChange({ top: false })} />}
             </>
@@ -406,13 +423,49 @@ export default function ProviderFilterBar({
                 )}
               </div>
 
+              {/* Presence segmented */}
+              <div>
+                <label className="text-body-sm font-semibold text-surface-700 dark:text-surface-200 mb-3 block">
+                  Aktyvumas
+                </label>
+                <div className="inline-flex w-full rounded-2xl bg-surface-100 p-1 dark:bg-surface-800">
+                  {(["all", "online", "today"] as const).map((option) => {
+                    const isActive = mobilePresence === option;
+                    const label =
+                      option === "all" ? "Visi" : option === "online" ? "Online" : "Šiandien";
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setMobilePresence(option)}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-body-sm font-semibold transition-all ${
+                          isActive
+                            ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
+                            : "text-surface-500 dark:text-surface-400"
+                        }`}
+                      >
+                        {option === "online" && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+                        )}
+                        {option === "today" && (
+                          <span
+                            className="h-1.5 w-1.5 rounded-full bg-surface-400 dark:bg-surface-500"
+                            aria-hidden
+                          />
+                        )}
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Toggle filters */}
               <div>
                 <label className="text-body-sm font-semibold text-surface-700 dark:text-surface-200 mb-3 block">
                   Greiti filtrai
                 </label>
                 <div className="space-y-2">
-                  <MobileToggle active={mobileActive} onClick={() => setMobileActive(!mobileActive)} icon={<Clock className="h-4 w-4" />} label="Aktyvus dabar" sublabel="Prisijungę per pastarąją savaitę" />
                   <MobileToggle active={mobileUrgent} onClick={() => setMobileUrgent(!mobileUrgent)} icon={<Zap className="h-4 w-4" />} label="Skubūs darbai" sublabel="Priima skubius užsakymus" />
                   <MobileToggle active={mobileTop} onClick={() => setMobileTop(!mobileTop)} icon={<Star className="h-4 w-4" />} label="Top reitingas" sublabel="4.5+ žvaigždučių vertinimas" />
                 </div>
@@ -448,7 +501,12 @@ export default function ProviderFilterBar({
           {search && <ActiveChip label={`"${search}"`} onRemove={() => onChange({ search: "" })} />}
           {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
           {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
-          {active && <ActiveChip label="Aktyvus" onRemove={() => onChange({ active: false })} />}
+          {presence !== "all" && (
+            <ActiveChip
+              label={presence === "online" ? "Online dabar" : "Aktyvūs šiandien"}
+              onRemove={() => onChange({ presence: "all" })}
+            />
+          )}
           {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
           {top && <ActiveChip label="Top reitingas" onRemove={() => onChange({ top: false })} />}
           <button
@@ -502,6 +560,33 @@ function MobileCategoryButton({
           {childCount}
         </span>
       )}
+    </button>
+  );
+}
+
+function PresenceChip({
+  level,
+  active,
+  onClick,
+}: {
+  level: "online" | "today";
+  active: boolean;
+  onClick: () => void;
+}) {
+  const label = level === "online" ? "Online dabar" : "Šiandien";
+  const dotClass =
+    level === "online" ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500";
+  return (
+    <button
+      onClick={onClick}
+      className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
+        active
+          ? "border-brand-200 bg-brand-50 text-brand-700 shadow-sm dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
+          : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} aria-hidden />
+      {label}
     </button>
   );
 }

@@ -22,6 +22,7 @@ interface PageProps {
     search?: string;
     location?: string;
     category?: string;
+    presence?: string;
     active?: string;
     urgent?: string;
     top?: string;
@@ -91,11 +92,19 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     }),
   );
   const rawCategory = params.category ?? "";
+  // `?active=1` is the legacy alias — old bookmarks land on the closest
+  // present-day equivalent ('today' bucket) instead of breaking.
+  const presence: ProviderFilters["presence"] =
+    params.presence === "online"
+      ? "online"
+      : params.presence === "today" || params.active === "1"
+        ? "today"
+        : "all";
   const initialFilters: ProviderFilters = {
     search: params.search?.trim() || "",
     location: params.location || "",
     category: validCategorySlugs.has(rawCategory) ? rawCategory : "",
-    active: params.active === "1",
+    presence,
     urgent: params.urgent === "1",
     top: params.top === "1",
   };
