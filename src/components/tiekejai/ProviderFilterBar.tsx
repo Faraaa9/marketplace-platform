@@ -12,17 +12,22 @@ import {
   Star,
   ChevronDown,
   Tag,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
+import type { ProvidersView } from "./ProvidersExperience";
 
 interface FilterBarProps {
   filters: ProviderFilters;
   resultCount: number;
+  view: ProvidersView;
   onChange: (patch: Partial<ProviderFilters>) => void;
   onClear: () => void;
+  onViewChange: (view: ProvidersView) => void;
 }
 
 function resultLabel(count: number) {
@@ -34,8 +39,10 @@ function resultLabel(count: number) {
 export default function ProviderFilterBar({
   filters,
   resultCount,
+  view,
   onChange,
   onClear,
+  onViewChange,
 }: FilterBarProps) {
   const { search, location, category, active, urgent, top } = filters;
 
@@ -226,9 +233,10 @@ export default function ProviderFilterBar({
             Top
           </FilterToggle>
 
-          {/* Spacer + count */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* Spacer + count + view toggle */}
+          <div className="ml-auto flex items-center gap-3">
             <span className="text-body-sm text-surface-400">{resultLabel(resultCount)}</span>
+            <ViewToggle view={view} onChange={onViewChange} />
           </div>
         </div>
       </div>
@@ -287,6 +295,9 @@ export default function ProviderFilterBar({
               {top && <ActiveChip label="Top" onRemove={() => onChange({ top: false })} />}
             </>
           )}
+          <div className="ml-auto">
+            <ViewToggle view={view} onChange={onViewChange} />
+          </div>
         </div>
       </div>
 
@@ -518,6 +529,47 @@ function FilterToggle({
       {icon}
       {children}
     </button>
+  );
+}
+
+function ViewToggle({
+  view,
+  onChange,
+}: {
+  view: ProvidersView;
+  onChange: (view: ProvidersView) => void;
+}) {
+  return (
+    <div className="inline-flex items-center rounded-full border border-surface-200 bg-white p-0.5 shadow-sm dark:border-surface-700 dark:bg-surface-800">
+      <button
+        type="button"
+        onClick={() => onChange("grid")}
+        aria-pressed={view === "grid"}
+        aria-label="Tinklelio vaizdas"
+        title="Tinklelio vaizdas"
+        className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+          view === "grid"
+            ? "bg-surface-100 text-surface-900 dark:bg-surface-700 dark:text-white"
+            : "text-surface-400 hover:text-surface-600 dark:hover:text-surface-200"
+        }`}
+      >
+        <LayoutGrid className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("list")}
+        aria-pressed={view === "list"}
+        aria-label="Sąrašo vaizdas"
+        title="Sąrašo vaizdas"
+        className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+          view === "list"
+            ? "bg-surface-100 text-surface-900 dark:bg-surface-700 dark:text-white"
+            : "text-surface-400 hover:text-surface-600 dark:hover:text-surface-200"
+        }`}
+      >
+        <List className="h-3.5 w-3.5" />
+      </button>
+    </div>
   );
 }
 

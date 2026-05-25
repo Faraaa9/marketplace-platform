@@ -20,6 +20,7 @@ export interface ProviderCardData {
   responseCount: number;
   acceptedCount: number;
   isRecentlyActive: boolean;
+  presenceLevel: "online" | "recent" | null;
   avgRating: number | null;
   reviewCount: number;
   hasActiveStory: boolean;

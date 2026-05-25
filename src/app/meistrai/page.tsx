@@ -7,6 +7,7 @@ import { Users, ArrowRight, Database } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
+import { getPresenceLevel } from "@/lib/presence";
 import type { ProviderCardData, ProviderFilters } from "@/lib/provider-filters";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         name: true,
         image: true,
         createdAt: true,
+        lastSeenAt: true,
         providerProfile: {
           select: {
             slug: true,
@@ -204,6 +206,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       responseCount: p._count.responses,
       acceptedCount,
       isRecentlyActive,
+      presenceLevel: getPresenceLevel(p.lastSeenAt),
       avgRating,
       reviewCount,
       hasActiveStory: providersWithStories.has(p.id),

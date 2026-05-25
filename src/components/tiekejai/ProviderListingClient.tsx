@@ -19,6 +19,7 @@ import {
   Globe,
 } from "lucide-react";
 import type { ProviderCardData } from "@/lib/provider-filters";
+import type { ProvidersView } from "./ProvidersExperience";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -29,6 +30,7 @@ interface ProviderListingClientProps {
   page: number;
   totalPages: number;
   hasActiveFilters: boolean;
+  view: ProvidersView;
   onPageChange: (page: number) => void;
   onClearFilters: () => void;
 }
@@ -107,6 +109,20 @@ function formatResponseTime(hours: number): string {
   if (hours < 1) return "<1 val.";
   if (hours < 24) return `${hours} val.`;
   return `${Math.round(hours / 24)} d.`;
+}
+
+function PresenceDot({ level }: { level: ProviderCardData["presenceLevel"] }) {
+  if (!level) return null;
+  const isOnline = level === "online";
+  return (
+    <span
+      className={`pointer-events-none absolute bottom-0.5 right-0.5 block h-2.5 w-2.5 rounded-full ring-[2.5px] ring-white dark:ring-surface-900 ${
+        isOnline ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
+      }`}
+      aria-label={isOnline ? "Prisijungęs dabar" : "Aktyvus per pastarą parą"}
+      title={isOnline ? "Prisijungęs dabar" : "Aktyvus per pastarą parą"}
+    />
+  );
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -466,6 +482,7 @@ export default function ProviderListingClient({
   page,
   totalPages,
   hasActiveFilters,
+  view,
   onPageChange,
   onClearFilters,
 }: ProviderListingClientProps) {
@@ -584,6 +601,124 @@ export default function ProviderListingClient({
   return (
     <>
       {providers.length > 0 ? (
+        view === "list" ? (
+          <ul className="flex flex-col gap-2.5">
+            {providers.map((p) => {
+              const badge = pickBadge(p);
+              const mainCategory =
+                p.categories.length > 0
+                  ? p.categories[0].name
+                  : "Paslaugų tiekėjas";
+              const priceText =
+                p.priceFrom !== null && p.priceFrom > 0
+                  ? `Nuo ${p.priceFrom} €`
+                  : "Kaina derinama";
+              const isSelected = sheetProviderId === p.id;
+
+              return (
+                <li key={p.id}>
+                  <a
+                    href={`/meistrai/${p.id}`}
+                    className="block cursor-pointer select-none"
+                    onMouseEnter={() => handleMouseEnter(p.id)}
+                    onClick={(e) => handleCardClick(e, p.id)}
+                  >
+                    <article
+                      className={`group flex items-center gap-4 rounded-2xl bg-white p-3 ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_22px_rgba(0,0,0,0.10)] dark:bg-surface-900 dark:ring-white/[0.08] ${
+                        isSelected
+                          ? "ring-2 ring-brand-500 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_22px_rgba(0,0,0,0.10)]"
+                          : "shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                      }`}
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative h-16 w-16 shrink-0 rounded-xl sm:h-20 sm:w-20">
+                        <div className="absolute inset-0 overflow-hidden rounded-xl">
+                          {p.coverImage ? (
+                            <Image
+                              src={p.coverImage}
+                              alt={p.name || ""}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${pickGradient(p.id)}`}
+                            >
+                              <span className="text-xl font-semibold text-white/70">
+                                {(p.name || "T")[0].toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <PresenceDot level={p.presenceLevel} />
+                      </div>
+
+                      {/* Main info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="truncate text-body font-semibold text-surface-900 dark:text-white">
+                            {p.name}
+                          </h3>
+                          {badge && (
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.cls}`}
+                            >
+                              {badge.label}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-2 text-[13px] text-surface-500 dark:text-surface-400">
+                          <span className="truncate">{mainCategory}</span>
+                          {p.location && (
+                            <>
+                              <span className="text-surface-300 dark:text-surface-600">·</span>
+                              <span className="inline-flex items-center gap-1 truncate">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                {p.location}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-surface-400">
+                          {p.avgRating !== null && (
+                            <span className="inline-flex items-center gap-1 text-surface-600 dark:text-surface-300">
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                              <span className="font-medium">{p.avgRating}</span>
+                              <span className="text-surface-400">({p.reviewCount})</span>
+                            </span>
+                          )}
+                          {p.avgResponseTimeHours !== null && (
+                            <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                              <Clock className="h-3 w-3" />
+                              {formatResponseTime(p.avgResponseTimeHours)}
+                            </span>
+                          )}
+                          {p.responseCount > 0 && (
+                            <span>{p.responseCount} pasiūl.</span>
+                          )}
+                          {p.acceptedCount > 0 && (
+                            <span className="text-emerald-600 dark:text-emerald-400">
+                              {p.acceptedCount} priimta
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Price + chevron */}
+                      <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
+                        <span className="text-body-sm font-semibold text-surface-900 dark:text-white whitespace-nowrap">
+                          {priceText}
+                        </span>
+                        <ArrowRight className="h-4 w-4 text-surface-300 transition-colors group-hover:text-surface-500 dark:text-surface-600 dark:group-hover:text-surface-300" />
+                      </div>
+                    </article>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {providers.map((p) => {
             const badge = pickBadge(p);
@@ -654,6 +789,24 @@ export default function ProviderListingClient({
                         {badge.label}
                       </span>
                     )}
+
+                    {p.presenceLevel && (
+                      <span
+                        className={`absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium backdrop-blur-sm ${
+                          p.presenceLevel === "online"
+                            ? "bg-white/85 text-emerald-700 dark:bg-surface-900/80 dark:text-emerald-300"
+                            : "bg-white/75 text-surface-600 dark:bg-surface-900/70 dark:text-surface-300"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            p.presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
+                          }`}
+                          aria-hidden
+                        />
+                        {p.presenceLevel === "online" ? "Online" : "Šiandien"}
+                      </span>
+                    )}
                   </div>
 
                   {/* ── Bottom info ── */}
@@ -698,6 +851,7 @@ export default function ProviderListingClient({
             );
           })}
         </div>
+        )
       ) : (
         /* ── Empty state ── */
         <div className="rounded-[28px] border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">

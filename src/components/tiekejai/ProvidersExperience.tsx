@@ -13,6 +13,8 @@ import {
 
 const PER_PAGE = 20;
 const FILTER_PARAM_KEYS = ["search", "location", "category", "active", "urgent", "top"];
+const VIEW_STORAGE_KEY = "meistrai-view";
+export type ProvidersView = "grid" | "list";
 
 interface ProvidersExperienceProps {
   initialProviders: ProviderCardData[];
@@ -25,6 +27,21 @@ export default function ProvidersExperience({
 }: ProvidersExperienceProps) {
   const [filters, setFilters] = useState<ProviderFilters>(initialFilters);
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<ProvidersView>("grid");
+
+  useEffect(() => {
+    const saved = typeof window === "undefined" ? null : localStorage.getItem(VIEW_STORAGE_KEY);
+    if (saved === "list" || saved === "grid") setView(saved);
+  }, []);
+
+  function handleViewChange(next: ProvidersView) {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, next);
+    } catch {
+      // localStorage may be unavailable (private mode, quota) — ignore.
+    }
+  }
 
   const filtered = useMemo(
     () => filterAndSortProviders(initialProviders, filters),
@@ -78,8 +95,10 @@ export default function ProvidersExperience({
         <ProviderFilterBar
           filters={filters}
           resultCount={filtered.length}
+          view={view}
           onChange={handleFiltersChange}
           onClear={handleClearFilters}
+          onViewChange={handleViewChange}
         />
       </div>
       <ProviderListingClient
@@ -87,6 +106,7 @@ export default function ProvidersExperience({
         page={currentPage}
         totalPages={totalPages}
         hasActiveFilters={hasActiveProviderFilters(filters)}
+        view={view}
         onPageChange={handlePageChange}
         onClearFilters={handleClearFilters}
       />
