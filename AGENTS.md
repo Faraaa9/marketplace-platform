@@ -138,6 +138,34 @@ when available and verify against current Supabase documentation.
   them, and mark any placeholder clearly in code comments when it affects code.
 - Preserve unrelated user changes in the working tree.
 
+## Cross-Agent Coordination
+
+Multiple agents (Claude, Codex, possibly others) share this repo. Keep them
+in sync via `AGENT_LOG.md` at the repo root.
+
+**At session start:** read the top entry of `AGENT_LOG.md` to learn what the
+other agent did recently and what's queued next. Don't blindly repeat work
+or revert changes you don't recognize.
+
+**Before committing:** run `git status` and `git diff` — if there are
+modifications you didn't make, they're likely the other agent's WIP. Either
+include them with explicit ack in your commit message, or stash/leave them
+alone.
+
+**After committing:** add a journal entry. Two options:
+
+1. **Manual:** `bash scripts/agent-log-entry.sh Codex` (or `Claude`) — prepends
+   a stub entry for the new HEAD commit. Idempotent. Then fill in the
+   **Toliau** field with notes for the next agent.
+
+2. **Automatic (Claude only):** `.claude/hooks/post-commit-log.sh` runs after
+   every `git commit` and calls the script for you. Codex must call the
+   script manually.
+
+The `AGENT_LOG.md` file IS committed (unlike `.claude/`), so journal entries
+travel with the repo. Commit them together with related code, or in a
+follow-up `chore(log): ...` commit.
+
 ## Pre-Handoff Checklist
 
 - Can this be a Server Component?
