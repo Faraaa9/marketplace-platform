@@ -31,6 +31,7 @@ model User {
   notifications           Notification[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  pendingSignInTokens     PendingSignInToken[]
   reviewsGiven            Review[]                 @relation("ReviewClient")
   reviewsReceived         Review[]                 @relation("ReviewProvider")
   directInquiriesSent     DirectInquiry[]          @relation("InquirySender")
@@ -289,6 +290,23 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_verification_tokens")
+}
+
+// One-time auto-sign-in token issued during registration. Lives only in the
+// registering browser tab; redeemable AFTER email verification completes so
+// the original tab can sign the user in without re-asking for the password.
+model PendingSignInToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("pending_signin_tokens")
 }
 
 model Review {

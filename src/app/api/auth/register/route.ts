@@ -58,6 +58,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // One-time signin token — lives only in this browser tab, lets it
+    // auto-login once email is verified without re-asking for the password.
+    const signinToken = crypto.randomBytes(32).toString("hex");
+    await prisma.pendingSignInToken.create({
+      data: {
+        token: signinToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+
     const emailData = emailVerificationEmail(name || "Vartotojas", token);
     const emailResult = await sendEmail({ to: email, ...emailData });
 
@@ -68,6 +79,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         emailSent: emailResult.success,
         emailMock: !!emailResult.mock,
+        signinToken,
       },
       warning: emailResult.success
         ? null

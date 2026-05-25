@@ -26,8 +26,56 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "El. paštas", type: "email" },
         password: { label: "Slaptažodis", type: "password" },
+        signinToken: { label: "Auto signin token", type: "text" },
       },
       async authorize(credentials) {
+        // Branch A: one-time signin token issued during registration. Lets the
+        // original tab auto-login after the user verifies email in another tab.
+        if (credentials?.signinToken) {
+          const tokenRow = await prisma.pendingSignInToken.findUnique({
+            where: { token: credentials.signinToken },
+            select: {
+              id: true,
+              userId: true,
+              expiresAt: true,
+              usedAt: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  role: true,
+                  image: true,
+                  emailVerified: true,
+                },
+              },
+            },
+          });
+
+          if (!tokenRow || tokenRow.usedAt || tokenRow.expiresAt < new Date()) {
+            throw new Error("Patvirtinimo nuoroda nebegalioja");
+          }
+
+          if (!tokenRow.user.emailVerified) {
+            throw new Error("El. paštas dar nepatvirtintas");
+          }
+
+          // Burn the token so it can't be replayed.
+          await prisma.pendingSignInToken.update({
+            where: { id: tokenRow.id },
+            data: { usedAt: new Date() },
+          });
+
+          return {
+            id: tokenRow.user.id,
+            email: tokenRow.user.email,
+            name: tokenRow.user.name,
+            role: tokenRow.user.role,
+            image: tokenRow.user.image,
+          };
+        }
+
+        // Branch B: classic email + password.
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Įveskite el. paštą ir slaptažodį");
         }

@@ -22,6 +22,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get("email") || "";
+  const intent = searchParams.get("intent") || "";
   const { data: session, status } = useSession();
   const [form, setForm] = useState({ name: "", email: emailParam, password: "", confirmPassword: "" });
   const [error, setError] = useState("");
@@ -56,12 +57,26 @@ function RegisterForm() {
         return;
       }
 
+      // Park the signin token in sessionStorage so /patvirtinti can poll for
+      // verification and auto-login this tab without a fresh password prompt.
+      if (data.data?.signinToken && typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("pendingSignInToken", data.data.signinToken);
+        } catch {
+          // sessionStorage unavailable (private mode) — fall back to the
+          // classic flow where the user logs in manually.
+        }
+      }
+
       const params = new URLSearchParams({
         email: form.email,
         delivery: data.data?.emailSent ? "sent" : "failed",
       });
       if (data.data?.emailMock) {
         params.set("mock", "1");
+      }
+      if (intent) {
+        params.set("intent", intent);
       }
       router.push(`/patvirtinti?${params.toString()}`);
       router.refresh();

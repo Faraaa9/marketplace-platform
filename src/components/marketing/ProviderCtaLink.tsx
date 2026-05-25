@@ -36,10 +36,14 @@ export default function ProviderCtaLink({
     );
   }
 
-  // Both logged-in non-providers and anonymous users go to /tiekejams
-  // where they can either register or use the "become provider" flow
+  // Logged-in non-providers go to /tapti-tiekeju. Anonymous users go to
+  // /registruotis?intent=provider so that after email verification we can
+  // route them straight to /tapti-tiekeju instead of the default home.
   return (
-    <Link href={session ? "/tapti-tiekeju" : "/registruotis"} className={className}>
+    <Link
+      href={session ? "/tapti-tiekeju" : "/registruotis?intent=provider"}
+      className={className}
+    >
       {children}
     </Link>
   );
