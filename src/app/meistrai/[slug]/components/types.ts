@@ -29,6 +29,7 @@ export interface ProviderProfileData {
   avgRating: number | null;
   totalReviews: number;
   lastActiveAt: string;
+  lastSeenAt: string | null;
   memberSince: string;
   moderationStatus: string;
   moderationReason: string | null;

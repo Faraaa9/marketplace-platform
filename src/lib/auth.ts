@@ -98,6 +98,23 @@ export const authOptions: NextAuthOptions = {
         }
         token.roleSyncedAt = Date.now();
       }
+
+      // Heartbeat: refresh User.lastSeenAt at most once per minute. The jwt
+      // callback fires on every getServerSession() call, so authenticated
+      // navigation across the app keeps this current without an extra endpoint.
+      const lastSeenSync = typeof token.lastSeenSyncedAt === "number" ? token.lastSeenSyncedAt : 0;
+      if (token.id && Date.now() - lastSeenSync > 60_000) {
+        try {
+          await prisma.user.update({
+            where: { id: token.id as string },
+            data: { lastSeenAt: new Date() },
+            select: { id: true },
+          });
+        } catch {
+          // User may have been deleted; swallow and move on.
+        }
+        token.lastSeenSyncedAt = Date.now();
+      }
       return token;
     },
     async session({ session, token }) {

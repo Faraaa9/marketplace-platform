@@ -9,6 +9,7 @@ import { authOptions } from "@/lib/auth";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
+import { isOnline as computeIsOnline, formatLastSeen } from "@/lib/presence";
 import EmptyState from "@/components/ui/EmptyState";
 import { JsonLd } from "@/components/seo/JsonLd";
 import DirectInquiryWidget from "./components/DirectInquiryWidget";
@@ -139,11 +140,8 @@ export default async function PublicProviderProfilePage({
   const breadcrumbSchema = buildBreadcrumbSchema(provider.name, profileUrl, baseUrl);
   const reviewSchemas = buildReviewSchemas(provider.name, topReviews);
 
-  const daysSinceActive = Math.floor(
-    // eslint-disable-next-line react-hooks/purity
-    (Date.now() - new Date(provider.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const isRecentlyActive = daysSinceActive <= 7;
+  const providerIsOnline = computeIsOnline(provider.lastSeenAt);
+  const lastSeenLabel = formatLastSeen(provider.lastSeenAt);
   const memberMonths = Math.max(
     1,
     // eslint-disable-next-line react-hooks/purity
@@ -296,6 +294,7 @@ export default async function PublicProviderProfilePage({
                     stories={stories}
                     providerName={provider.name}
                     providerImage={provider.image}
+                    isOnline={providerIsOnline}
                   />
                 </div>
 
@@ -347,11 +346,18 @@ export default async function PublicProviderProfilePage({
                       month: "long",
                     })}
                   </MetaPill>
-                  {isRecentlyActive && (
-                    <MetaPill icon={<Clock className="h-3.5 w-3.5" />} tone="success">
-                      Aktyvus šią savaitę
+                  {providerIsOnline ? (
+                    <MetaPill
+                      icon={<span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />}
+                      tone="success"
+                    >
+                      Prisijungęs dabar
                     </MetaPill>
-                  )}
+                  ) : lastSeenLabel ? (
+                    <MetaPill icon={<Clock className="h-3.5 w-3.5" />}>
+                      {lastSeenLabel}
+                    </MetaPill>
+                  ) : null}
                   {provider.website && (
                     <a
                       href={provider.website.startsWith("http") ? provider.website : `https://${provider.website}`}
@@ -630,6 +636,7 @@ async function getProviderProfile(
         name: true,
         image: true,
         createdAt: true,
+        lastSeenAt: true,
         providerProfile: {
           select: {
             description: true,
@@ -720,6 +727,7 @@ async function getProviderProfile(
     avgRating,
     totalReviews: reviewSummary._count._all,
     lastActiveAt: (recentResponses[0]?.createdAt || profile.createdAt).toISOString(),
+    lastSeenAt: provider.lastSeenAt ? provider.lastSeenAt.toISOString() : null,
     memberSince: provider.createdAt.toISOString(),
     moderationStatus: profile.moderationStatus,
     moderationReason: profile.moderationReason,

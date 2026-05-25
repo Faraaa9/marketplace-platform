@@ -17,6 +17,7 @@ model User {
   phone         String?
   phoneVerifiedAt DateTime?
   image         String?
+  lastSeenAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
