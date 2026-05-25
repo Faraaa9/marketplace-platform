@@ -19,6 +19,21 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-25 16:25 — Claude
 
+**Commit:** `2c9e101` — Fix agent-log-entry.sh on BSD awk (macOS) + flesh out journal entry · lokalus
+
+**Pakeitimai:** 2 files changed, 39 insertions(+), 10 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- scripts/agent-log-entry.sh
+
+**Toliau:**
+- Push'inti `2c9e101` (+ `72eef0d`) į origin/main.
+- Hook'as Claude'e patvirtintas — šis entry pridėtas automatiškai be mano `bash scripts/agent-log-entry.sh` kvietimo. Stub'as virsta tikru įrašu tik kai užpildai **Toliau** lauką ranka (arba per `/log`).
+
+
+## 2026-05-25 16:25 — Claude
+
 **Commit:** `72eef0d` — Add cross-agent coordination via AGENT_LOG.md · lokalus
 
 **Pakeitimai:** 3 files changed, 166 insertions(+)
