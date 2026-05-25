@@ -17,6 +17,31 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-25 16:25 — Claude
+
+**Commit:** `72eef0d` — Add cross-agent coordination via AGENT_LOG.md · lokalus
+
+**Pakeitimai:** 3 files changed, 166 insertions(+)
+
+**Failai:**
+- AGENTS.md (cross-agent coordination sekcija)
+- AGENT_LOG.md (šis žurnalas)
+- scripts/agent-log-entry.sh (shared helper, idempotent)
+- + .claude/hooks/post-commit-log.sh ir .claude/settings.json (lokalūs, gitignored)
+- + .claude/commands/log.md (lokalus `/log` slash command)
+
+**Toliau:**
+- Push'inti `72eef0d` į origin/main: `git push origin main`
+- Codex: kai pradedi sesiją, perskaityk šio failo viršų — `scripts/agent-log-entry.sh Codex` paleisk po savo commit'ų. Hook'as veikia tik Claude pusėje.
+- Jei užmiršti — bet kada gali paleisti rankiniu būdu, idempotentu (skip'ina jei toks commit jau yra logais).
+- Jei reikia turtingesnio įrašo (notes, kontekstas) — Claude'e naudok `/log` su free-form argumentu.
+
+**Pastabos kitam agentui:**
+- Hook'as Claude'e suaktyvinamas tik nuo KITOS Claude sesijos (`.claude/settings.json` įkeliamas startup'e). Ši sesija script'ą paleido rankiniu būdu.
+- BSD `awk` macOS nepriima multi-line `-v` — naudoju `sed` + temp file. Jei migruoji į GNU awk, kodas vis tiek veikia.
+- `AGENT_LOG.md` IS committed; `.claude/` lieka gitignored. Codex pusėje hook'as turėtų gyventi `.codex/` (atskiras setup, dabar dar nepadarytas — tik instrukcija per AGENTS.md).
+
+
 ## 2026-05-25 17:35 — Claude
 
 **Commit:** `fa50b61` — Add AI category suggestions and finish taxonomy unification wiring · push'inta

@@ -76,16 +76,20 @@ EOF
 fi
 
 if grep -q "$MARKER" "$LOG_FILE"; then
-  awk -v entry="$ENTRY" -v marker="$MARKER" '
-    {
-      print
-      if (index($0, marker) > 0 && !inserted) {
-        print ""
-        print entry
-        inserted = 1
-      }
-    }
-  ' "$LOG_FILE" > "$LOG_FILE.tmp"
+  # Split the file at the marker line, then reassemble with the new entry
+  # inserted between marker and the previous head entry. Portable across
+  # BSD awk (macOS) and GNU awk — uses sed line address + plain files.
+  MARKER_LINE="$(grep -n "$MARKER" "$LOG_FILE" | head -1 | cut -d: -f1)"
+  HEAD_TMP="$(mktemp)"
+  TAIL_TMP="$(mktemp)"
+  ENTRY_TMP="$(mktemp)"
+  trap 'rm -f "$HEAD_TMP" "$TAIL_TMP" "$ENTRY_TMP"' EXIT
+
+  sed -n "1,${MARKER_LINE}p" "$LOG_FILE" > "$HEAD_TMP"
+  sed -n "$((MARKER_LINE + 1)),\$p" "$LOG_FILE" > "$TAIL_TMP"
+  printf '\n%s\n' "$ENTRY" > "$ENTRY_TMP"
+
+  cat "$HEAD_TMP" "$ENTRY_TMP" "$TAIL_TMP" > "$LOG_FILE.tmp"
   mv "$LOG_FILE.tmp" "$LOG_FILE"
 else
   # Marker missing — just append at end so we don't lose the entry.
