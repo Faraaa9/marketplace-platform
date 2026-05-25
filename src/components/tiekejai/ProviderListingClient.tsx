@@ -792,15 +792,15 @@ export default function ProviderListingClient({
 
                     {p.presenceLevel && (
                       <span
-                        className={`absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium backdrop-blur-sm ${
+                        className={`absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-semibold backdrop-blur-md ${
                           p.presenceLevel === "online"
-                            ? "bg-white/85 text-emerald-700 dark:bg-surface-900/80 dark:text-emerald-300"
-                            : "bg-white/75 text-surface-600 dark:bg-surface-900/70 dark:text-surface-300"
+                            ? "bg-white/30 text-white drop-shadow-sm"
+                            : "bg-white/25 text-white/95 drop-shadow-sm"
                         }`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            p.presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
+                            p.presenceLevel === "online" ? "bg-emerald-400 ring-1 ring-emerald-300/40" : "bg-white/80"
                           }`}
                           aria-hidden
                         />
