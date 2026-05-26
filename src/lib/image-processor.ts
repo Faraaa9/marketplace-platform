@@ -95,35 +95,87 @@ export async function processAndUploadImage(
   }
 }
 
+// Default to a Gemini 3-class image model. Can be overridden per environment
+// (e.g. when a newer preview ID becomes available) via OPENROUTER_IMAGE_MODEL.
+// Must be at least Gemini 3.1 quality — older Gemini 2.x image models and the
+// previously used Pollinations flux model are not acceptable for new profiles.
+const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+
 /**
- * Generate an AI image from a prompt using Pollinations.ai (free, no API key),
- * then upload to Cloudinary for permanence. Returns the Cloudinary URL or null.
+ * Generate an AI image from a prompt via OpenRouter using a Gemini 3-class
+ * model, then upload to Cloudinary for permanence. Returns the Cloudinary URL
+ * (or the raw base64 data URL if Cloudinary is unconfigured) or null.
  */
 export async function generateAIImage(
   prompt: string,
   options: { folder?: string; width?: number; height?: number; seed?: number } = {}
 ): Promise<string | null> {
   if (!prompt.trim()) return null;
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    console.warn("OPENROUTER_API_KEY not configured — skipping AI image gen");
+    return null;
+  }
+
+  const model = process.env.OPENROUTER_IMAGE_MODEL || DEFAULT_IMAGE_MODEL;
   const width = options.width ?? 1024;
   const height = options.height ?? 768;
-  const seed = options.seed ?? Math.floor(Math.random() * 1_000_000);
-
-  const url =
-    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-    `?width=${width}&height=${height}&seed=${seed}&model=flux&nologo=true`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          modalities: ["image", "text"],
+          messages: [
+            {
+              role: "user",
+              content: `${prompt}\n\nAspect ratio: ${width}x${height}. Photorealistic, no text, no logos, no watermarks.`,
+            },
+          ],
+        }),
+      }
+    );
+
     if (!response.ok) {
-      console.warn(`AI image generation HTTP ${response.status}`);
+      const detail = await response.text().catch(() => "");
+      console.warn(
+        `AI image generation HTTP ${response.status}: ${detail.slice(0, 200)}`
+      );
       return null;
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
+    const data = await response.json();
+    const message = data?.choices?.[0]?.message;
+    const imageUrl: string | undefined =
+      message?.images?.[0]?.image_url?.url ||
+      message?.images?.[0]?.url ||
+      (typeof message?.content === "string" ? undefined : undefined);
+
+    if (!imageUrl) {
+      console.warn("AI image generation: no image in response", {
+        model,
+        hasMessage: Boolean(message),
+      });
+      return null;
+    }
+
+    // The image comes back as a base64 data URL (data:image/png;base64,...)
+    const buffer = await dataUrlOrHttpToBuffer(imageUrl);
+    if (!buffer) {
+      console.warn("AI image generation: failed to decode image data");
+      return null;
+    }
 
     if (!isCloudinaryConfigured()) {
-      // No cloud — return the source URL directly (cached by Pollinations CDN)
-      return url;
+      return imageUrl;
     }
 
     const cloudinary = getConfiguredCloudinary();
@@ -150,6 +202,26 @@ export async function generateAIImage(
       "AI image generation failed:",
       error instanceof Error ? error.message : error
     );
+    return null;
+  }
+}
+
+async function dataUrlOrHttpToBuffer(src: string): Promise<Buffer | null> {
+  try {
+    if (src.startsWith("data:")) {
+      const comma = src.indexOf(",");
+      if (comma === -1) return null;
+      const meta = src.slice(0, comma);
+      const payload = src.slice(comma + 1);
+      if (meta.includes(";base64")) {
+        return Buffer.from(payload, "base64");
+      }
+      return Buffer.from(decodeURIComponent(payload), "utf-8");
+    }
+    const res = await fetch(src);
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  } catch {
     return null;
   }
 }
