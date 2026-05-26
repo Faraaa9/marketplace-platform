@@ -179,6 +179,9 @@ export default function ProposalCard({
             currentSenderName={clientName}
             viewerRole="client"
             providerId={resp.providerId}
+            otherParticipantName={resp.provider.name}
+            otherParticipantImage={resp.provider.image}
+            otherParticipantReadAt={resp.providerLastReadAt ?? null}
             sendMessage={sendMessage}
             placeholder="Rašyti žinutę tiekėjui..."
             disabled={isClosed}

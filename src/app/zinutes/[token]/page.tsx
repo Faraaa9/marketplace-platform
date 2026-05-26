@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
+import type { PresenceLevel } from "@/lib/presence";
 import { MessageCircle } from "lucide-react";
 
 interface MessageData {
@@ -23,10 +25,13 @@ interface ConversationData {
   id: string;
   providerId: string;
   providerName: string | null;
+  providerImage: string | null;
+  presenceLevel: PresenceLevel;
   description: string;
   budget: string | null;
   senderName: string | null;
   createdAt: string;
+  providerLastReadAt: string | null;
   messages: MessageData[];
 }
 
@@ -88,6 +93,11 @@ export default function InquiryConversationPage() {
   }
 
   const providerName = conversation.providerName || "Tiekėjas";
+  const openingMessageSeen =
+    conversation.messages.length === 0 &&
+    conversation.providerLastReadAt &&
+    new Date(conversation.providerLastReadAt).getTime() >=
+      new Date(conversation.createdAt).getTime();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -99,6 +109,45 @@ export default function InquiryConversationPage() {
       </div>
 
       <Card>
+        {/* Provider header inside the chat card — always visible */}
+        <div className="mb-4 flex items-center gap-3 border-b border-surface-200/60 pb-4 dark:border-surface-700">
+          <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
+            <div className="relative h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950 dark:to-surface-800">
+              {conversation.providerImage ? (
+                <Image
+                  src={conversation.providerImage}
+                  alt={providerName}
+                  width={44}
+                  height={44}
+                  sizes="44px"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-body-sm font-semibold text-brand-700 dark:text-brand-300">
+                  {providerName[0]?.toUpperCase() ?? "T"}
+                </span>
+              )}
+            </div>
+            {conversation.presenceLevel === "online" && (
+              <span
+                className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
+                aria-label="Prisijungęs dabar"
+                title="Prisijungęs dabar"
+              >
+                <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" aria-hidden />
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
+              {providerName}
+            </p>
+            {conversation.presenceLevel === "online" && (
+              <p className="text-micro text-emerald-600 dark:text-emerald-400">Prisijungęs dabar</p>
+            )}
+          </div>
+        </div>
+
         {/* Opening message — the sender's own inquiry */}
         <div className="flex flex-col items-end gap-0.5">
           <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-body-sm text-white whitespace-pre-wrap break-words">
@@ -112,6 +161,27 @@ export default function InquiryConversationPage() {
           <span className="px-1 text-micro text-surface-400">
             {formatRelativeDate(conversation.createdAt)}
           </span>
+          {openingMessageSeen && (
+            <span
+              className="relative mr-1 mt-0.5 inline-flex h-5 w-5 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 dark:from-brand-950 dark:to-surface-800 dark:text-brand-300"
+              title={`Matyta ${providerName}`}
+              aria-label={`Matyta ${providerName}`}
+            >
+              {conversation.providerImage ? (
+                <Image
+                  src={conversation.providerImage}
+                  alt=""
+                  fill
+                  sizes="20px"
+                  className="object-cover"
+                />
+              ) : (
+                <span className="grid h-full w-full place-items-center text-[10px] font-semibold">
+                  {providerName[0]?.toUpperCase() ?? "T"}
+                </span>
+              )}
+            </span>
+          )}
         </div>
 
         <ThreadChat
@@ -125,6 +195,9 @@ export default function InquiryConversationPage() {
           currentSenderName={conversation.senderName || "Jūs"}
           viewerRole="client"
           providerId={conversation.providerId}
+          otherParticipantName={providerName}
+          otherParticipantImage={conversation.providerImage}
+          otherParticipantReadAt={conversation.providerLastReadAt}
           sendMessage={sendMessage}
           placeholder="Rašyti žinutę tiekėjui..."
         />

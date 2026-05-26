@@ -8,7 +8,7 @@ export interface ThreadMessage {
   createdAt: string;
   senderName: string | null;
   senderId?: string | null;
-  sender?: { id?: string; name: string } | null;
+  sender?: { id?: string; name: string; image?: string | null } | null;
   /** Optimistic status */
   status: "sent" | "sending" | "failed";
 }

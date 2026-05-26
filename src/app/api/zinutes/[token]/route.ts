@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getPresenceLevel } from "@/lib/presence";
+import { getProviderAvatarImage } from "@/lib/provider-image";
 
 /**
  * GET a direct-inquiry conversation by its tracking token — sender side.
@@ -23,7 +25,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         senderName: true,
         senderUserId: true,
         createdAt: true,
-        provider: { select: { name: true } },
+        providerLastReadAt: true,
+        provider: {
+          select: {
+            name: true,
+            image: true,
+            lastSeenAt: true,
+            providerProfile: { select: { images: true, heroImageUrl: true } },
+          },
+        },
         messages: {
           select: {
             id: true,
@@ -31,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
             createdAt: true,
             senderId: true,
             senderName: true,
-            sender: { select: { id: true, name: true } },
+            sender: { select: { id: true, name: true, image: true } },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -53,10 +63,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         id: inquiry.id,
         providerId: inquiry.providerId,
         providerName: inquiry.provider.name,
+        providerImage: getProviderAvatarImage(inquiry.provider),
+        presenceLevel: getPresenceLevel(inquiry.provider.lastSeenAt),
         description: inquiry.description,
         budget: inquiry.budget,
         senderName: inquiry.senderName,
         createdAt: inquiry.createdAt,
+        providerLastReadAt: inquiry.providerLastReadAt,
         messages: inquiry.messages,
       },
     });

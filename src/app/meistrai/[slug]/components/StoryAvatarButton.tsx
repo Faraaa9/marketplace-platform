@@ -67,7 +67,7 @@ export default function StoryAvatarButton({
         </button>
         {isOnline && (
           <span
-            className="pointer-events-none absolute bottom-[4px] right-[4px] flex h-[19px] w-[19px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[23px] sm:w-[23px]"
+            className="pointer-events-none absolute bottom-[6.5px] right-[6.5px] flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[18px] sm:w-[18px]"
             aria-label="Prisijungęs dabar"
             title="Prisijungęs dabar"
           >

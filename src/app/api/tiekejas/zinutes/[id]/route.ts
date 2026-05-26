@@ -21,6 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         senderName: true,
         senderEmail: true,
         senderPhone: true,
+        sender: { select: { image: true, name: true } },
         status: true,
         createdAt: true,
         messages: {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             createdAt: true,
             senderId: true,
             senderName: true,
-            sender: { select: { id: true, name: true } },
+            sender: { select: { id: true, name: true, image: true } },
           },
           orderBy: { createdAt: "asc" },
         },
@@ -51,7 +52,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // read tracking must never break the page
     }
 
-    return NextResponse.json({ success: true, data: inquiry });
+    const { sender, ...data } = inquiry;
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...data,
+        senderImage: sender?.image ?? null,
+        senderAccountName: sender?.name ?? null,
+      },
+    });
   } catch (error) {
     console.error("Get inquiry error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });

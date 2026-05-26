@@ -98,7 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           content: true,
           createdAt: true,
           senderName: true,
-          sender: { select: { id: true, name: true } },
+          sender: { select: { id: true, name: true, image: true } },
         },
       }),
       prisma.response.update({

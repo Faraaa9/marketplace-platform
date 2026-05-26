@@ -2,17 +2,21 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import Badge from "@/components/ui/Badge";
 import { formatRelativeDate } from "@/lib/utils";
 import { ArrowLeft, MessageCircle, ChevronRight } from "lucide-react";
+import type { PresenceLevel } from "@/lib/presence";
 
 interface Conversation {
   id: string;
   trackingToken: string;
   href: string;
   providerName: string;
+  providerImage: string | null;
+  presenceLevel: PresenceLevel;
   preview: string;
   lastMessageAt: string;
   unread: boolean;
@@ -124,13 +128,36 @@ export default function SentInquiriesPage() {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 shrink-0">
-                      {highlight ? (
-                        <span className="block h-2.5 w-2.5 rounded-full bg-brand-500" />
-                      ) : (
-                        <MessageCircle className="h-4 w-4 text-surface-300 dark:text-surface-600" />
+                    <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
+                      <div className="relative h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950 dark:to-surface-800">
+                        {c.providerImage ? (
+                          <Image
+                            src={c.providerImage}
+                            alt={c.providerName}
+                            width={44}
+                            height={44}
+                            sizes="44px"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center text-body-sm font-semibold text-brand-700 dark:text-brand-300">
+                            {c.providerName[0]?.toUpperCase() ?? "T"}
+                          </span>
+                        )}
+                      </div>
+                      {c.presenceLevel === "online" && (
+                        <span
+                          className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
+                          aria-label="Prisijungęs dabar"
+                          title="Prisijungęs dabar"
+                        >
+                          <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" aria-hidden />
+                        </span>
                       )}
                     </div>
+                    {highlight && (
+                      <span className="mt-1.5 block h-2 w-2 shrink-0 rounded-full bg-brand-500" aria-label="Neperskaityta" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3

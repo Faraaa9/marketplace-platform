@@ -13,11 +13,13 @@ export interface ResponseData {
   message: string;
   price?: number;
   createdAt: string;
+  providerLastReadAt?: string | null;
   providerBadge?: string | null;
   hasReview?: boolean;
   provider: {
     id: string;
     name: string;
+    image?: string | null;
     providerProfile?: { location: string; isVerified?: boolean };
   };
   messages: MessageData[];

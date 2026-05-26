@@ -100,7 +100,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
           content: true,
           createdAt: true,
           senderName: true,
-          sender: { select: { name: true } },
+          sender: { select: { id: true, name: true, image: true } },
         },
       }),
       prisma.directInquiry.update({

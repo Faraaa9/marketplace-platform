@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getProviderAvatarImage } from "@/lib/provider-image";
 
 /**
  * Public tracking endpoint — looks up by tracking token (NOT by internal ID).
@@ -39,12 +40,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             message: true,
             price: true,
             createdAt: true,
+            providerLastReadAt: true,
             provider: {
               select: {
                 id: true,
                 name: true,
                 image: true,
-                providerProfile: { select: { location: true, isVerified: true } },
+                providerProfile: { select: { location: true, isVerified: true, images: true, heroImageUrl: true } },
               },
             },
             messages: {
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 createdAt: true,
                 senderId: true,
                 senderName: true,
-                sender: { select: { name: true } },
+                sender: { select: { id: true, name: true, image: true } },
               },
               orderBy: { createdAt: "asc" as const },
             },
@@ -78,11 +80,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const reviewedResponseIds = new Set(request.reviews.map((r) => r.responseId));
 
     // Add badge info and review status to each response for client display
-    const responsesWithBadge = sortedResponses.map((resp) => ({
-      ...resp,
-      providerBadge: resp.provider.providerProfile?.isVerified ? "Patikimas" : null,
-      hasReview: reviewedResponseIds.has(resp.id),
-    }));
+    const responsesWithBadge = sortedResponses.map((resp) => {
+      const { images, heroImageUrl, ...providerProfile } = resp.provider.providerProfile ?? {};
+      return {
+        ...resp,
+        provider: {
+          ...resp.provider,
+          image: getProviderAvatarImage(resp.provider),
+          providerProfile,
+        },
+        providerBadge: resp.provider.providerProfile?.isVerified ? "Patikimas" : null,
+        hasReview: reviewedResponseIds.has(resp.id),
+      };
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { reviews: _reviews, _count, categoryRef, ...requestWithoutReviews } = request;

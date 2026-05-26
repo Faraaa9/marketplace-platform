@@ -50,6 +50,7 @@ interface RequestData {
   status: string;
   acceptedResponseId?: string;
   clientName: string;
+  clientImage?: string | null;
   clientEmail?: string | null;
   clientPhone?: string | null;
   createdAt: string;
@@ -392,6 +393,8 @@ export default function ProviderRequestDetailPage() {
               currentSenderName={session?.user?.name || "Tiekėjas"}
               viewerRole="provider"
               providerId={resp.provider.id}
+              otherParticipantName={request.clientName}
+              otherParticipantImage={request.clientImage}
               sendMessage={sendThreadMessage}
               placeholder="Rašyti žinutę..."
               disabled={request.status === "CLOSED"}

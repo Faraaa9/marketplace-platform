@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getPresenceLevel, type PresenceLevel } from "@/lib/presence";
+import { getProviderAvatarImage } from "@/lib/provider-image";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,8 @@ type SentConversationItem = {
   trackingToken: string;
   href: string;
   providerName: string;
+  providerImage: string | null;
+  presenceLevel: PresenceLevel;
   preview: string;
   lastMessageAt: Date;
   unread: boolean;
@@ -39,7 +43,14 @@ export async function GET() {
           trackingToken: true,
           description: true,
           lastMessageAt: true,
-          provider: { select: { name: true } },
+          provider: {
+            select: {
+              name: true,
+              image: true,
+              lastSeenAt: true,
+              providerProfile: { select: { images: true, heroImageUrl: true } },
+            },
+          },
           messages: {
             select: { content: true, senderId: true },
             orderBy: { createdAt: "desc" },
@@ -73,6 +84,8 @@ export async function GET() {
         trackingToken: q.trackingToken,
         href: `/zinutes/${q.trackingToken}`,
         providerName: q.provider.name || "Tiekėjas",
+        providerImage: getProviderAvatarImage(q.provider),
+        presenceLevel: getPresenceLevel(q.provider.lastSeenAt),
         // First send has no chat messages yet → preview the opening inquiry.
         preview: last ? last.content : q.description,
         lastMessageAt: q.lastMessageAt,

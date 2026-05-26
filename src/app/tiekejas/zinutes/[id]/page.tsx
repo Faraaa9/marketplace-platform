@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -30,9 +31,32 @@ interface InquiryData {
   senderName: string | null;
   senderEmail: string;
   senderPhone: string | null;
+  senderImage: string | null;
+  senderAccountName: string | null;
   status: string;
   createdAt: string;
   messages: MessageData[];
+}
+
+function avatarInitial(name: string) {
+  return name.trim().charAt(0).toUpperCase() || "?";
+}
+
+function ChatParticipantAvatar({ name, image }: { name: string; image?: string | null }) {
+  return (
+    <span
+      className="relative inline-flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 dark:from-brand-950 dark:to-surface-800 dark:text-brand-300"
+      aria-hidden="true"
+    >
+      {image ? (
+        <Image src={image} alt="" fill sizes="44px" className="object-cover" />
+      ) : (
+        <span className="grid h-full w-full place-items-center text-body-sm font-semibold">
+          {avatarInitial(name)}
+        </span>
+      )}
+    </span>
+  );
 }
 
 export default function ProviderInquiryDetailPage() {
@@ -107,8 +131,24 @@ export default function ProviderInquiryDetailPage() {
   if (loading) return <LoadingSpinner />;
   if (!inquiry) return <EmptyState title="Žinutė nerasta" />;
 
-  const senderDisplay = inquiry.senderName?.trim() || inquiry.senderEmail;
+  const senderDisplay = inquiry.senderName?.trim() || inquiry.senderAccountName?.trim() || inquiry.senderEmail;
   const isArchived = inquiry.status === "ARCHIVED";
+  const chatMessages: ThreadMessage[] = [
+    {
+      id: `opening-${inquiry.id}`,
+      content: inquiry.description,
+      createdAt: inquiry.createdAt,
+      senderId: null,
+      senderName: senderDisplay,
+      sender: { name: senderDisplay },
+      status: "sent",
+    },
+    ...inquiry.messages.map((m) => ({
+      ...m,
+      senderName: m.senderName || m.sender?.name || null,
+      status: "sent" as const,
+    })),
+  ];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -174,30 +214,28 @@ export default function ProviderInquiryDetailPage() {
 
       {/* Conversation */}
       <Card>
-        {/* Opening message — from the sender */}
-        <div className="flex flex-col items-start gap-0.5">
-          <span className="px-1 text-micro font-medium text-surface-500 dark:text-surface-400">
-            {senderDisplay}
-          </span>
-          <div className="max-w-[80%] rounded-2xl rounded-bl-md bg-surface-50 px-3.5 py-2 text-body-sm text-surface-700 whitespace-pre-wrap break-words dark:bg-surface-800 dark:text-surface-200">
-            {inquiry.description}
+        <div className="mb-4 flex items-center gap-3 border-b border-surface-200/60 pb-4 dark:border-surface-700">
+          <ChatParticipantAvatar name={senderDisplay} image={inquiry.senderImage} />
+          <div className="min-w-0">
+            <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
+              {senderDisplay}
+            </p>
+            <p className="text-micro text-surface-500 dark:text-surface-400">Klientas</p>
           </div>
-          <span className="px-1 text-micro text-surface-400">
-            {formatRelativeDate(inquiry.createdAt)}
-          </span>
         </div>
 
         <ThreadChat
           threadId={inquiry.id}
           threadKind="directInquiry"
-          initialMessages={inquiry.messages.map((m) => ({
-            ...m,
-            senderName: m.senderName || m.sender?.name || null,
-            status: "sent" as const,
-          }))}
+          initialMessages={chatMessages}
           currentSenderName={session?.user?.name || "Tiekėjas"}
           viewerRole="provider"
           providerId={inquiry.providerId}
+          otherParticipantName={senderDisplay}
+          otherParticipantImage={inquiry.senderImage}
+          showInitialTimeDivider={false}
+          forceDividerAfterFirstGroup
+          showTopBorder={false}
           sendMessage={sendMessage}
           placeholder="Rašyti žinutę..."
         />
