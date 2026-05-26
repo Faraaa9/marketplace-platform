@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPresenceLevel } from "@/lib/presence";
+import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { getProviderAvatarImage } from "@/lib/provider-image";
 
 /**
@@ -26,6 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         senderUserId: true,
         createdAt: true,
         providerLastReadAt: true,
+        clientLastReadAt: true,
         provider: {
           select: {
             name: true,
@@ -57,6 +58,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       return NextResponse.json({ success: false, error: "Neturite teisės" }, { status: 403 });
     }
 
+    // Possession of the tracking token proves the sender opened the thread.
+    const readAt = new Date();
+    try {
+      await prisma.directInquiry.update({
+        where: { id: inquiry.id },
+        data: { clientLastReadAt: readAt },
+        select: { id: true },
+      });
+    } catch {
+      // Read receipts must never block the conversation.
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -65,11 +78,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         providerName: inquiry.provider.name,
         providerImage: getProviderAvatarImage(inquiry.provider),
         presenceLevel: getPresenceLevel(inquiry.provider.lastSeenAt),
+        presenceLabel: formatLastSeen(inquiry.provider.lastSeenAt),
         description: inquiry.description,
         budget: inquiry.budget,
         senderName: inquiry.senderName,
         createdAt: inquiry.createdAt,
         providerLastReadAt: inquiry.providerLastReadAt,
+        clientLastReadAt: readAt,
         messages: inquiry.messages,
       },
     });

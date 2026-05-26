@@ -182,7 +182,10 @@ async function deliverResponseReply(
     }),
     prisma.response.update({
       where: { id: response.id },
-      data: { lastMessageAt: now, ...(fromClient ? {} : { providerLastReadAt: now }) },
+      data: {
+        lastMessageAt: now,
+        ...(fromClient ? { clientLastReadAt: now } : { providerLastReadAt: now }),
+      },
     }),
   ]);
 
@@ -242,7 +245,10 @@ async function deliverInquiryReply(
     }),
     prisma.directInquiry.update({
       where: { id: inquiry.id },
-      data: { lastMessageAt: now, ...(fromClient ? {} : { providerLastReadAt: now }) },
+      data: {
+        lastMessageAt: now,
+        ...(fromClient ? { clientLastReadAt: now } : { providerLastReadAt: now }),
+      },
     }),
   ]);
 

@@ -68,6 +68,9 @@ export async function GET(req: NextRequest) {
               location: true,
               images: true,
               isVerified: true,
+              isPremium: true,
+              isYoungTalent: true,
+              isGoat: true,
               rating: true,
               reviewCount: true,
               categories: {
@@ -106,6 +109,9 @@ export async function GET(req: NextRequest) {
         categories,
         location: p.providerProfile?.location || null,
         isVerified: p.providerProfile?.isVerified ?? false,
+        isPremium: p.providerProfile?.isPremium ?? false,
+        isYoungTalent: p.providerProfile?.isYoungTalent ?? false,
+        isGoat: p.providerProfile?.isGoat ?? false,
         rating: p.providerProfile?.rating ?? null,
         reviewCount: p.providerProfile?.reviewCount ?? 0,
         responseCount: p._count.responses,
@@ -113,8 +119,10 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Sort: verified first, then by rating (null lowest), then by review count
+    // Sort: GOAT first, then premium, then verified, then by rating (null lowest), then by review count
     mapped.sort((a, b) => {
+      if (a.isGoat !== b.isGoat) return a.isGoat ? -1 : 1;
+      if (a.isPremium !== b.isPremium) return a.isPremium ? -1 : 1;
       if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
       const aRating = a.rating ?? -1;
       const bRating = b.rating ?? -1;

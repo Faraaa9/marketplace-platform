@@ -12,6 +12,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
+import type { PresenceLevel } from "@/lib/presence";
 import { ArrowLeft, Mail, Phone, User, Euro, Archive, ArchiveRestore } from "lucide-react";
 
 interface MessageData {
@@ -20,7 +21,7 @@ interface MessageData {
   createdAt: string;
   senderId?: string | null;
   senderName?: string;
-  sender?: { id: string; name: string };
+  sender?: { id: string; name: string; image?: string | null };
 }
 
 interface InquiryData {
@@ -33,8 +34,11 @@ interface InquiryData {
   senderPhone: string | null;
   senderImage: string | null;
   senderAccountName: string | null;
+  senderPresenceLevel: PresenceLevel;
+  senderPresenceLabel: string | null;
   status: string;
   createdAt: string;
+  clientLastReadAt: string | null;
   messages: MessageData[];
 }
 
@@ -140,7 +144,8 @@ export default function ProviderInquiryDetailPage() {
       createdAt: inquiry.createdAt,
       senderId: null,
       senderName: senderDisplay,
-      sender: { name: senderDisplay },
+      sender: { name: senderDisplay, image: inquiry.senderImage },
+      metaLabel: inquiry.budget ? `Biudžetas: ${inquiry.budget}` : null,
       status: "sent",
     },
     ...inquiry.messages.map((m) => ({
@@ -215,12 +220,36 @@ export default function ProviderInquiryDetailPage() {
       {/* Conversation */}
       <Card>
         <div className="mb-4 flex items-center gap-3 border-b border-surface-200/60 pb-4 dark:border-surface-700">
-          <ChatParticipantAvatar name={senderDisplay} image={inquiry.senderImage} />
+          <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
+            <ChatParticipantAvatar name={senderDisplay} image={inquiry.senderImage} />
+            {inquiry.senderPresenceLevel && (
+              <span
+                className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
+                aria-label={inquiry.senderPresenceLabel ?? "Aktyvus neseniai"}
+                title={inquiry.senderPresenceLabel ?? "Aktyvus neseniai"}
+              >
+                <span
+                  className={`h-[7px] w-[7px] rounded-full ${
+                    inquiry.senderPresenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
+                  }`}
+                  aria-hidden
+                />
+              </span>
+            )}
+          </div>
           <div className="min-w-0">
             <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
               {senderDisplay}
             </p>
-            <p className="text-micro text-surface-500 dark:text-surface-400">Klientas</p>
+            <p
+              className={`text-micro ${
+                inquiry.senderPresenceLevel === "online"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-surface-500 dark:text-surface-400"
+              }`}
+            >
+              {inquiry.senderPresenceLabel ?? "Klientas"}
+            </p>
           </div>
         </div>
 
@@ -233,6 +262,7 @@ export default function ProviderInquiryDetailPage() {
           providerId={inquiry.providerId}
           otherParticipantName={senderDisplay}
           otherParticipantImage={inquiry.senderImage}
+          otherParticipantReadAt={inquiry.clientLastReadAt}
           showInitialTimeDivider={false}
           forceDividerAfterFirstGroup
           showTopBorder={false}

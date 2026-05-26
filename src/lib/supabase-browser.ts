@@ -40,6 +40,31 @@ export function getSupabaseBrowser(): SupabaseClient | null {
 }
 
 let realtimeAuthPromise: Promise<boolean> | null = null;
+const scopedRealtimeAuthPromises = new Map<string, Promise<boolean>>();
+
+export interface RealtimeAuthScope {
+  threadKind?: "response" | "directInquiry";
+  threadId?: string;
+  trackingToken?: string | null;
+}
+
+function authScopeKey(scope?: RealtimeAuthScope): string {
+  if (!scope) return "session";
+  return JSON.stringify({
+    threadKind: scope.threadKind ?? null,
+    threadId: scope.threadId ?? null,
+    trackingToken: scope.trackingToken ?? null,
+  });
+}
+
+function authTokenUrl(scope?: RealtimeAuthScope): string {
+  const params = new URLSearchParams();
+  if (scope?.threadKind) params.set("threadKind", scope.threadKind);
+  if (scope?.threadId) params.set("threadId", scope.threadId);
+  if (scope?.trackingToken) params.set("trackingToken", scope.trackingToken);
+  const query = params.toString();
+  return query ? `/api/realtime/token?${query}` : "/api/realtime/token";
+}
 
 /**
  * Fetch a signed JWT from the server and apply it to the Realtime client so
@@ -53,15 +78,21 @@ let realtimeAuthPromise: Promise<boolean> | null = null;
  * For MVP we don't auto-refresh on expiry; the 1h TTL covers a single page
  * session and any reload mints a fresh token.
  */
-export function authenticateRealtime(): Promise<boolean> {
-  if (realtimeAuthPromise) return realtimeAuthPromise;
+export function authenticateRealtime(scope?: RealtimeAuthScope): Promise<boolean> {
+  if (!scope) {
+    if (realtimeAuthPromise) return realtimeAuthPromise;
+  } else {
+    const key = authScopeKey(scope);
+    const cached = scopedRealtimeAuthPromises.get(key);
+    if (cached) return cached;
+  }
 
   const supabase = getSupabaseBrowser();
   if (!supabase) return Promise.resolve(false);
 
-  realtimeAuthPromise = (async () => {
+  const promise = (async () => {
     try {
-      const res = await fetch("/api/realtime/token", { credentials: "include" });
+      const res = await fetch(authTokenUrl(scope), { credentials: "include" });
       if (!res.ok) return false;
       const data = (await res.json()) as { token?: string };
       if (!data.token) return false;
@@ -72,5 +103,11 @@ export function authenticateRealtime(): Promise<boolean> {
     }
   })();
 
-  return realtimeAuthPromise;
+  if (!scope) {
+    realtimeAuthPromise = promise;
+  } else {
+    scopedRealtimeAuthPromises.set(authScopeKey(scope), promise);
+  }
+
+  return promise;
 }

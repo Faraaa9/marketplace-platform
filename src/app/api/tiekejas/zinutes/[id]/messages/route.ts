@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
-import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { createMessageNotification } from "@/lib/message-notifications";
 
 /**
@@ -33,12 +32,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
     if (!inquiry) {
       return NextResponse.json({ success: false, error: "Žinutė nerasta" }, { status: 404 });
-    }
-
-    // Rate limit: 5 messages per minute per user
-    const rl = await rateLimitAsync(`msg:${guard.userId}`, RATE_LIMITS.messages);
-    if (!rl.success) {
-      return NextResponse.json({ success: false, error: "Per daug žinučių. Palaukite minutę." }, { status: 429 });
     }
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);

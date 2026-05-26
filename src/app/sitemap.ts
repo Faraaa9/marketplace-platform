@@ -32,12 +32,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/meistrai/katalogas`,
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
       url: `${BASE_URL}/uzklausos`,
       lastModified: now,
       changeFrequency: "daily",
@@ -83,17 +77,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Pull the minimum surface area from DB: slug + updatedAt only.
   // Parallelize to keep total sitemap response under ~3s.
-  const [activeProviderProfiles, supplierSlugs, categoryGroups] = await Promise.all([
+  const [activeProviderProfiles, categoryGroups] = await Promise.all([
     prisma.providerProfile.findMany({
       where: {
         isActive: true,
         moderationStatus: "APPROVED",
         user: { role: "PROVIDER", emailVerified: { not: null } },
       },
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.supplierRecord.findMany({
-      where: { status: { in: ["unclaimed", "claimed"] } },
       select: { slug: true, updatedAt: true },
     }),
     getServiceCategoryGroups(),
@@ -107,13 +97,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     }));
-
-  const supplierEntries: SitemapEntry[] = supplierSlugs.map((s) => ({
-    url: `${BASE_URL}/meistrai/katalogas/${s.slug}`,
-    lastModified: s.updatedAt,
-    changeFrequency: "weekly",
-    priority: 0.6,
-  }));
 
   // Category × city combo URLs targeting the public requests listing
   // (where category + location are real, indexable query params).
@@ -138,7 +121,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const all: SitemapEntry[] = [
     ...staticEntries,
     ...providerEntries,
-    ...supplierEntries,
     ...comboEntries,
   ];
 

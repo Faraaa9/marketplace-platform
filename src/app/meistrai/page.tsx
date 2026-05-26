@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServiceCategoryGroups } from "@/lib/service-categories";
 import type { ServiceCategoryItem } from "@/lib/service-categories";
-import { Users, ArrowRight, Database } from "lucide-react";
+import { Users, ArrowRight } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
@@ -64,6 +64,9 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             location: true,
             images: true,
             isVerified: true,
+            isPremium: true,
+            isYoungTalent: true,
+            isGoat: true,
             availableForUrgent: true,
             priceFrom: true,
           },
@@ -211,6 +214,9 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       categories,
       location: p.providerProfile?.location || null,
       isVerified: p.providerProfile?.isVerified ?? false,
+      isPremium: p.providerProfile?.isPremium ?? false,
+      isYoungTalent: p.providerProfile?.isYoungTalent ?? false,
+      isGoat: p.providerProfile?.isGoat ?? false,
       badge,
       responseCount: p._count.responses,
       acceptedCount,
@@ -255,30 +261,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           initialProviders={allProviders}
           initialFilters={initialFilters}
         />
-
-        {/* Imported catalog CTA */}
-        <div className="mt-8 rounded-2xl border border-amber-200/60 bg-amber-50/50 p-6 dark:border-amber-800/30 dark:bg-amber-950/20">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/50">
-              <Database className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-body font-semibold text-surface-900 dark:text-white">
-                Importuotas katalogas
-              </p>
-              <p className="text-body-sm text-surface-500 dark:text-surface-400">
-                Peržiūrėkite tiekėjų profilius iš paslaugos.lt katalogo
-              </p>
-            </div>
-            <Link
-              href="/meistrai/katalogas"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-body-sm font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
-            >
-              Katalogas
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
 
         {/* Bottom CTA */}
         <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">

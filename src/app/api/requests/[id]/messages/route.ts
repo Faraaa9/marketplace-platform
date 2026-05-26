@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { createMessageNotification } from "@/lib/message-notifications";
 
 /**
@@ -60,12 +59,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Negalite rašyti žinučių savo paties diskusijoje" }, { status: 403 });
     }
 
-    // Rate limit: 5 messages per minute per user
-    const rl = await rateLimitAsync(`msg:${session.user.id}`, RATE_LIMITS.messages);
-    if (!rl.success) {
-      return NextResponse.json({ success: false, error: "Per daug žinučių. Palaukite minutę." }, { status: 429 });
-    }
-
     const sanitizedContent = sanitizeHtml(parsed.data.content);
 
     // Duplicate detection: block identical message within last 30 seconds
@@ -105,7 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         where: { id },
         data: {
           lastMessageAt: now,
-          ...(isProvider ? { providerLastReadAt: now } : {}),
+          ...(isProvider ? { providerLastReadAt: now } : { clientLastReadAt: now }),
         },
       }),
     ]);

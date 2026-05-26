@@ -25,7 +25,7 @@ interface MessageData {
   createdAt: string;
   senderId?: string | null;
   senderName?: string;
-  sender?: { id: string; name: string };
+  sender?: { id: string; name: string; image?: string | null };
 }
 
 interface ResponseData {
@@ -33,6 +33,7 @@ interface ResponseData {
   message: string;
   price?: number;
   createdAt: string;
+  clientLastReadAt?: string | null;
   provider: { id: string; name: string };
   messages: MessageData[];
 }
@@ -51,6 +52,8 @@ interface RequestData {
   acceptedResponseId?: string;
   clientName: string;
   clientImage?: string | null;
+  clientPresenceLevel?: string | null;
+  clientPresenceLabel?: string | null;
   clientEmail?: string | null;
   clientPhone?: string | null;
   createdAt: string;
@@ -178,6 +181,23 @@ export default function ProviderRequestDetailPage() {
         <hr className="border-surface-200/50 dark:border-surface-700 mb-3" />
         <div className="flex flex-wrap gap-4 text-body-sm text-surface-500">
           <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{request.clientName}</span>
+          {request.clientPresenceLabel && (
+            <span
+              className={`flex items-center gap-1.5 ${
+                request.clientPresenceLevel === "online"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-surface-500 dark:text-surface-400"
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  request.clientPresenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
+                }`}
+                aria-hidden
+              />
+              {request.clientPresenceLabel}
+            </span>
+          )}
           {request.clientEmail ? (
             <span className="flex items-center gap-1.5"><Mail className="h-4 w-4" />{request.clientEmail}</span>
           ) : (
@@ -395,6 +415,7 @@ export default function ProviderRequestDetailPage() {
               providerId={resp.provider.id}
               otherParticipantName={request.clientName}
               otherParticipantImage={request.clientImage}
+              otherParticipantReadAt={resp.clientLastReadAt ?? null}
               sendMessage={sendThreadMessage}
               placeholder="Rašyti žinutę..."
               disabled={request.status === "CLOSED"}

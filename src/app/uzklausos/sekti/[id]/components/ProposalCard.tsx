@@ -1,7 +1,8 @@
 "use client";
 
-import { ChevronDown, CheckCircle, Shield, Star } from "lucide-react";
+import { ChevronDown, CheckCircle, Star } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import ThreadChat from "@/components/messaging/ThreadChat";
@@ -80,15 +81,13 @@ export default function ProposalCard({
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-body font-medium text-surface-900 dark:text-white">
+            <span className="inline-flex items-center gap-1.5 text-body font-medium text-surface-900 dark:text-white">
               {resp.provider.name}
+              {resp.provider.providerProfile?.isVerified && <VerifiedBadge tier="verified" size="sm" />}
+              {resp.provider.providerProfile?.isYoungTalent && <VerifiedBadge tier="young-talent" size="sm" />}
+              {resp.provider.providerProfile?.isPremium && <VerifiedBadge tier="premium" size="sm" />}
+              {resp.provider.providerProfile?.isGoat && <VerifiedBadge tier="goat" size="sm" />}
             </span>
-            {resp.providerBadge && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                <Shield className="h-3 w-3" />
-                {resp.providerBadge}
-              </span>
-            )}
             {isAccepted && <Badge variant="success">Priimtas</Badge>}
           </div>
           {!expanded && (
@@ -182,6 +181,7 @@ export default function ProposalCard({
             otherParticipantName={resp.provider.name}
             otherParticipantImage={resp.provider.image}
             otherParticipantReadAt={resp.providerLastReadAt ?? null}
+            realtimeTrackingToken={trackingToken}
             sendMessage={sendMessage}
             placeholder="Rašyti žinutę tiekėjui..."
             disabled={isClosed}

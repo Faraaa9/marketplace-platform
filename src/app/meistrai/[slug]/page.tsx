@@ -20,6 +20,7 @@ import StoryAvatarButton from "./components/StoryAvatarButton";
 import StickyBottomBar from "./components/StickyBottomBar";
 import ContactButton from "./components/ContactButton";
 import HeroInfoCard from "./components/HeroInfoCard";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import WorkImageGallery from "./components/WorkImageGallery";
 import {
@@ -45,19 +46,100 @@ import {
   Globe,
   MapPin,
   MessageSquare,
-  Shield,
   Tag,
   UserCheck,
   Wrench,
   Zap,
 } from "lucide-react";
 
-export const metadata: Metadata = {
+export const dynamic = "force-dynamic";
+
+const SITE_NAME = "paslaugurinka.lt";
+const DEFAULT_METADATA: Metadata = {
   title: "Tiekėjo profilis — PaslaugųRinka",
-  description: "Peržiūrėkite paslaugų tiekėjo profilį, darbus, atsiliepimus ir susisiekite tiesiogiai.",
+  description:
+    "Peržiūrėkite paslaugų tiekėjo profilį, darbus, atsiliepimus ir susisiekite tiesiogiai.",
 };
 
-export const dynamic = "force-dynamic";
+/**
+ * Per-profile <title> and meta description. Prefers AI-generated seoTitle /
+ * seoDescription from src/app/api/profile/ai-generate/route.ts. Falls back to
+ * a deterministic formula for legacy profiles where AI hasn't run yet, so we
+ * never emit the same metadata twice for two different providers.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const row = await prisma.providerProfile.findUnique({
+    where: { slug },
+    select: {
+      displayName: true,
+      seoTitle: true,
+      seoDescription: true,
+      primaryService: true,
+      primaryCity: true,
+      description: true,
+      headline: true,
+      heroImageUrl: true,
+      moderationStatus: true,
+      isActive: true,
+      user: { select: { name: true } },
+    },
+  });
+  if (!row || !row.isActive || row.moderationStatus !== "APPROVED") {
+    return DEFAULT_METADATA;
+  }
+
+  const name = row.displayName || row.user?.name || "Paslaugų tiekėjas";
+  const title =
+    row.seoTitle ||
+    [
+      name,
+      row.primaryService
+        ? `— ${row.primaryService}${row.primaryCity ? ` ${row.primaryCity}e` : ""}`
+        : row.headline
+          ? `— ${row.headline}`
+          : "",
+      `| ${SITE_NAME}`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+  const fallbackDesc = row.description
+    ? row.description.replace(/\s+/g, " ").slice(0, 157).trim() +
+      (row.description.length > 157 ? "…" : "")
+    : `${name} paslaugos${row.primaryCity ? ` ${row.primaryCity}e` : ""}. Peržiūrėkite profilį ir susisiekite per paslaugurinka.lt.`;
+  const description = row.seoDescription || fallbackDesc;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${SITE_NAME}`;
+  const url = `${baseUrl}/meistrai/${slug}`;
+
+  return {
+    // `absolute` opts out of the root layout's `%s | PaslaugųRinka` template —
+    // seoTitle already includes the site suffix, so otherwise it ships twice.
+    title: { absolute: title },
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      type: "profile",
+      locale: "lt_LT",
+      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
+    },
+    twitter: {
+      card: row.heroImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
+    },
+  };
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -303,12 +385,10 @@ export default async function PublicProviderProfilePage({
                     <h1 className="min-w-0 text-2xl font-bold leading-tight tracking-[-0.03em] text-surface-900 sm:text-[34px] dark:text-white">
                       {provider.name}
                     </h1>
-                    {provider.badge && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-micro font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                        <Shield className="h-3 w-3" />
-                        {provider.badge}
-                      </span>
-                    )}
+                    {provider.isVerified && <VerifiedBadge tier="verified" size="md" />}
+                    {provider.isYoungTalent && <VerifiedBadge tier="young-talent" size="md" />}
+                    {provider.isPremium && <VerifiedBadge tier="premium" size="md" />}
+                    {provider.isGoat && <VerifiedBadge tier="goat" size="md" />}
                   </div>
 
                   {provider.headline && (
@@ -655,6 +735,9 @@ async function getProviderProfile(
             website: true,
             images: true,
             isVerified: true,
+            isPremium: true,
+            isYoungTalent: true,
+            isGoat: true,
             createdAt: true,
             moderationStatus: true,
             moderationReason: true,
@@ -720,6 +803,10 @@ async function getProviderProfile(
     website: profile.website,
     phone: profile.phone,
     badge,
+    isVerified: profile.isVerified ?? false,
+    isPremium: profile.isPremium ?? false,
+    isYoungTalent: profile.isYoungTalent ?? false,
+    isGoat: profile.isGoat ?? false,
     responseCount: provider._count.responses,
     acceptedCount,
     avgResponseTimeHours,

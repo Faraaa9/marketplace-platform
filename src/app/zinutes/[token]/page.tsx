@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
@@ -18,7 +17,7 @@ interface MessageData {
   createdAt: string;
   senderId?: string | null;
   senderName?: string;
-  sender?: { name: string };
+  sender?: { id?: string; name: string; image?: string | null };
 }
 
 interface ConversationData {
@@ -27,11 +26,13 @@ interface ConversationData {
   providerName: string | null;
   providerImage: string | null;
   presenceLevel: PresenceLevel;
+  presenceLabel: string | null;
   description: string;
   budget: string | null;
   senderName: string | null;
   createdAt: string;
   providerLastReadAt: string | null;
+  clientLastReadAt: string | null;
   messages: MessageData[];
 }
 
@@ -93,11 +94,23 @@ export default function InquiryConversationPage() {
   }
 
   const providerName = conversation.providerName || "Tiekėjas";
-  const openingMessageSeen =
-    conversation.messages.length === 0 &&
-    conversation.providerLastReadAt &&
-    new Date(conversation.providerLastReadAt).getTime() >=
-      new Date(conversation.createdAt).getTime();
+  const chatMessages: ThreadMessage[] = [
+    {
+      id: `opening-${conversation.id}`,
+      content: conversation.description,
+      createdAt: conversation.createdAt,
+      senderId: null,
+      senderName: conversation.senderName || "Jūs",
+      sender: { name: conversation.senderName || "Jūs" },
+      metaLabel: conversation.budget ? `Biudžetas: ${conversation.budget}` : null,
+      status: "sent",
+    },
+    ...conversation.messages.map((m) => ({
+      ...m,
+      senderName: m.senderName || m.sender?.name || null,
+      status: "sent" as const,
+    })),
+  ];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -128,13 +141,18 @@ export default function InquiryConversationPage() {
                 </span>
               )}
             </div>
-            {conversation.presenceLevel === "online" && (
+            {conversation.presenceLevel && (
               <span
                 className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
-                aria-label="Prisijungęs dabar"
-                title="Prisijungęs dabar"
+                aria-label={conversation.presenceLabel ?? "Aktyvus neseniai"}
+                title={conversation.presenceLabel ?? "Aktyvus neseniai"}
               >
-                <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" aria-hidden />
+                <span
+                  className={`h-[7px] w-[7px] rounded-full ${
+                    conversation.presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
+                  }`}
+                  aria-hidden
+                />
               </span>
             )}
           </div>
@@ -142,62 +160,34 @@ export default function InquiryConversationPage() {
             <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
               {providerName}
             </p>
-            {conversation.presenceLevel === "online" && (
-              <p className="text-micro text-emerald-600 dark:text-emerald-400">Prisijungęs dabar</p>
+            {conversation.presenceLabel && (
+              <p
+                className={`text-micro ${
+                  conversation.presenceLevel === "online"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-surface-500 dark:text-surface-400"
+                }`}
+              >
+                {conversation.presenceLabel}
+              </p>
             )}
           </div>
-        </div>
-
-        {/* Opening message — the sender's own inquiry */}
-        <div className="flex flex-col items-end gap-0.5">
-          <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-body-sm text-white whitespace-pre-wrap break-words">
-            {conversation.description}
-          </div>
-          {conversation.budget && (
-            <span className="px-1 text-micro text-surface-400">
-              Biudžetas: {conversation.budget}
-            </span>
-          )}
-          <span className="px-1 text-micro text-surface-400">
-            {formatRelativeDate(conversation.createdAt)}
-          </span>
-          {openingMessageSeen && (
-            <span
-              className="relative mr-1 mt-0.5 inline-flex h-5 w-5 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 dark:from-brand-950 dark:to-surface-800 dark:text-brand-300"
-              title={`Matyta ${providerName}`}
-              aria-label={`Matyta ${providerName}`}
-            >
-              {conversation.providerImage ? (
-                <Image
-                  src={conversation.providerImage}
-                  alt=""
-                  fill
-                  sizes="20px"
-                  className="object-cover"
-                />
-              ) : (
-                <span className="grid h-full w-full place-items-center text-[10px] font-semibold">
-                  {providerName[0]?.toUpperCase() ?? "T"}
-                </span>
-              )}
-            </span>
-          )}
         </div>
 
         <ThreadChat
           threadId={conversation.id}
           threadKind="directInquiry"
-          initialMessages={conversation.messages.map((m) => ({
-            ...m,
-            senderName: m.senderName || m.sender?.name || null,
-            status: "sent" as const,
-          }))}
+          initialMessages={chatMessages}
           currentSenderName={conversation.senderName || "Jūs"}
           viewerRole="client"
           providerId={conversation.providerId}
           otherParticipantName={providerName}
           otherParticipantImage={conversation.providerImage}
           otherParticipantReadAt={conversation.providerLastReadAt}
+          realtimeTrackingToken={params.token as string}
+          showInitialTimeDivider={false}
+          forceDividerAfterFirstGroup
+          showTopBorder={false}
           sendMessage={sendMessage}
           placeholder="Rašyti žinutę tiekėjui..."
         />

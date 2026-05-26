@@ -8,6 +8,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { checkEligibility } from "@/lib/provider-eligibility";
+import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 
 /**
  * Provider view of a request.
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         acceptedResponseId: true,
         clientId: true,
         clientName: true,
-        client: { select: { image: true, name: true } },
+        client: { select: { image: true, name: true, lastSeenAt: true } },
         clientEmail: true,
         clientPhone: true,
         createdAt: true,
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             message: true,
             price: true,
             createdAt: true,
+            clientLastReadAt: true,
             provider: { select: { id: true, name: true } },
             messages: {
               select: {
@@ -124,6 +126,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       acceptedResponseId: request.acceptedResponseId,
       clientName: request.clientName,
       clientImage: request.client?.image ?? null,
+      clientPresenceLevel: getPresenceLevel(request.client?.lastSeenAt),
+      clientPresenceLabel: formatLastSeen(request.client?.lastSeenAt),
       createdAt: request.createdAt,
       responses: request.responses,
       totalResponses,

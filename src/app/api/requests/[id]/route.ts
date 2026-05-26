@@ -41,12 +41,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             price: true,
             createdAt: true,
             providerLastReadAt: true,
+            clientLastReadAt: true,
             provider: {
               select: {
                 id: true,
                 name: true,
                 image: true,
-                providerProfile: { select: { location: true, isVerified: true, images: true, heroImageUrl: true } },
+                providerProfile: { select: { location: true, isVerified: true, isPremium: true, isYoungTalent: true, isGoat: true, images: true, heroImageUrl: true } },
               },
             },
             messages: {
@@ -71,6 +72,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 
+    const clientReadAt = new Date();
+    try {
+      await prisma.response.updateMany({
+        where: { requestId: request.id },
+        data: { clientLastReadAt: clientReadAt },
+      });
+    } catch {
+      // Read receipts must never block the tracking page.
+    }
+
     // Sort responses newest first
     const sortedResponses = [...request.responses].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -84,6 +95,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       const { images, heroImageUrl, ...providerProfile } = resp.provider.providerProfile ?? {};
       return {
         ...resp,
+        clientLastReadAt: clientReadAt,
         provider: {
           ...resp.provider,
           image: getProviderAvatarImage(resp.provider),

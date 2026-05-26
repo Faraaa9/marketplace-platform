@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
+import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 
 /**
  * GET — fetch one direct-inquiry conversation (provider view) and mark it read.
@@ -21,9 +22,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         senderName: true,
         senderEmail: true,
         senderPhone: true,
-        sender: { select: { image: true, name: true } },
+        sender: { select: { image: true, name: true, lastSeenAt: true } },
         status: true,
         createdAt: true,
+        clientLastReadAt: true,
         messages: {
           select: {
             id: true,
@@ -60,6 +62,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         ...data,
         senderImage: sender?.image ?? null,
         senderAccountName: sender?.name ?? null,
+        senderPresenceLevel: getPresenceLevel(sender?.lastSeenAt),
+        senderPresenceLabel: formatLastSeen(sender?.lastSeenAt),
       },
     });
   } catch (error) {

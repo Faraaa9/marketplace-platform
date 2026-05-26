@@ -151,6 +151,7 @@ export async function POST(req: NextRequest) {
           moderatedAt: new Date(),
           // The sender wrote this — leave it unread for the provider.
           providerLastReadAt: new Date(0),
+          clientLastReadAt: new Date(),
         },
       });
 

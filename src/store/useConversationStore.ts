@@ -9,6 +9,7 @@ export interface ThreadMessage {
   senderName: string | null;
   senderId?: string | null;
   sender?: { id?: string; name: string; image?: string | null } | null;
+  metaLabel?: string | null;
   /** Optimistic status */
   status: "sent" | "sending" | "failed";
 }
@@ -42,6 +43,17 @@ interface ConversationState {
 let tempCounter = 0;
 const EMPTY_THREAD: ThreadMessage[] = [];
 
+function dedupeMessages(messages: ThreadMessage[]): ThreadMessage[] {
+  const seen = new Set<string>();
+  const deduped: ThreadMessage[] = [];
+  for (const message of messages) {
+    if (seen.has(message.id)) continue;
+    seen.add(message.id);
+    deduped.push(message);
+  }
+  return deduped;
+}
+
 export const useConversationStore = create<ConversationState>((set, get) => ({
   threads: {},
 
@@ -56,7 +68,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       return {
         threads: {
           ...state.threads,
-          [responseId]: [...messages, ...pendingMessages],
+          [responseId]: dedupeMessages([...messages, ...pendingMessages]),
         },
       };
     }),
@@ -83,6 +95,14 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   confirmSend: (responseId, tempId, serverMessage) =>
     set((state) => {
       const thread = state.threads[responseId] || [];
+      if (thread.some((m) => m.id === serverMessage.id)) {
+        return {
+          threads: {
+            ...state.threads,
+            [responseId]: thread.filter((m) => m.id !== tempId),
+          },
+        };
+      }
       return {
         threads: {
           ...state.threads,

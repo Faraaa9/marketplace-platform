@@ -5,6 +5,7 @@ import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Search, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import GrantCreditsByEmailCard from "./GrantCreditsByEmailCard";
 
@@ -15,6 +16,10 @@ interface Provider {
   createdAt: string;
   providerProfile: {
     isActive: boolean;
+    isVerified: boolean;
+    isPremium: boolean;
+    isYoungTalent: boolean;
+    isGoat: boolean;
     creditBalance: number;
     description?: string;
     location?: string;
@@ -73,8 +78,30 @@ export default function AdminProvidersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action }),
     });
+
+    // Badge toggles stay in the open modal so the admin sees the change immediately;
+    // every other action returns the admin to the list.
+    const BADGE_ACTION_DELTAS: Record<string, Partial<NonNullable<Provider["providerProfile"]>>> = {
+      verify: { isVerified: true },
+      unverify: { isVerified: false },
+      premium: { isPremium: true },
+      unpremium: { isPremium: false },
+      "young-talent": { isYoungTalent: true },
+      "unyoung-talent": { isYoungTalent: false },
+      goat: { isGoat: true },
+      ungoat: { isGoat: false },
+    };
+    if (action in BADGE_ACTION_DELTAS) {
+      const delta = BADGE_ACTION_DELTAS[action];
+      setSelectedProvider((prev) =>
+        prev && prev.providerProfile
+          ? { ...prev, providerProfile: { ...prev.providerProfile, ...delta } }
+          : prev,
+      );
+    } else {
+      setSelectedProvider(null);
+    }
     fetchProviders();
-    setSelectedProvider(null);
   }
 
   async function handleGiftCredits() {
@@ -151,7 +178,15 @@ export default function AdminProvidersPage() {
             <tbody className="bg-white dark:bg-surface-900">
               {providers.map((p) => (
                 <tr key={p.id} className="border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
-                  <td className="py-3 px-4 font-medium text-surface-900 dark:text-white">{p.name}</td>
+                  <td className="py-3 px-4 font-medium text-surface-900 dark:text-white">
+                    <span className="inline-flex items-center gap-1.5">
+                      {p.name}
+                      {p.providerProfile?.isVerified && <VerifiedBadge tier="verified" size="sm" tooltipPlacement="bottom" />}
+                      {p.providerProfile?.isYoungTalent && <VerifiedBadge tier="young-talent" size="sm" tooltipPlacement="bottom" />}
+                      {p.providerProfile?.isPremium && <VerifiedBadge tier="premium" size="sm" tooltipPlacement="bottom" />}
+                      {p.providerProfile?.isGoat && <VerifiedBadge tier="goat" size="sm" tooltipPlacement="bottom" />}
+                    </span>
+                  </td>
                   <td className="py-3 px-4 text-surface-500">{p.email}</td>
                   <td className="py-3 px-4 font-medium tabular-nums text-surface-700 dark:text-surface-300">
                     {p.providerProfile?.creditBalance ?? 0}
@@ -222,6 +257,65 @@ export default function AdminProvidersPage() {
             <p><strong className="text-surface-900 dark:text-white">Kategorijos:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.categories?.map((c) => c.category.name).join(", ") || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Aprašymas:</strong> <span className="text-surface-500">{selectedProvider.providerProfile.description || "—"}</span></p>
             <p><strong className="text-surface-900 dark:text-white">Atsakymų:</strong> <span className="text-surface-500">{selectedProvider._count.responses}</span></p>
+
+            <div className="pt-2 border-t border-surface-100 dark:border-surface-800">
+              <p className="font-medium text-surface-900 dark:text-white mb-2">Ženkliukai</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(
+                  [
+                    {
+                      tier: "verified" as const,
+                      onLabel: "Patvirtintas",
+                      offLabel: "Patvirtinti",
+                      isOn: selectedProvider.providerProfile?.isVerified ?? false,
+                      onAction: "verify",
+                      offAction: "unverify",
+                      onCls: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300",
+                    },
+                    {
+                      tier: "young-talent" as const,
+                      onLabel: "Jaunasis talentas",
+                      offLabel: "Jaunasis talentas",
+                      isOn: selectedProvider.providerProfile?.isYoungTalent ?? false,
+                      onAction: "young-talent",
+                      offAction: "unyoung-talent",
+                      onCls: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300",
+                    },
+                    {
+                      tier: "premium" as const,
+                      onLabel: "Aukso meistras",
+                      offLabel: "Aukso meistras",
+                      isOn: selectedProvider.providerProfile?.isPremium ?? false,
+                      onAction: "premium",
+                      offAction: "unpremium",
+                      onCls: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300",
+                    },
+                    {
+                      tier: "goat" as const,
+                      onLabel: "GOAT",
+                      offLabel: "GOAT",
+                      isOn: selectedProvider.providerProfile?.isGoat ?? false,
+                      onAction: "goat",
+                      offAction: "ungoat",
+                      onCls: "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:border-violet-500/40 dark:bg-violet-500/10 dark:text-violet-300",
+                    },
+                  ]
+                ).map((b) => (
+                  <button
+                    key={b.tier}
+                    onClick={() => handleAction(selectedProvider.id, b.isOn ? b.offAction : b.onAction)}
+                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-body-sm transition-colors ${
+                      b.isOn
+                        ? b.onCls
+                        : "border-surface-300 bg-white text-surface-700 hover:bg-surface-50 dark:border-surface-600 dark:bg-surface-800 dark:text-surface-300"
+                    }`}
+                  >
+                    <VerifiedBadge tier={b.tier} size="sm" />
+                    {b.isOn ? b.onLabel : b.offLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="pt-2 border-t border-surface-100 dark:border-surface-800">
               <p className="font-medium text-surface-900 dark:text-white mb-1.5">

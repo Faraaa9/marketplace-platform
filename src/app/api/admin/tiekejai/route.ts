@@ -44,6 +44,10 @@ export async function GET(req: NextRequest) {
           providerProfile: {
             select: {
               isActive: true,
+              isVerified: true,
+              isPremium: true,
+              isYoungTalent: true,
+              isGoat: true,
               creditBalance: true,
               description: true,
               location: true,
@@ -90,6 +94,24 @@ export async function PATCH(req: NextRequest) {
     // grant-credits can instead resolve the recipient from a typed email.
     if (action !== "grant-credits" && !userId) {
       return NextResponse.json({ success: false, error: "Trūksta duomenų" }, { status: 400 });
+    }
+
+    const BADGE_ACTIONS: Record<string, { isVerified?: boolean; isPremium?: boolean; isYoungTalent?: boolean; isGoat?: boolean }> = {
+      verify: { isVerified: true },
+      unverify: { isVerified: false },
+      premium: { isPremium: true },
+      unpremium: { isPremium: false },
+      "young-talent": { isYoungTalent: true },
+      "unyoung-talent": { isYoungTalent: false },
+      goat: { isGoat: true },
+      ungoat: { isGoat: false },
+    };
+    if (typeof action === "string" && action in BADGE_ACTIONS) {
+      await prisma.providerProfile.update({
+        where: { userId },
+        data: BADGE_ACTIONS[action],
+      });
+      return NextResponse.json({ success: true });
     }
 
     if (action === "activate" || action === "deactivate") {

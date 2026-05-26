@@ -99,12 +99,26 @@ model ProviderProfile {
   heroImageUrl      String?
   companyCode       String?
   isVerified        Boolean   @default(false)
+  isPremium         Boolean   @default(false)
+  isYoungTalent     Boolean   @default(false)
+  isGoat            Boolean   @default(false)
   rating            Float?
   reviewCount       Int       @default(0)
   externalSource    String?
   externalSourceUrl String?
   enrichedAt        DateTime?
   metadataJson      String?   @db.Text
+
+  // ── SEO fields populated by AI (src/app/api/profile/ai-generate/route.ts) ──
+  // seoTitle/seoDescription back the per-profile <title> and meta description
+  // on /meistrai/[slug]. primaryService + primaryCity drive structured-data
+  // (LocalBusiness.areaServed) and a fallback metadata formula for legacy
+  // rows where AI hasn't run yet.
+  seoTitle        String?
+  seoDescription  String?
+  primaryService  String?
+  primaryCity     String?
+  serviceArea     String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,6 +221,7 @@ model Response {
   // recent activity and flag unread threads without scanning all messages.
   lastMessageAt      DateTime @default(now())
   providerLastReadAt DateTime @default(now())
+  clientLastReadAt   DateTime?
 
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   provider User           @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -354,6 +369,7 @@ model DirectInquiry {
   // Conversation tracking — a DirectInquiry is now a two-way message thread.
   lastMessageAt      DateTime @default(now())
   providerLastReadAt DateTime @default(now())
+  clientLastReadAt   DateTime?
 
   provider User      @relation("InquiryProvider", fields: [providerId], references: [id], onDelete: Cascade)
   sender   User?     @relation("InquirySender", fields: [senderUserId], references: [id], onDelete: SetNull)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { Send, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
@@ -17,6 +17,12 @@ interface MessageRow {
   senderName: string | null;
   content: string;
   createdAt: string;
+}
+
+interface ReadStateRow {
+  id: string;
+  providerLastReadAt?: string | null;
+  clientLastReadAt?: string | null;
 }
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
@@ -43,6 +49,8 @@ interface ThreadChatProps {
   otherParticipantImage?: string | null;
   /** When the other participant last read this thread, if the current view can know it. */
   otherParticipantReadAt?: string | null;
+  /** Tracking token for token-authenticated client threads. Session users can omit it. */
+  realtimeTrackingToken?: string | null;
   /** Draw the separator above the first rendered message group. */
   showInitialTimeDivider?: boolean;
   /** Force a timestamp before the second group, useful when an opening message is rendered as part of the thread. */
@@ -171,6 +179,7 @@ export default function ThreadChat({
   otherParticipantName,
   otherParticipantImage,
   otherParticipantReadAt,
+  realtimeTrackingToken,
   showInitialTimeDivider = true,
   forceDividerAfterFirstGroup = false,
   showTopBorder = true,
@@ -179,7 +188,9 @@ export default function ThreadChat({
   disabled = false,
 }: ThreadChatProps) {
   const [inputValue, setInputValue] = useState("");
+  const [liveOtherReadAt, setLiveOtherReadAt] = useState<string | null>(otherParticipantReadAt ?? null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMarkedReadMessageIdRef = useRef<string | null>(null);
 
   const hydrateThread = useConversationStore((s) => s.hydrateThread);
   const optimisticSend = useConversationStore((s) => s.optimisticSend);
@@ -188,6 +199,10 @@ export default function ThreadChat({
   const removeFailed = useConversationStore((s) => s.removeFailed);
   const appendMessageIfNew = useConversationStore((s) => s.appendMessageIfNew);
   const messages = useConversationStore((s) => s.threads[threadId]) ?? EMPTY_MESSAGES;
+
+  useEffect(() => {
+    setLiveOtherReadAt(otherParticipantReadAt ?? null);
+  }, [otherParticipantReadAt]);
 
   // Hydrate on mount / when server data changes
   useEffect(() => {
@@ -213,8 +228,15 @@ export default function ThreadChat({
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     (async () => {
-      await authenticateRealtime();
+      await authenticateRealtime({
+        threadKind,
+        threadId,
+        trackingToken: realtimeTrackingToken ?? null,
+      });
       if (cancelled) return;
+
+      const threadTable = threadKind === "response" ? "responses" : "direct_inquiries";
+      const otherReadField = viewerRole === "provider" ? "clientLastReadAt" : "providerLastReadAt";
 
       channel = supabase
         .channel(`messages-${threadId}`)
@@ -228,6 +250,8 @@ export default function ThreadChat({
           },
           (payload) => {
             const row = payload.new as MessageRow;
+            const fromProvider = row.senderId != null && row.senderId === providerId;
+            const own = fromProvider === (viewerRole === "provider");
             appendMessageIfNew(threadId, {
               id: row.id,
               content: row.content,
@@ -237,9 +261,27 @@ export default function ThreadChat({
                   : new Date(row.createdAt).toISOString(),
               senderId: row.senderId,
               senderName: row.senderName,
-              sender: row.senderName ? { name: row.senderName } : null,
+              sender: row.senderName
+                ? { name: row.senderName, image: own ? null : otherParticipantImage ?? null }
+                : null,
               status: "sent",
             });
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: threadTable,
+            filter: `id=eq.${threadId}`,
+          },
+          (payload) => {
+            const row = payload.new as ReadStateRow;
+            const readAt = row[otherReadField];
+            if (typeof readAt === "string") {
+              setLiveOtherReadAt(readAt);
+            }
           },
         )
         .subscribe();
@@ -249,12 +291,33 @@ export default function ThreadChat({
       cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [threadId, threadKind, appendMessageIfNew]);
+  }, [threadId, threadKind, providerId, viewerRole, realtimeTrackingToken, otherParticipantImage, appendMessageIfNew]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.status !== "sent") return;
+    if (isOwnMessage(lastMessage, viewerRole, providerId)) return;
+    if (lastMarkedReadMessageIdRef.current === lastMessage.id) return;
+
+    lastMarkedReadMessageIdRef.current = lastMessage.id;
+    void fetch("/api/realtime/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        threadKind,
+        threadId,
+        trackingToken: realtimeTrackingToken ?? null,
+      }),
+    }).catch(() => {
+      // Best-effort read receipts: failed writes should not interrupt chat.
+    });
+  }, [messages, providerId, realtimeTrackingToken, threadId, threadKind, viewerRole]);
 
   const handleSend = useCallback(async () => {
     const content = inputValue.trim();
@@ -286,7 +349,7 @@ export default function ThreadChat({
 
   const otherFallbackName = viewerRole === "provider" ? "Klientas" : "Tiekėjas";
   const otherDisplayName = otherParticipantName?.trim() || otherFallbackName;
-  const readAtTime = otherParticipantReadAt ? toTime(otherParticipantReadAt) : null;
+  const readAtTime = liveOtherReadAt ? toTime(liveOtherReadAt) : null;
 
   // Collapse consecutive messages from the same side into groups — Messenger-style.
   const groups = useMemo<MessageGroup[]>(() => {
@@ -412,20 +475,26 @@ export default function ThreadChat({
                       }
 
                       return (
-                        <div
-                          key={msg.id}
-                          className={cn(
-                            "max-w-full rounded-3xl px-4 py-2.5 text-[15px] leading-snug whitespace-pre-wrap break-words",
-                            group.isOwn
-                              ? "bg-brand-600 text-white dark:bg-brand-500"
-                              : "bg-surface-100 text-surface-900 dark:bg-surface-800 dark:text-surface-100",
-                            tail,
-                            msg.status === "sending" && "opacity-70",
+                        <Fragment key={msg.id}>
+                          <div
+                            className={cn(
+                              "max-w-full rounded-3xl px-4 py-2.5 text-[15px] leading-snug whitespace-pre-wrap break-words",
+                              group.isOwn
+                                ? "bg-brand-600 text-white dark:bg-brand-500"
+                                : "bg-surface-100 text-surface-900 dark:bg-surface-800 dark:text-surface-100",
+                              tail,
+                              msg.status === "sending" && "opacity-70",
+                            )}
+                            title={formatChatTimestamp(msg.createdAt)}
+                          >
+                            {msg.content}
+                          </div>
+                          {msg.metaLabel && (
+                            <span className="px-1 text-micro text-surface-400 dark:text-surface-500">
+                              {msg.metaLabel}
+                            </span>
                           )}
-                          title={formatChatTimestamp(msg.createdAt)}
-                        >
-                          {msg.content}
-                        </div>
+                        </Fragment>
                       );
                     })}
 
@@ -437,7 +506,7 @@ export default function ThreadChat({
                     )}
 
                     {showSeen && (
-                      <span className="flex min-h-5 items-center justify-end px-1" title={`Matyta ${formatRelativeDate(otherParticipantReadAt!)}`}>
+                      <span className="flex min-h-5 items-center justify-end px-1" title={`Matyta ${formatRelativeDate(liveOtherReadAt!)}`}>
                         <ParticipantAvatar
                           name={otherDisplayName}
                           image={otherParticipantImage}

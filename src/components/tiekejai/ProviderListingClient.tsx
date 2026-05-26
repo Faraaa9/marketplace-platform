@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { PresenceFilter, ProviderCardData } from "@/lib/provider-filters";
 import type { ProvidersView } from "./ProvidersExperience";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -672,10 +673,14 @@ export default function ProviderListingClient({
 
                       {/* Main info */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <h3 className="truncate text-body font-semibold text-surface-900 dark:text-white">
                             {p.name}
                           </h3>
+                          {p.isVerified && <VerifiedBadge tier="verified" size="sm" />}
+                          {p.isYoungTalent && <VerifiedBadge tier="young-talent" size="sm" />}
+                          {p.isPremium && <VerifiedBadge tier="premium" size="sm" />}
+                          {p.isGoat && <VerifiedBadge tier="goat" size="sm" />}
                           {badge && (
                             <span
                               className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.cls}`}
@@ -787,9 +792,15 @@ export default function ProviderListingClient({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                     <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
-                      <h3 className="text-lg font-bold text-white truncate leading-tight drop-shadow-sm">
-                        {p.name}
-                      </h3>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h3 className="text-lg font-bold text-white truncate leading-tight drop-shadow-sm">
+                          {p.name}
+                        </h3>
+                        {p.isVerified && <VerifiedBadge tier="verified" size="sm" className="drop-shadow-sm" />}
+                        {p.isYoungTalent && <VerifiedBadge tier="young-talent" size="sm" className="drop-shadow-sm" />}
+                        {p.isPremium && <VerifiedBadge tier="premium" size="sm" className="drop-shadow-sm" />}
+                        {p.isGoat && <VerifiedBadge tier="goat" size="sm" className="drop-shadow-sm" />}
+                      </div>
                       {p.location && (
                         <p className="mt-0.5 text-[13px] text-white/75 flex items-center gap-1 drop-shadow-sm">
                           <MapPin className="h-3 w-3 shrink-0" />

@@ -447,29 +447,43 @@ export default function ProviderDashboard() {
   const [notProvider, setNotProvider] = useState(false);
 
   useEffect(() => {
-    fetch("/api/tiekejas/stats")
-      .then(async (r) => {
-        if (r.status === 403) {
-          setNotProvider(true);
-          return null;
-        }
-        return r.json();
-      })
-      .then((data) => {
-        if (data?.success) {
-          setStats(data.data);
+    let cancelled = false;
 
-          if (data.data.emailVerified && data.data.isActive) {
-            fetch("/api/tiekejas/zinutes")
-              .then((r) => r.json())
-              .then((inboxData) => {
-                if (inboxData.success) setUnreadInbox(inboxData.data.totalUnread);
-              })
-              .catch(() => {});
-          }
+    const statsPromise = fetch("/api/tiekejas/stats").then(async (r) => {
+      if (r.status === 403) {
+        if (!cancelled) setNotProvider(true);
+        return null;
+      }
+      return r.json().catch(() => null);
+    });
+
+    // Inbox count fires in parallel — the guard rejects non-providers, in
+    // which case we silently leave the badge at 0. The savings vs. waiting
+    // for stats first matter more than the wasted call.
+    const inboxPromise = fetch("/api/tiekejas/zinutes")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+
+    Promise.all([statsPromise, inboxPromise])
+      .then(([statsData, inboxData]) => {
+        if (cancelled) return;
+        if (statsData?.success) setStats(statsData.data);
+        if (
+          inboxData?.success &&
+          statsData?.success &&
+          statsData.data.emailVerified &&
+          statsData.data.isActive
+        ) {
+          setUnreadInbox(inboxData.data.totalUnread);
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleStoryChange = useCallback((delta: number) => {

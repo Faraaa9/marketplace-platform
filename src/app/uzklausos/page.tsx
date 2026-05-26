@@ -29,11 +29,11 @@ interface PageProps {
   }>;
 }
 
-const getBoardRequests = unstable_cache(
+const getBoardListing = unstable_cache(
   async (
     page: number,
     perPage: number,
-    filters: { category: string; location: string; search: string; sort: string }
+    filters: { category: string; location: string; search: string }
   ) => {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -73,9 +73,7 @@ const getBoardRequests = unstable_cache(
       where.location = filters.location;
     }
 
-    const orderBy: Record<string, string> = { createdAt: "desc" };
-
-    const [requests, total, totalActive, newToday, totalProviderResponses] = await Promise.all([
+    const [requests, total] = await Promise.all([
       prisma.serviceRequest.findMany({
         where,
         select: {
@@ -90,19 +88,27 @@ const getBoardRequests = unstable_cache(
           status: true,
           attachmentUrls: true,
           createdAt: true,
-          _count: { select: { responses: true } },
         },
-        orderBy,
+        orderBy: { createdAt: "desc" },
         skip: (page - 1) * perPage,
         take: perPage,
       }),
       prisma.serviceRequest.count({ where }),
-      prisma.serviceRequest.count({ where: { status: "OPEN", moderationStatus: "APPROVED" } }),
-      prisma.serviceRequest.count({
-        where: { status: "OPEN", moderationStatus: "APPROVED", createdAt: { gte: oneDayAgo } },
-      }),
-      prisma.response.count(),
     ]);
+
+    // Response counts in a single grouped query instead of a correlated
+    // subquery per row — much cheaper than Prisma's `_count.responses` for
+    // wider result sets.
+    const ids = requests.map((r) => r.id);
+    const responseCounts =
+      ids.length > 0
+        ? await prisma.response.groupBy({
+            by: ["requestId"],
+            where: { requestId: { in: ids } },
+            _count: { _all: true },
+          })
+        : [];
+    const countByRequest = new Map(responseCounts.map((g) => [g.requestId, g._count._all]));
 
     // unstable_cache serializes via JSON, so Dates round-trip as strings.
     // Coerce here so consumers get real Date objects. Flatten the curated
@@ -111,12 +117,32 @@ const getBoardRequests = unstable_cache(
       ...r,
       categoryName: categoryRef?.name ?? "",
       createdAt: r.createdAt.toISOString(),
+      responseCount: countByRequest.get(r.id) ?? 0,
     }));
 
-    return { requests: serialized, total, totalActive, newToday, totalProviderResponses };
+    return { requests: serialized, total };
   },
   ["open-requests-list"],
   { revalidate: 30, tags: ["requests"] }
+);
+
+// Board-wide counters change slowly relative to the listing; cache them
+// separately with a longer TTL so the listing doesn't pay for three counts
+// (one of them unfiltered on `responses`) on every hit.
+const getBoardStats = unstable_cache(
+  async () => {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [totalActive, newToday, totalProviderResponses] = await Promise.all([
+      prisma.serviceRequest.count({ where: { status: "OPEN", moderationStatus: "APPROVED" } }),
+      prisma.serviceRequest.count({
+        where: { status: "OPEN", moderationStatus: "APPROVED", createdAt: { gte: oneDayAgo } },
+      }),
+      prisma.response.count(),
+    ]);
+    return { totalActive, newToday, totalProviderResponses };
+  },
+  ["board-stats"],
+  { revalidate: 300, tags: ["requests"] }
 );
 
 export default async function PublicRequestsPage({ searchParams }: PageProps) {
@@ -135,17 +161,18 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
   const now = new Date();
 
-  const [{ requests, total, totalActive, newToday, totalProviderResponses }, categoryGroups] =
+  const [{ requests, total }, { totalActive, newToday, totalProviderResponses }, categoryGroups] =
     await Promise.all([
-      getBoardRequests(page, perPage, { category, location, search, sort }),
+      getBoardListing(page, perPage, { category, location, search }),
+      getBoardStats(),
       getServiceCategoryGroups(),
     ]);
 
   // Client-side sort for response count (kept post-cache so it doesn't bloat the key surface)
   if (sort === "responses-asc") {
-    requests.sort((a, b) => a._count.responses - b._count.responses);
+    requests.sort((a, b) => a.responseCount - b.responseCount);
   } else if (sort === "responses-desc") {
-    requests.sort((a, b) => b._count.responses - a._count.responses);
+    requests.sort((a, b) => b.responseCount - a.responseCount);
   }
 
   const pages = Math.ceil(total / perPage);
@@ -276,7 +303,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
         {requests.length > 0 ? (
           <div className="uzklausa-grid grid gap-7 sm:gap-8">
             {requests.map((r, i) => {
-              const competition = competitionLevel(r._count.responses);
+              const competition = competitionLevel(r.responseCount);
               const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const isOpenedRequest = openRequestId === r.id;
@@ -365,7 +392,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                           </span>
                           <span className="inline-flex items-center gap-1.5">
                             <MessageSquare className="h-3.5 w-3.5 text-surface-400" />
-                            {r._count.responses} {offerNoun(r._count.responses)}
+                            {r.responseCount} {offerNoun(r.responseCount)}
                           </span>
                         </div>
 

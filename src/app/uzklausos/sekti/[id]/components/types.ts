@@ -4,7 +4,7 @@ export interface MessageData {
   createdAt: string;
   senderId?: string | null;
   senderName?: string;
-  sender?: { name: string };
+  sender?: { id?: string; name: string; image?: string | null };
 }
 
 export interface ResponseData {
@@ -14,13 +14,20 @@ export interface ResponseData {
   price?: number;
   createdAt: string;
   providerLastReadAt?: string | null;
+  clientLastReadAt?: string | null;
   providerBadge?: string | null;
   hasReview?: boolean;
   provider: {
     id: string;
     name: string;
     image?: string | null;
-    providerProfile?: { location: string; isVerified?: boolean };
+    providerProfile?: {
+      location: string;
+      isVerified?: boolean;
+      isPremium?: boolean;
+      isYoungTalent?: boolean;
+      isGoat?: boolean;
+    };
   };
   messages: MessageData[];
 }

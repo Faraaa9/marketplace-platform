@@ -17,6 +17,7 @@ interface Conversation {
   providerName: string;
   providerImage: string | null;
   presenceLevel: PresenceLevel;
+  presenceLabel: string | null;
   preview: string;
   lastMessageAt: string;
   unread: boolean;
@@ -145,13 +146,18 @@ export default function SentInquiriesPage() {
                           </span>
                         )}
                       </div>
-                      {c.presenceLevel === "online" && (
+                      {c.presenceLevel && (
                         <span
                           className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
-                          aria-label="Prisijungęs dabar"
-                          title="Prisijungęs dabar"
+                          aria-label={c.presenceLabel ?? "Aktyvus neseniai"}
+                          title={c.presenceLabel ?? "Aktyvus neseniai"}
                         >
-                          <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" aria-hidden />
+                          <span
+                            className={`h-[7px] w-[7px] rounded-full ${
+                              c.presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
+                            }`}
+                            aria-hidden
+                          />
                         </span>
                       )}
                     </div>
@@ -182,6 +188,7 @@ export default function SentInquiriesPage() {
                         {c.preview}
                       </p>
                       <p className="mt-1 text-micro text-surface-400">
+                        {c.presenceLabel ? `${c.presenceLabel} · ` : ""}
                         {formatRelativeDate(c.lastMessageAt)}
                       </p>
                     </div>

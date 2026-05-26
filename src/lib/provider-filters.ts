@@ -16,6 +16,9 @@ export interface ProviderCardData {
   categories: ProviderCategory[];
   location: string | null;
   isVerified: boolean;
+  isPremium: boolean;
+  isYoungTalent: boolean;
+  isGoat: boolean;
   badge: string | null;
   responseCount: number;
   acceptedCount: number;
@@ -104,6 +107,9 @@ function matchesLocation(providerLocation: string | null, filter: string): boole
 export function computeProviderScore(p: ProviderCardData): number {
   let score = 0;
 
+  if (p.isGoat) score += 50;
+  if (p.isPremium) score += 30;
+  if (p.isYoungTalent) score += 15;
   if (p.isVerified) score += 20;
 
   if (p.profileImage) score += 5;

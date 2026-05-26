@@ -22,6 +22,10 @@ export interface ProviderProfileData {
   website: string | null;
   phone: string | null;
   badge: string | null;
+  isVerified: boolean;
+  isPremium: boolean;
+  isYoungTalent: boolean;
+  isGoat: boolean;
   responseCount: number;
   acceptedCount: number;
   avgResponseTimeHours: number | null;

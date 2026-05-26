@@ -83,7 +83,36 @@ interface AIResult {
   offersInvoices?: boolean;
   availableForUrgent?: boolean;
   imagePrompt?: string;
+  // ── SEO-specific outputs (populate /meistrai/[slug] metadata + slug) ──
+  seoTitle?: string;
+  seoDescription?: string;
+  primaryService?: string;
+  primaryCity?: string;
+  serviceArea?: string[];
+  slugSuggestion?: string;
 }
+
+// Shared SEO discipline injected into both URL and scratch prompts. Keeps the
+// rules in one place so they don't drift between modes.
+const SEO_RULES = `SEO TAISYKLĖS (privalomos):
+- seoTitle: 50–60 simbolių. Formatas "{Vardas} — {pagrindinė paslauga} {mieste} | paslaugurinka.lt". Pirmas žodis = vardas, NE raktažodis.
+- seoDescription: 140–160 simbolių. Pradžioje pagrindinė paslauga + miestas, pabaigoje implicit CTA ("Kreipkitės dėl konsultacijos.", "Susisiekite šiandien." ir pan.).
+- description: pirmas sakinys (~120 simb.) natūraliai turi PAGRINDINĘ paslaugą + MIESTĄ. Toliau 3 dalys: (a) ką darai konkrečiai (su sinonimais — pvz. "klijavimas, dėjimas, montavimas"), (b) kuo išsiskiri (patirtis, medžiagos, garantija), (c) kur dirbi + kaip susisiekti.
+- slugSuggestion: vardas-paslauga-miestas, kebab-case, max 60 simb., BE lietuviškų raidžių (ą→a, č→c, ę→e, ė→e, į→i, š→s, ų→u, ū→u, ž→z), be metų/atributų. Pvz. "jonas-jonaitis-pliuteliu-klijavimas-kaunas".
+- primaryService: VIENA frazė standartinia lietuvių paslaugų terminologija (pvz. "Plytelių klijavimas", NE "darau plyteles").
+- primaryCity: vienas pagrindinis miestas iš input'o (pirmas, jei minimi keli).
+- serviceArea: 1–5 tikrų Lietuvos miestų/rajonų, kuriuose dirba (string array, ne išgalvoti).
+- headline: trumpas titulas UI'ui (ne SEO!) — max 80 simb., be miesto, jei jis jau seoTitle.
+
+NORMALIZAVIMAS:
+- Vartotojo input'as gali būti padrikas — ekstraktuok faktus ir VERSK į standartinius lietuviškus paslaugų terminus.
+  Pvz.: "darau plyteles vonioj" → primaryService "Plytelių klijavimas"; "elektra" → "Elektros instaliacija"; "remontuoju mašinas" → "Automobilių remontas".
+
+DRAUDŽIAMA:
+- Spam'inti raktažodžiais ("pigiai geriausias profesionalus" stack'as).
+- Klišės ("kokybiškai", "atsakingai", "profesionaliai") kaip pildiklis be konteksto.
+- Pridėti raktažodžius į vardą — vardas = realus žmogus arba įmonės pavadinimas.
+- Išgalvoti faktus (jei input'e nėra patirties metų — palik null).`;
 
 async function fetchAndScrape(url: string): Promise<ScrapedData> {
   let browser;
@@ -248,35 +277,38 @@ async function generateWithClaude(
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const prompt = `Tu esi profesionalus copywriter'is paslaugų rinkai Lietuvoje. Analizuok puslapio turinį ir sukurk paskyrą paslaugų teikėjui.
+  const prompt = `Tu esi lietuvių paslaugų rinkos SEO copywriter'is. Analizuok puslapio turinį ir sukurk SEO-optimizuotą paskyrą.
 
 Šaltinis: ${url}
 Pavadinimas: ${scraped.title || "(nežinoma)"}
 Turinys: ${scraped.text.slice(0, 4000)}
 
-Sukurk:
-1. headline — trumpas, įsimintinas titulas (max 80 simboliu, lietuvių kalba). Pvz: "Patikimas santechnikas Vilniuje — 15 metų patirtis"
-2. description — profesionalų, įtaigų aprašymą (200-300 žodžių lietuvių kalba). Aprašyk paslaugas, patirtį, kuo išsiskiria. NE generinis — naudok konkretus faktus iš šaltinio. Be klišių.
-3. phone — telefono numeris JEI rastas. Formatas: "+370XXXXXXXX" arba "8XXXXXXXX" (vienas numeris, ne array)
-4. location — miestas/regionas Lietuvoje, jei nurodytas (pvz. "Vilnius", "Kaunas, Klaipėda")
-5. services — konkretus paslaugų sąrašas po vieną į eilutę (markdown bullet su • simboliu), pvz: "• Vamzdžių keitimas\n• Čiaupų montavimas\n• Šildymo sistemų remontas". Sudaryk iš šaltinio teksto.
-6. experienceYears — patirtis metais kaip skaičius (integer). Pvz., jei šaltinis mini "5 metų patirtis" → 5. Jei nerasta — null.
-7. priceFrom — minimaliame kaina už paslaugą eurais kaip skaičius. Jei nerasta — null.
-8. offersInvoices — ar išrašo PVM sąskaitas-faktūras (true/false). Pagal nutylėjimą jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
-9. availableForUrgent — ar atlieka skubius darbus (true/false). Jei mini "skubus", "tą pačią dieną", "24/7" → true.
+${SEO_RULES}
 
-Grąžink TIK JSON (be markdown, be code fence):
+Grąžink TIK JSON (be markdown, be code fence) su laukais:
 {
-  "headline": "...",
-  "description": "...",
-  "phone": "+370...",
-  "location": "Vilnius",
-  "services": "• Paslauga 1\n• Paslauga 2",
+  "headline": "trumpas UI titulas, max 80 simb.",
+  "description": "200–300 žodžių pagal struktūrą",
+  "phone": "+370XXXXXXXX arba 8XXXXXXXX (vienas, ne array) arba null",
+  "location": "Vilnius (originalus formatas iš šaltinio)",
+  "services": "• Paslauga 1\\n• Paslauga 2",
   "experienceYears": 5,
   "priceFrom": 30,
   "offersInvoices": true,
-  "availableForUrgent": false
-}`;
+  "availableForUrgent": false,
+  "seoTitle": "Vardas — pagrindinė paslauga Vilniuje | paslaugurinka.lt",
+  "seoDescription": "Pagrindinė paslauga Vilniuje. USP sakinys. Kreipkitės dėl konsultacijos.",
+  "primaryService": "Plytelių klijavimas",
+  "primaryCity": "Vilnius",
+  "serviceArea": ["Vilnius", "Vilniaus r."],
+  "slugSuggestion": "vardas-paslauga-vilnius"
+}
+
+Patarimai:
+- experienceYears: "5 metų patirtis" → 5; jei nerasta — null.
+- offersInvoices: jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
+- availableForUrgent: jei mini "skubus", "tą pačią dieną", "24/7" → true.
+- Jei nerastas vardas — naudok įmonės/brand pavadinimą iš title'o.`;
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -368,6 +400,31 @@ Grąžink TIK JSON (be markdown, be code fence):
       typeof parsed.availableForUrgent === "boolean"
         ? parsed.availableForUrgent
         : undefined,
+    ...extractSeoFields(parsed),
+  };
+}
+
+// Shared SEO field extraction — used by both URL and scratch modes since the
+// JSON contract is identical for these keys.
+function extractSeoFields(parsed: Record<string, unknown>): {
+  seoTitle?: string;
+  seoDescription?: string;
+  primaryService?: string;
+  primaryCity?: string;
+  serviceArea?: string[];
+  slugSuggestion?: string;
+} {
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" && v.trim() ? v.trim() : undefined;
+  return {
+    seoTitle: str(parsed.seoTitle),
+    seoDescription: str(parsed.seoDescription),
+    primaryService: str(parsed.primaryService),
+    primaryCity: str(parsed.primaryCity),
+    serviceArea: Array.isArray(parsed.serviceArea)
+      ? parsed.serviceArea.filter((v): v is string => typeof v === "string" && !!v.trim())
+      : undefined,
+    slugSuggestion: str(parsed.slugSuggestion),
   };
 }
 
@@ -383,34 +440,38 @@ async function generateFromScratch(
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const prompt = `Tu esi profesionalus copywriter'is paslaugų rinkai Lietuvoje. Sukurk paskyrą paslaugų teikėjui iš pateiktos bazinės informacijos.
+  const prompt = `Tu esi lietuvių paslaugų rinkos SEO copywriter'is. Vartotojas pateikia padriką informaciją — tu paverti ją SEO-optimizuota paskyra.
 
-Bazinė info:
+Bazinė info nuo vartotojo:
 - Vardas/įmonė: ${input.businessName}
-- Teikiamos paslaugos (vartotojo aprašyme): ${input.servicesText}
+- Teikiamos paslaugos (savais žodžiais): ${input.servicesText}
 ${input.location ? `- Lokacija: ${input.location}` : ""}
 ${input.experienceYears ? `- Patirtis: ${input.experienceYears} metų` : ""}
 ${input.phone ? `- Telefonas: ${input.phone}` : ""}
 
-Sukurk:
-1. headline — trumpas, įsimintinas titulas (max 80 simbolių, lietuvių kalba). Naudok faktus iš vartotojo input'o.
-2. description — profesionalų, įtaigų aprašymą (180-280 žodžių lietuvių k.). Išskleisk vartotojo trumpą aprašymą į pilną, įtaigų tekstą. Pabrėžk patirtį, kokybę, profesionalumą. NE generinis, NE klišės.
-3. services — struktūrizuotas paslaugų sąrašas po bulletais (• simbolis). Iš vartotojo įvesto teksto sukurk normalų listą.
-4. priceFrom — bazinė kaina eurais, jei galima išvesti iš teksto, kitaip null
-5. offersInvoices — jei mini PVM/sąskaitos → true, kitaip false
-6. availableForUrgent — jei mini skubų/skubūs darbai → true, kitaip false
-7. imagePrompt — ANGLIŠKAI prompt'as profesionalios pagrindinės nuotraukos generavimui. Vaizduoja paslaugų teikėją realioje darbo aplinkoje. PHOTOREALISTIC, ne iliustracija, ne cartoon. Pavyzdys elektrikui: "Professional Lithuanian male electrician at work, wearing safety helmet and work uniform, holding electrical tools, installing wiring in a modern apartment, natural lighting, photorealistic, high quality, candid photo, no logos, no text". Adaptuok pagal specialybę.
+${SEO_RULES}
 
-Grąžink TIK JSON (be markdown):
+Grąžink TIK JSON (be markdown) su laukais:
 {
-  "headline": "...",
-  "description": "...",
+  "headline": "trumpas UI titulas, max 80 simb.",
+  "description": "180–280 žodžių pagal struktūrą",
   "services": "• Paslauga 1\\n• Paslauga 2",
   "priceFrom": null,
   "offersInvoices": false,
   "availableForUrgent": false,
-  "imagePrompt": "Professional photo of..."
-}`;
+  "imagePrompt": "Professional photo of...",
+  "seoTitle": "Vardas — pagrindinė paslauga Vilniuje | paslaugurinka.lt",
+  "seoDescription": "Pagrindinė paslauga Vilniuje. USP sakinys. Kreipkitės dėl konsultacijos.",
+  "primaryService": "Plytelių klijavimas",
+  "primaryCity": "Vilnius",
+  "serviceArea": ["Vilnius"],
+  "slugSuggestion": "vardas-paslauga-vilnius"
+}
+
+Patarimai:
+- imagePrompt: ANGLIŠKAI prompt'as photorealistic darbo nuotraukai (no logos, no text, candid photo).
+- Jei vartotojas miesto nenurodė — primaryCity = null, slugSuggestion = "vardas-paslauga" (be miesto).
+- primaryService imk iš servicesText, normalizuok į standartinę terminologiją.`;
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -468,6 +529,7 @@ Grąžink TIK JSON (be markdown):
     parsed = JSON.parse(jsonMatch[0]);
   }
 
+  const seo = extractSeoFields(parsed);
   return {
     headline: parsed.headline || "",
     description: parsed.description || "",
@@ -487,6 +549,9 @@ Grąžink TIK JSON (be markdown):
         : undefined,
     imagePrompt:
       typeof parsed.imagePrompt === "string" ? parsed.imagePrompt : undefined,
+    ...seo,
+    // Trust user-provided location over AI guess for primaryCity when both exist.
+    primaryCity: input.location || seo.primaryCity,
   };
 }
 
@@ -675,12 +740,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Save everything
-    const baseSlug = slugify(
-      (isScratchMode ? body.businessName : null) ||
-        user.name ||
-        session.user.email.split("@")[0] ||
-        "meistras"
-    );
+    // Prefer AI-suggested SEO slug (vardas-paslauga-miestas). Falls back to
+    // the legacy name-only slug when AI didn't produce one (or returned
+    // something unusable after the slugify pass). slugify() is idempotent so
+    // running it on AI output is safe — it strips lt diacritics and trims.
+    const aiSlug = aiResult.slugSuggestion
+      ? slugify(aiResult.slugSuggestion)
+      : "";
+    const baseSlug =
+      aiSlug ||
+      slugify(
+        (isScratchMode ? body.businessName : null) ||
+          user.name ||
+          session.user.email.split("@")[0] ||
+          "meistras"
+      );
 
     let providerProfile = user.providerProfile;
 
@@ -740,6 +814,11 @@ export async function POST(req: NextRequest) {
           moderationStatus: nextModerationStatus,
           moderationReason: moderation.reason,
           moderatedAt: new Date(),
+          seoTitle: aiResult.seoTitle || null,
+          seoDescription: aiResult.seoDescription || null,
+          primaryService: aiResult.primaryService || null,
+          primaryCity: aiResult.primaryCity || null,
+          serviceArea: aiResult.serviceArea || [],
         },
       });
     } else {
@@ -778,6 +857,16 @@ export async function POST(req: NextRequest) {
           moderationStatus: nextModerationStatus,
           moderationReason: moderation.reason,
           moderatedAt: new Date(),
+          seoTitle: aiResult.seoTitle ?? providerProfile.seoTitle,
+          seoDescription:
+            aiResult.seoDescription ?? providerProfile.seoDescription,
+          primaryService:
+            aiResult.primaryService ?? providerProfile.primaryService,
+          primaryCity: aiResult.primaryCity ?? providerProfile.primaryCity,
+          serviceArea:
+            aiResult.serviceArea && aiResult.serviceArea.length > 0
+              ? aiResult.serviceArea
+              : providerProfile.serviceArea,
         },
       });
     }
@@ -804,6 +893,12 @@ export async function POST(req: NextRequest) {
         imagesCount: imagesToSave.length,
         hasPhone: Boolean(aiResult.phone),
         hasLocation: Boolean(aiResult.location),
+        seoTitle: aiResult.seoTitle,
+        seoDescriptionLength: aiResult.seoDescription?.length ?? 0,
+        primaryService: aiResult.primaryService,
+        primaryCity: aiResult.primaryCity,
+        serviceAreaCount: aiResult.serviceArea?.length ?? 0,
+        slugFromAi: aiSlug || null,
       },
     });
   } catch (error) {

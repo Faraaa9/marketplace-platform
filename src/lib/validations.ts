@@ -88,7 +88,7 @@ export const responseSchema = z.object({
 });
 
 export const messageSchema = z.object({
-  content: z.string().min(5, "Žinutė turi būti bent 5 simbolių").max(1000),
+  content: z.string().trim().min(1, "Žinutė negali būti tuščia").max(1000),
 });
 
 export const providerProfileSchema = z.object({

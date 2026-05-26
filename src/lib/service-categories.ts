@@ -64,6 +64,20 @@ async function loadServiceCategoryRows(): Promise<CategoryRow[]> {
   });
 }
 
+// ── In-memory cache for the service taxonomy ──────────────────────────────
+// Categories change only when an admin runs the taxonomy import script. Without
+// caching this fan-out query fires on every page render (home, /meistrai,
+// /uzklausos, sitemap, /api/service-categories), which on production traffic
+// dominated the DB seq-scan stats. 5-minute TTL keeps invalidation simple
+// without a pub/sub layer, and the import script can call
+// invalidateServiceCategoryGroups() for immediate refresh.
+const CACHE_TTL_MS = 5 * 60_000;
+let cachedGroups: { value: ServiceCategoryGroup[]; expiresAt: number } | null = null;
+
+export function invalidateServiceCategoryGroups(): void {
+  cachedGroups = null;
+}
+
 /**
  * The service taxonomy that drives request/provider flows. Newer data is a
  * 3-level tree: root -> subcategory -> concrete service. The legacy 2-level
@@ -71,6 +85,9 @@ async function loadServiceCategoryRows(): Promise<CategoryRow[]> {
  * the UI is being migrated.
  */
 export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]> {
+  if (cachedGroups && cachedGroups.expiresAt > Date.now()) {
+    return cachedGroups.value;
+  }
   const rows = await loadServiceCategoryRows();
   const byParent = new Map<string | null, CategoryRow[]>();
   for (const row of rows) {
@@ -99,10 +116,12 @@ export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]
     .filter((row) => row.depth === 0 || row.parentId === null)
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "lt"));
 
-  return roots.map((root) => ({
+  const value: ServiceCategoryGroup[] = roots.map((root) => ({
     root: toItem(root),
     categories: (byParent.get(root.id) ?? []).map(toItem),
   }));
+  cachedGroups = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+  return value;
 }
 
 /**

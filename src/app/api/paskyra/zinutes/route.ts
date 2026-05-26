@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPresenceLevel, type PresenceLevel } from "@/lib/presence";
+import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
 import { getProviderAvatarImage } from "@/lib/provider-image";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ type SentConversationItem = {
   providerName: string;
   providerImage: string | null;
   presenceLevel: PresenceLevel;
+  presenceLabel: string | null;
   preview: string;
   lastMessageAt: Date;
   unread: boolean;
@@ -86,6 +87,7 @@ export async function GET() {
         providerName: q.provider.name || "Tiekėjas",
         providerImage: getProviderAvatarImage(q.provider),
         presenceLevel: getPresenceLevel(q.provider.lastSeenAt),
+        presenceLabel: formatLastSeen(q.provider.lastSeenAt),
         // First send has no chat messages yet → preview the opening inquiry.
         preview: last ? last.content : q.description,
         lastMessageAt: q.lastMessageAt,
