@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 17:20 — Claude
+
+**Commit:** `4791684` — feat: provider badge tiers, SEO fields, live read receipts + cleanup · lokalus
+
+**Pakeitimai:** 65 files changed, 1750 insertions(+), 2385 deletions(-)
+
+**Failai:**
+- .env.example
+- AGENT_LOG.md
+- docs/archive/katalogas.md
+- prisma/manual-migrations/20260526_add_client_read_receipts.sql
+- prisma/manual-migrations/20260526_add_provider_badges.sql
+- prisma/manual-migrations/20260526_add_provider_extra_badges.sql
+- prisma/manual-migrations/20260526_add_provider_seo_fields.sql
+- prisma/manual-migrations/20260526_enable_live_thread_read_state.sql
+- prisma/schema.prisma
+- src/app/admin/tiekejai/page.tsx
+- src/app/api/admin/claims/[id]/approve/route.ts
+- src/app/api/admin/claims/[id]/reject/route.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 05:34 — Claude
 
 **Commit:** `b7ef027` — chore(log): record 37b822f messaging chat uplift in AGENT_LOG · push'inta
