@@ -93,6 +93,12 @@ function toTime(value: string): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
+function latestReadAt(a: string | null, b: string | null) {
+  if (!a) return b;
+  if (!b) return a;
+  return toTime(b) > toTime(a) ? b : a;
+}
+
 function shouldBreakGroup(prev: ThreadMessage | undefined, next: ThreadMessage) {
   if (!prev) return true;
   return toTime(next.createdAt) - toTime(prev.createdAt) > GROUP_BREAK_MS;
@@ -188,7 +194,10 @@ export default function ThreadChat({
   disabled = false,
 }: ThreadChatProps) {
   const [inputValue, setInputValue] = useState("");
-  const [liveOtherReadAt, setLiveOtherReadAt] = useState<string | null>(otherParticipantReadAt ?? null);
+  const [realtimeOtherReadAt, setRealtimeOtherReadAt] = useState<{
+    threadId: string;
+    readAt: string | null;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMarkedReadMessageIdRef = useRef<string | null>(null);
 
@@ -199,10 +208,10 @@ export default function ThreadChat({
   const removeFailed = useConversationStore((s) => s.removeFailed);
   const appendMessageIfNew = useConversationStore((s) => s.appendMessageIfNew);
   const messages = useConversationStore((s) => s.threads[threadId]) ?? EMPTY_MESSAGES;
-
-  useEffect(() => {
-    setLiveOtherReadAt(otherParticipantReadAt ?? null);
-  }, [otherParticipantReadAt]);
+  const liveOtherReadAt = latestReadAt(
+    otherParticipantReadAt ?? null,
+    realtimeOtherReadAt?.threadId === threadId ? realtimeOtherReadAt.readAt : null,
+  );
 
   // Hydrate on mount / when server data changes
   useEffect(() => {
@@ -280,7 +289,7 @@ export default function ThreadChat({
             const row = payload.new as ReadStateRow;
             const readAt = row[otherReadField];
             if (typeof readAt === "string") {
-              setLiveOtherReadAt(readAt);
+              setRealtimeOtherReadAt({ threadId, readAt });
             }
           },
         )
@@ -372,7 +381,7 @@ export default function ThreadChat({
     return result;
   }, [messages, viewerRole, providerId, otherFallbackName, otherParticipantImage]);
 
-  const lastOwnSeenMessageId = useMemo(() => {
+  const lastOwnSeenMessageId = (() => {
     if (!readAtTime) return null;
 
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -383,7 +392,7 @@ export default function ThreadChat({
     }
 
     return null;
-  }, [messages, providerId, readAtTime, viewerRole]);
+  })();
 
   return (
     <div>

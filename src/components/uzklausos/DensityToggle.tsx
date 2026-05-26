@@ -12,8 +12,11 @@ export default function DensityToggle() {
 
   useEffect(() => {
     const saved = typeof window === "undefined" ? null : localStorage.getItem(STORAGE_KEY);
-    if (saved === "compact") setDensity("compact");
-    setHydrated(true);
+    const frame = window.requestAnimationFrame(() => {
+      if (saved === "compact") setDensity("compact");
+      setHydrated(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

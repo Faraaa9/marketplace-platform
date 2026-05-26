@@ -33,7 +33,12 @@ export default function ProvidersExperience({
 
   useEffect(() => {
     const saved = typeof window === "undefined" ? null : localStorage.getItem(VIEW_STORAGE_KEY);
-    if (saved === "list" || saved === "grid") setView(saved);
+    if (saved !== "list" && saved !== "grid") return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setView(saved);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function handleViewChange(next: ProvidersView) {

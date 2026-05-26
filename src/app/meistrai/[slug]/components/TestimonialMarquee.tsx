@@ -20,13 +20,17 @@ export default function TestimonialMarquee({ testimonials }: TestimonialMarqueeP
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const controls = useAnimationControls();
-  const [contentWidth, setContentWidth] = useState(0);
 
   // We duplicate the list for seamless loop
   const items = [...testimonials, ...testimonials];
 
   useEffect(() => {
+    if (isPaused) {
+      controls.stop();
+      return;
+    }
     if (!containerRef.current || testimonials.length === 0) return;
+
     // Measure first half (the original set)
     const children = containerRef.current.children;
     let totalWidth = 0;
@@ -34,18 +38,10 @@ export default function TestimonialMarquee({ testimonials }: TestimonialMarqueeP
       const child = children[i] as HTMLElement;
       if (child) totalWidth += child.offsetWidth + 16; // gap-4 = 16px
     }
-    setContentWidth(totalWidth);
-  }, [testimonials]);
-
-  useEffect(() => {
-    if (contentWidth === 0) return;
-    if (isPaused) {
-      controls.stop();
-      return;
-    }
+    if (totalWidth === 0) return;
 
     controls.start({
-      x: [-0, -contentWidth],
+      x: [0, -totalWidth],
       transition: {
         x: {
           duration: testimonials.length * 6,
@@ -55,7 +51,9 @@ export default function TestimonialMarquee({ testimonials }: TestimonialMarqueeP
         },
       },
     });
-  }, [contentWidth, isPaused, controls, testimonials.length]);
+
+    return () => controls.stop();
+  }, [controls, isPaused, testimonials]);
 
   if (testimonials.length === 0) return null;
 

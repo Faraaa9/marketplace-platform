@@ -250,8 +250,6 @@ function WaitingForVerificationScreen({
     "idle" | "polling" | "verified" | "signing-in" | "expired" | "failed"
   >("idle");
   const signinTokenRef = useRef<string | null>(null);
-  const intentRef = useRef<string | null>(intent);
-  intentRef.current = intent;
 
   // Boot polling: pick up the signin token planted by /registruotis and ask
   // the server every 3s whether email verification has landed.
@@ -263,11 +261,14 @@ function WaitingForVerificationScreen({
     } catch {
       token = null;
     }
+    let cancelled = false;
+    let pollingFrame: number | null = null;
     if (!token) return;
     signinTokenRef.current = token;
-    setAutoState("polling");
+    pollingFrame = window.requestAnimationFrame(() => {
+      if (!cancelled) setAutoState("polling");
+    });
 
-    let cancelled = false;
     const tick = async () => {
       try {
         const res = await fetch(
@@ -292,6 +293,7 @@ function WaitingForVerificationScreen({
     const interval = setInterval(tick, 3000);
     return () => {
       cancelled = true;
+      if (pollingFrame !== null) window.cancelAnimationFrame(pollingFrame);
       clearInterval(interval);
     };
   }, []);
@@ -321,13 +323,13 @@ function WaitingForVerificationScreen({
       // Role will be reflected in the destination page's session — for the
       // post-verify hop we only need the intent, which decides /tapti-tiekeju
       // vs the default landing.
-      const next = resolvePostVerifyPath(intentRef.current, undefined);
+      const next = resolvePostVerifyPath(intent, undefined);
       router.push(next);
       router.refresh();
     }, 2000);
 
     return () => clearTimeout(timeout);
-  }, [autoState, router]);
+  }, [autoState, intent, router]);
 
   const wrapper = "relative flex min-h-[85vh] items-center justify-center px-4";
   const card = "rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90";

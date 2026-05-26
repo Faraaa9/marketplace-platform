@@ -38,21 +38,22 @@ export default function UserMenu() {
   const links = getUserMenuLinks(session.user.role);
 
   return (
-    <div ref={ref} className="relative hidden sm:block">
+    <div ref={ref} className="relative block">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 py-1 pl-1 pr-2.5 transition-colors hover:bg-[#E9E4D9]"
+        aria-label="Paskyros meniu"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 transition-colors hover:bg-[#E9E4D9] sm:h-auto sm:w-auto sm:gap-2 sm:py-1 sm:pl-1 sm:pr-2.5"
       >
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-[#C25E3A] text-[12px] font-semibold text-white">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#C25E3A] text-[12px] font-semibold text-white sm:h-7 sm:w-7">
           {initial}
         </span>
-        <span className="max-w-[140px] truncate text-sm font-medium text-[#26231F]">
+        <span className="hidden max-w-[140px] truncate text-sm font-medium text-[#26231F] sm:block">
           {name}
         </span>
         <ChevronDown
-          className={cn("h-4 w-4 text-[#57534C] transition-transform", open && "rotate-180")}
+          className={cn("hidden h-4 w-4 text-[#57534C] transition-transform sm:block", open && "rotate-180")}
         />
       </button>
 
@@ -73,7 +74,7 @@ export default function UserMenu() {
                 href={link.href}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
+                className="flex min-h-[44px] items-center px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
               >
                 {link.label}
               </Link>
@@ -86,7 +87,7 @@ export default function UserMenu() {
                 setOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="flex w-full items-center justify-between px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
+              className="flex min-h-[44px] w-full items-center justify-between px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
             >
               Atsijungti
               <LogOut className="h-4 w-4 text-[#57534C]" />

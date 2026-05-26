@@ -773,7 +773,7 @@ export default function ProviderDashboard() {
             <Card hover>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Klientų užklausos</CardTitle>
+                  <CardTitle>Užklausos</CardTitle>
                   <p className="text-body-sm text-surface-500 mt-1">Naršyti ir atsakyti</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
@@ -784,7 +784,7 @@ export default function ProviderDashboard() {
           <Card>
             <div className="flex items-center justify-between opacity-50">
               <div>
-                <CardTitle>Klientų užklausos</CardTitle>
+                <CardTitle>Užklausos</CardTitle>
                 <p className="text-body-sm text-surface-500 mt-1">
                   {!stats.emailVerified ? "Patvirtinkite el. paštą" : "Paskyra sustabdyta"}
                 </p>

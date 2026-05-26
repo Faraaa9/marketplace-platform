@@ -186,7 +186,7 @@ function ProviderRequestsContent() {
         {/* Page header */}
         <div className="mb-5 flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
-            Klientų užklausos
+            Užklausos
           </h1>
           <div className="flex items-center gap-2.5">
             <Link
@@ -206,6 +206,21 @@ function ProviderRequestsContent() {
               <option value="newest">Naujausios</option>
             </select>
           </div>
+        </div>
+
+        <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
+          <span
+            aria-current="page"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-3 text-body-sm font-semibold text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white sm:flex-none"
+          >
+            Klientų
+          </span>
+          <Link
+            href="/paskyra/uzklausos"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 text-body-sm font-medium text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 sm:flex-none"
+          >
+            Mano pateiktos
+          </Link>
         </div>
 
         {/* Search + filter trigger */}

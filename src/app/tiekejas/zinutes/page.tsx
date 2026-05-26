@@ -69,7 +69,7 @@ export default function ProviderInboxPage() {
       <div className="mb-6">
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Žinutės</h1>
         <p className="text-body-sm text-surface-500 dark:text-surface-400 mt-0.5">
-          {unreadCount > 0 ? `${unreadCount} neperskaityti` : "Visi perskaityti"}
+          {unreadCount > 0 ? `${unreadCount} neperskaitytos` : "Visos perskaitytos"}
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export default function ProviderInboxPage() {
           <button
             key={tab.value}
             onClick={() => setFilter(tab.value)}
-            className={`flex-1 rounded-lg px-3 py-2 text-body-sm font-medium transition-colors ${
+            className={`min-h-[44px] flex-1 rounded-lg px-3 py-2 text-body-sm font-medium transition-colors ${
               filter === tab.value
                 ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
                 : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
@@ -155,11 +155,16 @@ export default function ProviderInboxPage() {
                         >
                           {c.title}
                         </h3>
-                        {reqStatus ? (
-                          <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
-                        ) : (
-                          <Badge variant="brand">Tiesioginė</Badge>
-                        )}
+                        <div className="flex shrink-0 items-center gap-1">
+                          {reqStatus ? (
+                            <>
+                              <Badge variant="brand">Užklausa</Badge>
+                              <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
+                            </>
+                          ) : (
+                            <Badge variant="brand">Tiesioginė</Badge>
+                          )}
+                        </div>
                       </div>
                       {c.subtitle && (
                         <p className="mt-0.5 truncate text-micro text-surface-400">{c.subtitle}</p>

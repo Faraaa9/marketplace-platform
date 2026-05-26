@@ -47,15 +47,22 @@ export async function GET() {
         },
       }),
       prisma.directInquiry.findMany({
-        where: { providerId, moderationStatus: "APPROVED" },
+        where: {
+          OR: [{ providerId }, { senderUserId: providerId }],
+          moderationStatus: "APPROVED",
+        },
         select: {
           id: true,
+          trackingToken: true,
+          providerId: true,
           description: true,
           senderName: true,
           senderEmail: true,
           status: true,
           lastMessageAt: true,
           providerLastReadAt: true,
+          clientLastReadAt: true,
+          provider: { select: { name: true } },
           messages: {
             select: { content: true, createdAt: true, senderId: true },
             orderBy: { createdAt: "desc" },
@@ -85,17 +92,28 @@ export async function GET() {
 
     const directItems: ConversationItem[] = inquiries.map((q) => {
       const last = q.messages[0] ?? null;
+      const viewerIsProvider = q.providerId === providerId;
+      // Outgoing direct inquiry (provider acting as sender) lives at the
+      // tracking-token route; incoming lives in the provider inbox detail.
+      const href = viewerIsProvider
+        ? `/tiekejas/zinutes/${q.id}`
+        : `/zinutes/${q.trackingToken}`;
+      const title = viewerIsProvider
+        ? (q.senderName?.trim() || q.senderEmail)
+        : (q.provider.name || "Tiekėjas");
+      const subtitle = viewerIsProvider ? q.senderEmail : "Mano išsiųsta žinutė";
+      const lastReadAt = viewerIsProvider ? q.providerLastReadAt : q.clientLastReadAt;
       return {
         type: "direct",
         id: q.id,
-        href: `/tiekejas/zinutes/${q.id}`,
-        title: q.senderName?.trim() || q.senderEmail,
-        subtitle: q.senderEmail,
-        // No chat messages yet → preview the opening inquiry (the sender's).
+        href,
+        title,
+        subtitle,
+        // No chat messages yet → preview the opening inquiry.
         preview: last ? last.content : q.description,
         lastMessageAt: q.lastMessageAt,
-        unread: q.lastMessageAt > q.providerLastReadAt,
-        fromProvider: last ? last.senderId === providerId : false,
+        unread: lastReadAt ? q.lastMessageAt > lastReadAt : !viewerIsProvider,
+        fromProvider: last ? last.senderId === providerId : viewerIsProvider,
         status: q.status,
         archived: q.status === "ARCHIVED",
       };

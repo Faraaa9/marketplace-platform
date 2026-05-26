@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -39,9 +40,11 @@ const FILTER_TABS: { value: StatusFilter; label: string }[] = [
 ];
 
 export default function MyRequestsPage() {
+  const { data: session } = useSession();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatusFilter>("OPEN");
+  const isProvider = session?.user?.role === "PROVIDER";
 
   useEffect(() => {
     fetch("/api/paskyra/uzklausos")
@@ -65,12 +68,29 @@ export default function MyRequestsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-surface-900 dark:text-white">
-            Mano užklausos
+            {isProvider ? "Mano pateiktos užklausos" : "Mano užklausos"}
           </h1>
           <Link href="/uzklausos/nauja">
             <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nauja</Button>
           </Link>
         </div>
+
+        {isProvider && (
+          <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
+            <Link
+              href="/tiekejas/uzklausos"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 text-body-sm font-medium text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 sm:flex-none"
+            >
+              Klientų
+            </Link>
+            <span
+              aria-current="page"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-3 text-body-sm font-semibold text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white sm:flex-none"
+            >
+              Mano pateiktos
+            </span>
+          </div>
+        )}
 
         {requests.length === 0 ? (
           <EmptyState
@@ -91,7 +111,7 @@ export default function MyRequestsPage() {
                   <button
                     key={tab.value}
                     onClick={() => setFilter(tab.value)}
-                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-body-sm font-medium transition-all ${
+                    className={`flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-body-sm font-medium transition-all ${
                       filter === tab.value
                         ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
                         : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"

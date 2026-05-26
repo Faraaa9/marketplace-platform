@@ -6,6 +6,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
 import RegisterSW from "@/components/pwa/RegisterSW";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
@@ -90,8 +91,9 @@ export default function RootLayout({
             <LoadingProgressBar />
           </Suspense>
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
           <Footer />
+          <MobileBottomNav />
           <RegisterSW />
           <InstallPrompt />
         </Providers>
