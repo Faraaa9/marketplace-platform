@@ -250,7 +250,7 @@ export default async function PublicProviderProfilePage({
           <div className="min-w-0 space-y-6">
 
           {/* ── Hero: Cover + Avatar + Name + Meta ── */}
-          <div className="overflow-hidden rounded-t-[28px] rounded-b-3xl bg-white dark:bg-surface-900/50">
+          <div className="overflow-hidden rounded-t-[28px] rounded-b-3xl bg-white dark:bg-surface-900">
             {/* Cover photo with gradient overlay */}
             <div className="relative h-52 w-full overflow-hidden rounded-[28px_28px_18px_18px] bg-gradient-to-br from-brand-100 via-brand-50 to-surface-100 sm:h-72 dark:from-brand-950 dark:via-surface-900 dark:to-surface-800">
               {provider.images.length > 0 ? (
@@ -986,4 +986,3 @@ function reviewsLabel(count: number) {
   if (count < 10) return "atsiliepimai";
   return "atsiliepimų";
 }
-

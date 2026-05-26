@@ -118,6 +118,23 @@
     mask-composite: exclude;
     pointer-events: none;
   }
+
+  /* Story avatar gradient ring with truly transparent inner gap */
+  .story-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 3px;
+    background-image: linear-gradient(to top right, #8a3f26, #cb7d53, #a94e2f);
+    background-size: 200% 200%;
+    animation: gradient 6s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
 }
 
 @layer utilities {
@@ -350,6 +367,155 @@
     .polaroid__photo {
       width: 106px;
       height: 106px;
+    }
+  }
+}
+
+/* ───────────── Užklausų lenta — compact (dense) režimas ───────────── */
+@layer components {
+  /* Tighter grid gap so more cards fit per screen. */
+  html[data-density="compact"] .uzklausa-grid {
+    gap: 0.85rem;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-grid {
+      gap: 1rem;
+    }
+  }
+
+  /* Trim card padding. Reserve right padding when photos are present
+     (they're absolutely positioned in compact mode). */
+  html[data-density="compact"] .uzklausa-card .paper-note__sheet {
+    padding: 1.1rem 1.25rem 1.15rem;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-card .paper-note__sheet {
+      padding: 1.15rem 1.6rem 1.2rem;
+    }
+  }
+  html[data-density="compact"] .uzklausa-card:has(.uzklausa-card__photos)
+    .paper-note__sheet {
+    padding-right: 116px;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-card:has(.uzklausa-card__photos)
+      .paper-note__sheet {
+      padding-right: 132px;
+    }
+  }
+
+  /* Drop the decorative competition badge to free top-right for photos. */
+  html[data-density="compact"] .uzklausa-card__competition {
+    display: none;
+  }
+
+  /* Hide the corner thumbtacks on the card itself; the pins on each
+     polaroid photo stay (they're nested inside .polaroid). */
+  html[data-density="compact"] .uzklausa-card > .pin {
+    display: none;
+  }
+
+  /* Title shrinks slightly; description clamped to 2 lines. */
+  html[data-density="compact"] .uzklausa-card h3 {
+    margin-top: 0.5rem;
+    font-size: 1.18rem;
+    line-height: 1.25;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-card h3 {
+      font-size: 1.3rem;
+    }
+  }
+  html[data-density="compact"] .uzklausa-card__description {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+
+  /* Photos: float top-right, vertically stacked with overlap. */
+  html[data-density="compact"] .uzklausa-card__photos {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 92px;
+    margin-top: 0;
+    pointer-events: auto;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-card__photos {
+      top: 1rem;
+      right: 1rem;
+      width: 104px;
+    }
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid-board {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    padding-top: 0;
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid {
+    padding: 4px 4px 12px;
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid + .polaroid {
+    margin-top: -36px;
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid__pin {
+    top: -5px;
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid__photo {
+    width: 64px;
+    height: 64px;
+  }
+  @media (min-width: 640px) {
+    html[data-density="compact"] .uzklausa-card__photos .polaroid__photo {
+      width: 74px;
+      height: 74px;
+    }
+  }
+  html[data-density="compact"] .uzklausa-card__photos .polaroid__photo--more {
+    font-size: 0.9rem;
+  }
+
+  /* Tighten the meta/CTA row. */
+  html[data-density="compact"] .uzklausa-card .paper-note__sheet > .mt-5 {
+    margin-top: 0.85rem;
+  }
+  html[data-density="compact"] .uzklausa-card .paper-note__sheet > .mt-4 {
+    margin-top: 0.7rem;
+  }
+
+  /* On tablet+ keep meta info and CTA on a single row — the meta info
+     wraps internally if too wide. On mobile we let CTA drop below
+     instead, since forcing it inline squeezes meta into too many lines. */
+  @media (min-width: 640px) {
+    html[data-density="compact"]
+      .uzklausa-card
+      .paper-note__sheet
+      > div:last-of-type {
+      flex-wrap: nowrap;
+    }
+    html[data-density="compact"]
+      .uzklausa-card
+      .paper-note__sheet
+      > div:last-of-type
+      > div:first-child {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    html[data-density="compact"]
+      .uzklausa-card
+      .paper-note__sheet
+      > div:last-of-type
+      > a {
+      flex-shrink: 0;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
     }
   }
 }

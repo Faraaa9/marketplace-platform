@@ -17,6 +17,87 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 03:54 — Claude
+
+**Commit:** `d5cda3d` — feat(tiekejas): drag-and-drop story upload + reroute onboarding to /meistrai/kurti-profili · lokalus
+
+**Pakeitimai:** 2 files changed, 49 insertions(+), 3 deletions(-)
+
+**Failai:**
+- src/app/tapti-tiekeju/BecomeProviderClient.tsx
+- src/app/tiekejas/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 03:54 — Claude
+
+**Commit:** `0620626` — fix(auth): wrap user + token creation in a single transaction · lokalus
+
+**Pakeitimai:** 1 file changed, 35 insertions(+), 28 deletions(-)
+
+**Failai:**
+- src/app/api/auth/register/route.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 03:54 — Claude
+
+**Commit:** `a220ce1` — feat(messaging): "Mano žinutės" sent-side inbox · lokalus
+
+**Pakeitimai:** 3 files changed, 268 insertions(+), 1 deletion(-)
+
+**Failai:**
+- src/app/api/paskyra/zinutes/route.ts
+- src/app/paskyra/zinutes/page.tsx
+- src/lib/redirects.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 03:53 — Claude
+
+**Commit:** `aaebaae` — feat(ai): switch profile image generation to OpenRouter Gemini 3 · lokalus
+
+**Pakeitimai:** 1 file changed, 84 insertions(+), 12 deletions(-)
+
+**Failai:**
+- src/lib/image-processor.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 03:53 — Claude
+
+**Commit:** `80f3fad` — feat(forms): auto-suggest categories from description, lock on manual edit · lokalus
+
+**Pakeitimai:** 2 files changed, 169 insertions(+), 37 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/profilis/page.tsx
+- src/app/uzklausos/nauja/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 03:53 — Claude
+
+**Commit:** `4781618` — feat(ai): two-pass category picker for profile generation · lokalus
+
+**Pakeitimai:** 6 files changed, 518 insertions(+), 72 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- scripts/smoke-test-category-picker.ts
+- scripts/tsconfig.json
+- src/app/api/profile/ai-generate/route.ts
+- src/app/kontaktai/AIProfileSetup.tsx
+- src/lib/category-picker-ai.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 — Claude (Opus 4.7, neužcommit'inta)
 
 **Pakeitimai:** AI profilio generavimo kategorijų parinkimas perdarytas į two-pass strategiją. Anksčiau Haiku gaudavo `depth ≤ 1 LIMIT 80` kategorijų sąrašą (su catch-all'ais kaip "Dokumentai, tyrimai, konsultavimas") ir parinkdavo iš ten + papildomai `suggestCategories` substring matcher dadėdavo iš VISOS 3255 kategorijų tree. Substring matcher'is matchindavo "specialistas" žodį iš AI marketing copy → žolelininkui priskirdavo "HR specialistas", "Microsoft Office Excel specialistai" ir pan.

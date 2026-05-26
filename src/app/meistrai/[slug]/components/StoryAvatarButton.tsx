@@ -27,7 +27,7 @@ export default function StoryAvatarButton({
 
   return (
     <>
-      <div className="relative">
+      <div className="relative [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
         <button
           type="button"
           onClick={() => {
@@ -35,17 +35,17 @@ export default function StoryAvatarButton({
             setStoryIndex(0);
             openStory(stories[0]?.id ?? null);
           }}
-          className={`shrink-0 rounded-full transition-all ${
+          className={`relative h-[70px] w-[70px] shrink-0 rounded-full transition-all sm:h-[78px] sm:w-[78px] ${
             hasStories
-              ? "cursor-pointer p-[3px] bg-gradient-to-tr from-brand-700 via-brand-400 to-brand-600 bg-[length:200%_200%] animate-gradient hover:scale-[1.03]"
-              : "cursor-default bg-transparent"
+              ? "cursor-pointer story-ring hover:scale-[1.03]"
+              : "cursor-default"
           }`}
           disabled={!hasStories}
           aria-label={hasStories ? "Peržiūrėti tiekėjo story" : providerName}
         >
           <div
-            className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 sm:h-[72px] sm:w-[72px] dark:from-brand-950 dark:to-surface-800 ${
-              hasStories ? "ring-[1.5px] ring-white dark:ring-surface-900" : ""
+            className={`absolute flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950 dark:to-surface-800 ${
+              hasStories ? "inset-[3px]" : "inset-0"
             }`}
           >
             {providerImage ? (
@@ -67,10 +67,12 @@ export default function StoryAvatarButton({
         </button>
         {isOnline && (
           <span
-            className="absolute bottom-0.5 right-0.5 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-[3px] ring-white sm:h-3 sm:w-3 dark:ring-surface-900"
+            className="pointer-events-none absolute bottom-[4px] right-[4px] flex h-[19px] w-[19px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[23px] sm:w-[23px]"
             aria-label="Prisijungęs dabar"
             title="Prisijungęs dabar"
-          />
+          >
+            <span className="h-[10px] w-[10px] rounded-full bg-emerald-500 sm:h-[13px] sm:w-[13px]" aria-hidden />
+          </span>
         )}
       </div>
 

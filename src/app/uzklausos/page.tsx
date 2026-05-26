@@ -67,7 +67,11 @@ const getBoardRequests = unstable_cache(
         in: categoryId ? await expandToMatchSet([categoryId]) : ([] as string[]),
       };
     }
-    if (filters.location) where.location = filters.location;
+    // "Visa Lietuva" is the explicit "all of Lithuania" choice — keep the
+    // chip/URL but don't apply a DB filter, so providers see every city.
+    if (filters.location && filters.location !== "Visa Lietuva") {
+      where.location = filters.location;
+    }
 
     const orderBy: Record<string, string> = { createdAt: "desc" };
 
@@ -270,7 +274,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
       {/* ── Pinned notes ── */}
       <div className="mx-auto max-w-5xl px-4 pb-16 pt-7 sm:px-6">
         {requests.length > 0 ? (
-          <div className="grid gap-7 sm:gap-8">
+          <div className="uzklausa-grid grid gap-7 sm:gap-8">
             {requests.map((r, i) => {
               const competition = competitionLevel(r._count.responses);
               const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
@@ -289,9 +293,9 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                 : `text-white ${CTA_TONES[i % CTA_TONES.length]}`;
 
               return (
-                <article id={`uzklausa-${r.id}`} key={r.id} className="paper-note scroll-mt-24">
+                <article id={`uzklausa-${r.id}`} key={r.id} className="paper-note uzklausa-card scroll-mt-24">
                   <div className="paper-note__shadow">
-                    <div className="paper-note__sheet px-6 pb-8 pt-11 sm:px-9">
+                    <div className="paper-note__sheet px-6 pb-8 pt-8 sm:px-9">
                       {/* category + competition */}
                       <div className="flex items-center justify-between gap-3">
                         {r.categoryName && (
@@ -301,7 +305,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                         )}
                         {!isMatched && (
                           <span
-                            className={`ml-auto inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
+                            className={`uzklausa-card__competition ml-auto inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
                           >
                             {competition.opportunity ? (
                               <Sparkles className="h-3 w-3" />
@@ -328,13 +332,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       </h3>
 
                       {/* description */}
-                      <p className="mt-2 whitespace-pre-wrap text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
+                      <p className="uzklausa-card__description mt-2 whitespace-pre-wrap text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
                         {isOpenedRequest ? r.description : truncate(r.description, 150)}
                       </p>
 
                       {/* attachment photos */}
                       {r.attachmentUrls.length > 0 && (
-                        <div className="mt-4">
+                        <div className="uzklausa-card__photos mt-4">
                           <PinnedRequestPhotos urls={r.attachmentUrls} title={r.title} />
                         </div>
                       )}
@@ -389,8 +393,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                     </span>
                   )}
 
-                  <span aria-hidden className="pin absolute left-5 top-3.5" />
-                  <span aria-hidden className="pin absolute right-5 top-3.5" />
+                  <span aria-hidden className="pin absolute left-1/2 top-3 -translate-x-1/2" />
                 </article>
               );
             })}
@@ -430,8 +433,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
               </div>
             </div>
 
-            <span aria-hidden className="pin absolute left-5 top-3.5" />
-            <span aria-hidden className="pin absolute right-5 top-3.5" />
+            <span aria-hidden className="pin absolute left-1/2 top-3 -translate-x-1/2" />
           </article>
         )}
 
@@ -481,8 +483,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <span aria-hidden className="pin absolute left-5 top-3.5" />
-          <span aria-hidden className="pin absolute right-5 top-3.5" />
+          <span aria-hidden className="pin absolute left-1/2 top-3 -translate-x-1/2" />
         </article>
       </div>
     </div>

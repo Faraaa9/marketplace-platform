@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ProviderFilterBar from "./ProviderFilterBar";
 import ProviderListingClient from "./ProviderListingClient";
 import {
@@ -25,6 +26,7 @@ export default function ProvidersExperience({
   initialProviders,
   initialFilters,
 }: ProvidersExperienceProps) {
+  const router = useRouter();
   const [filters, setFilters] = useState<ProviderFilters>(initialFilters);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<ProvidersView>("grid");
@@ -77,6 +79,12 @@ export default function ProvidersExperience({
   function handleFiltersChange(patch: Partial<ProviderFilters>) {
     setFilters((prev) => ({ ...prev, ...patch }));
     setPage(1);
+    // Presence is a wall-clock signal — pull fresh server data so that
+    // anyone who logged in (or went idle) after this page first rendered
+    // shows the right state immediately, not just on a manual reload.
+    if (patch.presence !== undefined) {
+      router.refresh();
+    }
   }
 
   function handleClearFilters() {

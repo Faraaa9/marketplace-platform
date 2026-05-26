@@ -113,17 +113,29 @@ function formatResponseTime(hours: number): string {
   return `${Math.round(hours / 24)} d.`;
 }
 
-function PresenceDot({ level }: { level: ProviderCardData["presenceLevel"] }) {
-  if (!level) return null;
+function PresenceDot({
+  level,
+  label,
+}: {
+  level: ProviderCardData["presenceLevel"];
+  label: string | null;
+}) {
+  if (!level || !label) return null;
   const isOnline = level === "online";
+  const tooltip = isOnline ? "Prisijungęs dabar" : `Prisijungęs ${label.toLowerCase()}`;
   return (
     <span
-      className={`pointer-events-none absolute bottom-0.5 right-0.5 block h-2.5 w-2.5 rounded-full ring-[2.5px] ring-white dark:ring-surface-900 ${
-        isOnline ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
-      }`}
-      aria-label={isOnline ? "Prisijungęs dabar" : "Aktyvus per pastarą parą"}
-      title={isOnline ? "Prisijungęs dabar" : "Aktyvus per pastarą parą"}
-    />
+      className="pointer-events-none absolute bottom-0 right-0 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[20px] sm:w-[20px]"
+      aria-label={tooltip}
+      title={tooltip}
+    >
+      <span
+        className={`h-[9px] w-[9px] rounded-full sm:h-[10px] sm:w-[10px] ${
+          isOnline ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
+        }`}
+        aria-hidden
+      />
+    </span>
   );
 }
 
@@ -628,7 +640,7 @@ export default function ProviderListingClient({
                     onClick={(e) => handleCardClick(e, p.id)}
                   >
                     <article
-                      className={`group flex items-center gap-4 rounded-2xl bg-white p-3 ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_22px_rgba(0,0,0,0.10)] dark:bg-surface-900 dark:ring-white/[0.08] ${
+                      className={`group flex items-center gap-4 rounded-2xl bg-white p-3 ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_22px_rgba(0,0,0,0.10)] dark:bg-surface-900 dark:ring-white/[0.08] [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e] ${
                         isSelected
                           ? "ring-2 ring-brand-500 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_22px_rgba(0,0,0,0.10)]"
                           : "shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
@@ -655,7 +667,7 @@ export default function ProviderListingClient({
                             </div>
                           )}
                         </div>
-                        <PresenceDot level={p.presenceLevel} />
+                        <PresenceDot level={p.presenceLevel} label={p.presenceLabel} />
                       </div>
 
                       {/* Main info */}
@@ -794,7 +806,7 @@ export default function ProviderListingClient({
                       </span>
                     )}
 
-                    {p.presenceLevel && (
+                    {p.presenceLabel && p.presenceLevel && (
                       <span
                         className={`absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-semibold backdrop-blur-md ${
                           p.presenceLevel === "online"
@@ -808,7 +820,7 @@ export default function ProviderListingClient({
                           }`}
                           aria-hidden
                         />
-                        {p.presenceLevel === "online" ? "Online" : "Šiandien"}
+                        {p.presenceLabel}
                       </span>
                     )}
                   </div>

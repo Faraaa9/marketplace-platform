@@ -6,6 +6,7 @@ import { ArrowUpDown, Search, SlidersHorizontal, X } from "lucide-react";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import CategoryFilter from "./CategoryFilter";
 import CityFilter from "./CityFilter";
+import DensityToggle from "./DensityToggle";
 
 interface FilterBarProps {
   activeCategory: string;
@@ -266,6 +267,7 @@ export default function RequestFilterBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
+          <DensityToggle />
           <div className="flex items-center gap-1.5">
             <ArrowUpDown className="h-3.5 w-3.5 text-surface-400" />
             <div className="flex gap-1">
