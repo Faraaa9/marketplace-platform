@@ -17,6 +17,56 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 — Claude (Opus 4.7, neužcommit'inta)
+
+**Pakeitimai:** AI profilio generavimo kategorijų parinkimas perdarytas į two-pass strategiją. Anksčiau Haiku gaudavo `depth ≤ 1 LIMIT 80` kategorijų sąrašą (su catch-all'ais kaip "Dokumentai, tyrimai, konsultavimas") ir parinkdavo iš ten + papildomai `suggestCategories` substring matcher dadėdavo iš VISOS 3255 kategorijų tree. Substring matcher'is matchindavo "specialistas" žodį iš AI marketing copy → žolelininkui priskirdavo "HR specialistas", "Microsoft Office Excel specialistai" ir pan.
+
+Naujas pipeline'as (`src/lib/category-picker-ai.ts`):
+- **Pass 1:** 26 canonical roots (`externalSource = paslaugurinka-taxonomy`, depth 0) + po 8 sample children. AI parenka 1–3 šaknis su confidence ≥ 0.5.
+- **Pass 2:** Tik depth=1 leaves po pasirinktomis šaknimis. AI parenka 3–5 su confidence ≥ 0.5.
+- Picker'is gauna VARTOTOJO RAW input'ą (`servicesText` arba `scraped.text`), NE Claude marketing rewrite — taip eliminuojam generinius "specialistas"/"konsultacijos" žodžius, kurie buvo triukšmo šaltinis.
+
+`generateWithClaude` ir `generateFromScratch` daugiau neparinkinėja kategorijų — tik headline/description/services/etc.
+`suggestCategories` lib LIEKA naudojama `/api/category-suggestions` endpoint'ui (klientų užklausoms ir profile editor'iui — ten substring tinka, nes vartotojas tiesiog rašo kategorijos vardą).
+
+**Smoke testai** (3 atvejai per `scripts/smoke-test-category-picker.ts`):
+- Žolelininkas → "Sveikata, gydymas" + "Ezoterika, dvasinės paslaugos" + Homeopatai/Dietologai/Psichologai (nebėra "HR specialistas"!)
+- Santechnikas → tik "Statybos, apdaila" + santechnikos/katilai/ventiliacija (NE "Buitinės")
+- Kosmetologė → tik "Grožio paslaugos" + Kosmetologės/Salonai (NE "Sveikata")
+
+**Failai:**
+- `src/lib/category-picker-ai.ts` (naujas)
+- `src/app/api/profile/ai-generate/route.ts` (refactor)
+- `scripts/smoke-test-category-picker.ts` (naujas)
+- `scripts/tsconfig.json` (naujas — ts-node baseUrl)
+
+**Toliau:** DB dedupe — `paslaugos.lt` legacy taksonomija dubliuojasi su `paslaugurinka-taxonomy` (pvz. "Sveikata, gydymas" yra du kartus, "HR specialistas" du, "Excel specialistai" du+). Kristupo bug'ui jau nebeaktualu (picker'is filtruoja pagal externalSource), bet vis tiek varysto nav meniu / SEO. Reikia audit'o: kiek profilių sėdi ant `paslaugos.lt` kategorijų → remap į paslaugurinka-taxonomy ekvivalentus → soft-delete `paslaugos.lt` rows. Atskira sesija, atsargiai (gyva DB su real users).
+
+
+## 2026-05-26 01:18 — Claude
+
+**Commit:** `c385aef` — docs: add NOTES.md with /admin layout guard follow-up · lokalus
+
+**Pakeitimai:** 1 file changed, 22 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-26 01:11 — Claude
+
+**Commit:** `2f29644` — chore(log): annotate Toliau for ebe05af and 1e68293 · lokalus
+
+**Pakeitimai:** 1 file changed, 143 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 01:10 — Claude
 
 **Commit:** `1e68293` — feat(auth): auto-sign-in original tab after email verification · lokalus

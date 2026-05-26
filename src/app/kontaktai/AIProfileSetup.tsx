@@ -96,7 +96,7 @@ type Mode = "url" | "scratch";
 
 export function AIProfileSetup() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("url");
+  const [mode, setMode] = useState<Mode>("scratch");
 
   // URL mode state
   const [url, setUrl] = useState("");
@@ -354,7 +354,7 @@ export function AIProfileSetup() {
                   onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                     setSource(e.target.value as "services_lt" | "linkedin")
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="services_lt">paslaugos.lt profilis</option>
                   <option value="linkedin">LinkedIn profilis</option>
@@ -376,7 +376,7 @@ export function AIProfileSetup() {
                       ? "https://paslaugos.lt/..."
                       : "https://linkedin.com/in/..."
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
             </>
@@ -394,7 +394,7 @@ export function AIProfileSetup() {
                     setError("");
                   }}
                   placeholder="Pvz. Tomas Kazlauskas arba UAB Statybos meistrai"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 
@@ -410,7 +410,7 @@ export function AIProfileSetup() {
                   }}
                   rows={4}
                   placeholder="Trumpai aprašyk, ką dirbi. Pvz.: Santechnikos darbai — vamzdžių keitimas, šildymo sistemų montavimas, čiaupų remontas. Dirbu Vilniuje ir aplink, taip pat skubūs darbai."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Nesirūpink rašyba — AI viską sutvarkys.
@@ -427,7 +427,7 @@ export function AIProfileSetup() {
                     value={scratchLocation}
                     onChange={(e) => setScratchLocation(e.target.value)}
                     placeholder="Vilnius"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
                 <div>
@@ -441,7 +441,7 @@ export function AIProfileSetup() {
                     value={scratchExperience}
                     onChange={(e) => setScratchExperience(e.target.value)}
                     placeholder="5"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   />
                 </div>
               </div>
@@ -455,7 +455,7 @@ export function AIProfileSetup() {
                   value={scratchPhone}
                   onChange={(e) => setScratchPhone(e.target.value)}
                   placeholder="+370..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
             </>

@@ -7,6 +7,7 @@ import { chromium as playwrightCore } from "playwright-core";
 import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
 import { rateLimitAsync } from "@/lib/rate-limit";
 import { moderateText } from "@/lib/moderation";
+import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -74,7 +75,6 @@ interface ScrapedData {
 interface AIResult {
   description: string;
   headline: string;
-  categoryNames: string[];
   phone?: string;
   location?: string;
   services?: string;
@@ -244,7 +244,6 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
 async function generateWithClaude(
   scraped: ScrapedData,
   url: string,
-  availableCategories: string[]
 ): Promise<AIResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
@@ -255,26 +254,21 @@ async function generateWithClaude(
 Pavadinimas: ${scraped.title || "(nežinoma)"}
 Turinys: ${scraped.text.slice(0, 4000)}
 
-Galimos kategorijos (PARINKK TIK IŠ ŠIO SĄRAŠO, tiksli rašyba):
-${availableCategories.map((c) => `- ${c}`).join("\n")}
-
 Sukurk:
 1. headline — trumpas, įsimintinas titulas (max 80 simboliu, lietuvių kalba). Pvz: "Patikimas santechnikas Vilniuje — 15 metų patirtis"
 2. description — profesionalų, įtaigų aprašymą (200-300 žodžių lietuvių kalba). Aprašyk paslaugas, patirtį, kuo išsiskiria. NE generinis — naudok konkretus faktus iš šaltinio. Be klišių.
-3. categories — iki 6 tinkamiausių kategorijų iš sąrašo viršuje (naudok TIKSLIUS pavadinimus)
-4. phone — telefono numeris JEI rastas. Formatas: "+370XXXXXXXX" arba "8XXXXXXXX" (vienas numeris, ne array)
-5. location — miestas/regionas Lietuvoje, jei nurodytas (pvz. "Vilnius", "Kaunas, Klaipėda")
-6. services — konkretus paslaugų sąrašas po vieną į eilutę (markdown bullet su • simboliu), pvz: "• Vamzdžių keitimas\n• Čiaupų montavimas\n• Šildymo sistemų remontas". Sudaryk iš šaltinio teksto.
-7. experienceYears — patirtis metais kaip skaičius (integer). Pvz., jei šaltinis mini "5 metų patirtis" → 5. Jei nerasta — null.
-8. priceFrom — minimaliame kaina už paslaugą eurais kaip skaičius. Jei nerasta — null.
-9. offersInvoices — ar išrašo PVM sąskaitas-faktūras (true/false). Pagal nutylėjimą jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
-10. availableForUrgent — ar atlieka skubius darbus (true/false). Jei mini "skubus", "tą pačią dieną", "24/7" → true.
+3. phone — telefono numeris JEI rastas. Formatas: "+370XXXXXXXX" arba "8XXXXXXXX" (vienas numeris, ne array)
+4. location — miestas/regionas Lietuvoje, jei nurodytas (pvz. "Vilnius", "Kaunas, Klaipėda")
+5. services — konkretus paslaugų sąrašas po vieną į eilutę (markdown bullet su • simboliu), pvz: "• Vamzdžių keitimas\n• Čiaupų montavimas\n• Šildymo sistemų remontas". Sudaryk iš šaltinio teksto.
+6. experienceYears — patirtis metais kaip skaičius (integer). Pvz., jei šaltinis mini "5 metų patirtis" → 5. Jei nerasta — null.
+7. priceFrom — minimaliame kaina už paslaugą eurais kaip skaičius. Jei nerasta — null.
+8. offersInvoices — ar išrašo PVM sąskaitas-faktūras (true/false). Pagal nutylėjimą jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
+9. availableForUrgent — ar atlieka skubius darbus (true/false). Jei mini "skubus", "tą pačią dieną", "24/7" → true.
 
 Grąžink TIK JSON (be markdown, be code fence):
 {
   "headline": "...",
   "description": "...",
-  "categories": ["kategorija1", "kategorija2"],
   "phone": "+370...",
   "location": "Vilnius",
   "services": "• Paslauga 1\n• Paslauga 2",
@@ -355,9 +349,6 @@ Grąžink TIK JSON (be markdown, be code fence):
   return {
     headline: parsed.headline || "",
     description: parsed.description || "",
-    categoryNames: Array.isArray(parsed.categories)
-      ? parsed.categories.slice(0, 6)
-      : [],
     phone,
     location:
       typeof parsed.location === "string" ? parsed.location : undefined,
@@ -388,7 +379,6 @@ async function generateFromScratch(
     experienceYears?: number;
     phone?: string;
   },
-  availableCategories: string[]
 ): Promise<AIResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
@@ -402,24 +392,19 @@ ${input.location ? `- Lokacija: ${input.location}` : ""}
 ${input.experienceYears ? `- Patirtis: ${input.experienceYears} metų` : ""}
 ${input.phone ? `- Telefonas: ${input.phone}` : ""}
 
-Galimos kategorijos (PARINK TIK IŠ ŠIO SĄRAŠO, tiksli rašyba):
-${availableCategories.map((c) => `- ${c}`).join("\n")}
-
 Sukurk:
 1. headline — trumpas, įsimintinas titulas (max 80 simbolių, lietuvių kalba). Naudok faktus iš vartotojo input'o.
 2. description — profesionalų, įtaigų aprašymą (180-280 žodžių lietuvių k.). Išskleisk vartotojo trumpą aprašymą į pilną, įtaigų tekstą. Pabrėžk patirtį, kokybę, profesionalumą. NE generinis, NE klišės.
-3. categories — iki 6 tinkamiausių kategorijų iš sąrašo (TIKSLŪS pavadinimai)
-4. services — struktūrizuotas paslaugų sąrašas po bulletais (• simbolis). Iš vartotojo įvesto teksto sukurk normalų listą.
-5. priceFrom — bazinė kaina eurais, jei galima išvesti iš teksto, kitaip null
-6. offersInvoices — jei mini PVM/sąskaitos → true, kitaip false
-7. availableForUrgent — jei mini skubų/skubūs darbai → true, kitaip false
-8. imagePrompt — ANGLIŠKAI prompt'as profesionalios pagrindinės nuotraukos generavimui. Vaizduoja paslaugų teikėją realioje darbo aplinkoje. PHOTOREALISTIC, ne iliustracija, ne cartoon. Pavyzdys elektrikui: "Professional Lithuanian male electrician at work, wearing safety helmet and work uniform, holding electrical tools, installing wiring in a modern apartment, natural lighting, photorealistic, high quality, candid photo, no logos, no text". Adaptuok pagal specialybę.
+3. services — struktūrizuotas paslaugų sąrašas po bulletais (• simbolis). Iš vartotojo įvesto teksto sukurk normalų listą.
+4. priceFrom — bazinė kaina eurais, jei galima išvesti iš teksto, kitaip null
+5. offersInvoices — jei mini PVM/sąskaitos → true, kitaip false
+6. availableForUrgent — jei mini skubų/skubūs darbai → true, kitaip false
+7. imagePrompt — ANGLIŠKAI prompt'as profesionalios pagrindinės nuotraukos generavimui. Vaizduoja paslaugų teikėją realioje darbo aplinkoje. PHOTOREALISTIC, ne iliustracija, ne cartoon. Pavyzdys elektrikui: "Professional Lithuanian male electrician at work, wearing safety helmet and work uniform, holding electrical tools, installing wiring in a modern apartment, natural lighting, photorealistic, high quality, candid photo, no logos, no text". Adaptuok pagal specialybę.
 
 Grąžink TIK JSON (be markdown):
 {
   "headline": "...",
   "description": "...",
-  "categories": ["..."],
   "services": "• Paslauga 1\\n• Paslauga 2",
   "priceFrom": null,
   "offersInvoices": false,
@@ -486,9 +471,6 @@ Grąžink TIK JSON (be markdown):
   return {
     headline: parsed.headline || "",
     description: parsed.description || "",
-    categoryNames: Array.isArray(parsed.categories)
-      ? parsed.categories.slice(0, 6)
-      : [],
     phone: input.phone, // user-provided
     location: input.location, // user-provided
     services: typeof parsed.services === "string" ? parsed.services : undefined,
@@ -608,40 +590,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Generate with Claude
-    const allCategories = await prisma.category.findMany({
-      where: { depth: { lte: 1 } },
-      select: { id: true, name: true },
-      orderBy: [{ depth: "asc" }, { name: "asc" }],
-      take: 80,
-    });
-
+    // 2. Generate marketing copy with Claude (no category picking here)
     const aiResult = isScratchMode
-      ? await generateFromScratch(
-          {
-            businessName: body.businessName!,
-            servicesText: body.servicesText!,
-            location: body.location,
-            experienceYears: body.experienceYears,
-            phone: body.phone,
-          },
-          allCategories.map((c) => c.name)
-        )
-      : await generateWithClaude(
-          scraped,
-          body.url!,
-          allCategories.map((c) => c.name)
-        );
+      ? await generateFromScratch({
+          businessName: body.businessName!,
+          servicesText: body.servicesText!,
+          location: body.location,
+          experienceYears: body.experienceYears,
+          phone: body.phone,
+        })
+      : await generateWithClaude(scraped, body.url!);
 
-    // 3. Match categories
-    const selectedCategoryIds = allCategories
-      .filter((cat) =>
-        aiResult.categoryNames.some(
-          (name) =>
-            name.toLowerCase().trim() === cat.name.toLowerCase().trim()
-        )
-      )
-      .map((c) => c.id);
+    // 3. Pick categories with the two-pass AI picker. We feed it the
+    // ORIGINAL user input (servicesText or scraped page text), not the
+    // marketing rewrite — generic words like "specialistas"/"konsultacijos"
+    // in the rewrite were the root cause of mismatches (e.g. herbal healer
+    // getting tagged as "HR specialistas").
+    const pickerText = isScratchMode
+      ? body.servicesText!
+      : scraped.text;
+    const pickerTitle = isScratchMode
+      ? body.businessName
+      : scraped.title;
+
+    const categoryPick = await pickProviderCategoriesAI({
+      rawText: pickerText,
+      title: pickerTitle,
+    });
+    const selectedCategoryIds = categoryPick.categoryIds;
+    console.log("AI category pick:", {
+      roots: categoryPick.pickedRootNames,
+      leaves: categoryPick.pickedLeafNames,
+      total: selectedCategoryIds.length,
+    });
 
     // 4. Get user and ensure PROVIDER role
     const user = await prisma.user.findUnique({
