@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 03:55 — Claude
+
+**Commit:** `79d67e8` — feat(ui): granular presence labels + uzklausos compact density · lokalus
+
+**Pakeitimai:** 13 files changed, 438 insertions(+), 61 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- public/theme-init.js
+- src/app/globals.css
+- src/app/meistrai/[slug]/components/StoryAvatarButton.tsx
+- src/app/meistrai/[slug]/page.tsx
+- src/app/meistrai/page.tsx
+- src/app/uzklausos/page.tsx
+- src/components/tiekejai/ProviderListingClient.tsx
+- src/components/tiekejai/ProvidersExperience.tsx
+- src/components/uzklausos/DensityToggle.tsx
+- src/components/uzklausos/RequestFilterBar.tsx
+- src/lib/presence.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 03:54 — Claude
 
 **Commit:** `d5cda3d` — feat(tiekejas): drag-and-drop story upload + reroute onboarding to /meistrai/kurti-profili · lokalus
