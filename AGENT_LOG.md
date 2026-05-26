@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 05:25 — Claude
+
+**Commit:** `37b822f` — feat(messaging): chat avatars, read receipts and time dividers · lokalus
+
+**Pakeitimai:** 19 files changed, 501 insertions(+), 119 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- src/app/api/paskyra/zinutes/route.ts
+- src/app/api/requests/[id]/messages/route.ts
+- src/app/api/requests/[id]/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/route.ts
+- src/app/api/tiekejas/zinutes/[id]/messages/route.ts
+- src/app/api/tiekejas/zinutes/[id]/route.ts
+- src/app/api/zinutes/[token]/messages/route.ts
+- src/app/api/zinutes/[token]/route.ts
+- src/app/meistrai/[slug]/components/StoryAvatarButton.tsx
+- src/app/paskyra/zinutes/page.tsx
+- src/app/tiekejas/uzklausos/[id]/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 03:55 — Claude
 
 **Commit:** `d034e2f` — chore(log): record 79d67e8 UI polish bundle in AGENT_LOG · lokalus
