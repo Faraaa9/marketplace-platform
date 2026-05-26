@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-26 21:45 — Codex
+
+**Commit:** `71190ca` — feat(provider): simplify inbox and request navigation · lokalus
+
+**Pakeitimai:** 16 files changed, 490 insertions(+), 265 deletions(-)
+
+**Failai:**
+- src/app/(auth)/patvirtinti/page.tsx
+- src/app/api/tiekejas/zinutes/route.ts
+- src/app/layout.tsx
+- src/app/meistrai/[slug]/components/TestimonialMarquee.tsx
+- src/app/paskyra/uzklausos/page.tsx
+- src/app/paskyra/zinutes/SentInquiriesView.tsx
+- src/app/paskyra/zinutes/page.tsx
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/uzklausos/page.tsx
+- src/app/tiekejas/zinutes/page.tsx
+- src/components/layout/MobileBottomNav.tsx
+- src/components/layout/UserMenu.tsx
+
+**Toliau:** Provider navigacija ir vieno inbox modelis įdiegti. `npm run lint` praeina su 0 errorų (likę tik esami warningai), `npm run build` praeina; build metu dar matomas Upstash Redis config warningas.
+
+
 ## 2026-05-26 17:20 — Claude
 
 **Commit:** `4791684` — feat: provider badge tiers, SEO fields, live read receipts + cleanup · lokalus
