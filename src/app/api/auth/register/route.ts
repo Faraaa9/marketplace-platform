@@ -37,36 +37,43 @@ export async function POST(req: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: "CLIENT",
-        emailVerified: null,
-      },
-      select: { id: true, email: true },
-    });
-
-    // Send verification email
     const token = crypto.randomBytes(32).toString("hex");
-    await prisma.emailVerificationToken.create({
-      data: {
-        token,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
-
-    // One-time signin token — lives only in this browser tab, lets it
-    // auto-login once email is verified without re-asking for the password.
     const signinToken = crypto.randomBytes(32).toString("hex");
-    await prisma.pendingSignInToken.create({
-      data: {
-        token: signinToken,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-      },
+
+    // Atomic: user + both tokens succeed together, or nothing persists.
+    // Without this, a mid-flow failure (e.g. missing table) left orphan users
+    // that blocked re-registration with "el. paštas jau registruotas".
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: "CLIENT",
+          emailVerified: null,
+        },
+        select: { id: true, email: true },
+      });
+
+      await tx.emailVerificationToken.create({
+        data: {
+          token,
+          userId: created.id,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+
+      // One-time signin token — lives only in this browser tab, lets it
+      // auto-login once email is verified without re-asking for the password.
+      await tx.pendingSignInToken.create({
+        data: {
+          token: signinToken,
+          userId: created.id,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        },
+      });
+
+      return created;
     });
 
     const emailData = emailVerificationEmail(name || "Vartotojas", token);
