@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { Loader2, ArrowRight, Check, Sparkles, Pencil, ImagePlus, X, Paperclip, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
-import type { ServiceCategoryGroup } from "@/lib/service-categories";
+import type { ServiceCategoryGroup, ServiceCategoryItem } from "@/lib/service-categories";
 import { saveGuestRequest } from "@/lib/guest-request";
 import { saveListingDraft, loadListingDraft, clearListingDraft } from "@/lib/listing-draft";
 import { useImageUpload } from "@/lib/use-image-upload";
@@ -20,7 +20,6 @@ import PhoneVerification from "@/components/requests/PhoneVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
-import CategorySuggestions from "@/components/ai/CategorySuggestions";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function NewRequestPage() {
@@ -93,7 +92,14 @@ function NewRequestForm() {
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
   const [contactsEditorOpen, setContactsEditorOpen] = useState(false);
+  // True once the user has manually picked a category from the picker. While
+  // false, the auto-suggest effect is allowed to refresh `form.categoryId` as
+  // the description changes. A manual pick locks the field.
+  const [categoryManuallyPicked, setCategoryManuallyPicked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks the last description text we asked the suggestion API about, so we
+  // skip redundant calls when the description hasn't materially changed.
+  const lastAutoSuggestTextRef = useRef<string>("");
 
   const isLoggedIn = status === "authenticated" && !!session?.user;
 
@@ -135,20 +141,29 @@ function NewRequestForm() {
     });
   }
 
-  // id -> name and slug -> id maps over the curated categories. The AI returns
-  // a category slug; the picker stores the id.
+  // id -> name and slug -> id maps over the curated categories, walking the
+  // full tree so depth-2+ leaves (which the suggestion engine returns) also
+  // resolve, not just the depth-1 group children.
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
+    function add(cat: ServiceCategoryItem) {
+      map.set(cat.id, cat.name);
+      for (const child of cat.children ?? []) add(child);
+    }
     for (const group of categoryGroups) {
-      for (const cat of group.categories) map.set(cat.id, cat.name);
+      for (const cat of group.categories) add(cat);
     }
     return map;
   }, [categoryGroups]);
 
   const categoryIdBySlug = useMemo(() => {
     const map = new Map<string, string>();
+    function add(cat: ServiceCategoryItem) {
+      map.set(cat.slug, cat.id);
+      for (const child of cat.children ?? []) add(child);
+    }
     for (const group of categoryGroups) {
-      for (const cat of group.categories) map.set(cat.slug, cat.id);
+      for (const cat of group.categories) add(cat);
     }
     return map;
   }, [categoryGroups]);
@@ -331,10 +346,68 @@ function NewRequestForm() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({ ...f, categoryId: resolved }));
     }
-     
+
     setPendingAiCategory("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAiCategory, categoryGroups]);
+
+  // Auto-suggest category whenever the description changes meaningfully and the
+  // user hasn't already locked in a manual pick. Replaces the old "Pasiūlyti
+  // pagal aprašymą" button — the suggestion engine now runs in the background
+  // alongside the description-improve AI. Debounced so we don't fire on every
+  // keystroke.
+  useEffect(() => {
+    if (aiLoading) return;
+    if (categoryManuallyPicked) return;
+    if (categoryGroups.length === 0) return;
+
+    const text = form.description.trim();
+    const title = form.title.trim();
+    if (text.length < 20) return;
+    if (text === lastAutoSuggestTextRef.current) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/category-suggestions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "request",
+            text,
+            title: title || undefined,
+            limit: 5,
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              data?: { suggestions?: Array<{ id: string; slug: string }> };
+            }
+          | null;
+        if (!data?.success) return;
+        const top = data.data?.suggestions?.[0];
+        if (!top) return;
+        // Resolve either id or slug into a picker id, then only apply if the
+        // user is still in "no manual pick yet" mode.
+        const resolvedId = resolveAiCategory(top.slug) || resolveAiCategory(top.id);
+        if (!resolvedId) return;
+        lastAutoSuggestTextRef.current = text;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setForm((f) => (f.categoryId && categoryManuallyPicked ? f : { ...f, categoryId: resolvedId }));
+      } catch {
+        // Network/abort errors are silent — auto-suggest is best-effort.
+      }
+    }, 1500);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.description, form.title, aiLoading, categoryManuallyPicked, categoryGroups.length]);
 
   // ── Validation ──
   const titleOk = form.title.trim().length >= 5;
@@ -581,21 +654,15 @@ function NewRequestForm() {
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 flex flex-col gap-2">
-              <CategorySuggestions
-                mode="request"
-                text={form.description}
-                title={form.title}
-                selectedIds={form.categoryId ? [form.categoryId] : []}
-                onSelect={(suggestion) => update("categoryId", suggestion.id)}
-              />
-            </div>
             <GroupedCategoryPicker
               id="categoryId"
               label="Kategorija"
               groups={categoryGroups}
               value={form.categoryId}
-              onChange={(v) => update("categoryId", v)}
+              onChange={(v) => {
+                setCategoryManuallyPicked(true);
+                update("categoryId", v);
+              }}
               mode="id"
               required
               error={showErrors && !form.categoryId ? "Privaloma" : undefined}

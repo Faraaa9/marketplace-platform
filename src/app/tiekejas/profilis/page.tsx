@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,6 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown } from "lucide-react";
 import SectionHeader from "./components/SectionHeader";
 import CategoryChecklist from "./components/CategoryChecklist";
-import CategorySuggestions from "@/components/ai/CategorySuggestions";
 
 const MAX_CATEGORIES = 20;
 
@@ -62,6 +61,12 @@ export default function ProviderProfilePage() {
     website: "",
   });
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
+  // True once the provider has toggled any category by hand. Locks the
+  // auto-suggest effect from touching the selection further so we never
+  // override an explicit choice.
+  const [categoryManuallyEdited, setCategoryManuallyEdited] = useState(false);
+  const [autoSuggestingCategories, setAutoSuggestingCategories] = useState(false);
+  const lastAutoSuggestTextRef = useRef<string>("");
 
   useEffect(() => {
     Promise.all([
@@ -182,6 +187,7 @@ export default function ProviderProfilePage() {
   }
 
   function toggleCategory(id: string) {
+    setCategoryManuallyEdited(true);
     setForm((prev) => {
       if (prev.categoryIds.includes(id)) {
         return { ...prev, categoryIds: prev.categoryIds.filter((c) => c !== id) };
@@ -191,18 +197,81 @@ export default function ProviderProfilePage() {
     });
   }
 
-  function addSuggestedCategory(id: string) {
-    setForm((prev) => {
-      if (prev.categoryIds.includes(id)) return prev;
-      if (prev.categoryIds.length >= MAX_CATEGORIES) return prev;
-      return { ...prev, categoryIds: [...prev.categoryIds, id] };
-    });
-  }
-
   const suggestionText = useMemo(
     () => [form.services, form.description, form.headline].filter(Boolean).join("\n\n"),
     [form.services, form.description, form.headline],
   );
+
+  // Auto-suggest categories whenever the description-side text changes
+  // meaningfully — but only when the provider hasn't yet picked any categories
+  // and hasn't manually edited the list. Existing profiles with selections are
+  // left alone so we never overwrite an intentional choice. Replaces the old
+  // "Pasiūlyti pagal aprašymą" button.
+  useEffect(() => {
+    if (loading) return;
+    if (categoryManuallyEdited) return;
+    if (form.categoryIds.length > 0) return;
+    if (categoryGroups.length === 0) return;
+
+    const text = suggestionText.trim();
+    const title = form.headline.trim();
+    if (text.length < 30) return;
+    if (text === lastAutoSuggestTextRef.current) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setAutoSuggestingCategories(true);
+      try {
+        const res = await fetch("/api/category-suggestions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "provider",
+            text,
+            title: title || undefined,
+            limit: 6,
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              data?: { suggestions?: Array<{ id: string }> };
+            }
+          | null;
+        if (!data?.success) return;
+        const suggestions = data.data?.suggestions ?? [];
+        if (suggestions.length === 0) return;
+        lastAutoSuggestTextRef.current = text;
+        setForm((prev) => {
+          if (prev.categoryIds.length > 0) return prev;
+          const next = [...prev.categoryIds];
+          for (const s of suggestions) {
+            if (next.length >= MAX_CATEGORIES) break;
+            if (!next.includes(s.id)) next.push(s.id);
+          }
+          return { ...prev, categoryIds: next };
+        });
+      } catch {
+        // Auto-suggest is best-effort — silent on network/abort errors.
+      } finally {
+        setAutoSuggestingCategories(false);
+      }
+    }, 1500);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [
+    suggestionText,
+    form.headline,
+    form.categoryIds.length,
+    categoryGroups.length,
+    categoryManuallyEdited,
+    loading,
+  ]);
 
   async function uploadFile(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -462,17 +531,13 @@ export default function ProviderProfilePage() {
               </div>
               <p className="text-micro text-surface-400 mb-2">
                 Pasirinkite konkrečias paslaugas, kurias teikiate — pagal jas gausite tinkamas užklausas.
+                {form.categoryIds.length === 0 && !categoryManuallyEdited && (
+                  <span className="ml-1 inline-flex items-center gap-1 text-brand-600 dark:text-brand-400">
+                    <Sparkles className="h-3 w-3" />
+                    {autoSuggestingCategories ? "AI parenka…" : "AI automatiškai parenka pagal aprašymą."}
+                  </span>
+                )}
               </p>
-              <div className="mb-2">
-                <CategorySuggestions
-                  mode="provider"
-                  text={suggestionText}
-                  title={form.headline}
-                  selectedIds={form.categoryIds}
-                  onSelect={(suggestion) => addSuggestedCategory(suggestion.id)}
-                  maxReached={form.categoryIds.length >= MAX_CATEGORIES}
-                />
-              </div>
               <CategoryChecklist
                 groups={categoryGroups}
                 selectedIds={form.categoryIds}
