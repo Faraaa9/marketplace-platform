@@ -20,7 +20,7 @@ export default function BecomeProviderClient() {
       const data = await res.json();
       if (data.success) {
         await update();
-        router.push("/tiekejas/profilis");
+        router.push("/meistrai/kurti-profili");
         router.refresh();
       } else {
         setError(data.error || "Nepavyko");

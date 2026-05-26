@@ -65,6 +65,7 @@ function StoryModal({
   const [deleting, setDeleting] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Fetch stories when modal opens
   useEffect(() => {
@@ -98,6 +99,11 @@ function StoryModal({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
+
+  // Reset drag state when modal closes
+  useEffect(() => {
+    if (!open) setIsDragging(false);
+  }, [open]);
 
   async function handleUpload(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -161,7 +167,35 @@ function StoryModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
       {/* Sheet */}
-      <div className="relative w-full sm:max-w-md bg-white dark:bg-surface-900 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col">
+      <div
+        className="relative w-full sm:max-w-md bg-white dark:bg-surface-900 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col"
+        onDragEnter={(e) => {
+          if (uploading || loadingStories || stories.length >= 3) return;
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(true);
+        }}
+        onDragOver={(e) => {
+          if (uploading || loadingStories || stories.length >= 3) return;
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragging(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(false);
+          if (uploading || loadingStories || stories.length >= 3) return;
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleUpload(file);
+        }}
+      >
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-3 pb-0 sm:hidden">
           <div className="h-1 w-10 rounded-full bg-surface-300 dark:bg-surface-600" />
@@ -271,7 +305,7 @@ function StoryModal({
                     ) : (
                       <>
                         <Camera className="h-4 w-4 text-brand-500" />
-                        <span className="text-body-sm font-medium text-surface-600 dark:text-surface-400">Pasirinkti nuotrauką</span>
+                        <span className="text-body-sm font-medium text-surface-600 dark:text-surface-400">Pasirinkti arba įmesti nuotrauką</span>
                       </>
                     )}
                     <input
@@ -298,6 +332,18 @@ function StoryModal({
             </>
           )}
         </div>
+
+        {/* Drag-and-drop overlay */}
+        {isDragging && (
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-t-2xl sm:rounded-2xl bg-white/95 backdrop-blur-sm dark:bg-surface-900/95">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-brand-500 px-8 py-6">
+              <Camera className="h-8 w-8 text-brand-500" />
+              <p className="text-body-sm font-medium text-surface-700 dark:text-surface-300">
+                Paleiskite nuotrauką čia
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
