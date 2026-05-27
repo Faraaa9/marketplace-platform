@@ -19,6 +19,18 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-27 19:17 — Claude
 
+**Commit:** `184cf0b` — docs(ai): AI-native marketplace roadmap · lokalus
+
+**Pakeitimai:** 1 file changed, 409 insertions(+)
+
+**Failai:**
+- docs/ai-roadmap.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-27 19:17 — Claude
+
 **Commit:** `5446d67` — feat(admin): AI health, marketplace intelligence and follow-up signal cards · lokalus
 
 **Pakeitimai:** 8 files changed, 995 insertions(+), 23 deletions(-)
