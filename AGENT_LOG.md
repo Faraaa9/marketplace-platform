@@ -19,6 +19,20 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-27 19:13 — Claude
 
+**Commit:** `b846aa6` — fix(rate-limit): silence build-phase Upstash warning + add aiLeadCopilot bucket · lokalus
+
+**Pakeitimai:** 3 files changed, 171 insertions(+), 1 deletion(-)
+
+**Failai:**
+- .env.example
+- docs/known-warnings.md
+- src/lib/rate-limit.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-27 19:13 — Claude
+
 **Commit:** `df14c69` — feat(ai): AiRun audit model + recordAiRun helper · lokalus
 
 **Pakeitimai:** 3 files changed, 110 insertions(+)

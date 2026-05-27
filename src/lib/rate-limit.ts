@@ -13,7 +13,22 @@ const REDIS_REST_TOKEN =
 
 const hasUpstash = !!(REDIS_REST_URL && REDIS_REST_TOKEN);
 
-if (!hasUpstash && process.env.NODE_ENV === "production") {
+const isNextBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+let warnedMissingUpstash = false;
+
+function warnMissingUpstashOnce() {
+  if (warnedMissingUpstash) return;
+  warnedMissingUpstash = true;
+
+  // `next build` runs with NODE_ENV=production, but it is not a live runtime.
+  // Warn only where the in-memory fallback can actually affect rate limiting.
+  const shouldWarn =
+    process.env.NODE_ENV === "production" &&
+    !isNextBuildPhase &&
+    (process.env.VERCEL === "1" || process.env.RATE_LIMIT_WARN_ON_MEMORY === "1");
+
+  if (!shouldWarn) return;
+
   console.warn(
     "[rate-limit] Upstash Redis not configured — rate limiting falls back to " +
       "per-instance memory and is ineffective on serverless. Provision Upstash " +
@@ -86,6 +101,7 @@ interface RateLimitResult {
  */
 export async function rateLimitAsync(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
   if (!hasUpstash) {
+    warnMissingUpstashOnce();
     return memoryRateLimit(key, config);
   }
 
@@ -113,6 +129,7 @@ export const RATE_LIMITS = {
   responses: { maxRequests: 10, windowMs: 10 * 60 * 1000 },     // 10 per 10 min
   aiImprove: { maxRequests: 15, windowMs: 60 * 60 * 1000 },     // 15 per hour (AI aprašymo tvarkymas)
   aiProposal: { maxRequests: 15, windowMs: 60 * 60 * 1000 },    // 15 per hour (AI pasiūlymo juodraštis)
+  aiLeadCopilot: { maxRequests: 20, windowMs: 60 * 60 * 1000 }, // 20 per hour (lead įžvalgos tiekėjui)
   aiTranscribe: { maxRequests: 30, windowMs: 60 * 60 * 1000 },  // 30 per hour (balso diktavimas)
   requestCode: { maxRequests: 8, windowMs: 60 * 60 * 1000 },    // 8 per hour (užklausos el. pašto kodas)
   phoneCode: { maxRequests: 6, windowMs: 60 * 60 * 1000 },      // 6 per hour (telefono SMS kodas)
