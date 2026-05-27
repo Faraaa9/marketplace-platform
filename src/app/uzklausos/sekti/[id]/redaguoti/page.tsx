@@ -19,7 +19,15 @@ import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
 interface FormState {
   title: string;
   description: string;
+  /** The primary category shown in the picker. */
   categoryId: string;
+  /** Secondary categories (sortOrder 1+). The edit form doesn't let users
+   *  modify these — they are preserved on save so multi-category requests
+   *  don't silently lose their extra categories. */
+  secondaryCategoryIds: string[];
+  /** Display names for all categories (primary + secondaries), for the
+   *  informational hint shown to the user. */
+  allCategoryNames: string[];
   location: string;
   budget: string;
   deadline: string;
@@ -36,6 +44,8 @@ export default function EditRequestPage() {
     title: "",
     description: "",
     categoryId: "",
+    secondaryCategoryIds: [],
+    allCategoryNames: [],
     location: "",
     budget: "",
     deadline: "",
@@ -60,10 +70,25 @@ export default function EditRequestPage() {
         if (cancelled) return;
         if (data.success) {
           const d = data.data;
+          // Preserve multi-category info from the GET response so save doesn't
+          // drop secondary categories. The primary stays editable via the
+          // single picker; secondaries pass through untouched.
+          const incomingIds: string[] = Array.isArray(d.categoryIds) && d.categoryIds.length > 0
+            ? d.categoryIds
+            : d.categoryId
+              ? [d.categoryId]
+              : [];
+          const incomingNames: string[] = Array.isArray(d.categoryNames) && d.categoryNames.length > 0
+            ? d.categoryNames
+            : d.category
+              ? [d.category]
+              : [];
           setForm({
             title: d.title || "",
             description: d.description || "",
-            categoryId: d.categoryId || "",
+            categoryId: incomingIds[0] ?? "",
+            secondaryCategoryIds: incomingIds.slice(1),
+            allCategoryNames: incomingNames,
             location: d.location || "",
             budget: d.budget || "",
             deadline: d.deadline || "",
@@ -135,10 +160,22 @@ export default function EditRequestPage() {
     setSaving(true);
     setSaveError("");
     try {
+      const { categoryId, secondaryCategoryIds, allCategoryNames: _names, ...rest } = form;
+      void _names;
+      // Preserve any pre-existing secondary categories on save — the single
+      // picker only edits the primary. Dedupe in case the user picked one
+      // that was already a secondary.
+      const seen = new Set<string>();
+      const categoryIds: string[] = [];
+      for (const id of [categoryId, ...secondaryCategoryIds]) {
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        categoryIds.push(id);
+      }
       const res = await fetch(`/api/tracking/${token}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...rest, categoryIds }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
@@ -249,14 +286,25 @@ export default function EditRequestPage() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <CategorySelect
-              id="categoryId"
-              label="Kategorija"
-              groups={categoryGroups}
-              value={form.categoryId}
-              onChange={(v) => update("categoryId", v)}
-              error={attempted && !form.categoryId ? "Privaloma" : undefined}
-            />
+            <div>
+              <CategorySelect
+                id="categoryId"
+                label="Kategorija"
+                groups={categoryGroups}
+                value={form.categoryId}
+                onChange={(v) => update("categoryId", v)}
+                error={attempted && !form.categoryId ? "Privaloma" : undefined}
+              />
+              {form.secondaryCategoryIds.length > 0 && (
+                <p className="mt-1.5 text-micro text-surface-500 dark:text-surface-400">
+                  Skelbimas turi {form.secondaryCategoryIds.length + 1} kategorijas:{" "}
+                  <span className="font-medium text-surface-700 dark:text-surface-200">
+                    {form.allCategoryNames.join(", ")}
+                  </span>
+                  . Papildomos kategorijos išsaugomos automatiškai.
+                </p>
+              )}
+            </div>
             <Input
               id="location"
               label="Miestas ar vietovė"

@@ -223,7 +223,12 @@ export default function TrackRequestPage() {
   }
   if (!request) return null;
 
-  const categoryLabel = request.category;
+  const categoryLabels =
+    request.categoryNames && request.categoryNames.length > 0
+      ? request.categoryNames
+      : request.category
+        ? [request.category]
+        : [];
   const statusMap: Record<string, { label: string; variant: "warning" | "brand" | "default" }> = {
     PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
     OPEN: { label: "Atidaryta", variant: "brand" },
@@ -252,7 +257,11 @@ export default function TrackRequestPage() {
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
-            <span className="truncate text-body-sm text-surface-500">{categoryLabel}</span>
+            {categoryLabels.length > 0 && (
+              <span className="truncate text-body-sm text-surface-500">
+                {categoryLabels.join(" · ")}
+              </span>
+            )}
           </div>
           {isApproved && (
             <Link

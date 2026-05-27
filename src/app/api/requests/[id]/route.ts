@@ -16,10 +16,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         id: true,
         title: true,
         description: true,
-        // `categoryId` lets the edit form pre-select the picker; `categoryRef`
-        // supplies the display name (returned as the `category` field).
+        // `categoryId` lets the edit form pre-select the legacy single picker;
+        // `categoryRef` supplies the primary display name (returned as the
+        // `category` field). `categories` is the join table with all
+        // primary+secondary IDs/names, returned as `categoryIds` and
+        // `categoryNames` for multi-category consumers.
         categoryId: true,
         categoryRef: { select: { name: true } },
+        categories: {
+          select: { categoryId: true, category: { select: { name: true } } },
+          orderBy: { sortOrder: "asc" },
+        },
         location: true,
         budget: true,
         deadline: true,
@@ -107,15 +114,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { reviews: _reviews, _count, categoryRef, ...requestWithoutReviews } = request;
+    const { reviews: _reviews, _count, categoryRef, categories, ...requestWithoutReviews } = request;
+
+    // Prefer the join table; fall back to the legacy categoryRef so rows
+    // written before the migration still render correctly.
+    const joinedNames = categories
+      .map((link) => link.category?.name?.trim() ?? "")
+      .filter((name) => name.length > 0);
+    const categoryNames = joinedNames.length > 0
+      ? joinedNames
+      : categoryRef?.name
+        ? [categoryRef.name]
+        : [];
+    const categoryIds = categories.length > 0
+      ? categories.map((link) => link.categoryId)
+      : request.categoryId
+        ? [request.categoryId]
+        : [];
 
     return NextResponse.json({
       success: true,
       data: {
         ...requestWithoutReviews,
-        // Keep the response field name `category` — now the curated category
-        // display name — so existing consumers keep working.
+        // Keep the legacy single `category` (display name) so existing
+        // consumers that haven't migrated still work.
         category: categoryRef?.name ?? "",
+        categoryNames,
+        categoryIds,
         responses: responsesWithBadge,
         viewCount: _count.views,
       },

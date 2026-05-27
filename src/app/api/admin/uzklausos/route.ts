@@ -46,6 +46,10 @@ export async function GET(req: NextRequest) {
         include: {
           _count: { select: { responses: true } },
           categoryRef: { select: { name: true } },
+          categories: {
+            select: { category: { select: { name: true } } },
+            orderBy: { sortOrder: "asc" },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -54,9 +58,23 @@ export async function GET(req: NextRequest) {
       prisma.serviceRequest.count({ where }),
     ]);
 
+    const serialized = requests.map(({ categories, ...rest }) => {
+      const joinedNames = categories
+        .map((link) => link.category?.name?.trim() ?? "")
+        .filter((name) => name.length > 0);
+      return {
+        ...rest,
+        categoryNames: joinedNames.length > 0
+          ? joinedNames
+          : rest.categoryRef?.name
+            ? [rest.categoryRef.name]
+            : [],
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      data: requests,
+      data: serialized,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {

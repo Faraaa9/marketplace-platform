@@ -24,6 +24,10 @@ export async function GET(req: NextRequest) {
         location: true,
         clientId: true,
         requestVerificationExpiresAt: true,
+        categories: {
+          select: { categoryId: true },
+          orderBy: { sortOrder: "asc" },
+        },
       },
     });
 
@@ -70,7 +74,14 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    notifyRelevantProviders(request.title, request.categoryId, request.location, request.clientId).catch((error) =>
+    // Prefer the join table (multi-category support); fall back to the legacy
+    // single categoryId for any row written before the migration.
+    const notifyCategoryIds = request.categories.length > 0
+      ? request.categories.map((link) => link.categoryId)
+      : request.categoryId
+        ? [request.categoryId]
+        : [];
+    notifyRelevantProviders(request.title, notifyCategoryIds, request.location, request.clientId).catch((error) =>
       console.error("Provider notification error:", error)
     );
 

@@ -20,7 +20,10 @@ export const registerSchema = registerSchemaBase.refine((data) => data.password 
 export const serviceRequestSchema = z.object({
   title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
-  categoryId: z.string().min(1, "Pasirinkite kategoriją"),
+  categoryIds: z
+    .array(z.string().min(1))
+    .min(1, "Pasirinkite bent vieną kategoriją")
+    .max(3, "Daugiausia 3 kategorijos"),
   location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
   budget: z.string().min(1, "Nurodykite biudžetą").max(100),
   deadline: z.string().min(1, "Nurodykite terminą").max(100),
@@ -43,12 +46,41 @@ export const serviceRequestSchema = z.object({
   { message: "Slaptažodis turi būti bent 8 simbolių", path: ["password"] }
 );
 
+// v2 publish schema for /uzklausos/nauja-v2 — location/budget/deadline are
+// optional (AI fills what it can from the raw text, user fills the rest only
+// if they care). Title and categoryId stay required because AI always
+// produces them; if AI fails, the user must intervene before publishing.
+export const serviceRequestV2Schema = z.object({
+  title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
+  description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
+  categoryIds: z
+    .array(z.string().min(1))
+    .min(1, "Pasirinkite bent vieną kategoriją")
+    .max(3, "Daugiausia 3 kategorijos"),
+  location: z.string().trim().max(100).optional().or(z.literal("")),
+  budget: z.string().trim().max(100).optional().or(z.literal("")),
+  deadline: z.string().trim().max(100).optional().or(z.literal("")),
+  attachmentUrls: z.array(z.string().url().includes("res.cloudinary.com")).max(5, "Daugiausia 5 nuotraukos").optional(),
+  clientName: z.string().min(2, "Vardas turi būti bent 2 simbolių"),
+  clientEmail: z.string().email("Neteisingas el. pašto formatas"),
+  clientPhone: z
+    .string()
+    .trim()
+    .max(30, "Telefono numeris per ilgas")
+    .optional()
+    .or(z.literal("")),
+  honeypot: z.string().optional(),
+});
+
 // Editable subset of a service request — excludes clientEmail (verified identity)
 // and the account/honeypot fields used only at creation.
 export const serviceRequestEditSchema = z.object({
   title: z.string().min(5, "Pavadinimas turi būti bent 5 simbolių").max(100),
   description: z.string().min(20, "Aprašymas turi būti bent 20 simbolių").max(2000),
-  categoryId: z.string().min(1, "Pasirinkite kategoriją"),
+  categoryIds: z
+    .array(z.string().min(1))
+    .min(1, "Pasirinkite bent vieną kategoriją")
+    .max(3, "Daugiausia 3 kategorijos"),
   location: z.string().min(1, "Nurodykite miestą ar vietovę").max(100),
   budget: z.string().min(1, "Nurodykite biudžetą").max(100),
   deadline: z.string().min(1, "Nurodykite terminą").max(100),
@@ -118,6 +150,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceRequestInput = z.infer<typeof serviceRequestSchema>;
 export type ServiceRequestEditInput = z.infer<typeof serviceRequestEditSchema>;
+export type ServiceRequestV2Input = z.infer<typeof serviceRequestV2Schema>;
 export type ImproveDescriptionInput = z.infer<typeof improveDescriptionSchema>;
 export type CategorySuggestionsInput = z.infer<typeof categorySuggestionsSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;

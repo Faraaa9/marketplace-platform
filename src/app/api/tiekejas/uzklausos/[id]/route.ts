@@ -29,6 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         category: true,
         categoryId: true,
         categoryRef: { select: { id: true, rootId: true, name: true } },
+        categories: {
+          select: { category: { select: { name: true } } },
+          orderBy: { sortOrder: "asc" },
+        },
         location: true,
         budget: true,
         deadline: true,
@@ -113,11 +117,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       providerCategories,
     );
 
+    const joinedNames = request.categories
+      .map((link) => link.category?.name?.trim() ?? "")
+      .filter((name) => name.length > 0);
+    const primaryCategoryName = request.categoryRef?.name ?? request.category;
+    const categoryNames = joinedNames.length > 0
+      ? joinedNames
+      : primaryCategoryName
+        ? [primaryCategoryName]
+        : [];
+
     const data = {
       id: request.id,
       title: request.title,
       description: request.description,
-      category: request.categoryRef?.name ?? request.category,
+      category: primaryCategoryName,
+      categoryNames,
       location: request.location,
       budget: request.budget,
       deadline: request.deadline,

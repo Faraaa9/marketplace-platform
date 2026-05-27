@@ -19,6 +19,29 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-28 02:51 — Claude
 
+**Commit:** `d923976` — feat(uzklausos): v2 request creation flow with multi-category + inline AI · lokalus
+
+**Pakeitimai:** 23 files changed, 1900 insertions(+), 779 deletions(-)
+
+**Failai:**
+- prisma/schema.prisma
+- src/app/admin/uzklausos/page.tsx
+- src/app/api/admin/uzklausos/route.ts
+- src/app/api/requests/[id]/route.ts
+- src/app/api/requests/route.ts
+- src/app/api/requests/verify/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/route.ts
+- src/app/api/tiekejas/uzklausos/route.ts
+- src/app/api/tracking/[token]/route.ts
+- src/app/tiekejas/uzklausos/[id]/page.tsx
+- src/app/tiekejas/uzklausos/page.tsx
+- src/app/uzklausos/nauja/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-28 02:51 — Claude
+
 **Commit:** `9fe5f27` — perf(ui): add loading skeletons to key dynamic routes · lokalus
 
 **Pakeitimai:** 7 files changed, 326 insertions(+)

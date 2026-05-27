@@ -36,7 +36,12 @@ export interface RequestData {
   id: string;
   title: string;
   description: string;
+  /** Legacy single-category display name (primary). Prefer categoryNames. */
   category: string;
+  /** Up to 3 category names, primary first (multi-category support). */
+  categoryNames?: string[];
+  /** Matching category IDs (same order as categoryNames). */
+  categoryIds?: string[];
   location: string;
   budget?: string;
   deadline?: string;

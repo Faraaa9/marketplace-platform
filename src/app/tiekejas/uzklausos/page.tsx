@@ -33,6 +33,8 @@ interface Request {
   title: string;
   description: string;
   categoryRef: { id: string; name: string } | null;
+  /** Multi-category names (primary first); preferred over categoryRef.name. */
+  categoryNames?: string[];
   location: string;
   budget?: string;
   createdAt: string;
@@ -374,11 +376,19 @@ function ProviderRequestsContent() {
                       {/* Top: category + status badges (left), budget (right) */}
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          {req.categoryRef && (
-                            <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
-                              {req.categoryRef.name}
+                          {(req.categoryNames && req.categoryNames.length > 0
+                            ? req.categoryNames
+                            : req.categoryRef?.name
+                              ? [req.categoryRef.name]
+                              : []
+                          ).map((name) => (
+                            <span
+                              key={name}
+                              className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400"
+                            >
+                              {name}
                             </span>
-                          )}
+                          ))}
                           {!req.isUnlocked ? (
                             <span className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2 py-1 text-micro font-semibold text-white dark:bg-brand-500">
                               <Lock className="h-3 w-3" />

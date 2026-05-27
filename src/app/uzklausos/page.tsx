@@ -82,6 +82,10 @@ const getBoardListing = unstable_cache(
           title: true,
           description: true,
           categoryRef: { select: { name: true } },
+          categories: {
+            select: { category: { select: { name: true } } },
+            orderBy: { sortOrder: "asc" },
+          },
           location: true,
           budget: true,
           clientId: true,
@@ -111,14 +115,25 @@ const getBoardListing = unstable_cache(
     const countByRequest = new Map(responseCounts.map((g) => [g.requestId, g._count._all]));
 
     // unstable_cache serializes via JSON, so Dates round-trip as strings.
-    // Coerce here so consumers get real Date objects. Flatten the curated
-    // category relation to a plain display name.
-    const serialized = requests.map(({ categoryRef, ...r }) => ({
-      ...r,
-      categoryName: categoryRef?.name ?? "",
-      createdAt: r.createdAt.toISOString(),
-      responseCount: countByRequest.get(r.id) ?? 0,
-    }));
+    // Coerce here so consumers get real Date objects. Prefer the join table
+    // for multi-category display; fall back to the legacy single relation
+    // for any row written before the multi-category migration.
+    const serialized = requests.map(({ categoryRef, categories, ...r }) => {
+      const joinedNames = categories
+        .map((link) => link.category?.name?.trim() ?? "")
+        .filter((name) => name.length > 0);
+      const categoryNames = joinedNames.length > 0
+        ? joinedNames
+        : categoryRef?.name
+          ? [categoryRef.name]
+          : [];
+      return {
+        ...r,
+        categoryNames,
+        createdAt: r.createdAt.toISOString(),
+        responseCount: countByRequest.get(r.id) ?? 0,
+      };
+    });
 
     return { requests: serialized, total };
   },
@@ -324,11 +339,18 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                   <div className="paper-note__shadow">
                     <div className="paper-note__sheet px-6 pb-8 pt-8 sm:px-9">
                       {/* category + competition */}
-                      <div className="flex items-center justify-between gap-3">
-                        {r.categoryName && (
-                          <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
-                            {r.categoryName}
-                          </span>
+                      <div className="flex items-start justify-between gap-3">
+                        {r.categoryNames.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {r.categoryNames.map((name) => (
+                              <span
+                                key={name}
+                                className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
+                              >
+                                {name}
+                              </span>
+                            ))}
+                          </div>
                         )}
                         {!isMatched && (
                           <span

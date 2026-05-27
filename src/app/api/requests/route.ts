@@ -4,7 +4,7 @@ import { revalidateTag } from "next/cache";
 import crypto from "crypto";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { serviceRequestSchema } from "@/lib/validations";
+import { serviceRequestV2Schema } from "@/lib/validations";
 import { sendEmail, requestConfirmationEmail } from "@/lib/email";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
@@ -15,13 +15,14 @@ import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation"
 
 export const dynamic = "force-dynamic";
 
-// A confirmed email code stays valid for publishing for this long.
 const VERIFICATION_VALID_MS = 60 * 60 * 1000;
 
 /**
- * Publish a service request. The email must already be verified — either the
- * caller is logged in (account owns its email) or a 6-digit code was confirmed
- * via /api/requests/verify-code. The request goes live (OPEN) immediately.
+ * Publish endpoint for /uzklausos/nauja. Notes:
+ * - location / budget / deadline are optional in the input schema
+ * - empty location is stored as "" (DB column is NOT NULL) but mapped to
+ *   "Visa Lietuva" for the provider notifier so unfiltered requests still
+ *   reach providers in the matched category.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     const body = await req.json();
-    const parsed = serviceRequestSchema.safeParse(body);
+    const parsed = serviceRequestV2Schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
         { success: false, error: parsed.error.issues?.[0]?.message || "Validacijos klaida" },
@@ -45,7 +46,6 @@ export async function POST(req: NextRequest) {
       );
     }
     const data = parsed.data;
-    // Phone is optional — only validate format if the user actually provided one.
     const rawPhone = data.clientPhone?.trim() ?? "";
     const phone = rawPhone ? normalizePhoneNumber(rawPhone) : null;
     if (rawPhone && !phone) {
@@ -55,8 +55,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Honeypot — bots fill this hidden field; humans never see it. Return a
-    // plausible fake payload so the bot does not learn the submission failed.
     if (data.honeypot && data.honeypot.trim().length > 0) {
       console.warn("Honeypot triggered from IP:", ip);
       return NextResponse.json({
@@ -69,8 +67,6 @@ export async function POST(req: NextRequest) {
     const userId = session?.user?.id;
     const sessionEmail = session?.user?.email?.toLowerCase();
 
-    // Email gate — a logged-in account owns its address; everyone else must
-    // have a confirmed 6-digit code for this exact email.
     const verifiedViaAccount = !!userId && sessionEmail === email;
     let consumeVerification = false;
     if (!verifiedViaAccount) {
@@ -93,8 +89,6 @@ export async function POST(req: NextRequest) {
     const clientId = verifiedViaAccount && userId ? userId : null;
     let consumePhoneVerification = false;
 
-    // Phone verification only runs when the user actually provided a number —
-    // a verified email already satisfies the contact requirement.
     if (phone) {
       let verifiedViaAccountPhone = false;
       if (clientId) {
@@ -123,18 +117,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Resolve the chosen curated category. `categoryId` drives matching; the
-    // legacy `category` String column (NOT NULL) is set to the category slug.
-    const category = await prisma.category.findUnique({
-      where: { id: data.categoryId },
+    const uniqueCategoryIds = Array.from(new Set(data.categoryIds));
+    const categoryRows = await prisma.category.findMany({
+      where: { id: { in: uniqueCategoryIds } },
       select: { id: true, slug: true },
     });
-    if (!category) {
+    if (categoryRows.length !== uniqueCategoryIds.length) {
       return NextResponse.json(
-        { success: false, error: "Pasirinkta kategorija nerasta" },
+        { success: false, error: "Viena ar daugiau kategorijų nerasta" },
         { status: 400 },
       );
     }
+    const orderedCategories = uniqueCategoryIds.map(
+      (id) => categoryRows.find((row) => row.id === id)!,
+    );
+    const primaryCategory = orderedCategories[0];
+
+    const locationValue = (data.location ?? "").trim();
+    const budgetValue = (data.budget ?? "").trim();
+    const deadlineValue = (data.deadline ?? "").trim();
 
     const [textModeration, imageModeration] = await Promise.all([
       moderateText({
@@ -142,8 +143,8 @@ export async function POST(req: NextRequest) {
         fields: {
           title: data.title,
           description: data.description,
-          budget: data.budget,
-          deadline: data.deadline,
+          budget: budgetValue,
+          deadline: deadlineValue,
         },
         actorUserId: clientId,
       }),
@@ -171,11 +172,17 @@ export async function POST(req: NextRequest) {
       data: {
         title: sanitizeHtml(data.title),
         description: sanitizeHtml(data.description),
-        category: category.slug,
-        categoryId: category.id,
-        location: data.location,
-        budget: sanitizeHtml(data.budget),
-        deadline: sanitizeHtml(data.deadline),
+        category: primaryCategory.slug,
+        categoryId: primaryCategory.id,
+        categories: {
+          create: orderedCategories.map((cat, index) => ({
+            categoryId: cat.id,
+            sortOrder: index,
+          })),
+        },
+        location: locationValue,
+        budget: budgetValue ? sanitizeHtml(budgetValue) : null,
+        deadline: deadlineValue ? sanitizeHtml(deadlineValue) : null,
         attachmentUrls: data.attachmentUrls ?? [],
         status: "OPEN",
         moderationStatus,
@@ -196,8 +203,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Only push the (verified) phone onto the account when it was actually
-    // submitted — otherwise we'd nuke whatever phone the user already had.
     if (clientId && phone) {
       await prisma.user.update({
         where: { id: clientId },
@@ -206,7 +211,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // One-time use — drop the verification record once consumed.
     if (consumeVerification) {
       await prisma.requestEmailVerification.delete({ where: { email } }).catch(() => {});
     }
@@ -217,11 +221,18 @@ export async function POST(req: NextRequest) {
     const isPublished = moderationStatus === "APPROVED";
 
     if (isPublished) {
-      // The request is live — refresh public caches and reach out to providers.
       revalidateTag("requests", { expire: 0 });
-      notifyRelevantProviders(request.title, request.categoryId, request.location, clientId).catch(
-        (error) => console.error("Provider notification error:", error),
-      );
+      // Empty location → treat as "Visa Lietuva" for matching so providers
+      // still get notified (the notifier's exact-string match would otherwise
+      // skip everyone). The DB row keeps the empty value to reflect what the
+      // client actually entered.
+      const notifyLocation = request.location.trim() || "Visa Lietuva";
+      notifyRelevantProviders(
+        request.title,
+        orderedCategories.map((cat) => cat.id),
+        notifyLocation,
+        clientId,
+      ).catch((error) => console.error("Provider notification error:", error));
     }
 
     if (clientId) {
@@ -249,7 +260,7 @@ export async function POST(req: NextRequest) {
       data: { trackingToken: request.trackingToken },
     });
   } catch (error) {
-    console.error("Create request error:", error);
+    console.error("Create request v2 error:", error);
     return NextResponse.json(
       { success: false, error: "Nepavyko sukurti užklausos" },
       { status: 500 },

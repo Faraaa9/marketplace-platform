@@ -92,6 +92,10 @@ export async function GET(req: NextRequest) {
           description: true,
           categoryId: true,
           categoryRef: { select: { id: true, name: true } },
+          categories: {
+            select: { categoryId: true, category: { select: { name: true } } },
+            orderBy: { sortOrder: "asc" },
+          },
           location: true,
           budget: true,
           deadline: true,
@@ -109,11 +113,17 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    // Score relevance + mark responded.
+    // Score relevance + mark responded. Multi-cat: a request matches if ANY
+    // of its category IDs is in the provider's match set.
     const providerMatch = new Set(providerMatchSet);
     const scored = allRequests.map((reqRow) => {
       let score = 0;
-      if (reqRow.categoryId && providerMatch.has(reqRow.categoryId)) score += 2;
+      const requestCategoryIds = reqRow.categories.length > 0
+        ? reqRow.categories.map((link) => link.categoryId)
+        : reqRow.categoryId
+          ? [reqRow.categoryId]
+          : [];
+      if (requestCategoryIds.some((id) => providerMatch.has(id))) score += 2;
       if (
         reqRow.location === providerLocation ||
         reqRow.location === "Visa Lietuva" ||
@@ -138,9 +148,17 @@ export async function GET(req: NextRequest) {
           categoryName: reqRow.categoryRef?.name,
         },
       );
-      const { responses, ...rest } = reqRow;
+      const { responses, categories, ...rest } = reqRow;
+      const categoryNames = categories
+        .map((link) => link.category?.name?.trim() ?? "")
+        .filter((name) => name.length > 0);
       return {
         ...rest,
+        categoryNames: categoryNames.length > 0
+          ? categoryNames
+          : reqRow.categoryRef?.name
+            ? [reqRow.categoryRef.name]
+            : [],
         relevance: score,
         semanticShadowScore: semantic.score,
         semanticShadowTerms: semantic.sharedTerms,

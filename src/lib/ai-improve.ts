@@ -96,7 +96,7 @@ function buildSystemPrompt(categoryList: string): string {
   return `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Klientas rašo užklausą — aprašo, kokios paslaugos jam reikia. Tavo tikslas, kad paslaugų tiekėjas iškart suprastų užduotį ir galėtų ją tiksliai įkainoti.
 
 Grąžink TIK galiojantį JSON objektą su laukais:
-{"improvedDescription": "...", "title": "...", "category": "...", "location": "...", "budget": "...", "deadline": "...", "recommendations": [{"prompt": "...", "field": "..."}]}
+{"improvedDescription": "...", "title": "...", "categories": ["...", "..."], "category": "...", "location": "...", "budget": "...", "deadline": "...", "recommendations": [{"prompt": "...", "field": "...", "yesAnswer": "...", "noAnswer": "..."}]}
 
 "improvedDescription" — sutvarkytas kliento aprašymas. PRIVALU grąžinti šį lauką su turinio:
 - Ištaisyk rašybos ir gramatikos klaidas, rašyk taisyklinga, natūralia lietuvių kalba.
@@ -109,9 +109,11 @@ Grąžink TIK galiojantį JSON objektą su laukais:
 
 "title" — trumpas, konkretus užklausos pavadinimas lietuvių kalba (3–8 žodžiai, daugiausia 70 simbolių). Pvz. „Trinkelių klojimas kieme".
 
-"category" — TIKSLIAI vienas kategorijos kodas (slug) iš šio sąrašo (grąžink tik kodą, ne pavadinimą skliausteliuose). Kategorijos sugrupuotos pagal sritį:
+"categories" — masyvas iš 1–3 kategorijos kodų (slug) iš žemiau pateikto sąrašo, surūšiuotų pagal tinkamumą (pirmas — labiausiai tinkantis). Daugumai užklausų vienos kategorijos pakanka. Pridėk antrą ar trečią TIK jei užklausa aiškiai jungia kelias skirtingas kompetencijas (pvz. „vonios remontas + santechnikos pakeitimas" → 2 kategorijos; „šventė + fotografas + muzika" → 3). NIEKADA nepilnaviršyk dirbtinai — geriau viena tiksli, nei trys silpnos. Jei nieko gero nerandi — grąžink tuščią masyvą [].
+Kategorijos:
 ${categoryList}
-Parink tinkamiausią konkrečią kategoriją pagal aprašymą.
+
+"category" — pirmas slug iš "categories" masyvo (suderinamumui su senesne versija). Jei "categories" tuščias — grąžink tuščią eilutę "".
 
 "location" — vietovė. Jei aprašyme paminėtas miestas, rajonas, miestelis ar kaimas (Lietuvos arba užsienio) — grąžink jį vardininko linksniu ir taisyklinga rašyba (pvz. „Trakų rajone" → „Trakai", „darbai Kaune" → „Kaunas"). Jei vietovė aprašyme nepaminėta — grąžink tuščią eilutę "".
 
@@ -119,10 +121,12 @@ Parink tinkamiausią konkrečią kategoriją pagal aprašymą.
 
 "deadline" — darbų terminas. Jei klientas paminėjo, kada reikia atlikti darbą (pvz. „skubu", „iki gegužės pabaigos", „per 2 savaites", „šią savaitę") — grąžink trumpai. Jei apie terminą nieko nepasakyta — grąžink tuščią eilutę "".
 
-"recommendations" — 2–4 dalykai, kurių aprašyme TRŪKSTA, kad tiekėjas galėtų tiksliai įkainoti darbą. Kiekvienas objektas:
-- "prompt": trumpas, draugiškas raginimas klientui, ką nurodyti (pvz. „Nurodykite kiemo plotą kvadratiniais metrais").
-- "field": labai trumpa to dalyko žyma, tinkanti eilutės pradžiai (1–3 žodžiai, pvz. „Plotas (m²)", „Darbų terminas", „Medžiagos").
-Neklausk to, kas jau parašyta. Jei aprašymas jau išsamus — grąžink tuščią sąrašą [].
+"recommendations" — 2–4 patikslinimo klausimai TAIP/NE formatu, kurie padės tiekėjui geriau įkainoti darbą. Kiekvienas objektas:
+- "prompt": trumpas TAIP/NE formato klausimas (pvz. „Ar reikalingas senos tvoros demontavimas?", „Ar reikalingas pamatų betonavimas?").
+- "field": labai trumpa to dalyko žyma (1–3 žodžiai, pvz. „Demontavimas", „Pamatai", „Medžiagos").
+- "yesAnswer": viena trumpa, taisyklinga eilutė, kuri bus pridėta prie aprašymo, jei klientas pasirenka TAIP (pvz. „Sena tvora yra ir ją reikia demontuoti.").
+- "noAnswer": viena trumpa, taisyklinga eilutė, kuri bus pridėta prie aprašymo, jei klientas pasirenka NE (pvz. „Senos tvoros demontuoti nereikia.").
+Visi klausimai PRIVALO būti TAIP/NE tipo — neklausk atvirų klausimų („Koks plotas?", „Kokios spalvos?"). Jei kažko negali patikrinti TAIP/NE klausimu, geriau praleisk. Neklausk to, kas jau parašyta. Jei aprašymas jau išsamus — grąžink tuščią sąrašą [].
 
 Grąžink TIK JSON, be jokio papildomo teksto.`;
 }
@@ -132,12 +136,19 @@ export class AiImproveError extends Error {}
 export interface ImproveRecommendation {
   prompt: string;
   field: string;
+  /** Short statement to append to the description if the user picks TAIP. */
+  yesAnswer: string;
+  /** Short statement to append to the description if the user picks NE. */
+  noAnswer: string;
 }
 
 export interface ImproveDescriptionResult {
   improvedDescription: string;
   title: string;
-  /** A curated category slug, or "" when the model picked nothing valid. */
+  /** 0–3 curated category slugs, most relevant first. */
+  categories: string[];
+  /** Legacy single-slug field: same as categories[0] (or ""). Kept so the v1
+   *  RequestAiAgentPanel keeps working without changes. */
   category: string;
   location: string;
   budget: string;
@@ -174,8 +185,32 @@ function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionRe
 
   const title = typeof record.title === "string" ? record.title.trim().slice(0, 90) : "";
 
-  const rawCategory = (typeof record.category === "string" ? record.category.trim() : "").toLowerCase();
-  const category = validSlugs.has(rawCategory) ? rawCategory : "";
+  // categories[]: validate each slug, dedupe while preserving order, cap at 3.
+  const rawCategories: string[] = Array.isArray(record.categories)
+    ? record.categories
+        .map((item) => (typeof item === "string" ? item.trim().toLowerCase() : ""))
+        .filter((slug) => slug.length > 0 && validSlugs.has(slug))
+    : [];
+  const seen = new Set<string>();
+  const categories: string[] = [];
+  for (const slug of rawCategories) {
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    categories.push(slug);
+    if (categories.length === 3) break;
+  }
+
+  // Legacy single-slug fallback for the v1 panel. Prefer the array's first
+  // entry; fall back to the model's separately-returned "category" if it
+  // happened to skip the array.
+  let category = categories[0] ?? "";
+  if (!category) {
+    const rawCategory = (typeof record.category === "string" ? record.category.trim() : "").toLowerCase();
+    if (validSlugs.has(rawCategory)) {
+      category = rawCategory;
+      categories.push(rawCategory);
+    }
+  }
 
   const location =
     typeof record.location === "string" ? record.location.trim().slice(0, 100) : "";
@@ -193,13 +228,29 @@ function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionRe
           const entry = item as Record<string, unknown>;
           const prompt = typeof entry.prompt === "string" ? entry.prompt.trim() : "";
           const field = typeof entry.field === "string" ? entry.field.trim() : "";
-          return prompt && field ? { prompt, field } : null;
+          const yesAnswer =
+            typeof entry.yesAnswer === "string" ? entry.yesAnswer.trim() : "";
+          const noAnswer =
+            typeof entry.noAnswer === "string" ? entry.noAnswer.trim() : "";
+          // Drop recommendations missing either yes/no answer — the new UI
+          // shows TAIP/NE buttons and needs both branches.
+          if (!prompt || !field || !yesAnswer || !noAnswer) return null;
+          return { prompt, field, yesAnswer, noAnswer };
         })
         .filter((x): x is ImproveRecommendation => x !== null)
         .slice(0, 5)
     : [];
 
-  return { improvedDescription, title, category, location, budget, deadline, recommendations };
+  return {
+    improvedDescription,
+    title,
+    categories,
+    category,
+    location,
+    budget,
+    deadline,
+    recommendations,
+  };
 }
 
 export async function improveDescription(
@@ -264,6 +315,11 @@ export async function improveDescription(
     const overrideCategory = pickCategoryOverrideSlug(userContent, validSlugs);
     if (overrideCategory) {
       result.category = overrideCategory;
+      // Promote the override slug to the front of the categories list.
+      result.categories = [
+        overrideCategory,
+        ...result.categories.filter((slug) => slug !== overrideCategory),
+      ].slice(0, 3);
     }
     return result;
   } catch (err) {

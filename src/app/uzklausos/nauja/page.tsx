@@ -1,31 +1,34 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, ArrowRight, Check, Pencil, ImagePlus, X, Paperclip, AlertCircle } from "lucide-react";
-import Image from "next/image";
-import { LITHUANIAN_CITIES } from "@/lib/constants";
+import { ArrowRight, Check, AlertCircle, Pencil, Loader2 } from "lucide-react";
 import type { ServiceCategoryGroup, ServiceCategoryItem } from "@/lib/service-categories";
 import { saveGuestRequest } from "@/lib/guest-request";
-import { saveListingDraft, loadListingDraft, clearListingDraft } from "@/lib/listing-draft";
+import {
+  saveListingDraft,
+  loadListingDraft,
+  clearListingDraft,
+} from "@/lib/listing-draft";
 import { useImageUpload } from "@/lib/use-image-upload";
-import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmailVerification from "@/components/requests/EmailVerification";
 import PhoneVerification from "@/components/requests/PhoneVerification";
-import ListingPreview from "@/components/requests/ListingPreview";
-import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
-import RequestAiAgentPanel, { type AiInferredFields } from "@/components/ai/RequestAiAgentPanel";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import AiProcessingSkeleton from "@/components/uzklausos-v2/AiProcessingSkeleton";
+import AiSuggestionsStrip, {
+  type AiSuggestion,
+  type AiSuggestionChoice,
+} from "@/components/uzklausos-v2/AiSuggestionsStrip";
+import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
 
-export default function NewRequestPage() {
+export default function NewRequestV2Page() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <NewRequestForm />
+      <NewRequestV2Form />
     </Suspense>
   );
 }
@@ -33,7 +36,7 @@ export default function NewRequestPage() {
 interface FormState {
   title: string;
   description: string;
-  categoryId: string;
+  categoryIds: string[];
   location: string;
   budget: string;
   deadline: string;
@@ -44,30 +47,23 @@ interface FormState {
   honeypot: string;
 }
 
-// Editing any of these latches the editor open, so it never collapses out from
-// under someone who is still completing the listing by hand.
-const LISTING_FIELDS = new Set<keyof FormState>([
-  "title",
-  "description",
-  "categoryId",
-  "location",
-  "budget",
-  "deadline",
-  "attachmentUrls",
-]);
+const MAX_CATEGORIES = 3;
 
-function NewRequestForm() {
+type AiStatus = "idle" | "running" | "done" | "error";
+type AiField = "title" | "description" | "category" | "location" | "budget" | "deadline";
+
+function NewRequestV2Form() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
 
   const initialDescription = (searchParams.get("description") || "").slice(0, 2000);
   const cameFromHero = initialDescription.trim().length >= 15;
 
   const [form, setForm] = useState<FormState>({
     title: "",
-    description: "",
-    categoryId: "",
+    description: initialDescription,
+    categoryIds: [],
     location: "",
     budget: "",
     deadline: "",
@@ -77,37 +73,29 @@ function NewRequestForm() {
     clientPhone: "",
     honeypot: "",
   });
+
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
-  // The AI may answer before the category list finishes loading — stash its
-  // raw slug here and resolve it once the picker options are available.
-  const [pendingAiCategory, setPendingAiCategory] = useState("");
+  // Slugs returned by AI before categoryGroups loaded; resolved to IDs once
+  // the picker options arrive.
+  const [pendingAiCategorySlugs, setPendingAiCategorySlugs] = useState<string[]>([]);
+  const [aiFields, setAiFields] = useState<Set<AiField>>(new Set());
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [aiStatus, setAiStatus] = useState<AiStatus>(cameFromHero ? "running" : "idle");
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [accountPhone, setAccountPhone] = useState("");
   const [accountPhoneVerifiedAt, setAccountPhoneVerifiedAt] = useState<string | null>(null);
+
   const [attemptedPublish, setAttemptedPublish] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [error, setError] = useState("");
-  const [editorOpen, setEditorOpen] = useState(false);
+  const [publishError, setPublishError] = useState("");
   const [contactsEditorOpen, setContactsEditorOpen] = useState(false);
-  const [agentRawText, setAgentRawText] = useState(initialDescription);
-  const [agentPanelRevision, setAgentPanelRevision] = useState(0);
-  const [restoreAgentAutoRun, setRestoreAgentAutoRun] = useState(false);
-  // Tracks which AI recommendation fields the user has already appended, so the
-  // panel can grey them out instead of offering them again.
-  const [agentAddedFields, setAgentAddedFields] = useState<string[]>([]);
-  // True once the user has explicitly committed to a category — either by
-  // picking one from the picker or by clicking "Pritaikyti formai" on the AI
-  // panel. While false, the silent auto-suggest effect may fill an empty slot
-  // as the description grows; once true, the slot is locked.
-  const [categoryManuallyPicked, setCategoryManuallyPicked] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  // Tracks the last description text we asked the suggestion API about, so we
-  // skip redundant calls when the description hasn't materially changed.
-  const lastAutoSuggestTextRef = useRef<string>("");
 
-  const isLoggedIn = status === "authenticated" && !!session?.user;
+  const isLoggedIn = sessionStatus === "authenticated" && !!session?.user;
 
+  // Photo upload hook drives both the dropzone and the file picker button.
   const {
     uploading: photosUploading,
     error: photoError,
@@ -125,78 +113,7 @@ function NewRequestForm() {
     setForm((f) => ({ ...f, attachmentUrls: f.attachmentUrls.filter((u) => u !== url) }));
   }
 
-  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-    if (LISTING_FIELDS.has(key)) setEditorOpen(true);
-  }
-
-  function appendAgentFields(fields: string[]) {
-    if (fields.length === 0) return;
-    setForm((current) => {
-      const block = fields.map((field) => `- ${field}: `).join("\n");
-      const sep =
-        current.description.length === 0 || current.description.endsWith("\n")
-          ? ""
-          : "\n";
-      return { ...current, description: `${current.description}${sep}${block}` };
-    });
-    setAgentAddedFields((current) => Array.from(new Set([...current, ...fields])));
-    setEditorOpen(true);
-    requestAnimationFrame(() => {
-      const el = document.getElementById("description");
-      if (el instanceof HTMLTextAreaElement) {
-        el.focus();
-        const end = el.value.length;
-        el.setSelectionRange(end, end);
-        el.scrollTop = el.scrollHeight;
-      }
-    });
-  }
-
-  /** Apply the AI panel's inferred fields to the editable form. Empty AI
-   *  values are ignored, and the user still has the final publish control. */
-  function applyAiSuggestions(fields: AiInferredFields) {
-    const resolvedCategory = resolveAiCategory(fields.categorySlug);
-    setForm((current) => ({
-      ...current,
-      title: fields.title || current.title,
-      description: fields.description || current.description,
-      location: fields.location || current.location,
-      budget: fields.budget || current.budget,
-      deadline: fields.deadline || current.deadline,
-      categoryId: resolvedCategory || current.categoryId,
-    }));
-    if (resolvedCategory) {
-      // An explicit "Pritaikyti formai" click is the user's final pick — lock
-      // the slot so the debounced auto-suggest effect can't overwrite it once
-      // the AI's expanded description triggers a re-run.
-      setCategoryManuallyPicked(true);
-    } else if (fields.categorySlug && categoryGroups.length === 0) {
-      setPendingAiCategory(fields.categorySlug);
-    }
-    setEditorOpen(true);
-  }
-
-  // Stash the listing so it survives the Google OAuth redirect round-trip.
-  function persistDraft() {
-    saveListingDraft({
-      title: form.title,
-      description: form.description,
-      agentRawText: agentRawText || initialDescription,
-      categoryId: form.categoryId,
-      location: form.location,
-      budget: form.budget,
-      deadline: form.deadline,
-      attachmentUrls: form.attachmentUrls,
-      clientName: form.clientName,
-      clientEmail: form.clientEmail,
-      clientPhone: form.clientPhone,
-    });
-  }
-
-  // id -> name and slug -> id maps over the curated categories, walking the
-  // full tree so depth-2+ leaves (which the suggestion engine returns) also
-  // resolve, not just the depth-1 group children.
+  // ── Category resolution maps ──
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
     function add(cat: ServiceCategoryItem) {
@@ -221,44 +138,218 @@ function NewRequestForm() {
     return map;
   }, [categoryGroups]);
 
-  // slug → human label, so the AI panel can display "Trinkelių klojimas"
-  // instead of the bare slug it gets from the API.
-  const categoryLabelBySlug = useMemo(() => {
-    const map = new Map<string, string>();
-    function add(cat: ServiceCategoryItem) {
-      map.set(cat.slug, cat.name);
-      for (const child of cat.children ?? []) add(child);
-    }
-    for (const group of categoryGroups) {
-      for (const cat of group.categories) add(cat);
-    }
-    return map;
-  }, [categoryGroups]);
+  const resolveCategorySlug = useCallback(
+    (slug: string | undefined): string => {
+      if (!slug) return "";
+      return categoryIdBySlug.get(slug) ?? "";
+    },
+    [categoryIdBySlug],
+  );
 
-  /** Resolve an AI-returned category slug (or id) to a valid category id. */
-  function resolveAiCategory(value: string | undefined): string {
-    if (!value) return "";
-    if (categoryIdBySlug.has(value)) return categoryIdBySlug.get(value) ?? "";
-    if (categoryNameById.has(value)) return value;
-    return "";
+  // ── Field setters that strip the "from AI" mark when user edits ──
+  function setField<K extends keyof FormState>(key: K, value: FormState[K], field?: AiField) {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (field) {
+      setAiFields((current) => {
+        if (!current.has(field)) return current;
+        const next = new Set(current);
+        next.delete(field);
+        return next;
+      });
+    }
   }
+
+  // Persist the listing across OAuth redirects. The draft schema still stores
+  // a single categoryId — we keep the first picked category so the OAuth
+  // round-trip doesn't drop the user back to an empty chip. Secondary
+  // categories (rarely added before sign-in) are not preserved.
+  const persistDraft = useCallback(() => {
+    saveListingDraft({
+      title: form.title,
+      description: form.description,
+      agentRawText: initialDescription,
+      categoryId: form.categoryIds[0] ?? "",
+      location: form.location,
+      budget: form.budget,
+      deadline: form.deadline,
+      attachmentUrls: form.attachmentUrls,
+      clientName: form.clientName,
+      clientEmail: form.clientEmail,
+      clientPhone: form.clientPhone,
+    });
+  }, [form, initialDescription]);
+
+  // ── Fallback: ask category-suggestions for best-guess slugs when AI improve
+  // returns an empty categories array. Fills the chip with the single top
+  // suggestion (we don't auto-add 2-3 fallback categories — the fallback path
+  // already means the prompt is ambiguous, so the user picks more by hand).
+  const fillCategoryFromSuggestions = useCallback(
+    async (text: string, title: string) => {
+      try {
+        const res = await fetch("/api/category-suggestions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "request",
+            text,
+            title: title || undefined,
+            limit: 3,
+          }),
+        });
+        if (!res.ok) return;
+        const data = (await res.json().catch(() => null)) as
+          | { success?: boolean; data?: { suggestions?: Array<{ slug?: string }> } }
+          | null;
+        const topSlug = data?.data?.suggestions?.[0]?.slug;
+        if (!topSlug) return;
+        const resolved = resolveCategorySlug(topSlug);
+        if (resolved) {
+          setForm((current) =>
+            current.categoryIds.length > 0
+              ? current
+              : { ...current, categoryIds: [resolved] },
+          );
+          setAiFields((prev) => {
+            const next = new Set(prev);
+            next.add("category");
+            return next;
+          });
+        } else {
+          setPendingAiCategorySlugs([topSlug]);
+        }
+      } catch {
+        // Silent fallback — user can still pick a category by hand.
+      }
+    },
+    [resolveCategorySlug],
+  );
+
+  // ── Run the AI improve call and apply its result ──
+  const runAiImprove = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (trimmed.length < 15) return;
+      setAiStatus("running");
+      setAiError(null);
+      try {
+        const res = await fetch("/api/requests/improve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: trimmed }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              error?: string;
+              data?: {
+                improvedDescription?: string;
+                title?: string;
+                categories?: string[];
+                category?: string;
+                location?: string;
+                budget?: string;
+                deadline?: string;
+                recommendations?: AiSuggestion[];
+              };
+            }
+          | null;
+        if (!res.ok || !data?.success || !data.data?.improvedDescription) {
+          setAiError(data?.error || "AI nepavyko apdoroti aprašymo. Užpildyk laukus pats.");
+          setAiStatus("error");
+          return;
+        }
+        const result = data.data;
+
+        // Prefer the new categories[] array; fall back to legacy single field.
+        const aiSlugs: string[] = (() => {
+          if (Array.isArray(result.categories) && result.categories.length > 0) {
+            return result.categories;
+          }
+          return result.category ? [result.category] : [];
+        })();
+        const resolvedIds: string[] = [];
+        const unresolvedSlugs: string[] = [];
+        for (const slug of aiSlugs) {
+          const id = resolveCategorySlug(slug);
+          if (id && !resolvedIds.includes(id)) resolvedIds.push(id);
+          else if (!id) unresolvedSlugs.push(slug);
+        }
+
+        const filled = new Set<AiField>();
+        if (result.improvedDescription) filled.add("description");
+        if (result.title) filled.add("title");
+        if (result.location) filled.add("location");
+        if (result.budget) filled.add("budget");
+        if (result.deadline) filled.add("deadline");
+        if (resolvedIds.length > 0) filled.add("category");
+
+        setForm((current) => ({
+          ...current,
+          description: result.improvedDescription || current.description,
+          title: result.title || current.title,
+          location: result.location || current.location,
+          budget: result.budget || current.budget,
+          deadline: result.deadline || current.deadline,
+          categoryIds:
+            resolvedIds.length > 0 ? resolvedIds.slice(0, MAX_CATEGORIES) : current.categoryIds,
+        }));
+        setAiFields(filled);
+        setAiSuggestions(
+          Array.isArray(result.recommendations)
+            ? result.recommendations
+                .filter(
+                  (item): item is AiSuggestion =>
+                    !!item &&
+                    typeof item.prompt === "string" &&
+                    typeof item.field === "string" &&
+                    typeof item.yesAnswer === "string" &&
+                    typeof item.noAnswer === "string" &&
+                    item.prompt.trim().length > 0 &&
+                    item.field.trim().length > 0 &&
+                    item.yesAnswer.trim().length > 0 &&
+                    item.noAnswer.trim().length > 0,
+                )
+                .slice(0, 3)
+            : [],
+        );
+        setAiStatus("done");
+
+        if (unresolvedSlugs.length > 0 && resolvedIds.length === 0) {
+          // AI returned slugs but categories haven't loaded yet — defer all.
+          setPendingAiCategorySlugs(unresolvedSlugs);
+        }
+        if (aiSlugs.length === 0) {
+          // AI couldn't match any curated category from the improve flow; try
+          // the dedicated suggestion endpoint for a best-guess fallback.
+          await fillCategoryFromSuggestions(
+            result.improvedDescription ?? trimmed,
+            result.title ?? "",
+          );
+        }
+      } catch {
+        setAiError("Tinklo klaida. Bandyk dar kartą arba užpildyk pats.");
+        setAiStatus("error");
+      }
+    },
+    [resolveCategorySlug, fillCategoryFromSuggestions],
+  );
+
+  // ── Effects ──
 
   // Pre-fill name + email for logged-in users.
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user) return;
+    if (sessionStatus !== "authenticated" || !session?.user) return;
     const user = session.user;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForm((f) => ({
       ...f,
       clientName: f.clientName || user.name || "",
       clientEmail: user.email || f.clientEmail,
     }));
-  }, [status, session?.user]);
+  }, [sessionStatus, session?.user]);
 
-  // Load account phone because NextAuth's lightweight session does not carry
-  // the client profile fields.
+  // Fetch account phone (NextAuth session doesn't carry profile fields).
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (sessionStatus !== "authenticated") return;
     let cancelled = false;
     (async () => {
       try {
@@ -269,10 +360,10 @@ function NewRequestForm() {
         const nextAccountPhoneVerifiedAt = data.data?.phoneVerifiedAt || null;
         setAccountPhone(nextAccountPhone);
         setAccountPhoneVerifiedAt(nextAccountPhoneVerifiedAt);
-        setForm((current) => {
-          const nextPhone = current.clientPhone || nextAccountPhone;
-          return { ...current, clientPhone: nextPhone };
-        });
+        setForm((current) => ({
+          ...current,
+          clientPhone: current.clientPhone || nextAccountPhone,
+        }));
       } catch {
         // Phone can still be entered manually.
       }
@@ -280,20 +371,19 @@ function NewRequestForm() {
     return () => {
       cancelled = true;
     };
-  }, [status]);
+  }, [sessionStatus]);
 
   useEffect(() => {
     if (!isLoggedIn || !accountPhone) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhoneVerified(false);
       return;
     }
-    const verified = !!accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone;
-     
+    const verified =
+      !!accountPhoneVerifiedAt && form.clientPhone.trim() === accountPhone;
     setPhoneVerified(verified);
   }, [isLoggedIn, accountPhone, accountPhoneVerifiedAt, form.clientPhone]);
 
-  // Load the grouped curated categories for the picker.
+  // Load curated categories.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -304,7 +394,7 @@ function NewRequestForm() {
           setCategoryGroups(data.data as ServiceCategoryGroup[]);
         }
       } catch {
-        // Picker stays empty — the form still validates categoryId as required.
+        // Picker will stay empty; user must reload to retry.
       }
     })();
     return () => {
@@ -312,55 +402,56 @@ function NewRequestForm() {
     };
   }, []);
 
-  // Restore the dictated listing after returning from a Google sign-in redirect.
-  // Only restore if explicitly allowed (restored=1 for OAuth flow).
-  // Otherwise always start with a clean form to avoid stale data.
+  // Resolve the AI's pending category slugs once the picker options are loaded.
+  useEffect(() => {
+    if (pendingAiCategorySlugs.length === 0 || categoryGroups.length === 0) return;
+    const ids: string[] = [];
+    for (const slug of pendingAiCategorySlugs) {
+      const id = resolveCategorySlug(slug);
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+    if (ids.length > 0) {
+      setForm((f) =>
+        f.categoryIds.length > 0
+          ? f
+          : { ...f, categoryIds: ids.slice(0, MAX_CATEGORIES) },
+      );
+      setAiFields((current) => {
+        const next = new Set(current);
+        next.add("category");
+        return next;
+      });
+    }
+    setPendingAiCategorySlugs([]);
+  }, [pendingAiCategorySlugs, categoryGroups, resolveCategorySlug]);
+
+  // Restore the listing after Google OAuth round-trip.
   useEffect(() => {
     const restored = searchParams.get("restored") === "1";
-    if (restored) {
-      const draft = loadListingDraft();
-      if (draft) {
-        const restoredAgentRawText = draft.agentRawText || "";
-        if (restoredAgentRawText || draft.description) {
-          setAgentRawText(restoredAgentRawText || draft.description);
-          setAgentPanelRevision((value) => value + 1);
-          setRestoreAgentAutoRun(
-            !!restoredAgentRawText &&
-              !draft.description &&
-              restoredAgentRawText.trim().length >= 15,
-          );
-        }
-        // Only copy fields with real content so we don't wipe values the session
-        // has already pre-filled (e.g. clientName from Google).
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setForm((f) => {
-          const next = { ...f };
-          if (draft.title) next.title = draft.title;
-          if (draft.description) next.description = draft.description;
-          if (draft.categoryId) next.categoryId = draft.categoryId;
-          if (draft.location) next.location = draft.location;
-          if (draft.budget) next.budget = draft.budget;
-          if (draft.deadline) next.deadline = draft.deadline;
-          if (draft.attachmentUrls.length > 0) next.attachmentUrls = draft.attachmentUrls;
-          if (draft.clientName) next.clientName = draft.clientName;
-          if (draft.clientEmail) next.clientEmail = draft.clientEmail;
-          if (draft.clientPhone) next.clientPhone = draft.clientPhone;
-          return next;
-        });
-        clearListingDraft();
-      }
-      router.replace("/uzklausos/nauja");
+    if (!restored) return;
+    const draft = loadListingDraft();
+    if (draft) {
+      setForm((f) => {
+        const next = { ...f };
+        if (draft.title) next.title = draft.title;
+        if (draft.description) next.description = draft.description;
+        if (draft.categoryId) next.categoryIds = [draft.categoryId];
+        if (draft.location) next.location = draft.location;
+        if (draft.budget) next.budget = draft.budget;
+        if (draft.deadline) next.deadline = draft.deadline;
+        if (draft.attachmentUrls.length > 0) next.attachmentUrls = draft.attachmentUrls;
+        if (draft.clientName) next.clientName = draft.clientName;
+        if (draft.clientEmail) next.clientEmail = draft.clientEmail;
+        if (draft.clientPhone) next.clientPhone = draft.clientPhone;
+        return next;
+      });
+      clearListingDraft();
     }
+    router.replace("/uzklausos/nauja");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save initial description immediately when arriving from hero search.
-  useEffect(() => {
-    if (!cameFromHero || !initialDescription) return;
-    persistDraft();
-  }, [cameFromHero, initialDescription]);
-
-  // Auto-save the form when coming from hero search, so it survives page reloads.
+  // Auto-save the form when coming from hero search.
   useEffect(() => {
     if (!cameFromHero) return;
     const timer = setTimeout(() => {
@@ -369,131 +460,67 @@ function NewRequestForm() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [form.description, cameFromHero]);
+  }, [form.description, cameFromHero, persistDraft]);
 
-  // The AI improve call now lives inside <RequestAiAgentPanel>. The hero entry
-  // flow (`?description=...`) is forwarded to the panel as its initial rawText
-  // with autoRunOnMount=true.
-
-  // Apply the AI-picked category once the picker options have loaded. Only
-  // fills an empty slot — a manual pick always wins. The lock flag is set
-  // here too because the apply happened before categories were available, so
-  // `applyAiSuggestions` couldn't lock it at the time.
+  // First-paint AI run when arriving from the hero.
   useEffect(() => {
-    if (!pendingAiCategory || categoryGroups.length === 0) return;
-    const resolved = resolveAiCategory(pendingAiCategory);
-    if (resolved) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm((f) => (f.categoryId ? f : { ...f, categoryId: resolved }));
-      setCategoryManuallyPicked(true);
-    }
-
-    setPendingAiCategory("");
+    if (!cameFromHero) return;
+    void runAiImprove(initialDescription);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingAiCategory, categoryGroups]);
+  }, []);
 
-  // Auto-suggest category whenever the description changes meaningfully and the
-  // user hasn't already locked in a manual pick. Runs silently in the
-  // background to make the category picker smarter as the user types.
-  // Debounced so we don't fire on every keystroke.
-  useEffect(() => {
-    if (categoryManuallyPicked) return;
-    if (categoryGroups.length === 0) return;
-
-    const text = form.description.trim();
-    const title = form.title.trim();
-    if (text.length < 20) return;
-    if (text === lastAutoSuggestTextRef.current) return;
-
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/category-suggestions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mode: "request",
-            text,
-            title: title || undefined,
-            limit: 5,
-          }),
-          signal: controller.signal,
-        });
-        if (!res.ok) return;
-        const data = (await res.json().catch(() => null)) as
-          | {
-              success?: boolean;
-              data?: { suggestions?: Array<{ id: string; slug: string }> };
-            }
-          | null;
-        if (!data?.success) return;
-        const top = data.data?.suggestions?.[0];
-        if (!top) return;
-        // Resolve either id or slug into a picker id, then only apply if the
-        // user is still in "no manual pick yet" mode.
-        const resolvedId = resolveAiCategory(top.slug) || resolveAiCategory(top.id);
-        if (!resolvedId) return;
-        lastAutoSuggestTextRef.current = text;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setForm((f) => (f.categoryId && categoryManuallyPicked ? f : { ...f, categoryId: resolvedId }));
-      } catch {
-        // Network/abort errors are silent — auto-suggest is best-effort.
-      }
-    }, 1500);
-
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.description, form.title, categoryManuallyPicked, categoryGroups.length]);
+  // ── Suggestion → description append ──
+  // User picks TAIP or NE on an AI recommendation; we append the matching
+  // pre-written answer to the description so they don't have to type anything.
+  function handleAnswerSuggestion(
+    suggestion: AiSuggestion,
+    choice: AiSuggestionChoice,
+  ) {
+    const answer = choice === "yes" ? suggestion.yesAnswer : suggestion.noAnswer;
+    setForm((f) => {
+      const sep = f.description.length === 0 || f.description.endsWith("\n") ? "" : "\n";
+      return { ...f, description: `${f.description}${sep}- ${answer}` };
+    });
+    setAiFields((current) => {
+      if (!current.has("description")) return current;
+      const next = new Set(current);
+      next.delete("description");
+      return next;
+    });
+  }
 
   // ── Validation ──
   const titleOk = form.title.trim().length >= 5;
   const descOk = form.description.trim().length >= 20;
+  const categoryOk = form.categoryIds.length > 0;
   const nameOk = form.clientName.trim().length >= 2;
   const phoneOk = form.clientPhone.trim().length >= 6;
-
-  const missingListing: string[] = [];
-  if (!titleOk) missingListing.push("pavadinimą");
-  if (!descOk) missingListing.push("aprašymą");
-  if (!form.categoryId) missingListing.push("kategoriją");
-  if (!form.location.trim()) missingListing.push("miestą");
-  if (!form.budget.trim()) missingListing.push("biudžetą");
-  if (!form.deadline.trim()) missingListing.push("terminą");
-
   const emailOk = emailVerified || isLoggedIn;
   const hasContact = emailOk || phoneOk;
-  const ready = missingListing.length === 0 && nameOk && hasContact;
 
-  // When the dictated listing already passes, collapse the editor to a single
-  // "Redaguoti skelbimą" affordance — nothing to fix, so don't show the form.
-  const listingComplete = missingListing.length === 0;
-  const showEditor = editorOpen || !listingComplete;
-
-  // Logged-in users get name + verified email for free from Google, so the
-  // contacts block can collapse the same way the listing block does.
+  const listingComplete = titleOk && descOk && categoryOk;
   const contactsComplete = isLoggedIn && nameOk && hasContact;
   const showContactsEditor = contactsEditorOpen || !contactsComplete;
 
+  const ready = listingComplete && nameOk && hasContact;
+  const showErrors = attemptedPublish;
+
   const publishHint = (() => {
-    const gaps = [...missingListing];
+    const gaps: string[] = [];
+    if (!titleOk) gaps.push("pavadinimą");
+    if (!descOk) gaps.push("aprašymą");
+    if (!categoryOk) gaps.push("kategoriją");
     if (!nameOk) gaps.push("vardą");
     if (!hasContact) gaps.push("el. pašto arba telefono");
-    if (gaps.length > 0) return `Dar reikia užpildyti: ${gaps.join(", ")}`;
+    if (gaps.length > 0) return `Dar reikia: ${gaps.join(", ")}`;
     return "";
   })();
-
-  // Field errors only surface after a publish attempt — the AI panel handles
-  // its own progress signalling, so we no longer flash form errors during the
-  // hero-entry round-trip.
-  const showErrors = attemptedPublish;
 
   async function handlePublish() {
     setAttemptedPublish(true);
     if (!ready || publishing) return;
     setPublishing(true);
-    setError("");
+    setPublishError("");
     try {
       const res = await fetch("/api/requests", {
         method: "POST",
@@ -506,16 +533,16 @@ function NewRequestForm() {
         clearListingDraft();
         router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
       } else {
-        setError(data?.error || "Nepavyko paskelbti skelbimo");
+        setPublishError(data?.error || "Nepavyko paskelbti skelbimo");
         setPublishing(false);
       }
     } catch {
-      setError("Nepavyko paskelbti. Bandykite dar kartą.");
+      setPublishError("Nepavyko paskelbti. Bandyk dar kartą.");
       setPublishing(false);
     }
   }
 
-  if (status === "loading") {
+  if (sessionStatus === "loading") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
         <LoadingSpinner />
@@ -523,263 +550,124 @@ function NewRequestForm() {
     );
   }
 
-  const categoryLabel = form.categoryId ? categoryNameById.get(form.categoryId) : undefined;
+  const selectedCategories = form.categoryIds.map((id) => ({
+    id,
+    label: categoryNameById.get(id) || "",
+  }));
+  const aiIsRunning = aiStatus === "running";
+
+  function addCategoryId(id: string) {
+    if (!id) return;
+    setForm((current) => {
+      if (current.categoryIds.includes(id)) return current;
+      if (current.categoryIds.length >= MAX_CATEGORIES) return current;
+      return { ...current, categoryIds: [...current.categoryIds, id] };
+    });
+    setAiFields((prev) => {
+      if (!prev.has("category")) return prev;
+      const next = new Set(prev);
+      next.delete("category");
+      return next;
+    });
+  }
+
+  function removeCategoryId(id: string) {
+    setForm((current) => ({
+      ...current,
+      categoryIds: current.categoryIds.filter((existing) => existing !== id),
+    }));
+    setAiFields((prev) => {
+      if (!prev.has("category")) return prev;
+      const next = new Set(prev);
+      next.delete("category");
+      return next;
+    });
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Tavo skelbimas</h1>
+      <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
+        Tavo skelbimas
+      </h1>
       <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
-        Aprašyk darbą su AI agentu, tada patikrink ir paskelbk.
+        {aiIsRunning
+          ? "AI ruošia tvarkingą versiją. Iškart galėsi pakoreguoti ir paskelbti."
+          : "Patikrink, paredaguok ir paskelbk."}
       </p>
 
-      {/* ── Užklausos AI agentas — single unified entry point ── */}
-      <RequestAiAgentPanel
-        key={agentPanelRevision}
-        initialRawText={agentRawText}
-        autoRunOnMount={cameFromHero || restoreAgentAutoRun}
-        categoryLabelBySlug={categoryLabelBySlug}
-        onRawTextChange={setAgentRawText}
-        onApply={applyAiSuggestions}
-        onAppendField={(field) => appendAgentFields([field])}
-        alreadyAddedFields={agentAddedFields}
-      />
-
-      {/* ── Live preview — exactly how the listing appears to providers ── */}
-      <ListingPreview
-        className="mt-6"
-        title={form.title}
-        description={form.description}
-        categoryLabel={categoryLabel}
-        location={form.location}
-        budget={form.budget}
-        deadline={form.deadline}
-        attachmentUrls={form.attachmentUrls}
-      />
-
-      {/* ── Inline publish CTA — duplicates the bottom button so a user with a
-          ready listing doesn't have to scroll past the editor to publish. ── */}
-      <div className="mt-6">
-        <Button
-          type="button"
-          size="lg"
-          variant={ready ? "primary" : "secondary"}
-          className="w-full"
-          onClick={handlePublish}
-          isLoading={publishing}
-        >
-          {!publishing && <ArrowRight className="h-5 w-5" />}
-          Paskelbti skelbimą
-        </Button>
-        {!publishing && publishHint && (
-          <p className="mt-2 text-center text-micro text-surface-400">{publishHint}</p>
-        )}
-      </div>
-
-      {/* ── Complete & fix ── */}
-      {showEditor ? (
-      <div className="mt-8 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
-        <div className="flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-surface-500 dark:text-surface-400" />
-          <h2 className="text-body-sm font-semibold text-surface-900 dark:text-white">
-            Patikrink ir užbaik
-          </h2>
-        </div>
-
-        {missingListing.length > 0 ? (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-            Skelbimui dar trūksta:{" "}
-            <span className="font-semibold">{missingListing.join(", ")}</span>
-          </div>
-        ) : (
-          <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-body-sm text-emerald-700 dark:border-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-            <Check className="h-4 w-4 shrink-0" /> Skelbimas pilnas — gali skelbti.
-          </div>
-        )}
-
-        <div className="mt-4 space-y-4">
-          <Input
-            id="title"
-            label="Pavadinimas"
-            placeholder="Pvz. Vonios kambario remontas"
-            value={form.title}
-            onChange={(e) => update("title", e.target.value)}
-            error={showErrors && !titleOk ? "Bent 5 simboliai" : undefined}
-          />
-          <div>
-            <div
-              {...photoDropHandlers}
-              className={`relative rounded-xl transition-colors ${
-                photoDragOver ? "ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-surface-900" : ""
-              }`}
-            >
-              <Textarea
-                id="description"
-                label="Aprašymas"
-                placeholder="Aprašyk, ko reikia — ką padaryti, mastai, medžiagos..."
-                value={form.description}
-                onChange={(e) => update("description", e.target.value)}
-                autoResize
-                error={showErrors && !descOk ? "Bent 20 simbolių" : undefined}
-              />
-              {photoDragOver && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-brand-50/90 dark:bg-brand-950/60">
-                  <div className="flex items-center gap-2 text-body-sm font-medium text-brand-700 dark:text-brand-300">
-                    <ImagePlus className="h-5 w-5" /> Įmesk nuotraukas čia
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {form.attachmentUrls.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {form.attachmentUrls.map((url, i) => (
-                  <div
-                    key={url}
-                    className="group relative h-20 w-20 overflow-hidden rounded-lg border border-surface-200 dark:border-surface-700"
-                  >
-                    <Image
-                      src={optimizeCloudinaryUrl(url, { width: 160, height: 160, crop: "fill" })}
-                      alt={`Nuotrauka ${i + 1}`}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(url)}
-                      aria-label="Pašalinti nuotrauką"
-                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-                {photosUploading && (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-surface-300 dark:border-surface-600">
-                    <Loader2 className="h-5 w-5 animate-spin text-surface-400" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={photosUploading || form.attachmentUrls.length >= 5}
-                className="inline-flex items-center gap-1.5 text-body-sm font-medium text-surface-600 transition-colors hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-surface-400 dark:hover:text-brand-400"
-              >
-                {photosUploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Paperclip className="h-4 w-4" />
-                )}
-                Pridėti nuotraukų
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = e.target.files ? Array.from(e.target.files) : [];
-                  void uploadPhotos(files);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-            <p className="mt-1.5 text-micro text-surface-400">
-              Nuotraukas gali pertempti tiesiai į aprašymą. Iki 5 nuotraukų, kiekviena iki 25 MB.
-            </p>
-            {photoError && (
-              <p className="mt-1 text-micro text-red-500 dark:text-red-400">{photoError}</p>
-            )}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <GroupedCategoryPicker
-              id="categoryId"
-              label="Kategorija"
-              groups={categoryGroups}
-              value={form.categoryId}
-              onChange={(v) => {
-                setCategoryManuallyPicked(true);
-                update("categoryId", v);
-              }}
-              mode="id"
-              required
-              error={showErrors && !form.categoryId ? "Privaloma" : undefined}
-            />
-            <Input
-              id="location"
-              label="Miestas ar vietovė"
-              placeholder="Pvz. Trakai"
-              value={form.location}
-              onChange={(e) => update("location", e.target.value)}
-              list="city-suggestions"
-              autoComplete="off"
-              error={showErrors && !form.location.trim() ? "Privaloma" : undefined}
-            />
-            <datalist id="city-suggestions">
-              {LITHUANIAN_CITIES.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
-            <Input
-              id="budget"
-              label="Biudžetas"
-              placeholder="Pvz. 500 € arba derinama"
-              value={form.budget}
-              onChange={(e) => update("budget", e.target.value)}
-              error={showErrors && !form.budget.trim() ? "Privaloma" : undefined}
-            />
-            <Input
-              id="deadline"
-              label="Terminas"
-              placeholder="Pvz. iki gegužės pabaigos"
-              value={form.deadline}
-              onChange={(e) => update("deadline", e.target.value)}
-              error={showErrors && !form.deadline.trim() ? "Privaloma" : undefined}
-            />
-          </div>
-        </div>
-      </div>
-      ) : (
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
-          <span className="flex items-center gap-1.5 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
-            <Check className="h-4 w-4 shrink-0" /> Skelbimas paruoštas — gali skelbti
-          </span>
-          <button
-            type="button"
-            onClick={() => setEditorOpen(true)}
-            className="inline-flex items-center gap-1.5 text-body-sm font-medium text-brand-600 underline-offset-2 transition-colors hover:text-brand-700 hover:underline dark:text-brand-400 dark:hover:text-brand-300"
-          >
-            <Pencil className="h-3.5 w-3.5" /> Redaguoti skelbimą
-          </button>
+      {aiStatus === "error" && aiError && (
+        <div className="mt-6 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{aiError} Užpildyk laukus rankiniu būdu.</span>
         </div>
       )}
 
-      {/* ── Contacts ── */}
+      {aiIsRunning && <AiProcessingSkeleton />}
+
+      {!aiIsRunning && (
+        <>
+          {aiSuggestions.length > 0 && (
+            <AiSuggestionsStrip
+              suggestions={aiSuggestions}
+              onAnswer={handleAnswerSuggestion}
+            />
+          )}
+
+          <div className="mt-6">
+            <InlineListingCard
+              title={form.title}
+              onTitleChange={(value) => setField("title", value, "title")}
+              description={form.description}
+              onDescriptionChange={(value) => setField("description", value, "description")}
+              attachmentUrls={form.attachmentUrls}
+              onRemovePhoto={removePhoto}
+              onUploadFiles={uploadPhotos}
+              photosUploading={photosUploading}
+              photoError={photoError ?? undefined}
+              photoDragOver={photoDragOver}
+              dropHandlers={photoDropHandlers}
+              selectedCategories={selectedCategories}
+              maxCategories={MAX_CATEGORIES}
+              categoryGroups={categoryGroups}
+              categoryFromAi={aiFields.has("category")}
+              onAddCategory={addCategoryId}
+              onRemoveCategory={removeCategoryId}
+              location={form.location}
+              locationFromAi={aiFields.has("location")}
+              onLocationChange={(value) => setField("location", value, "location")}
+              budget={form.budget}
+              budgetFromAi={aiFields.has("budget")}
+              onBudgetChange={(value) => setField("budget", value, "budget")}
+              deadline={form.deadline}
+              deadlineFromAi={aiFields.has("deadline")}
+              onDeadlineChange={(value) => setField("deadline", value, "deadline")}
+              titleError={showErrors && !titleOk ? "Bent 5 simboliai" : undefined}
+              descriptionError={
+                showErrors && !descOk ? "Bent 20 simbolių" : undefined
+              }
+              showCategoryError={showErrors && !categoryOk}
+              onTriggerAi={() => void runAiImprove(form.description)}
+              aiRunning={aiIsRunning}
+            />
+          </div>
+        </>
+      )}
+
+      {/* ── Contacts (same pattern as v1) ── */}
       {!showContactsEditor ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex min-w-0 items-start gap-2">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
-              <span className="text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
-                Kontaktai paruošti — gali skelbti
-              </span>
-            </div>
-            {!form.clientPhone.trim() && (
-              <div className="flex items-center gap-1.5">
-                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span className="text-micro text-surface-500 dark:text-surface-400">
-                  Telefonas nepridėtas
-                </span>
-              </div>
-            )}
-            {form.clientPhone.trim() && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="flex items-center gap-1.5 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
+              <Check className="h-4 w-4 shrink-0" /> Kontaktai paruošti
+            </span>
+            {form.clientPhone.trim() ? (
               <span className="text-micro text-surface-500 dark:text-surface-400">
                 Telefonas: {form.clientPhone}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-micro text-surface-500 dark:text-surface-400">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                Telefonas nepridėtas
               </span>
             )}
           </div>
@@ -792,102 +680,104 @@ function NewRequestForm() {
           </button>
         </div>
       ) : (
-      <div className="mt-4 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
-        <h2 className="mb-4 text-body-sm font-semibold text-surface-900 dark:text-white">Kontaktai</h2>
-        <div className="space-y-4">
-          {isLoggedIn ? (
-            <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-700 dark:bg-emerald-500/10">
-              <Check className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <div className="min-w-0">
-                <p className="text-body-sm font-medium text-surface-900 dark:text-surface-100">
-                  Prisijungta{session?.user?.name ? ` kaip ${session.user.name}` : ""}
-                </p>
-                <p className="truncate text-micro text-surface-500 dark:text-surface-400">
-                  {session?.user?.email} · el. paštas patvirtintas
-                </p>
+        <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <h2 className="mb-4 text-body-sm font-semibold text-surface-900 dark:text-white">
+            Kontaktai
+          </h2>
+          <div className="space-y-4">
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-700 dark:bg-emerald-500/10">
+                <Check className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <div className="min-w-0">
+                  <p className="text-body-sm font-medium text-surface-900 dark:text-surface-100">
+                    Prisijungta{session?.user?.name ? ` kaip ${session.user.name}` : ""}
+                  </p>
+                  <p className="truncate text-micro text-surface-500 dark:text-surface-400">
+                    {session?.user?.email} · el. paštas patvirtintas
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div>
-              <GoogleSignInButton
-                callbackUrl="/uzklausos/nauja?restored=1"
-                label="Tęsti su Google"
-                onBeforeSignIn={persistDraft}
-              />
-              <p className="mt-1.5 text-micro text-surface-400">
-                Google iškart patvirtina el. paštą. Telefonas – neprivalomas.
-              </p>
-              <div className="mt-3">
-                <PhoneVerificationField
-                  phone={form.clientPhone}
-                  onPhoneChange={(value) => update("clientPhone", value)}
-                  verified={phoneVerified}
-                  onVerifiedChange={setPhoneVerified}
-                  onVerified={(verifiedPhone, verifiedAt) => {
-                    setAccountPhone(verifiedPhone);
-                    setAccountPhoneVerifiedAt(verifiedAt);
-                  }}
-                  error={showErrors && !hasContact ? "Įvesk el. paštą arba telefoną" : undefined}
+            ) : (
+              <div>
+                <GoogleSignInButton
+                  callbackUrl="/uzklausos/nauja?restored=1"
+                  label="Tęsti su Google"
+                  onBeforeSignIn={persistDraft}
                 />
+                <p className="mt-1.5 text-micro text-surface-400">
+                  Google iškart patvirtina el. paštą. Telefonas – neprivalomas.
+                </p>
+                <div className="mt-3">
+                  <PhoneVerification
+                    phone={form.clientPhone}
+                    onPhoneChange={(value) => setField("clientPhone", value)}
+                    verified={phoneVerified}
+                    onVerifiedChange={setPhoneVerified}
+                    onVerified={(verifiedPhone, verifiedAt) => {
+                      setAccountPhone(verifiedPhone);
+                      setAccountPhoneVerifiedAt(verifiedAt);
+                    }}
+                    helper="Telefonas neprivalomas."
+                    error={showErrors && !hasContact ? "Įvesk el. paštą arba telefoną" : undefined}
+                  />
+                </div>
+                <div className="my-4 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+                  <span className="text-micro text-surface-400">arba su el. paštu</span>
+                  <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+                </div>
               </div>
-              <div className="my-4 flex items-center gap-3">
-                <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
-                <span className="text-micro text-surface-400">arba su el. paštu</span>
-                <span className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
-              </div>
-            </div>
-          )}
-          <Input
-            id="clientName"
-            label="Tavo vardas"
-            placeholder="Jonas"
-            value={form.clientName}
-            onChange={(e) => update("clientName", e.target.value)}
-            error={showErrors && !nameOk ? "Bent 2 simboliai" : undefined}
-          />
-          {!isLoggedIn && (
-            <EmailVerification
-              email={form.clientEmail}
-              onEmailChange={(v) => update("clientEmail", v)}
-              verified={emailVerified}
-              onVerifiedChange={setEmailVerified}
+            )}
+            <Input
+              id="clientName"
+              label="Tavo vardas"
+              placeholder="Jonas"
+              value={form.clientName}
+              onChange={(e) => setField("clientName", e.target.value)}
+              error={showErrors && !nameOk ? "Bent 2 simboliai" : undefined}
             />
-          )}
-          {isLoggedIn && (
-            <PhoneVerificationField
-              phone={form.clientPhone}
-              onPhoneChange={(value) => update("clientPhone", value)}
-              verified={phoneVerified}
-              onVerifiedChange={setPhoneVerified}
-              onVerified={(verifiedPhone, verifiedAt) => {
-                setAccountPhone(verifiedPhone);
-                setAccountPhoneVerifiedAt(verifiedAt);
-              }}
-              error={showErrors && !hasContact ? "Įvesk telefoną" : undefined}
+            {!isLoggedIn && (
+              <EmailVerification
+                email={form.clientEmail}
+                onEmailChange={(value) => setField("clientEmail", value)}
+                verified={emailVerified}
+                onVerifiedChange={setEmailVerified}
+              />
+            )}
+            {isLoggedIn && (
+              <PhoneVerification
+                phone={form.clientPhone}
+                onPhoneChange={(value) => setField("clientPhone", value)}
+                verified={phoneVerified}
+                onVerifiedChange={setPhoneVerified}
+                onVerified={(verifiedPhone, verifiedAt) => {
+                  setAccountPhone(verifiedPhone);
+                  setAccountPhoneVerifiedAt(verifiedAt);
+                }}
+                helper="Telefonas neprivalomas."
+                error={showErrors && !hasContact ? "Įvesk telefoną" : undefined}
+              />
+            )}
+            <input
+              type="text"
+              name="website_url"
+              value={form.honeypot}
+              onChange={(e) => setField("honeypot", e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="pointer-events-none absolute -left-[9999px] -top-[9999px] h-0 w-0 opacity-0"
             />
-          )}
-          {/* Honeypot — hidden from humans, bait for bots */}
-          <input
-            type="text"
-            name="website_url"
-            value={form.honeypot}
-            onChange={(e) => update("honeypot", e.target.value)}
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            className="pointer-events-none absolute -left-[9999px] -top-[9999px] h-0 w-0 opacity-0"
-          />
+          </div>
         </div>
-      </div>
       )}
 
-      {error && (
+      {publishError && (
         <div className="mt-4 rounded-xl bg-red-50 p-3 text-body-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
-          {error}
+          {publishError}
         </div>
       )}
 
-      {/* ── Publish ── */}
       <div className="mt-6">
         <Button
           type="button"
@@ -896,11 +786,13 @@ function NewRequestForm() {
           className="w-full"
           onClick={handlePublish}
           isLoading={publishing}
+          disabled={aiIsRunning}
         >
-          {!publishing && <ArrowRight className="h-5 w-5" />}
-          Paskelbti skelbimą
+          {!publishing &&
+            (aiIsRunning ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />)}
+          {aiIsRunning ? "AI dirba…" : "Paskelbti skelbimą"}
         </Button>
-        {!publishing && publishHint && (
+        {!publishing && publishHint && !aiIsRunning && (
           <p className="mt-2 text-center text-micro text-surface-400">{publishHint}</p>
         )}
         <p className="mt-3 text-center text-micro text-surface-400">
@@ -908,33 +800,5 @@ function NewRequestForm() {
         </p>
       </div>
     </div>
-  );
-}
-
-function PhoneVerificationField({
-  phone,
-  onPhoneChange,
-  verified,
-  onVerifiedChange,
-  onVerified,
-  error,
-}: {
-  phone: string;
-  onPhoneChange: (value: string) => void;
-  verified: boolean;
-  onVerifiedChange: (value: boolean) => void;
-  onVerified?: (phone: string, phoneVerifiedAt: string) => void;
-  error?: string;
-}) {
-  return (
-    <PhoneVerification
-      phone={phone}
-      onPhoneChange={onPhoneChange}
-      verified={verified}
-      onVerifiedChange={onVerifiedChange}
-      onVerified={onVerified}
-      error={error}
-      helper="Telefonas neprivalomas."
-    />
   );
 }

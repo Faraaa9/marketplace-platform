@@ -5,7 +5,10 @@ import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 interface ListingPreviewProps {
   title: string;
   description: string;
+  /** Legacy single-category label. Used when categoryLabels is not provided. */
   categoryLabel?: string;
+  /** Up to 3 category names, primary first. Preferred over categoryLabel. */
+  categoryLabels?: string[];
   location: string;
   budget: string;
   deadline: string;
@@ -20,6 +23,7 @@ export default function ListingPreview({
   title,
   description,
   categoryLabel,
+  categoryLabels,
   location,
   budget,
   deadline,
@@ -28,17 +32,37 @@ export default function ListingPreview({
   responseCount = 0,
   className = "",
 }: ListingPreviewProps) {
+  // Prefer the multi array when provided; fall back to the legacy single label
+  // so existing callers that haven't migrated keep working unchanged.
+  const labels: string[] = (() => {
+    if (categoryLabels && categoryLabels.length > 0) {
+      return categoryLabels.filter((label) => label.trim().length > 0);
+    }
+    if (categoryLabel && categoryLabel.trim().length > 0) {
+      return [categoryLabel];
+    }
+    return [];
+  })();
+  const hasLabels = labels.length > 0;
+
   return (
     <article className={`paper-note ${className}`}>
       <div className="paper-note__shadow">
         <div className="paper-note__sheet px-6 pb-9 pt-11 sm:px-9">
-          {categoryLabel && (
-            <span className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700">
-              {categoryLabel}
-            </span>
+          {hasLabels && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {labels.map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           )}
           <h3
-            className={`${categoryLabel ? "mt-3.5" : ""} font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]`}
+            className={`${hasLabels ? "mt-3.5" : ""} font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]`}
           >
             {title.trim() || (
               <span className="text-surface-300 dark:text-surface-600">Skelbimo pavadinimas</span>

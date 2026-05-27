@@ -153,6 +153,25 @@ model ProviderProfileCategory {
   @@map("provider_profile_categories")
 }
 
+// Multi-category link table — a service request can have up to 3 curated
+// categories. sortOrder 0 = primary (mirrored to the legacy categoryId column
+// for backwards compatibility with code paths that still read the single FK).
+model ServiceRequestCategory {
+  id         String   @id @default(cuid())
+  requestId  String
+  categoryId String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  category Category       @relation(fields: [categoryId], references: [id])
+
+  @@unique([requestId, categoryId])
+  @@index([requestId])
+  @@index([categoryId])
+  @@map("service_request_categories")
+}
+
 model ServiceRequest {
   id                           String    @id @default(cuid())
   trackingToken                String    @unique @default(cuid())
@@ -179,8 +198,9 @@ model ServiceRequest {
   createdAt                    DateTime  @default(now())
   updatedAt                    DateTime  @updatedAt
 
-  client      User?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  categoryRef Category?     @relation(fields: [categoryId], references: [id])
+  client      User?                    @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  categoryRef Category?                @relation(fields: [categoryId], references: [id])
+  categories  ServiceRequestCategory[]
   responses   Response[]
   reviews     Review[]
   views       RequestView[]
@@ -495,6 +515,7 @@ model Category {
   aliases         CategoryAlias[]
   supplierLinks   SupplierCategoryLink[]
   serviceRequests ServiceRequest[]
+  requestLinks    ServiceRequestCategory[]
   providerLinks   ProviderProfileCategory[]
 
   @@index([parentId])

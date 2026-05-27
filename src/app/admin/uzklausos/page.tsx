@@ -11,6 +11,8 @@ interface Request {
   id: string;
   title: string;
   categoryRef: { name: string } | null;
+  /** All category names assigned (primary + secondary). */
+  categoryNames?: string[];
   location: string;
   status: string;
   clientName: string;
@@ -150,12 +152,27 @@ export default function AdminRequestsPage() {
             </thead>
             <tbody className="bg-white dark:bg-surface-900">
               {requests.map((req) => {
-                const categoryName = req.categoryRef?.name;
+                const categoryNames =
+                  req.categoryNames && req.categoryNames.length > 0
+                    ? req.categoryNames
+                    : req.categoryRef?.name
+                      ? [req.categoryRef.name]
+                      : [];
                 return (
                   <tr key={req.id} className="border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
                     <td className="py-3 px-4 font-medium text-surface-900 dark:text-white max-w-[200px] truncate">{req.title}</td>
                     <td className="py-3 px-4 text-surface-500">{req.clientName}</td>
-                    <td className="py-3 px-4">{categoryName ? <Badge>{categoryName}</Badge> : <span className="text-surface-400">—</span>}</td>
+                    <td className="py-3 px-4">
+                      {categoryNames.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {categoryNames.map((name) => (
+                            <Badge key={name}>{name}</Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-surface-400">—</span>
+                      )}
+                    </td>
                     <td className="py-3 px-4">
                       <select
                         value={req.status}

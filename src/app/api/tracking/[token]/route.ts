@@ -88,19 +88,55 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
       );
     }
 
-    await prisma.serviceRequest.update({
-      where: { id: request.id },
-      data: {
-        ...parsed.data,
-        title: sanitizeHtml(parsed.data.title),
-        description: sanitizeHtml(parsed.data.description),
-        budget: sanitizeHtml(parsed.data.budget),
-        deadline: sanitizeHtml(parsed.data.deadline),
-        moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
-        moderationReason: moderation.reason,
-        moderatedAt: new Date(),
-      },
+    // Validate the picked categories before touching the join table.
+    const uniqueCategoryIds = Array.from(new Set(parsed.data.categoryIds));
+    const categoryRows = await prisma.category.findMany({
+      where: { id: { in: uniqueCategoryIds } },
+      select: { id: true, slug: true },
     });
+    if (categoryRows.length !== uniqueCategoryIds.length) {
+      return NextResponse.json(
+        { success: false, error: "Viena ar daugiau kategorijų nerasta" },
+        { status: 400 },
+      );
+    }
+    const orderedCategories = uniqueCategoryIds.map(
+      (id) => categoryRows.find((row) => row.id === id)!,
+    );
+    const primaryCategory = orderedCategories[0];
+
+    // categoryIds is not a column on ServiceRequest — strip it from the spread
+    // so Prisma doesn't error. The join table is rewritten transactionally
+    // below.
+    const { categoryIds: _categoryIds, ...editableFields } = parsed.data;
+    void _categoryIds;
+
+    await prisma.$transaction([
+      prisma.serviceRequestCategory.deleteMany({
+        where: { requestId: request.id },
+      }),
+      prisma.serviceRequest.update({
+        where: { id: request.id },
+        data: {
+          ...editableFields,
+          title: sanitizeHtml(parsed.data.title),
+          description: sanitizeHtml(parsed.data.description),
+          budget: sanitizeHtml(parsed.data.budget),
+          deadline: sanitizeHtml(parsed.data.deadline),
+          category: primaryCategory.slug,
+          categoryId: primaryCategory.id,
+          categories: {
+            create: orderedCategories.map((cat, index) => ({
+              categoryId: cat.id,
+              sortOrder: index,
+            })),
+          },
+          moderationStatus: moderation.verdict === "ok" ? "APPROVED" : "PENDING",
+          moderationReason: moderation.reason,
+          moderatedAt: new Date(),
+        },
+      }),
+    ]);
 
     revalidateTag("requests", { expire: 0 });
 

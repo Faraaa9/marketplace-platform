@@ -43,8 +43,10 @@ interface RequestData {
   id: string;
   title: string;
   description: string;
-  /** Resolved category name (string), or null if the request has no category. */
+  /** Resolved primary category name (string), or null. Prefer categoryNames. */
   category: string | null;
+  /** All category names assigned to this request (primary + secondaries). */
+  categoryNames?: string[];
   location: string;
   budget?: string;
   deadline?: string;
@@ -159,8 +161,15 @@ export default function ProviderRequestDetailPage() {
       </button>
 
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          {request.category && <Badge variant="brand">{request.category}</Badge>}
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          {(request.categoryNames && request.categoryNames.length > 0
+            ? request.categoryNames
+            : request.category
+              ? [request.category]
+              : []
+          ).map((name) => (
+            <Badge key={name} variant="brand">{name}</Badge>
+          ))}
           <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
         </div>
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mt-3">{request.title}</h1>
