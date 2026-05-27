@@ -4,30 +4,12 @@ import { isDynamicServerError } from "next/dist/client/components/hooks-server-c
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { countPendingModeration } from "@/lib/moderation/admin-actions";
+import { buildDayBuckets } from "@/lib/admin/day-buckets";
+import { getAiUsageStats } from "@/lib/admin/ai-usage";
+import { getMarketplaceIntelligence } from "@/lib/admin/marketplace-intelligence";
+import { getFollowUpAdminSignal } from "@/lib/admin/follow-up-signal";
 
 export const dynamic = "force-dynamic";
-
-type DayBucket = { date: string; label: string; count: number };
-
-function buildDayBuckets(rows: { createdAt: Date }[]): DayBucket[] {
-  const dayCounts = new Map<string, number>();
-  for (let i = 13; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    dayCounts.set(date.toISOString().split("T")[0], 0);
-  }
-  for (const row of rows) {
-    const key = row.createdAt.toISOString().split("T")[0];
-    if (dayCounts.has(key)) {
-      dayCounts.set(key, (dayCounts.get(key) || 0) + 1);
-    }
-  }
-  return Array.from(dayCounts.entries()).map(([date, count]) => ({
-    date,
-    label: new Date(date).toLocaleDateString("lt-LT", { month: "short", day: "numeric" }),
-    count,
-  }));
-}
 
 export async function GET() {
   try {
@@ -53,6 +35,9 @@ export async function GET() {
       recentResponses,
       recentUsers,
       recentProviders,
+      aiUsage,
+      marketplaceIntelligence,
+      followUps,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "PROVIDER" } }),
@@ -78,6 +63,9 @@ export async function GET() {
         where: { createdAt: { gte: fourteenDaysAgo }, role: "PROVIDER" },
         select: { createdAt: true },
       }),
+      getAiUsageStats(fourteenDaysAgo),
+      getMarketplaceIntelligence(fourteenDaysAgo),
+      getFollowUpAdminSignal(fourteenDaysAgo),
     ]);
 
     const chartData = buildDayBuckets(recentRequests);
@@ -100,6 +88,9 @@ export async function GET() {
         usersChart,
         providersChart,
         responsesChart,
+        aiUsage,
+        marketplaceIntelligence,
+        followUps,
       },
     });
   } catch (error) {

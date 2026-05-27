@@ -17,6 +17,25 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-27 19:17 — Claude
+
+**Commit:** `5446d67` — feat(admin): AI health, marketplace intelligence and follow-up signal cards · lokalus
+
+**Pakeitimai:** 8 files changed, 995 insertions(+), 23 deletions(-)
+
+**Failai:**
+- src/app/admin/FollowUpAgentCard.tsx
+- src/app/admin/MarketplaceIntelligenceCard.tsx
+- src/app/admin/page.tsx
+- src/app/api/admin/stats/route.ts
+- src/lib/admin/ai-usage.ts
+- src/lib/admin/day-buckets.ts
+- src/lib/admin/follow-up-signal.ts
+- src/lib/admin/marketplace-intelligence.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-27 19:16 — Claude
 
 **Commit:** `69b2ba1` — feat(ai): follow-up agent MVP (advisory only) · lokalus

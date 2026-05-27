@@ -5,7 +5,33 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Sparkline from "@/components/ui/Sparkline";
-import { Users, FileText, MessageCircle, UserCheck, AlertTriangle, Clock } from "lucide-react";
+import MarketplaceIntelligenceCard from "./MarketplaceIntelligenceCard";
+import FollowUpAgentCard from "./FollowUpAgentCard";
+import { Users, FileText, MessageCircle, UserCheck, AlertTriangle, Clock, Sparkles } from "lucide-react";
+
+type FollowUpBucket =
+  | "provider_replied_client_silent"
+  | "client_open_no_provider_replies"
+  | "provider_no_reply_to_lead"
+  | "client_inquiry_provider_silent";
+
+interface FollowUpAdminSignal {
+  totalThreads: number;
+  countsByBucket: Record<FollowUpBucket, number>;
+  stalledLeads: Array<{
+    type: "response" | "direct";
+    id: string;
+    title: string;
+    daysSinceActivity: number;
+    bucket: FollowUpBucket;
+  }>;
+  unansweredRequests: Array<{
+    id: string;
+    title: string;
+    ageDays: number;
+  }>;
+  recommendations: string[];
+}
 
 interface ChartDay {
   date: string;
@@ -20,10 +46,73 @@ interface Stats {
   totalResponses: number;
   pendingRequests: number;
   pendingActivation: number;
+  aiUsage: AiUsageStats;
+  marketplaceIntelligence: MarketplaceIntelligence;
+  followUps: FollowUpAdminSignal;
   chartData: ChartDay[];
   usersChart: ChartDay[];
   providersChart: ChartDay[];
   responsesChart: ChartDay[];
+}
+
+interface AiUsageStats {
+  total14d: number;
+  success14d: number;
+  error14d: number;
+  avgLatencyMs: number | null;
+  lastRunAt: string | null;
+  byFeature: Array<{ feature: string; total: number; errors: number; avgLatencyMs: number | null }>;
+  recentErrors: Array<{ feature: string; errorCode: string | null; createdAt: string }>;
+}
+
+interface MarketplaceIntelligence {
+  supplyDemandGaps: Array<{
+    categoryId: string;
+    categoryName: string;
+    requestCount: number;
+    providerCount: number;
+    gapScore: number;
+  }>;
+  unansweredRequests: Array<{
+    id: string;
+    title: string;
+    categoryName: string;
+    location: string;
+    createdAt: string;
+  }>;
+  recommendations: string[];
+}
+
+const FEATURE_LABELS: Record<string, string> = {
+  lead_copilot: "Lead co-pilot",
+  proposal_draft: "Pasiūlymo juodraštis",
+  request_improve: "Užklausos tvarkymas",
+  category_suggest: "Kategorijų parinkimas",
+  profile_generate: "Profilio generavimas",
+  audio_transcribe: "Balso transkripcija",
+  moderation: "Moderacija",
+  semantic_match_shadow: "Semantinis matching'as",
+  follow_up_scan: "Follow-up skenavimas",
+};
+
+function featureLabel(feature: string): string {
+  return FEATURE_LABELS[feature] ?? feature.replace(/_/g, " ");
+}
+
+function formatLatency(ms: number | null): string {
+  if (ms == null) return "nėra";
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)} s`;
+  return `${ms} ms`;
+}
+
+function formatRunTime(value: string | null): string {
+  if (!value) return "dar nėra";
+  return new Date(value).toLocaleString("lt-LT", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function RequestsChart({ data }: { data: ChartDay[] }) {
@@ -136,6 +225,11 @@ export default function AdminDashboard() {
   if (!stats) return null;
 
   const hasActions = stats.pendingActivation > 0 || stats.pendingRequests > 0;
+  const aiErrorRate =
+    stats.aiUsage.total14d > 0
+      ? Math.round((stats.aiUsage.error14d / stats.aiUsage.total14d) * 100)
+      : 0;
+  const maxAiFeatureCount = Math.max(...stats.aiUsage.byFeature.map((item) => item.total), 1);
 
   const statCards = [
     {
@@ -244,6 +338,113 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      <MarketplaceIntelligenceCard intelligence={stats.marketplaceIntelligence} />
+
+      <FollowUpAgentCard followUps={stats.followUps} />
+
+      <Card className="mb-8">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-brand-50 p-2.5 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">
+                AI health
+              </h3>
+              <p className="text-micro text-surface-500">
+                Paskutinis kvietimas: {formatRunTime(stats.aiUsage.lastRunAt)}
+              </p>
+            </div>
+          </div>
+          {stats.aiUsage.total14d > 0 && (
+            <span className="inline-flex min-h-8 items-center rounded-lg bg-surface-100 px-3 text-caption font-semibold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
+              14 d. langas
+            </span>
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-surface-200/60 bg-surface-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/40">
+            <p className="text-micro text-surface-500">AI kvietimai</p>
+            <p className="mt-1 text-heading-3 font-bold text-surface-900 dark:text-white">
+              {stats.aiUsage.total14d}
+            </p>
+          </div>
+          <div className="rounded-xl border border-surface-200/60 bg-surface-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/40">
+            <p className="text-micro text-surface-500">Klaidų dalis</p>
+            <p className={`mt-1 text-heading-3 font-bold ${aiErrorRate > 15 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+              {aiErrorRate}%
+            </p>
+          </div>
+          <div className="rounded-xl border border-surface-200/60 bg-surface-50 p-3 dark:border-surface-700/50 dark:bg-surface-800/40">
+            <p className="text-micro text-surface-500">Vid. trukmė</p>
+            <p className="mt-1 text-heading-3 font-bold text-surface-900 dark:text-white">
+              {formatLatency(stats.aiUsage.avgLatencyMs)}
+            </p>
+          </div>
+        </div>
+
+        {stats.aiUsage.byFeature.length > 0 ? (
+          <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_18rem]">
+            <div>
+              <h4 className="mb-3 text-caption font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">
+                Funkcijos
+              </h4>
+              <div className="space-y-3">
+                {stats.aiUsage.byFeature.map((item) => (
+                  <div key={item.feature}>
+                    <div className="mb-1 flex items-center justify-between gap-3 text-body-sm">
+                      <span className="font-medium text-surface-700 dark:text-surface-200">
+                        {featureLabel(item.feature)}
+                      </span>
+                      <span className="text-micro text-surface-500">
+                        {item.total} kv. · {formatLatency(item.avgLatencyMs)}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-100 dark:bg-surface-800">
+                      <div
+                        className={`h-full rounded-full ${item.errors > 0 ? "bg-amber-500" : "bg-brand-500"}`}
+                        style={{ width: `${Math.max(8, (item.total / maxAiFeatureCount) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="mb-3 text-caption font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">
+                Naujausios klaidos
+              </h4>
+              {stats.aiUsage.recentErrors.length > 0 ? (
+                <div className="space-y-2">
+                  {stats.aiUsage.recentErrors.map((item) => (
+                    <div
+                      key={`${item.feature}-${item.createdAt}`}
+                      className="rounded-xl bg-amber-50 px-3 py-2 text-body-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-300"
+                    >
+                      <p className="font-medium">{featureLabel(item.feature)}</p>
+                      <p className="text-micro opacity-80">
+                        {item.errorCode || "AI_ERROR"} · {formatRunTime(item.createdAt)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl bg-emerald-50 px-3 py-2 text-body-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  Klaidų per 14 dienų nėra.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-5 rounded-xl bg-surface-50 px-3 py-2 text-body-sm text-surface-500 dark:bg-surface-800/50 dark:text-surface-400">
+            AI kvietimų dar nėra. Duomenys atsiras tiekėjams pradėjus naudoti lead co-pilot.
+          </p>
+        )}
+      </Card>
 
       {/* Užklausos per 14 dienų — line + area chart */}
       <Card>
