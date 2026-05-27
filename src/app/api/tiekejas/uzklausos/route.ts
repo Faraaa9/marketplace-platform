@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { expandToMatchSet } from "@/lib/category-matching";
 import { getUnlockedRequestIds } from "@/lib/credits";
+import { recordAiRun } from "@/lib/ai/audit";
+import { calculateSemanticMatch, summarizeSemanticScores } from "@/lib/semantic-match";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +20,25 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const sort = searchParams.get("sort") || "relevance";
     const perPage = 20;
+    const semanticStarted = Date.now();
 
     // Load provider profile — curated categories drive matching + relevance.
     const profile = await prisma.providerProfile.findUnique({
       where: { userId: guard.userId },
       select: {
+        id: true,
+        headline: true,
+        description: true,
+        services: true,
+        primaryService: true,
+        specializations: true,
         location: true,
-        categories: { select: { categoryId: true } },
+        categories: {
+          select: {
+            categoryId: true,
+            category: { select: { name: true } },
+          },
+        },
       },
     });
 
@@ -80,6 +94,7 @@ export async function GET(req: NextRequest) {
           categoryRef: { select: { id: true, name: true } },
           location: true,
           budget: true,
+          deadline: true,
           status: true,
           createdAt: true,
           _count: { select: { responses: true } },
@@ -106,8 +121,55 @@ export async function GET(req: NextRequest) {
       ) {
         score += 1;
       }
+      const semantic = calculateSemanticMatch(
+        {
+          headline: profile?.headline,
+          description: profile?.description,
+          services: profile?.services,
+          primaryService: profile?.primaryService,
+          specializations: profile?.specializations,
+          categories: profile?.categories.map((category) => category.category.name),
+        },
+        {
+          title: reqRow.title,
+          description: reqRow.description,
+          budget: reqRow.budget,
+          deadline: reqRow.deadline,
+          categoryName: reqRow.categoryRef?.name,
+        },
+      );
       const { responses, ...rest } = reqRow;
-      return { ...rest, relevance: score, hasResponded: responses.length > 0 };
+      return {
+        ...rest,
+        relevance: score,
+        semanticShadowScore: semantic.score,
+        semanticShadowTerms: semantic.sharedTerms,
+        hasResponded: responses.length > 0,
+      };
+    });
+
+    const semanticSummary = summarizeSemanticScores(
+      scored.map((request) => request.semanticShadowScore),
+    );
+    void recordAiRun({
+      feature: "semantic_match_shadow",
+      status: "success",
+      provider: "deterministic",
+      model: "weighted-token-v1",
+      promptVersion: "semantic_shadow_v1",
+      latencyMs: Date.now() - semanticStarted,
+      actorUserId: guard.userId,
+      entityType: "ProviderProfile",
+      entityId: guard.providerProfileId,
+      metadata: {
+        candidateCount: allRequests.length,
+        page,
+        sort,
+        hasCategoryFilter: Boolean(category),
+        hasLocationFilter: Boolean(location),
+        hasSearchFilter: Boolean(search),
+        ...semanticSummary,
+      },
     });
 
     // Sort

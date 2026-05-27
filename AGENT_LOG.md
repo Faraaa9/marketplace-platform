@@ -19,6 +19,19 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-27 19:15 — Claude
 
+**Commit:** `6f73e13` — feat(ai): semantic match shadow mode for provider inbox · lokalus
+
+**Pakeitimai:** 2 files changed, 281 insertions(+), 2 deletions(-)
+
+**Failai:**
+- src/app/api/tiekejas/uzklausos/route.ts
+- src/lib/semantic-match.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-27 19:15 — Claude
+
 **Commit:** `ff67184` — feat(ai): deterministic category override fallback for water/plumbing · lokalus
 
 **Pakeitimai:** 3 files changed, 137 insertions(+), 7 deletions(-)
