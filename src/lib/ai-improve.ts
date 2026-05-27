@@ -1,5 +1,6 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
 import { getFlatServiceCategories } from "@/lib/service-categories";
+import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini handles Lithuanian grammar/nuance best of the OpenRouter models.
@@ -57,6 +58,31 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
     })
     .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
     .slice(0, 140);
+
+  const allValidSlugs = new Set(categories.map((category) => category.slug));
+  const overrideSlug = pickCategoryOverrideSlug(query, allValidSlugs);
+  if (overrideSlug) {
+    const overrideCategory = categories.find((category) => category.slug === overrideSlug);
+    if (overrideCategory) {
+      const names: string[] = [overrideCategory.name];
+      let parent = overrideCategory.parentId ? byId.get(overrideCategory.parentId) : undefined;
+      while (parent) {
+        names.unshift(parent.name);
+        parent = parent.parentId ? byId.get(parent.parentId) : undefined;
+      }
+      const existingIndex = candidates.findIndex(
+        (entry) => entry.category.slug === overrideSlug,
+      );
+      if (existingIndex >= 0) {
+        candidates.splice(existingIndex, 1);
+      }
+      candidates.unshift({
+        category: overrideCategory,
+        breadcrumb: names.join(" > "),
+        score: Number.MAX_SAFE_INTEGER,
+      });
+    }
+  }
 
   const validSlugs = new Set<string>();
   const lines = candidates.map(({ category, breadcrumb }) => {
@@ -234,6 +260,10 @@ export async function improveDescription(
     const result = parseResult(raw, validSlugs);
     if (!result) {
       throw new AiImproveError("AI_EMPTY_RESPONSE");
+    }
+    const overrideCategory = pickCategoryOverrideSlug(userContent, validSlugs);
+    if (overrideCategory) {
+      result.category = overrideCategory;
     }
     return result;
   } catch (err) {

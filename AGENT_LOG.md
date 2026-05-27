@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-27 19:15 — Claude
+
+**Commit:** `ff67184` — feat(ai): deterministic category override fallback for water/plumbing · lokalus
+
+**Pakeitimai:** 3 files changed, 137 insertions(+), 7 deletions(-)
+
+**Failai:**
+- src/lib/ai-improve.ts
+- src/lib/category-overrides.ts
+- src/lib/category-suggestions.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-27 19:14 — Claude
 
 **Commit:** `4ee2fc1` — feat(ai): wire audit logging into existing AI flows · lokalus

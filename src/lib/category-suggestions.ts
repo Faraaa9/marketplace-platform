@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -197,6 +198,10 @@ function scoreCandidate(
     }
   }
 
+  if (matchedTokens.size === 0) {
+    return { score: 0, matchedTokens };
+  }
+
   // Prefer concrete leaves over coarse roots when both match.
   if (candidate.depth === 2) score += 2;
   else if (candidate.depth === 1) score += 0.5;
@@ -278,6 +283,16 @@ function reasonFor(entry: ScoredCandidate): string {
   }
   const joined = words.map((w) => `„${w}"`).join(", ");
   return `Tekste minimi žodžiai ${joined}.`;
+}
+
+function forcePreferredFirst(
+  picked: ScoredCandidate[],
+  preferred: ScoredCandidate | null,
+  limit: number,
+): ScoredCandidate[] {
+  if (!preferred) return picked;
+  const rest = picked.filter((entry) => entry.candidate.id !== preferred.candidate.id);
+  return [preferred, ...rest].slice(0, limit);
 }
 
 function confidenceFor(entry: ScoredCandidate, bestScore: number): number {
@@ -506,8 +521,21 @@ export async function suggestCategories(
 
   const byId = new Map(candidates.map((c) => [c.id, c]));
   const scored = rankCandidates(candidates, byId, text);
+  const validSlugs = new Set(candidates.map((candidate) => candidate.slug));
+  const overrideSlug = pickCategoryOverrideSlug(text, validSlugs);
+  const overrideCandidate = overrideSlug
+    ? candidates.find((candidate) => candidate.slug === overrideSlug)
+    : undefined;
+  const overrideEntry = overrideCandidate
+    ? {
+        candidate: overrideCandidate,
+        breadcrumb: buildBreadcrumb(overrideCandidate, byId),
+        score: Number.MAX_SAFE_INTEGER,
+        matchedTokens: new Set(["kriauklė", "vanduo"]),
+      }
+    : null;
 
-  if (scored.length === 0) {
+  if (scored.length === 0 && !overrideEntry) {
     return {
       suggestions: [],
       clarificationQuestion:
@@ -517,10 +545,15 @@ export async function suggestCategories(
     };
   }
 
-  const deterministicPicked = pickTopSuggestions(scored, input.mode, limit);
-  const bestScore = deterministicPicked[0]?.score ?? scored[0].score;
+  const scoredWithOverride = forcePreferredFirst(scored, overrideEntry, scored.length + 1);
+  const deterministicPicked = forcePreferredFirst(
+    pickTopSuggestions(scoredWithOverride, input.mode, limit),
+    overrideEntry,
+    limit,
+  );
+  const bestScore = deterministicPicked[0]?.score ?? scoredWithOverride[0].score;
 
-  const ai = await aiRerank(input, scored.slice(0, 30));
+  const ai = await aiRerank(input, scoredWithOverride.slice(0, 30));
 
   let pickedEntries = deterministicPicked;
   let reasonBySlug: Map<string, string> | null = null;
@@ -528,8 +561,8 @@ export async function suggestCategories(
   let aiClarification: string | undefined;
 
   if (ai && ai.ranking.length > 0) {
-    const merged = mergeWithAi(scored, ai, limit);
-    pickedEntries = merged.picked;
+    const merged = mergeWithAi(scoredWithOverride, ai, limit);
+    pickedEntries = forcePreferredFirst(merged.picked, overrideEntry, limit);
     reasonBySlug = merged.reasonBySlug;
     confidenceBySlug = merged.confidenceBySlug;
     aiClarification = ai.clarificationQuestion;
