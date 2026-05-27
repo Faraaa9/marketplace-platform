@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-27 19:16 — Claude
+
+**Commit:** `a562044` — feat(ai): lead co-pilot for providers (advisory only) · lokalus
+
+**Pakeitimai:** 4 files changed, 631 insertions(+)
+
+**Failai:**
+- src/app/api/tiekejas/uzklausos/[id]/copilot/route.ts
+- src/app/tiekejas/uzklausos/[id]/LeadCopilotCard.tsx
+- src/app/tiekejas/uzklausos/[id]/page.tsx
+- src/lib/ai/lead-copilot.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-27 19:15 — Claude
 
 **Commit:** `6f73e13` — feat(ai): semantic match shadow mode for provider inbox · lokalus

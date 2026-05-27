@@ -18,6 +18,7 @@ import Link from "next/link";
 import RequestPhotos from "@/components/requests/RequestPhotos";
 import GenerateProposalButton from "@/components/ai/GenerateProposalButton";
 import UnlockCard from "./UnlockCard";
+import LeadCopilotCard from "./LeadCopilotCard";
 
 interface MessageData {
   id: string;
@@ -210,6 +211,10 @@ export default function ProviderRequestDetailPage() {
           )}
         </div>
       </Card>
+
+      {!hasResponded && request.canRespond && (
+        <LeadCopilotCard requestId={request.id} />
+      )}
 
       {/* Unlock card — eligible but not yet unlocked */}
       {!hasResponded && request.canRespond && !request.isUnlocked && (
