@@ -662,6 +662,30 @@ model ModerationLog {
   @@map("moderation_logs")
 }
 
+// Lightweight audit trail for AI features. Store operational metadata only;
+// avoid raw user/provider text so prompts with personal data don't become
+// another long-lived data surface.
+model AiRun {
+  id            String   @id @default(cuid())
+  feature       String
+  status        String
+  provider      String?
+  model         String?
+  promptVersion String?
+  latencyMs     Int?
+  actorUserId   String?
+  entityType    String?
+  entityId      String?
+  errorCode     String?
+  metadataJson  String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([feature, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
+  @@map("ai_runs")
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 4 — pay-per-lead credit model
 // ═══════════════════════════════════════════════════════════════════════

@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-27 19:13 — Claude
+
+**Commit:** `df14c69` — feat(ai): AiRun audit model + recordAiRun helper · lokalus
+
+**Pakeitimai:** 3 files changed, 110 insertions(+)
+
+**Failai:**
+- prisma/manual-migrations/20260526_add_ai_runs.sql
+- prisma/schema.prisma
+- src/lib/ai/audit.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-26 21:45 — Codex
 
 **Commit:** `71190ca` — feat(provider): simplify inbox and request navigation · lokalus
