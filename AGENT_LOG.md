@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 02:51 — Claude
+
+**Commit:** `9fe5f27` — perf(ui): add loading skeletons to key dynamic routes · lokalus
+
+**Pakeitimai:** 7 files changed, 326 insertions(+)
+
+**Failai:**
+- src/app/meistrai/[slug]/loading.tsx
+- src/app/meistrai/loading.tsx
+- src/app/tiekejas/uzklausos/[id]/loading.tsx
+- src/app/tiekejas/uzklausos/loading.tsx
+- src/app/uzklausos/loading.tsx
+- src/app/uzklausos/sekti/[id]/loading.tsx
+- src/components/ui/Skeleton.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 02:50 — Claude
 
 **Commit:** `17be66f` — perf(build): switch Vercel install to pnpm and tree-shake heavy imports · lokalus
