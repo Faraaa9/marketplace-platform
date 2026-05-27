@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, ArrowRight, Check, Sparkles, Pencil, ImagePlus, X, Paperclip, AlertCircle } from "lucide-react";
+import { Loader2, ArrowRight, Check, Pencil, ImagePlus, X, Paperclip, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import type { ServiceCategoryGroup, ServiceCategoryItem } from "@/lib/service-categories";
@@ -19,7 +19,7 @@ import EmailVerification from "@/components/requests/EmailVerification";
 import PhoneVerification from "@/components/requests/PhoneVerification";
 import ListingPreview from "@/components/requests/ListingPreview";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
-import ImproveDescriptionButton from "@/components/ai/ImproveDescriptionButton";
+import RequestAiAgentPanel, { type AiInferredFields } from "@/components/ai/RequestAiAgentPanel";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function NewRequestPage() {
@@ -66,7 +66,7 @@ function NewRequestForm() {
 
   const [form, setForm] = useState<FormState>({
     title: "",
-    description: initialDescription,
+    description: "",
     categoryId: "",
     location: "",
     budget: "",
@@ -79,10 +79,8 @@ function NewRequestForm() {
   });
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
   // The AI may answer before the category list finishes loading — stash its
-  // raw slug/id here and resolve it once the picker options are available.
+  // raw slug here and resolve it once the picker options are available.
   const [pendingAiCategory, setPendingAiCategory] = useState("");
-  const [aiLoading, setAiLoading] = useState(cameFromHero);
-  const [aiFailed, setAiFailed] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [accountPhone, setAccountPhone] = useState("");
@@ -92,9 +90,16 @@ function NewRequestForm() {
   const [error, setError] = useState("");
   const [editorOpen, setEditorOpen] = useState(false);
   const [contactsEditorOpen, setContactsEditorOpen] = useState(false);
-  // True once the user has manually picked a category from the picker. While
-  // false, the auto-suggest effect is allowed to refresh `form.categoryId` as
-  // the description changes. A manual pick locks the field.
+  const [agentRawText, setAgentRawText] = useState(initialDescription);
+  const [agentPanelRevision, setAgentPanelRevision] = useState(0);
+  const [restoreAgentAutoRun, setRestoreAgentAutoRun] = useState(false);
+  // Tracks which AI recommendation fields the user has already appended, so the
+  // panel can grey them out instead of offering them again.
+  const [agentAddedFields, setAgentAddedFields] = useState<string[]>([]);
+  // True once the user has explicitly committed to a category — either by
+  // picking one from the picker or by clicking "Pritaikyti formai" on the AI
+  // panel. While false, the silent auto-suggest effect may fill an empty slot
+  // as the description grows; once true, the slot is locked.
   const [categoryManuallyPicked, setCategoryManuallyPicked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Tracks the last description text we asked the suggestion API about, so we
@@ -125,11 +130,59 @@ function NewRequestForm() {
     if (LISTING_FIELDS.has(key)) setEditorOpen(true);
   }
 
+  function appendAgentFields(fields: string[]) {
+    if (fields.length === 0) return;
+    setForm((current) => {
+      const block = fields.map((field) => `- ${field}: `).join("\n");
+      const sep =
+        current.description.length === 0 || current.description.endsWith("\n")
+          ? ""
+          : "\n";
+      return { ...current, description: `${current.description}${sep}${block}` };
+    });
+    setAgentAddedFields((current) => Array.from(new Set([...current, ...fields])));
+    setEditorOpen(true);
+    requestAnimationFrame(() => {
+      const el = document.getElementById("description");
+      if (el instanceof HTMLTextAreaElement) {
+        el.focus();
+        const end = el.value.length;
+        el.setSelectionRange(end, end);
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+  }
+
+  /** Apply the AI panel's inferred fields to the editable form. Empty AI
+   *  values are ignored, and the user still has the final publish control. */
+  function applyAiSuggestions(fields: AiInferredFields) {
+    const resolvedCategory = resolveAiCategory(fields.categorySlug);
+    setForm((current) => ({
+      ...current,
+      title: fields.title || current.title,
+      description: fields.description || current.description,
+      location: fields.location || current.location,
+      budget: fields.budget || current.budget,
+      deadline: fields.deadline || current.deadline,
+      categoryId: resolvedCategory || current.categoryId,
+    }));
+    if (resolvedCategory) {
+      // An explicit "Pritaikyti formai" click is the user's final pick — lock
+      // the slot so the debounced auto-suggest effect can't overwrite it once
+      // the AI's expanded description triggers a re-run.
+      setCategoryManuallyPicked(true);
+    } else if (fields.categorySlug && categoryGroups.length === 0) {
+      setPendingAiCategory(fields.categorySlug);
+    }
+    setEditorOpen(true);
+  }
+
   // Stash the listing so it survives the Google OAuth redirect round-trip.
   function persistDraft() {
     saveListingDraft({
       title: form.title,
       description: form.description,
+      agentRawText: agentRawText || initialDescription,
       categoryId: form.categoryId,
       location: form.location,
       budget: form.budget,
@@ -160,6 +213,20 @@ function NewRequestForm() {
     const map = new Map<string, string>();
     function add(cat: ServiceCategoryItem) {
       map.set(cat.slug, cat.id);
+      for (const child of cat.children ?? []) add(child);
+    }
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) add(cat);
+    }
+    return map;
+  }, [categoryGroups]);
+
+  // slug → human label, so the AI panel can display "Trinkelių klojimas"
+  // instead of the bare slug it gets from the API.
+  const categoryLabelBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    function add(cat: ServiceCategoryItem) {
+      map.set(cat.slug, cat.name);
       for (const child of cat.children ?? []) add(child);
     }
     for (const group of categoryGroups) {
@@ -253,6 +320,16 @@ function NewRequestForm() {
     if (restored) {
       const draft = loadListingDraft();
       if (draft) {
+        const restoredAgentRawText = draft.agentRawText || "";
+        if (restoredAgentRawText || draft.description) {
+          setAgentRawText(restoredAgentRawText || draft.description);
+          setAgentPanelRevision((value) => value + 1);
+          setRestoreAgentAutoRun(
+            !!restoredAgentRawText &&
+              !draft.description &&
+              restoredAgentRawText.trim().length >= 15,
+          );
+        }
         // Only copy fields with real content so we don't wipe values the session
         // has already pre-filled (e.g. clientName from Google).
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -294,57 +371,21 @@ function NewRequestForm() {
     return () => clearTimeout(timer);
   }, [form.description, cameFromHero]);
 
-  // Run AI extraction once when arriving from the hero box.
-  useEffect(() => {
-    if (!cameFromHero) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/requests/improve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ description: initialDescription }),
-        });
-        const data = await res.json().catch(() => null);
-        if (cancelled) return;
-        if (res.ok && data?.success && data.data) {
-          const d = data.data;
-          setForm((f) => ({
-            ...f,
-            description: d.improvedDescription || f.description,
-            title: d.title || f.title,
-            location: d.location || f.location,
-            budget: d.budget || f.budget,
-            deadline: d.deadline || f.deadline,
-          }));
-          // AI returns a curated category slug — resolve it to an id once the
-          // picker options are loaded.
-          if (typeof d.category === "string" && d.category) {
-            setPendingAiCategory(d.category);
-          }
-        } else {
-          setAiFailed(true);
-        }
-      } catch {
-        if (!cancelled) setAiFailed(true);
-      } finally {
-        if (!cancelled) setAiLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The AI improve call now lives inside <RequestAiAgentPanel>. The hero entry
+  // flow (`?description=...`) is forwarded to the panel as its initial rawText
+  // with autoRunOnMount=true.
 
   // Apply the AI-picked category once the picker options have loaded. Only
-  // fills an empty slot — a manual pick always wins.
+  // fills an empty slot — a manual pick always wins. The lock flag is set
+  // here too because the apply happened before categories were available, so
+  // `applyAiSuggestions` couldn't lock it at the time.
   useEffect(() => {
     if (!pendingAiCategory || categoryGroups.length === 0) return;
     const resolved = resolveAiCategory(pendingAiCategory);
-    if (resolved && !form.categoryId) {
+    if (resolved) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm((f) => ({ ...f, categoryId: resolved }));
+      setForm((f) => (f.categoryId ? f : { ...f, categoryId: resolved }));
+      setCategoryManuallyPicked(true);
     }
 
     setPendingAiCategory("");
@@ -352,12 +393,10 @@ function NewRequestForm() {
   }, [pendingAiCategory, categoryGroups]);
 
   // Auto-suggest category whenever the description changes meaningfully and the
-  // user hasn't already locked in a manual pick. Replaces the old "Pasiūlyti
-  // pagal aprašymą" button — the suggestion engine now runs in the background
-  // alongside the description-improve AI. Debounced so we don't fire on every
-  // keystroke.
+  // user hasn't already locked in a manual pick. Runs silently in the
+  // background to make the category picker smarter as the user types.
+  // Debounced so we don't fire on every keystroke.
   useEffect(() => {
-    if (aiLoading) return;
     if (categoryManuallyPicked) return;
     if (categoryGroups.length === 0) return;
 
@@ -407,7 +446,7 @@ function NewRequestForm() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.description, form.title, aiLoading, categoryManuallyPicked, categoryGroups.length]);
+  }, [form.description, form.title, categoryManuallyPicked, categoryGroups.length]);
 
   // ── Validation ──
   const titleOk = form.title.trim().length >= 5;
@@ -445,8 +484,10 @@ function NewRequestForm() {
     return "";
   })();
 
-  // Field errors surface after AI fills (hero flow) or after a publish attempt.
-  const showErrors = (cameFromHero && !aiLoading) || attemptedPublish;
+  // Field errors only surface after a publish attempt — the AI panel handles
+  // its own progress signalling, so we no longer flash form errors during the
+  // hero-entry round-trip.
+  const showErrors = attemptedPublish;
 
   async function handlePublish() {
     setAttemptedPublish(true);
@@ -474,7 +515,6 @@ function NewRequestForm() {
     }
   }
 
-  if (aiLoading) return <PreviewSkeleton />;
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
@@ -489,14 +529,20 @@ function NewRequestForm() {
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Tavo skelbimas</h1>
       <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
-        Štai kaip skelbimą matys tiekėjai. Patikrink, užbaik ir paskelbk.
+        Aprašyk darbą su AI agentu, tada patikrink ir paskelbk.
       </p>
 
-      {aiFailed && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-          AI nepavyko sutvarkyti aprašymo — užpildyk laukus pats.
-        </div>
-      )}
+      {/* ── Užklausos AI agentas — single unified entry point ── */}
+      <RequestAiAgentPanel
+        key={agentPanelRevision}
+        initialRawText={agentRawText}
+        autoRunOnMount={cameFromHero || restoreAgentAutoRun}
+        categoryLabelBySlug={categoryLabelBySlug}
+        onRawTextChange={setAgentRawText}
+        onApply={applyAiSuggestions}
+        onAppendField={(field) => appendAgentFields([field])}
+        alreadyAddedFields={agentAddedFields}
+      />
 
       {/* ── Live preview — exactly how the listing appears to providers ── */}
       <ListingPreview
@@ -510,11 +556,30 @@ function NewRequestForm() {
         attachmentUrls={form.attachmentUrls}
       />
 
+      {/* ── Inline publish CTA — duplicates the bottom button so a user with a
+          ready listing doesn't have to scroll past the editor to publish. ── */}
+      <div className="mt-6">
+        <Button
+          type="button"
+          size="lg"
+          variant={ready ? "primary" : "secondary"}
+          className="w-full"
+          onClick={handlePublish}
+          isLoading={publishing}
+        >
+          {!publishing && <ArrowRight className="h-5 w-5" />}
+          Paskelbti skelbimą
+        </Button>
+        {!publishing && publishHint && (
+          <p className="mt-2 text-center text-micro text-surface-400">{publishHint}</p>
+        )}
+      </div>
+
       {/* ── Complete & fix ── */}
       {showEditor ? (
       <div className="mt-8 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+          <Pencil className="h-4 w-4 text-surface-500 dark:text-surface-400" />
           <h2 className="text-body-sm font-semibold text-surface-900 dark:text-white">
             Patikrink ir užbaik
           </h2>
@@ -598,28 +663,6 @@ function NewRequestForm() {
             )}
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <ImproveDescriptionButton
-                value={form.description}
-                onChange={(value) => update("description", value)}
-                onMeta={(meta) => {
-                  setForm((prev) => {
-                    const resolved = resolveAiCategory(meta.category);
-                    return {
-                      ...prev,
-                      categoryId: prev.categoryId || resolved,
-                      title: prev.title || meta.title,
-                      location: prev.location || meta.location,
-                    };
-                  });
-                  if (meta.category && categoryGroups.length === 0) {
-                    setPendingAiCategory(meta.category);
-                  }
-                }}
-                targetId="description"
-                category={categoryLabel}
-                title={form.title}
-                tone="form"
-              />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -863,24 +906,6 @@ function NewRequestForm() {
         <p className="mt-3 text-center text-micro text-surface-400">
           Paskelbus, skelbimą iškart matys tiekėjai ir netrukus gausi pasiūlymų.
         </p>
-      </div>
-    </div>
-  );
-}
-
-function PreviewSkeleton() {
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="flex items-center gap-2.5 text-brand-600 dark:text-brand-400">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        <span className="text-body font-medium">AI tvarko tavo skelbimą…</span>
-      </div>
-      <p className="mt-1 text-body-sm text-surface-400">
-        Tuoj parodysime, kaip atrodys tavo skelbimas.
-      </p>
-      <div className="mt-6 space-y-4">
-        <div className="h-60 animate-pulse rounded-2xl bg-surface-100 dark:bg-surface-800" />
-        <div className="h-44 animate-pulse rounded-2xl bg-surface-100 dark:bg-surface-800" />
       </div>
     </div>
   );

@@ -156,6 +156,13 @@ export function useVoiceRecorder({
   }, []);
 
   useEffect(() => {
+    // React Strict Mode in dev runs setup → cleanup → setup again on mount.
+    // The cleanup below flips `unmountedRef` to true; without an explicit
+    // reset here, the second setup leaves it stuck at true, which causes
+    // `startRecording` to immediately stop the mic stream it just acquired
+    // and `MediaRecorder.start()` is never called — i.e. the mic appears
+    // dead even when permission is granted. Reset on every setup pass.
+    unmountedRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSupported(detectSupport());
     return () => {

@@ -13,6 +13,9 @@ interface ImproveMeta {
   category: string;
   title: string;
   location: string;
+  budget: string;
+  deadline: string;
+  recommendations: Recommendation[];
 }
 
 interface ImproveDescriptionButtonProps {
@@ -93,6 +96,8 @@ export default function ImproveDescriptionButton({
               title?: string;
               category?: string;
               location?: string;
+              budget?: string;
+              deadline?: string;
               recommendations?: Recommendation[];
             };
           }
@@ -110,6 +115,18 @@ export default function ImproveDescriptionButton({
         category: data.data?.category || "",
         title: data.data?.title || "",
         location: data.data?.location || "",
+        budget: data.data?.budget || "",
+        deadline: data.data?.deadline || "",
+        recommendations: Array.isArray(data.data?.recommendations)
+          ? data.data.recommendations.filter(
+              (r): r is Recommendation =>
+                !!r &&
+                typeof r.prompt === "string" &&
+                typeof r.field === "string" &&
+                r.prompt.trim().length > 0 &&
+                r.field.trim().length > 0,
+            )
+          : [],
       });
       const recs = data.data?.recommendations;
       setRecommendations(

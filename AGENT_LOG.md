@@ -19,6 +19,22 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-27 19:16 — Claude
 
+**Commit:** `0ad0ec8` — feat(ai): client request agent panel on the new-request form · lokalus
+
+**Pakeitimai:** 5 files changed, 651 insertions(+), 110 deletions(-)
+
+**Failai:**
+- src/app/uzklausos/nauja/page.tsx
+- src/components/ai/ImproveDescriptionButton.tsx
+- src/components/ai/RequestAiAgentPanel.tsx
+- src/lib/listing-draft.ts
+- src/lib/use-voice-recorder.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-27 19:16 — Claude
+
 **Commit:** `a562044` — feat(ai): lead co-pilot for providers (advisory only) · lokalus
 
 **Pakeitimai:** 4 files changed, 631 insertions(+)
