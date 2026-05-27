@@ -7,6 +7,7 @@ import Link from "next/link";
 import Card, { CardTitle } from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { MagicCard } from "@/components/magicui/magic-card";
+import ProviderFollowUpsCard from "./ProviderFollowUpsCard";
 import Image from "next/image";
 import { FileText, MessageCircle, Coins, AlertCircle, ArrowRight, Mail, ShieldCheck, User, CheckCircle2, Eye, Plus, X, Trash2, Sparkles, Clock, Camera, Database, Building2 } from "lucide-react";
 
@@ -765,6 +766,10 @@ export default function ProviderDashboard() {
           )}
         </Link>
       )}
+
+      {/* Follow-Up Agent — advisory only. Renders nothing when there are no
+          stalled signals so the dashboard stays calm. */}
+      {canAccessRequests && <ProviderFollowUpsCard />}
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

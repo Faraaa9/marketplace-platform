@@ -19,6 +19,21 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-27 19:16 — Claude
 
+**Commit:** `69b2ba1` — feat(ai): follow-up agent MVP (advisory only) · lokalus
+
+**Pakeitimai:** 4 files changed, 628 insertions(+)
+
+**Failai:**
+- src/app/api/tiekejas/follow-ups/route.ts
+- src/app/tiekejas/ProviderFollowUpsCard.tsx
+- src/app/tiekejas/page.tsx
+- src/lib/ai/follow-up.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-27 19:16 — Claude
+
 **Commit:** `0ad0ec8` — feat(ai): client request agent panel on the new-request form · lokalus
 
 **Pakeitimai:** 5 files changed, 651 insertions(+), 110 deletions(-)
