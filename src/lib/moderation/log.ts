@@ -34,6 +34,7 @@ export async function writeModerationLog(entry: ModerationLogEntry): Promise<voi
         latencyMs: entry.latencyMs ?? null,
         actorUserId: entry.actorUserId ?? null,
       },
+      select: { id: true },
     });
   } catch (err) {
     console.error("writeModerationLog nepavyko:", err);

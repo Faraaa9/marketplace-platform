@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-27 19:14 — Claude
+
+**Commit:** `4ee2fc1` — feat(ai): wire audit logging into existing AI flows · lokalus
+
+**Pakeitimai:** 7 files changed, 280 insertions(+), 13 deletions(-)
+
+**Failai:**
+- src/app/api/category-suggestions/route.ts
+- src/app/api/profile/ai-generate/route.ts
+- src/app/api/requests/improve/route.ts
+- src/app/api/requests/transcribe/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/juodrastis/route.ts
+- src/lib/moderation/index.ts
+- src/lib/moderation/log.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-27 19:13 — Claude
 
 **Commit:** `b846aa6` — fix(rate-limit): silence build-phase Upstash warning + add aiLeadCopilot bucket · lokalus

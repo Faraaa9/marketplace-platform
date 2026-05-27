@@ -8,9 +8,13 @@ import { processImagesBatch, generateAIImage } from "@/lib/image-processor";
 import { rateLimitAsync } from "@/lib/rate-limit";
 import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
+import { recordAiRun } from "@/lib/ai/audit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const PROFILE_MODEL = "anthropic/claude-haiku-4.5";
+const PROFILE_PROMPT_VERSION = "provider_profile_v1";
 
 function isServerlessEnv(): boolean {
   return (
@@ -319,7 +323,7 @@ Patarimai:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4.5",
+        model: PROFILE_MODEL,
         messages: [
           {
             role: "system",
@@ -482,7 +486,7 @@ Patarimai:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4.5",
+        model: PROFILE_MODEL,
         messages: [
           {
             role: "system",
@@ -577,18 +581,59 @@ function slugify(input: string): string {
     .slice(0, 60);
 }
 
+const providerProfilePersistenceSelect = {
+  id: true,
+  slug: true,
+  phone: true,
+  location: true,
+  services: true,
+  experienceYears: true,
+  priceFrom: true,
+  offersInvoices: true,
+  availableForUrgent: true,
+  images: true,
+  heroImageUrl: true,
+  externalSourceUrl: true,
+  displayName: true,
+  moderationStatus: true,
+  seoTitle: true,
+  seoDescription: true,
+  primaryService: true,
+  primaryCity: true,
+  serviceArea: true,
+} as const;
+
 async function ensureUniqueSlug(base: string): Promise<string> {
   let slug = base || "meistras";
   let suffix = 0;
-  while (await prisma.providerProfile.findUnique({ where: { slug } })) {
+  while (await prisma.providerProfile.findUnique({ where: { slug }, select: { id: true } })) {
     suffix += 1;
     slug = `${base}-${suffix}`;
   }
   return slug;
 }
 
+function getProfileGenerateErrorCode(errorMsg: string): string {
+  if (errorMsg.includes("OPENROUTER_API_KEY")) return "AI_NOT_CONFIGURED";
+  if (errorMsg.includes("429") || errorMsg.includes("per apkrautas")) return "AI_RATE_LIMITED";
+  if (errorMsg.includes("OpenRouter")) return "AI_REQUEST_FAILED";
+  if (errorMsg.includes("netinkamą atsakymą")) return "AI_INVALID_RESPONSE";
+  if (errorMsg.includes("Timeout")) return "SOURCE_TIMEOUT";
+  if (errorMsg.includes("Browser launch failed")) return "SCRAPE_BROWSER_FAILED";
+  if (errorMsg.includes("Failed to fetch URL") || errorMsg.includes("blokuoja")) return "SCRAPE_FAILED";
+  if (errorMsg.includes("network error")) return "AI_NETWORK_ERROR";
+  if (errorMsg.includes("Unique constraint")) return "PROFILE_UNIQUE_CONSTRAINT";
+  return "PROFILE_GENERATE_FAILED";
+}
+
 export async function POST(req: NextRequest) {
   let isScratchMode = false;
+  let sourceForAudit: AIGenerateRequest["source"] | undefined;
+  let actorUserId: string | undefined;
+  let profileEntityId: string | undefined;
+  let aiAuditStarted = false;
+  let aiAuditRecorded = false;
+  const started = Date.now();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -609,6 +654,7 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as AIGenerateRequest;
     const { source } = body;
+    sourceForAudit = source;
 
     if (!source) {
       return NextResponse.json(
@@ -638,6 +684,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: {
+        id: true,
+        role: true,
+        emailVerified: true,
+        name: true,
+        providerProfile: {
+          select: providerProfilePersistenceSelect,
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    actorUserId = user.id;
+
     // 1. Scrape (only in URL mode)
     let scraped: ScrapedData = { text: "", images: [] };
     if (!isScratchMode) {
@@ -656,6 +720,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Generate marketing copy with Claude (no category picking here)
+    aiAuditStarted = true;
     const aiResult = isScratchMode
       ? await generateFromScratch({
           businessName: body.businessName!,
@@ -688,16 +753,6 @@ export async function POST(req: NextRequest) {
       leaves: categoryPick.pickedLeafNames,
       total: selectedCategoryIds.length,
     });
-
-    // 4. Get user and ensure PROVIDER role
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { providerProfile: true },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // 4b. Moderate generated content. Mirrors src/app/api/tiekejas/profilis/route.ts:
     // ok → APPROVED, ai_fallback → keep current status (so an infra blip doesn't
@@ -736,6 +791,7 @@ export async function POST(req: NextRequest) {
           role: "PROVIDER",
           emailVerified: user.emailVerified ?? new Date(),
         },
+        select: { id: true },
       });
     }
 
@@ -820,6 +876,7 @@ export async function POST(req: NextRequest) {
           primaryCity: aiResult.primaryCity || null,
           serviceArea: aiResult.serviceArea || [],
         },
+        select: providerProfilePersistenceSelect,
       });
     } else {
       providerProfile = await prisma.providerProfile.update({
@@ -868,8 +925,10 @@ export async function POST(req: NextRequest) {
               ? aiResult.serviceArea
               : providerProfile.serviceArea,
         },
+        select: providerProfilePersistenceSelect,
       });
     }
+    profileEntityId = providerProfile.id;
 
     // 6. Replace categories
     await prisma.providerProfileCategory.deleteMany({
@@ -879,8 +938,29 @@ export async function POST(req: NextRequest) {
     for (const categoryId of selectedCategoryIds) {
       await prisma.providerProfileCategory.create({
         data: { providerProfileId: providerProfile.id, categoryId },
+        select: { id: true },
       });
     }
+
+    await recordAiRun({
+      feature: "profile_generate",
+      status: "success",
+      provider: "openrouter",
+      model: PROFILE_MODEL,
+      promptVersion: PROFILE_PROMPT_VERSION,
+      latencyMs: Date.now() - started,
+      actorUserId,
+      entityType: "ProviderProfile",
+      entityId: providerProfile.id,
+      metadata: {
+        source,
+        mode: isScratchMode ? "scratch" : "url",
+        categoriesCount: selectedCategoryIds.length,
+        imagesCount: imagesToSave.length,
+        generatedImageAttempted: Boolean(isScratchMode && aiResult.imagePrompt),
+      },
+    });
+    aiAuditRecorded = true;
 
     return NextResponse.json({
       success: true,
@@ -910,6 +990,25 @@ export async function POST(req: NextRequest) {
       stack: errorStack,
       mode: isScratchMode ? "scratch" : "url",
     });
+
+    if (aiAuditStarted && !aiAuditRecorded) {
+      await recordAiRun({
+        feature: "profile_generate",
+        status: "error",
+        provider: "openrouter",
+        model: PROFILE_MODEL,
+        promptVersion: PROFILE_PROMPT_VERSION,
+        latencyMs: Date.now() - started,
+        actorUserId,
+        entityType: profileEntityId ? "ProviderProfile" : undefined,
+        entityId: profileEntityId,
+        errorCode: getProfileGenerateErrorCode(errorMsg),
+        metadata: {
+          source: sourceForAudit,
+          mode: isScratchMode ? "scratch" : "url",
+        },
+      });
+    }
 
     // Safe error messages - never leak raw error details to client
     let clientMessage = "Profilio generavimas nepavyko. Bandykite vėliau.";

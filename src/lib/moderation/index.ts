@@ -2,6 +2,7 @@ import { normalize } from "./normalize";
 import { checkBlocklist } from "./blocklist";
 import { moderateWithAi, moderateImagesWithAi } from "./ai";
 import { writeModerationLog } from "./log";
+import { recordAiRun } from "@/lib/ai/audit";
 
 export type ModerationVerdict = "ok" | "review" | "reject";
 export type ModerationSource = "blocklist" | "ai" | "ai_fallback";
@@ -18,6 +19,7 @@ export interface ModerationResult {
 
 export interface ModerateInput {
   entityType: string;
+  entityId?: string | null;
   /** Laukų pavadinimas -> reikšmė. Tušti / nenurodyti laukai praleidžiami. */
   fields: Record<string, string | null | undefined>;
   actorUserId?: string | null;
@@ -72,6 +74,7 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
     };
     await writeModerationLog({
       entityType: input.entityType,
+      entityId: input.entityId,
       verdict: result.verdict,
       source: result.source,
       categories: result.categories,
@@ -106,6 +109,7 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
 
   await writeModerationLog({
     entityType: input.entityType,
+    entityId: input.entityId,
     verdict: result.verdict,
     source: result.source,
     categories: result.categories,
@@ -114,6 +118,24 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
     model: ai ? MODEL : null,
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId,
+  });
+
+  await recordAiRun({
+    feature: "moderation",
+    status: ai ? "success" : "error",
+    provider: "openrouter",
+    model: MODEL,
+    promptVersion: "moderation_text_v1",
+    latencyMs: Date.now() - started,
+    actorUserId: input.actorUserId ?? undefined,
+    entityType: input.entityType,
+    entityId: input.entityId ?? undefined,
+    errorCode: ai ? undefined : "MODERATION_AI_UNAVAILABLE",
+    metadata: {
+      modality: "text",
+      verdict: result.verdict,
+      source: result.source,
+    },
   });
 
   return result;
@@ -126,6 +148,7 @@ const REJECT_IMAGE_USER_MESSAGE =
 
 export interface ModerateImagesInput {
   entityType: string;
+  entityId?: string | null;
   imageUrls: Array<string | null | undefined>;
   actorUserId?: string | null;
 }
@@ -172,6 +195,7 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
 
   await writeModerationLog({
     entityType: input.entityType,
+    entityId: input.entityId,
     verdict: result.verdict,
     source: result.source,
     categories: result.categories,
@@ -180,6 +204,25 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
     model: ai ? MODEL : null,
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId,
+  });
+
+  await recordAiRun({
+    feature: "moderation",
+    status: ai ? "success" : "error",
+    provider: "openrouter",
+    model: MODEL,
+    promptVersion: "moderation_image_v1",
+    latencyMs: Date.now() - started,
+    actorUserId: input.actorUserId ?? undefined,
+    entityType: input.entityType,
+    entityId: input.entityId ?? undefined,
+    errorCode: ai ? undefined : "MODERATION_AI_UNAVAILABLE",
+    metadata: {
+      modality: "image",
+      imageCount: urls.length,
+      verdict: result.verdict,
+      source: result.source,
+    },
   });
 
   return result;
