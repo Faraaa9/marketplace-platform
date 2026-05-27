@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 02:50 — Claude
+
+**Commit:** `17be66f` — perf(build): switch Vercel install to pnpm and tree-shake heavy imports · lokalus
+
+**Pakeitimai:** 5 files changed, 221 insertions(+), 8304 deletions(-)
+
+**Failai:**
+- .gitignore
+- next.config.mjs
+- package-lock.json
+- pnpm-lock.yaml
+- vercel.json
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-27 19:17 — Claude
 
 **Commit:** `184cf0b` — docs(ai): AI-native marketplace roadmap · lokalus

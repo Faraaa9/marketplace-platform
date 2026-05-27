@@ -7,6 +7,14 @@ const nextConfig = {
       "./node_modules/playwright-core/**/*",
     ],
   },
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "framer-motion",
+      "@hookform/resolvers",
+    ],
+  },
   images: {
     qualities: [75, 80, 90],
     remotePatterns: [
