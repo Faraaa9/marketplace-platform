@@ -190,8 +190,18 @@ export function AIProfileSetup() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Nepavyko sugeneruoti profilio");
+        const raw = await response.text();
+        let message = "Nepavyko sugeneruoti profilio";
+        try {
+          const data = JSON.parse(raw);
+          message = data.error || message;
+        } catch {
+          if (response.status === 504 || response.status === 408) {
+            message =
+              "Generavimas užtruko per ilgai. Pabandykite dar kartą.";
+          }
+        }
+        throw new Error(message);
       }
 
       const result = await response.json();

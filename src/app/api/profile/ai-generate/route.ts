@@ -10,7 +10,7 @@ import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const PROFILE_MODEL = "anthropic/claude-haiku-4.5";
 const PROFILE_PROMPT_VERSION = "provider_profile_v1";
