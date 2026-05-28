@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, connection } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { directInquirySchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";

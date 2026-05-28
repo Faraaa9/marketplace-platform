@@ -12,6 +12,16 @@ const eslintConfig = defineConfig([
       // Ported from the previous .eslintrc.json: keep dependency-array
       // problems as warnings rather than errors.
       "react-hooks/exhaustive-deps": "warn",
+      // React Compiler advisory rules (new in eslint-config-next 16). Kept as
+      // warnings — same stance as exhaustive-deps above — because they fire
+      // false positives that aren't worth risky refactors here:
+      //  - `purity`: flags `Date.now()` in Server Components, which render once
+      //    per request, so the call is effectively pure for that render.
+      //  - `set-state-in-effect`: flags legitimate "initialize from
+      //    sessionStorage / session" effects in the request-creation funnel.
+      // Surfaced as warnings so they stay visible without blocking.
+      "react-hooks/purity": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
   globalIgnores([

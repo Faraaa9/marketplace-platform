@@ -137,7 +137,6 @@ export default function HeroSearch() {
     if (draft.description) {
       setValue((current) => (current ? current : draft.description));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist attachments (and accompanying description) the moment they change,

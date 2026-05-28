@@ -99,6 +99,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Add badge info and review status to each response for client display
     const responsesWithBadge = sortedResponses.map((resp) => {
+      // images/heroImageUrl are intentionally stripped from the client payload.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { images, heroImageUrl, ...providerProfile } = resp.provider.providerProfile ?? {};
       return {
         ...resp,
