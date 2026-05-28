@@ -17,6 +17,23 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 01:24 — Claude
+
+**Commit:** `5404ace` — feat(telegram): transport layer + webhook endpoint for request bot · lokalus
+
+**Pakeitimai:** 6 files changed, 296 insertions(+), 1 deletion(-)
+
+**Failai:**
+- .env.example
+- package.json
+- scripts/telegram-set-webhook.ts
+- src/app/api/telegram/webhook/route.ts
+- src/lib/telegram/api.ts
+- src/lib/telegram/types.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 00:14 — Claude
 
 **Commit:** `1d2c290` — fix(categories): scrollable dropdown + unified provider profile picker · lokalus
