@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import crypto from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -6,9 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, emailVerificationEmail } from "@/lib/email";
 
-export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const ip = getClientIp(req);
     const rl = await rateLimitAsync(`resend-verify:${ip}`, { maxRequests: 3, windowMs: 15 * 60 * 1000 });

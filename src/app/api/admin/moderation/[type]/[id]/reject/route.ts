@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { moderateEntity, isModerationType } from "@/lib/moderation/admin-actions";
-
-export const dynamic = "force-dynamic";
 
 /** POST /api/admin/moderation/:type/:id/reject — reject a held item. Admin only. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ type: string; id: string }> },
 ) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "ADMIN") {

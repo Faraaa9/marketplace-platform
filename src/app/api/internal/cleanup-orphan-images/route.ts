@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getConfiguredCloudinary,
@@ -6,7 +6,6 @@ import {
   publicIdFromCloudinaryUrl,
 } from "@/lib/cloudinary";
 
-export const dynamic = "force-dynamic"; // cron endpoint
 export const maxDuration = 60;
 
 const ORPHAN_AGE_HOURS = 24;
@@ -32,6 +31,7 @@ interface CloudinaryResource {
  * Auth: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function GET(req: NextRequest) {
+  await connection();
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
 

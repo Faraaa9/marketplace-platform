@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getDevEmailLog } from "@/lib/email";
 
 /**
@@ -10,6 +10,7 @@ import { getDevEmailLog } from "@/lib/email";
  *   ?preview=0  — returns HTML of that email index for browser rendering
  */
 export async function GET(req: Request) {
+  await connection();
   if (process.env.RESEND_API_KEY) {
     return NextResponse.json(
       { error: "This endpoint is only available in dev mode (no RESEND_API_KEY)" },

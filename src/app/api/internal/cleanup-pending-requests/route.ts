@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-export const dynamic = "force-dynamic"; // cron endpoint
 
 const PENDING_CLEANUP_DAYS = 7;
 
@@ -20,6 +18,7 @@ const PENDING_CLEANUP_DAYS = 7;
  * TODO: optional "your request is about to expire — confirm now" email before deletion.
  */
 export async function GET(req: NextRequest) {
+  await connection();
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
 
