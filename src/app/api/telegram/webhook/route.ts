@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { handleUpdate } from "@/lib/telegram/bot";
 import type { TgUpdate } from "@/lib/telegram/types";
 
-// Telegram delivers voice downloads and uses Buffer — needs the Node runtime.
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// Node is the default (and only) runtime under cacheComponents, which is what
+// we need: the handler downloads voice files into a Buffer.
 
 /**
  * Telegram webhook endpoint.
@@ -39,11 +39,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  try {
-    await handleUpdate(update);
-  } catch (error) {
-    console.error("[telegram] handleUpdate threw:", error);
-  }
+  // Process after responding. Transcription + AI structuring can take tens of
+  // seconds; replying 200 immediately stops Telegram from timing out and
+  // re-delivering the same update (which would post duplicate drafts).
+  after(async () => {
+    try {
+      await handleUpdate(update);
+    } catch (error) {
+      console.error("[telegram] handleUpdate threw:", error);
+    }
+  });
 
   return NextResponse.json({ ok: true });
 }
