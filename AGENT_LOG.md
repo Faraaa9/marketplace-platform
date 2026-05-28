@@ -17,6 +17,45 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 15:56 — Claude
+
+**Šaka:** `suspense/provider-secondary` (PR3, push'inta, **NEmergint'a**) — 4 commit'ai:
+- `26b2928` fix(auth): SessionGate naudojamas kaip JSX komponentas
+- `036c65e` perf(tiekejas/atsakymai)
+- `17d2c6f` perf(tiekejas/zinutes/[id])
+- `c51ab75` perf(tiekejas/zinutes)
+
+**Pakeitimai:** PR3 (SUSPENSE_PLAN.md §Page 7/5/4) — trys provider'io antriniai
+puslapiai konvertuoti iš „client fetch useEffect'e" į „plonas server shell +
+SessionGate + streamin'amos server sekcijos". Visi trys dabar `◐ Partial
+Prerender` (statinis šeletas iškart, dinamika per Suspense). `pnpm build`
+praeina (švarus worktree, sharp deklaruotas). Kiekvienas puslapis = vienas
+fetch'as → vienas data Suspense.
+
+**Nauji failai:**
+- `src/app/tiekejas/atsakymai/ResponsesList.tsx` (async server) + `ResponsesListSkeleton`
+- `src/app/tiekejas/zinutes/[id]/ThreadView.tsx` (async server) + `ArchiveButton.tsx` & `InquiryThreadChat.tsx` (client leaves) + `ThreadViewSkeleton`
+- `src/app/tiekejas/zinutes/ConversationList.tsx` (async server) + `InboxFilterShell.tsx` (client, ?tab=) + `ConversationListSkeleton`
+- 3 skeletonai re-export'inti per `src/components/ui/skeletons/index.ts`
+- ištrinti: `AtsakymaiClient.tsx`, `IdClient.tsx`; `/tiekejas/zinutes/page.tsx` iš „use client" → server shell.
+
+**Toliau:**
+- **SessionGate latent bug pataisytas (`26b2928`).** Merge'intas SessionGate
+  grąžino `children(userId)` kaip `ReactNode` (su `bigint`) → async komponentas
+  negaliojo kaip JSX (`AwaitedReactNode`). Kompiliavosi PR1'e tik todėl, kad
+  niekas dar nerenderino `<SessionGate/>`. Fix = Fragment wrap. **PR4-7 tą fix'ą
+  paveldi po PR3 merge**; jei jie šakoti nuo seno main, jiems reikės to paties
+  vieno-eilutės fix'o (trivialus konfliktas).
+- **QA prieš merge (Vercel preview, realus PROVIDER account'as).** Lokaliai
+  netestuota su login'u (vengiau live DB / nėra test account'o — kaip PR1).
+  Patikrinti: skeleton→content streaming (throttle slow-3g); logged-out →
+  `/prisijungti` (proxy); non-PROVIDER → `/tapti-tiekeju` (SessionGate);
+  atsakymų tab'ai `?status=`; inbox tab'ai `?tab=`; thread žinučių siuntimas +
+  archyvavimas (archyvas dabar daro `router.refresh()`, ne lokalų optimistic).
+- Žr. `NOTES.md` PR3 įrašus dėl 2 sąmoningų sprendimų (active-provider gate
+  sušvelnintas; inbox unread count nuimtas) + 1 orphaned route.
+
+
 ## 2026-05-28 06:59 — Claude
 
 **Commit:** `a470b59` — perf(paskyra/profilis): hoist static header above the Suspense boundary · push'inta

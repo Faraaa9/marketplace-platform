@@ -1,10 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
   FileText,
   MapPin,
@@ -17,17 +13,6 @@ import {
 } from "lucide-react";
 
 type ResponseStatus = "laukia" | "priimti" | "nepasirinkti";
-
-interface ResponseItem {
-  responseId: string;
-  requestId: string;
-  title: string;
-  categoryName: string | null;
-  location: string;
-  price: number | null;
-  createdAt: string;
-  status: ResponseStatus;
-}
 
 const STATUS_META: Record<
   ResponseStatus,
@@ -59,74 +44,96 @@ const TABS: { value: "" | ResponseStatus; label: string }[] = [
   { value: "nepasirinkti", label: "Nepasirinkti" },
 ];
 
-export default function AtsakymaiClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [items, setItems] = useState<ResponseItem[] | null>(null);
+function tabHref(value: "" | ResponseStatus) {
+  return value ? `/tiekejas/atsakymai?status=${value}` : "/tiekejas/atsakymai";
+}
 
-  const statusParam = searchParams.get("status") || "";
+/**
+ * Streams the provider's full response list once, derives each offer's outcome
+ * from its parent request, and filters by the `?status=` tab. Tabs are plain
+ * <Link>s, so switching is URL-driven and re-streams this section (no client JS).
+ */
+export async function ResponsesList({
+  userId,
+  searchParams,
+}: {
+  userId: string;
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status } = await searchParams;
   const activeStatus: "" | ResponseStatus =
-    statusParam === "laukia" ||
-    statusParam === "priimti" ||
-    statusParam === "nepasirinkti"
-      ? statusParam
+    status === "laukia" || status === "priimti" || status === "nepasirinkti"
+      ? status
       : "";
 
-  useEffect(() => {
-    fetch("/api/tiekejas/atsakymai")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) {
-          setItems(data.data.items);
-        } else if (
-          data.code === "EMAIL_NOT_VERIFIED" ||
-          data.code === "ACCOUNT_NOT_ACTIVE" ||
-          data.code === "NOT_PROVIDER"
-        ) {
-          router.push("/tiekejas");
-        } else {
-          setItems([]);
-        }
-      })
-      .catch(() => setItems([]));
-  }, [router]);
+  const rows = await prisma.response.findMany({
+    where: { providerId: userId },
+    select: {
+      id: true,
+      price: true,
+      createdAt: true,
+      request: {
+        select: {
+          id: true,
+          title: true,
+          location: true,
+          status: true,
+          acceptedResponseId: true,
+          categoryRef: { select: { name: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-  const list = items ?? [];
+  const items = rows.map((row) => {
+    // Outcome comes from the parent request: "priimti" when this is the
+    // accepted offer, "laukia" while the request is still open with nothing
+    // accepted, "nepasirinkti" once another offer won or it closed.
+    let status: ResponseStatus;
+    if (row.request.acceptedResponseId === row.id) {
+      status = "priimti";
+    } else if (
+      row.request.acceptedResponseId === null &&
+      row.request.status === "OPEN"
+    ) {
+      status = "laukia";
+    } else {
+      status = "nepasirinkti";
+    }
+    return {
+      responseId: row.id,
+      requestId: row.request.id,
+      title: row.request.title,
+      categoryName: row.request.categoryRef?.name ?? null,
+      location: row.request.location,
+      price: row.price,
+      createdAt: row.createdAt,
+      status,
+    };
+  });
+
   const counts: Record<"" | ResponseStatus, number> = {
-    "": list.length,
-    laukia: list.filter((i) => i.status === "laukia").length,
-    priimti: list.filter((i) => i.status === "priimti").length,
-    nepasirinkti: list.filter((i) => i.status === "nepasirinkti").length,
+    "": items.length,
+    laukia: items.filter((i) => i.status === "laukia").length,
+    priimti: items.filter((i) => i.status === "priimti").length,
+    nepasirinkti: items.filter((i) => i.status === "nepasirinkti").length,
   };
   const filtered = activeStatus
-    ? list.filter((i) => i.status === activeStatus)
-    : list;
-
-  function selectTab(value: string) {
-    router.push(
-      value ? `/tiekejas/atsakymai?status=${value}` : "/tiekejas/atsakymai",
-    );
-  }
+    ? items.filter((i) => i.status === activeStatus)
+    : items;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-          Mano atsakymai
-        </h1>
-        <p className="mt-1 text-body text-surface-500 dark:text-surface-400">
-          Užklausos, į kurias atsakėte, ir kiekvieno pasiūlymo būsena.
-        </p>
-      </div>
-
-      {/* Status tabs */}
+    <div>
+      {/* Status tabs — URL-driven */}
       <div className="mb-5 flex flex-wrap gap-1 rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
         {TABS.map((tab) => {
           const isActive = activeStatus === tab.value;
           return (
-            <button
+            <Link
               key={tab.value || "all"}
-              onClick={() => selectTab(tab.value)}
+              href={tabHref(tab.value)}
+              aria-current={isActive ? "page" : undefined}
               className={`rounded-lg px-3 py-1.5 text-body-sm font-medium transition-all ${
                 isActive
                   ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
@@ -137,15 +144,13 @@ export default function AtsakymaiClient() {
               <span className="ml-1.5 tabular-nums text-surface-400">
                 {counts[tab.value]}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>
 
       {/* List */}
-      {items === null ? (
-        <LoadingSpinner />
-      ) : items.length === 0 ? (
+      {items.length === 0 ? (
         <EmptyState
           title="Dar neatsakėte į jokią užklausą"
           body="Kai atsakysite į klientų užklausas, jos atsiras čia."
