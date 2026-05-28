@@ -20,16 +20,44 @@ export type ProvidersView = "grid" | "list";
 interface ProvidersExperienceProps {
   initialProviders: ProviderCardData[];
   initialFilters: ProviderFilters;
+  /** Full count from the server. The initialProviders array typically only
+   *  carries the top slice (page-1 worth) — we lazy-fetch the rest so the
+   *  initial HTML payload stays small. */
+  totalProviderCount: number;
 }
 
 export default function ProvidersExperience({
   initialProviders,
   initialFilters,
+  totalProviderCount,
 }: ProvidersExperienceProps) {
   const router = useRouter();
   const [filters, setFilters] = useState<ProviderFilters>(initialFilters);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<ProvidersView>("grid");
+  const [providers, setProviders] = useState<ProviderCardData[]>(initialProviders);
+
+  // Lazy-fetch the rest of the listing after hydration so navigation/filter
+  // beyond the first page still feels local-first. Skipped when the initial
+  // slice already covers everything.
+  useEffect(() => {
+    if (providers.length >= totalProviderCount) return;
+
+    const controller = new AbortController();
+    fetch("/api/meistrai/providers", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { providers: ProviderCardData[] } | null) => {
+        if (data?.providers) setProviders(data.providers);
+      })
+      .catch(() => {
+        // Network/abort — keep showing the initial slice silently.
+      });
+
+    return () => controller.abort();
+    // Intentionally only runs once on mount; totalProviderCount is a render
+    // input, not a re-fetch trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const saved = typeof window === "undefined" ? null : localStorage.getItem(VIEW_STORAGE_KEY);
@@ -51,8 +79,8 @@ export default function ProvidersExperience({
   }
 
   const filtered = useMemo(
-    () => filterAndSortProviders(initialProviders, filters),
-    [initialProviders, filters],
+    () => filterAndSortProviders(providers, filters),
+    [providers, filters],
   );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

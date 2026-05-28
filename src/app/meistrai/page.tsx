@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { getServiceCategoryGroups } from "@/lib/service-categories";
-import type { ServiceCategoryItem } from "@/lib/service-categories";
 import { Users, ArrowRight } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
-import { isStoryEnabled } from "@/lib/platform-settings";
-import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
-import { getPresenceLabel, getPresenceLevel } from "@/lib/presence";
-import type { ProviderCardData, ProviderFilters } from "@/lib/provider-filters";
+import { getProvidersListingData, buildProviderCards } from "@/lib/providers-listing";
+import type { ServiceCategoryItem } from "@/lib/service-categories";
+import type { ProviderFilters } from "@/lib/provider-filters";
 
 export const metadata: Metadata = {
   title: "Meistrai ir paslaugų teikėjai",
@@ -21,6 +16,11 @@ export const metadata: Metadata = {
 // searchParams still flow through (just for initial filter chips); they don't
 // touch the cached fetch.
 export const revalidate = 60;
+
+// Top slice we render server-side. The rest of the (up to 500) cached
+// providers ship via /api/meistrai/providers after hydration, restoring the
+// local-first filtering UX without paying the full payload cost on FCP.
+const SSR_INITIAL_COUNT = 20;
 
 interface PageProps {
   searchParams: Promise<{
@@ -34,153 +34,17 @@ interface PageProps {
   }>;
 }
 
-const DESC_PREVIEW_LENGTH = 160;
-// Local-first listing: every provider is fetched once and filtered in the
-// browser, so category/location/search changes are instant. 500 is a safety
-// ceiling — beyond it, filtering should move back into SQL.
-const MAX_PROVIDERS = 500;
-
-const getProvidersListingData = unstable_cache(
-  async () => {
-    const where: Record<string, unknown> = {
-      role: "PROVIDER",
-      emailVerified: { not: null },
-      providerProfile: { isActive: true, moderationStatus: "APPROVED" },
-    };
-
-    const [providers, storyFeatureOn, categoryGroups] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          createdAt: true,
-          lastSeenAt: true,
-          providerProfile: {
-            select: {
-              slug: true,
-              description: true,
-              categories: {
-                select: { category: { select: { id: true, name: true, slug: true } } },
-                orderBy: { sortOrder: "asc" },
-              },
-              location: true,
-              images: true,
-              isVerified: true,
-              isPremium: true,
-              isYoungTalent: true,
-              isGoat: true,
-              availableForUrgent: true,
-              priceFrom: true,
-            },
-          },
-          _count: { select: { responses: true, reviewsReceived: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: MAX_PROVIDERS,
-      }),
-      isStoryEnabled(),
-      getServiceCategoryGroups(),
-    ]);
-
-    const providerIds = providers.map((p) => p.id);
-
-    // ── Batch enrichment queries — same providerIds set ──
-    const [reviewAggs, acceptedRows, lastResponseRows, avgResponseRows, activeStories] = await Promise.all([
-      providerIds.length > 0
-        ? prisma.review.groupBy({
-            by: ["providerId"],
-            where: { providerId: { in: providerIds }, moderationStatus: "APPROVED" },
-            _avg: { rating: true },
-            _count: { _all: true },
-          })
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; count: bigint }>>`
-            SELECT r."providerId", COUNT(*)::bigint AS count
-            FROM service_requests sr
-            JOIN responses r ON sr."acceptedResponseId" = r.id
-            WHERE r."providerId" = ANY(${providerIds}::text[])
-            GROUP BY r."providerId"
-          `
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; lastAt: Date }>>`
-            SELECT "providerId", MAX("createdAt") AS "lastAt"
-            FROM responses
-            WHERE "providerId" = ANY(${providerIds}::text[])
-            GROUP BY "providerId"
-          `
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; avgHours: number | null }>>`
-            SELECT r."providerId",
-                   AVG(EXTRACT(EPOCH FROM (r."createdAt" - sr."createdAt")) / 3600) AS "avgHours"
-            FROM responses r
-            JOIN service_requests sr ON r."requestId" = sr.id
-            WHERE r."providerId" = ANY(${providerIds}::text[])
-              AND r."createdAt" > sr."createdAt"
-            GROUP BY r."providerId"
-          `
-        : Promise.resolve([]),
-      storyFeatureOn && providerIds.length > 0
-        ? prisma.providerStory.groupBy({
-            by: ["providerId"],
-            where: {
-              providerId: { in: providerIds },
-              moderationStatus: "APPROVED",
-              expiresAt: { gt: new Date() },
-            },
-            _count: true,
-          })
-        : Promise.resolve([]),
-    ]);
-
-    // Map raw DB shapes to lookups keyed by providerId. Done inside the cache
-    // so we don't re-pay the O(n) cost on every cached read.
-    return {
-      providers,
-      categoryGroups,
-      reviewAggs: reviewAggs.map((r) => ({
-        providerId: r.providerId,
-        avg: r._avg.rating,
-        count: r._count._all,
-      })),
-      acceptedRows: acceptedRows.map((r) => ({
-        providerId: r.providerId,
-        count: Number(r.count),
-      })),
-      lastResponseRows: lastResponseRows.map((r) => ({
-        providerId: r.providerId,
-        lastAt: r.lastAt.toISOString(),
-      })),
-      avgResponseRows: avgResponseRows.map((r) => ({
-        providerId: r.providerId,
-        avgHours: r.avgHours !== null ? Math.round(Number(r.avgHours)) : null,
-      })),
-      activeStoryProviderIds: activeStories.map((s) => s.providerId),
-    };
-  },
-  ["meistrai-listing-v1"],
-  {
-    revalidate: 60,
-    tags: ["providers-listing"],
-  },
-);
-
 export default async function ProvidersListingPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  const {
-    providers,
-    categoryGroups,
-    reviewAggs,
-    acceptedRows,
-    lastResponseRows,
-    avgResponseRows,
-    activeStoryProviderIds,
-  } = await getProvidersListingData();
+  const data = await getProvidersListingData();
+  const { categoryGroups, providers } = data;
+
+  // Build only the visible slice; the rest is hydrated client-side. Heavy
+  // transform work (image URL builds, presence labels) for 480 unseen rows
+  // would otherwise burn server CPU + balloon the RSC payload.
+  const initialProviders = buildProviderCards(data, providers.slice(0, SSR_INITIAL_COUNT));
+  const totalProviderCount = providers.length;
 
   // Initial filters come from the URL so shared/deep links keep working.
   // `?category=` is validated against the curated depth-1 category slugs —
@@ -214,73 +78,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
     top: params.top === "1",
   };
 
-  // ── Build lookup maps from cached enrichment rows ──
-  const reviewMap = new Map(reviewAggs.map((r) => [r.providerId, { avg: r.avg, count: r.count }]));
-  const acceptedMap = new Map(acceptedRows.map((r) => [r.providerId, r.count]));
-  const lastResponseMap = new Map(lastResponseRows.map((r) => [r.providerId, new Date(r.lastAt)]));
-  const avgResponseMap = new Map(avgResponseRows.map((r) => [r.providerId, r.avgHours]));
-  const providersWithStories = new Set(activeStoryProviderIds);
-
-  // ── Map to card data ──
-  const allProviders: ProviderCardData[] = providers.map((p) => {
-    const badge = p.providerProfile?.isVerified ? "Patikimas" : null;
-
-    const firstImage: string | null = p.providerProfile?.images?.[0] ?? null;
-    const categories = (p.providerProfile?.categories ?? []).map((link) => ({
-      id: link.category.id,
-      name: link.category.name,
-      slug: link.category.slug,
-    }));
-
-    const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
-    const daysSinceActive = Math.floor(
-      (Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    const isRecentlyActive = daysSinceActive <= 7;
-
-    const acceptedCount = acceptedMap.get(p.id) || 0;
-    const review = reviewMap.get(p.id);
-    const avgRating = review?.avg != null ? Math.round(review.avg * 10) / 10 : null;
-    const reviewCount = review?.count ?? 0;
-
-    const rawDesc = p.providerProfile?.description || null;
-    const description = rawDesc && rawDesc.length > DESC_PREVIEW_LENGTH
-      ? rawDesc.slice(0, DESC_PREVIEW_LENGTH).trimEnd() + "…"
-      : rawDesc;
-
-    return {
-      id: p.id,
-      slug: p.providerProfile?.slug ?? null,
-      name: p.name,
-      profileImage: getSafeProviderImageUrl(firstImage || p.image, { width: 96, crop: "fill" }),
-      coverImage: getSafeProviderImageUrl(firstImage || p.image, { width: 600, height: 400, crop: "fill" }),
-      description,
-      categories,
-      location: p.providerProfile?.location || null,
-      isVerified: p.providerProfile?.isVerified ?? false,
-      isPremium: p.providerProfile?.isPremium ?? false,
-      isYoungTalent: p.providerProfile?.isYoungTalent ?? false,
-      isGoat: p.providerProfile?.isGoat ?? false,
-      badge,
-      responseCount: p._count.responses,
-      acceptedCount,
-      isRecentlyActive,
-      presenceLevel: getPresenceLevel(p.lastSeenAt),
-      presenceLabel: getPresenceLabel(p.lastSeenAt),
-      avgRating,
-      reviewCount,
-      hasActiveStory: providersWithStories.has(p.id),
-      availableForUrgent: p.providerProfile?.availableForUrgent ?? false,
-      priceFrom: p.providerProfile?.priceFrom ?? null,
-      avgResponseTimeHours: avgResponseMap.get(p.id) ?? null,
-    };
-  });
-
-  const total = allProviders.length;
-
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="relative overflow-hidden border-b border-surface-200/50 dark:border-surface-800/50">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex items-center gap-3 mb-2">
@@ -292,21 +91,20 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             </h1>
           </div>
           <p className="text-body text-surface-500 dark:text-surface-400 ml-[52px]">
-            {total > 0
-              ? `${total} ${total === 1 ? "patikimas specialistas" : total < 10 ? "patikimi specialistai" : "patikimų specialistų"} jūsų paslaugoms`
+            {totalProviderCount > 0
+              ? `${totalProviderCount} ${totalProviderCount === 1 ? "patikimas specialistas" : totalProviderCount < 10 ? "patikimi specialistai" : "patikimų specialistų"} jūsų paslaugoms`
               : "Raskite patikimus specialistus savo mieste"}
           </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filter bar + listing — local-first, filters run in-memory */}
         <ProvidersExperience
-          initialProviders={allProviders}
+          initialProviders={initialProviders}
           initialFilters={initialFilters}
+          totalProviderCount={totalProviderCount}
         />
 
-        {/* Bottom CTA */}
         <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
           <p className="text-body font-semibold text-surface-900 dark:text-white">
             Nerandate tinkamo specialisto?
