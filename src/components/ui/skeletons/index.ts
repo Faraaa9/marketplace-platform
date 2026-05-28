@@ -14,4 +14,4 @@
  *
  * This PR establishes the home + convention only; no shapes live here yet.
  */
-export {};
+export { ResponsesListSkeleton } from "./ResponsesListSkeleton";
