@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 02:26 — Claude
+
+**Commit:** `a0559c6` — fix(telegram): re-prompt for contact button instead of treating typed text as a new request · lokalus
+
+**Pakeitimai:** 3 files changed, 30 insertions(+)
+
+**Failai:**
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/conversation.ts
+- src/lib/telegram/format.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 02:21 — Claude
 
 **Commit:** `cd39276` — feat(categories): precise AI picking + paid timed category unlock · lokalus
