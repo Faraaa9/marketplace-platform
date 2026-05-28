@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
  * Attach a guest request to the logged-in user's account using the tracking token.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json(

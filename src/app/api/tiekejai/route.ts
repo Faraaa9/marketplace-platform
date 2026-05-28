@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildProviderLocationFilter } from "@/lib/provider-filters";
 import { expandToMatchSet } from "@/lib/category-matching";
-
-export const dynamic = "force-dynamic";
 
 /**
  * GET /api/tiekejai — Public provider listing.
  * Only returns active, email-verified providers with safe fields.
  */
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || "";

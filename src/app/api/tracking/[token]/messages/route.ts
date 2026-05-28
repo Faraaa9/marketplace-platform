@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +18,7 @@ import { createMessageNotification } from "@/lib/message-notifications";
  * preventing cross-request message injection.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
     const body = await req.json();

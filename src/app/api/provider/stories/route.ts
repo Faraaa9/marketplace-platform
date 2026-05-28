@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,8 +12,6 @@ import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
-export const dynamic = "force-dynamic";
-
 const MAX_ACTIVE_STORIES = 3;
 const STORY_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -23,6 +21,7 @@ const MAX_TEXT_LENGTH = 200;
  * GET — list active stories for the current provider
  */
 export async function GET() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -53,6 +52,7 @@ export async function GET() {
  * POST — create a new story (image + optional text)
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

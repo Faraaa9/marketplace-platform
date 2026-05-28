@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const token = req.nextUrl.searchParams.get("token");
 

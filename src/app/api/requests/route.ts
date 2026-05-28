@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import crypto from "crypto";
@@ -13,8 +13,6 @@ import { PHONE_VERIFICATION_VALID_MS } from "@/lib/phone-verification";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 
-export const dynamic = "force-dynamic";
-
 const VERIFICATION_VALID_MS = 60 * 60 * 1000;
 
 /**
@@ -25,6 +23,7 @@ const VERIFICATION_VALID_MS = 60 * 60 * 1000;
  *   reach providers in the matched category.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const ip = getClientIp(req);
     const rl = await rateLimitAsync(`requests:create:${ip}`, RATE_LIMITS.requests);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { unstable_cache } from "next/cache";
 import * as categoryService from "@/lib/imported/category-service";
 
@@ -46,6 +46,7 @@ const getRootsCached = unstable_cache(
  *   ?stats=1        — get category stats
  */
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const { searchParams } = new URL(req.url);
 

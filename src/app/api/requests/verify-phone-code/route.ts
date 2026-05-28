@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -7,14 +7,13 @@ import { normalizePhoneNumber } from "@/lib/phone";
 import { phoneVerificationCodeMatches } from "@/lib/phone-verification";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
-export const dynamic = "force-dynamic";
-
 const schema = z.object({
   phone: z.string().trim().min(1),
   code: z.string().trim().regex(/^\d{6}$/, "Įveskite 6 skaitmenų kodą"),
 });
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const ip = getClientIp(req);
     const rl = await rateLimitAsync(`phone-verify:ip:${ip}`, RATE_LIMITS.phoneVerify);

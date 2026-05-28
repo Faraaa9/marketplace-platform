@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
  * must match request.clientId if one exists.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
     const body = await req.json();

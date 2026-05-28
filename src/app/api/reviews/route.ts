@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +9,7 @@ import { moderateText } from "@/lib/moderation";
  * Body: { requestId, responseId, providerId, rating (1-5), comment? }
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -127,6 +128,7 @@ export async function POST(req: NextRequest) {
  * GET /api/reviews?providerId=xxx — Get reviews for a provider (public).
  */
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const providerId = new URL(req.url).searchParams.get("providerId");
     if (!providerId) {
