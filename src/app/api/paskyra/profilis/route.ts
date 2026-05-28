@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { revalidateProviderCaches } from "@/lib/cache-invalidation";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Vardas turi būti bent 2 simbolių").max(100),
@@ -104,6 +105,12 @@ export async function PATCH(req: NextRequest) {
       },
       select: userSelect,
     });
+
+    // A provider's name renders on /meistrai cards + their profile page, so a
+    // name change must refresh those caches; plain clients have no such surface.
+    if (session.user.role === "PROVIDER") {
+      revalidateProviderCaches(session.user.id);
+    }
 
     return NextResponse.json({ success: true, data: user });
   } catch (error) {

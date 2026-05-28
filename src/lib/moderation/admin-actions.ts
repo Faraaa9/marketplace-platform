@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
+import { revalidateProviderCaches, revalidateReviewCaches } from "@/lib/cache-invalidation";
 import { writeModerationLog } from "./log";
 
 export const MODERATION_TYPES = ["request", "profile", "story", "review", "inquiry"] as const;
@@ -267,9 +268,21 @@ export async function moderateEntity(
     actorUserId: adminId,
   });
 
-  // An approved request becomes publicly visible — refresh cached request views.
-  if (type === "request" && action === "approve") {
-    revalidateTag("requests", { expire: 0 });
+  // Moderation flips public visibility (approve shows it, reject hides it), so
+  // refresh the cache surfaces that render each entity type — for either action.
+  switch (type) {
+    case "request":
+      revalidateTag("requests", { expire: 0 });
+      break;
+    case "profile":
+      revalidateProviderCaches();
+      break;
+    case "review":
+      revalidateReviewCaches();
+      break;
+    case "story":
+      revalidateTag("stories", { expire: 0 });
+      break;
   }
 
   return { ok: true };
