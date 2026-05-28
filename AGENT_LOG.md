@@ -17,6 +17,36 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 06:49 — Claude
+
+**Commit:** `c4f1c5b` — perf(meistrai): cache reviews and similar providers sections · lokalus
+
+**Pakeitimai:** 3 files changed, 43 insertions(+), 15 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/meistrai/[slug]/components/ReviewsSection.tsx
+- src/app/meistrai/[slug]/components/SimilarProvidersSection.tsx
+
+**Esmė:** Abi `/meistrai/[slug]` sekcijos (reviews, panašūs tiekėjai), kurios
+dar darė uncached `prisma.findMany`, dabar apgaubtos `'use cache'` (300s
+revalidate). Tag'ai pagal EGZISTUOJANČIĄ konvenciją — `reviews:user:${id}` ir
+`provider:user:${id}` — kad sutaptų su `getProviderProfile`/`getTopReviewsForSeo`.
+Suspense/props nekeisti; owner-preview session lookup nepaliestas (privacy).
+
+**Toliau:**
+- Branch `suspense/meistrai-cache-tags` push'intas į origin — NEMERGE'inti į
+  main tiesiogiai; eina per PR review (Suspense plano §Page 12 dalis).
+- Cache invalidation hook'ai vis dar neimplementuoti (žr. NOTES.md). Kai bus
+  pridėtas `revalidateTag` wiring'as (review approval → `reviews:user:${id}`,
+  profilio update → `provider:user:${id}`), jis automatiškai padengs ir šias
+  dvi sekcijas — atskiro darbo nereikia.
+- Lokaliam `pnpm build` šitam worktree'e reikėjo `.npmrc` su
+  `shamefully-hoist=true` (phantom dep `sharp` neresolvinasi su strict pnpm
+  linker'iu). Vercel deploy'as naudoja npm, tad CI nepaliestas; `.npmrc`
+  necommit'intas — tik lokalus workaround.
+
+
 ## 2026-05-28 04:50 — Claude
 
 **Commit:** `b15ce8f` — Merge remote-tracking branch 'origin/cache-components/task-f-suspense' · lokalus
