@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,6 @@ import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
 
-export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const PROFILE_MODEL = "anthropic/claude-haiku-4.5";
@@ -627,6 +626,7 @@ function getProfileGenerateErrorCode(errorMsg: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  await connection();
   let isScratchMode = false;
   let sourceForAudit: AIGenerateRequest["source"] | undefined;
   let actorUserId: string | undefined;

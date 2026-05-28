@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
@@ -7,6 +7,7 @@ import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
  * GET — fetch one direct-inquiry conversation (provider view) and mark it read.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * PATCH — archive / un-archive an inquiry (status: ARCHIVED or READ).
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();

@@ -1,11 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
-
-export const dynamic = "force-dynamic";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email("Neteisingas el. pašto formatas"),
@@ -17,6 +15,7 @@ const schema = z.object({
  * email and, if valid, swap the user's account email + mark it verified.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

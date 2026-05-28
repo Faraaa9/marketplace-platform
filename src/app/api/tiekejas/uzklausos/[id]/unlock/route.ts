@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { checkEligibility } from "@/lib/provider-eligibility";
@@ -11,6 +11,7 @@ import { unlockLead } from "@/lib/credits";
  * a no-op and is not charged again.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();

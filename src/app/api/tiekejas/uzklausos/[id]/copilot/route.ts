@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { checkEligibility } from "@/lib/provider-eligibility";
@@ -6,13 +6,12 @@ import { isLeadUnlocked } from "@/lib/credits";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateLeadCopilot, AiLeadCopilotError } from "@/lib/ai/lead-copilot";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Read-only lead co-pilot. Gives the provider short decision support for a
  * request; it never unlocks the lead, sends messages, or writes response text.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();

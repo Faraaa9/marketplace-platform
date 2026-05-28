@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
-
-export const dynamic = "force-dynamic";
 
 /**
  * Unified provider inbox — request conversations (Response threads) and direct
@@ -24,6 +22,7 @@ type ConversationItem = {
 };
 
 export async function GET() {
+  await connection();
   try {
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;

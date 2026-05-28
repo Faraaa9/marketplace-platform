@@ -1,13 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { expandToMatchSet } from "@/lib/category-matching";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

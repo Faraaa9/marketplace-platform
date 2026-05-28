@@ -1,9 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { getCreditLedger } from "@/lib/credits";
-
-export const dynamic = "force-dynamic";
 
 /**
  * GET /api/tiekejas/kreditai
@@ -11,6 +9,7 @@ export const dynamic = "force-dynamic";
  * provider's own credits page.
  */
 export async function GET() {
+  await connection();
   try {
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;

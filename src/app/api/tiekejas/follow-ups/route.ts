@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import {
@@ -10,14 +10,13 @@ import {
   type ResponseFollowUpInput,
 } from "@/lib/ai/follow-up";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Read-only Follow-Up Agent for the active provider. Returns advisory
  * suggestions for stalled response threads and unanswered direct inquiries.
  * Never sends messages, never spends credits — strictly a render hint.
  */
 export async function GET() {
+  await connection();
   const guard = await requireActiveProvider();
   if (!guard.authorized) return guard.response;
 

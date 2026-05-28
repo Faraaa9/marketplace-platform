@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
@@ -12,6 +12,7 @@ import { recordAiRun } from "@/lib/ai/audit";
  * response endpoint.
  */
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   let requestId: string | null = null;
   let actorUserId: string | null = null;
   let providerProfileId: string | null = null;
