@@ -26,6 +26,10 @@ type VerifyStep = "form" | "code" | "needsLogin";
 
 interface DirectInquiryWidgetProps {
   providerId: string;
+  /** Canonical profile slug — used for the login round-trip URL so returning
+   * does not bounce through the legacy cuid → slug redirect (which would drop
+   * the `?inquiry=1` flag and lose the restored form). */
+  providerSlug: string;
   providerName: string;
   isSelf: boolean;
   variant?: "default" | "sidebar";
@@ -46,6 +50,7 @@ export default function DirectInquiryWidget(props: DirectInquiryWidgetProps) {
 
 function DirectInquiryWidgetInner({
   providerId,
+  providerSlug,
   providerName,
   isSelf,
   variant = "default",
@@ -334,7 +339,7 @@ function DirectInquiryWidgetInner({
         <p className="mb-4 text-micro text-blue-700/70 dark:text-blue-400/70">
           Prisijunkite prie savo paskyros, grįšite čia ir galėsite išsiųsti žinutę vienu paspaudimu.
         </p>
-        <Link href={`/prisijungti?callbackUrl=${encodeURIComponent(`/meistrai/${providerId}?inquiry=1`)}`}>
+        <Link href={`/prisijungti?callbackUrl=${encodeURIComponent(`/meistrai/${providerSlug}?inquiry=1`)}`}>
           <Button size="sm">
             <LogIn className="h-4 w-4" />
             Prisijungti

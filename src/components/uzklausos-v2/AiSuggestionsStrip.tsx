@@ -56,7 +56,7 @@ export default function AiSuggestionsStrip({
           type="button"
           onClick={() => setCollapsed(true)}
           aria-label="Slėpti AI pasiūlymus"
-          className="rounded-md p-1 text-surface-400 transition-colors hover:bg-brand-100/60 hover:text-surface-700 dark:hover:bg-brand-900/30 dark:hover:text-surface-200"
+          className="-m-2 inline-flex h-11 w-11 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-brand-100/60 hover:text-surface-700 dark:hover:bg-brand-900/30 dark:hover:text-surface-200"
         >
           <X className="h-3.5 w-3.5" />
         </button>

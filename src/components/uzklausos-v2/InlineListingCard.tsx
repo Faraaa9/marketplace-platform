@@ -563,7 +563,7 @@ export default function InlineListingCard({
               type="button"
               onClick={() => setOpenMeta(null)}
               aria-label="Uždaryti"
-              className="rounded-md p-1 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-200"
+              className="-m-2 inline-flex h-11 w-11 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-200"
             >
               <X className="h-3.5 w-3.5" />
             </button>

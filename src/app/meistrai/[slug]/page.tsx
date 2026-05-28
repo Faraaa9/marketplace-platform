@@ -18,6 +18,7 @@ import DirectInquiryWidget from "./components/DirectInquiryWidget";
 import MessengerCTA from "./components/MessengerCTA";
 import ReviewsSection from "./components/ReviewsSection";
 import SimilarProvidersSection from "./components/SimilarProvidersSection";
+import SectionErrorBoundary from "./components/SectionErrorBoundary";
 import StoryAvatarButton from "./components/StoryAvatarButton";
 import StickyBottomBar from "./components/StickyBottomBar";
 import ContactButton from "./components/ContactButton";
@@ -554,13 +555,15 @@ async function ProfileContent({ params, searchParams }: PageProps) {
             )}
 
             <div id="atsiliepimai" className="scroll-mt-24">
-              <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
-                <ReviewsSection
-                  providerId={provider.id}
-                  avgRating={provider.avgRating}
-                  totalReviews={provider.totalReviews}
-                />
-              </Suspense>
+              <SectionErrorBoundary title="Atsiliepimai">
+                <Suspense fallback={<SectionSkeleton title="Atsiliepimai" />}>
+                  <ReviewsSection
+                    providerId={provider.id}
+                    avgRating={provider.avgRating}
+                    totalReviews={provider.totalReviews}
+                  />
+                </Suspense>
+              </SectionErrorBoundary>
             </div>
           </div>
           </div>
@@ -599,6 +602,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
             <div id="zinute" className="rounded-3xl bg-gradient-to-br from-brand-50/80 to-white p-6 dark:from-brand-950/50 dark:to-surface-900/50">
               <DirectInquiryWidget
                 providerId={provider.id}
+                providerSlug={resolvedSlug}
                 providerName={provider.name}
                 isSelf={isSelf}
                 variant="sidebar"
@@ -660,13 +664,15 @@ async function ProfileContent({ params, searchParams }: PageProps) {
 
           {/* ── Full-width: Similar providers ── */}
           <div className="min-w-0 md:col-span-2">
-            <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
-              <SimilarProvidersSection
-                providerId={provider.id}
-                categoryIds={provider.categories.map((c) => c.id)}
-                location={provider.location}
-              />
-            </Suspense>
+            <SectionErrorBoundary title="Panašūs tiekėjai">
+              <Suspense fallback={<SectionSkeleton title="Panašūs tiekėjai" />}>
+                <SimilarProvidersSection
+                  providerId={provider.id}
+                  categoryIds={provider.categories.map((c) => c.id)}
+                  location={provider.location}
+                />
+              </Suspense>
+            </SectionErrorBoundary>
           </div>
         </div>
       </div>

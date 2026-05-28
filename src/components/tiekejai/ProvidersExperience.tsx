@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProviderFilterBar from "./ProviderFilterBar";
 import ProviderListingClient from "./ProviderListingClient";
@@ -78,9 +78,23 @@ export default function ProvidersExperience({
     }
   }
 
+  // Keep the search box instant while gating the expensive filter+sort (over
+  // up to ~500 rows) and the list re-render behind a deferred value. Typing
+  // updates the controlled input immediately; the results catch up on a
+  // non-blocking render, which keeps per-keystroke INP low on mobile.
+  const deferredSearch = useDeferredValue(filters.search);
+  const { locations, categories, presence, urgent, top } = filters;
   const filtered = useMemo(
-    () => filterAndSortProviders(providers, filters),
-    [providers, filters],
+    () =>
+      filterAndSortProviders(providers, {
+        search: deferredSearch,
+        locations,
+        categories,
+        presence,
+        urgent,
+        top,
+      }),
+    [providers, deferredSearch, locations, categories, presence, urgent, top],
   );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

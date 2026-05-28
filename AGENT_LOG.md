@@ -17,6 +17,25 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 22:29 — Claude
+
+**Commit:** `0111921` — fix(audit): P1/P2 polish from production-readiness audit · lokalus
+
+**Pakeitimai:** 8 files changed, 109 insertions(+), 23 deletions(-)
+
+**Failai:**
+- src/app/meistrai/[slug]/components/DirectInquiryWidget.tsx
+- src/app/meistrai/[slug]/components/SectionErrorBoundary.tsx
+- src/app/meistrai/[slug]/page.tsx
+- src/components/tiekejai/ProvidersExperience.tsx
+- src/components/ui/EmptyState.tsx
+- src/components/uzklausos-v2/AiSuggestionsStrip.tsx
+- src/components/uzklausos-v2/InlineListingCard.tsx
+- src/lib/auth.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 18:36 — Claude
 
 **Commit:** `87cb73a` — docs(notes): defer taxonomy category-filter consolidation (not urgent) · lokalus

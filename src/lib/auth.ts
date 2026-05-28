@@ -124,6 +124,25 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    // Defense-in-depth for `allowDangerousEmailAccountLinking`. Google verifies
+    // email ownership, so linking a Google login onto a matching account is
+    // normally safe. The one risky path: an existing *credentials* account whose
+    // email was never verified could have been squatted with someone else's
+    // address — auto-linking Google to it would hand that row to the Google
+    // owner. Block only that case; the legitimate owner can still sign in with
+    // their password (authorize() does not gate on emailVerified).
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user?.email) {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: { password: true, emailVerified: true },
+        });
+        if (existing?.password && !existing.emailVerified) {
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
