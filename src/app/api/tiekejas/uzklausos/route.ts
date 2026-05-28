@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
-import { expandToMatchSet } from "@/lib/category-matching";
+import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 import { getUnlockedRequestIds } from "@/lib/credits";
 import { recordAiRun } from "@/lib/ai/audit";
 import { calculateSemanticMatch, summarizeSemanticScores } from "@/lib/semantic-match";
@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
         specializations: true,
         location: true,
         categories: {
+          where: activeCategoryFilter(),
           select: {
             categoryId: true,
             category: { select: { name: true } },

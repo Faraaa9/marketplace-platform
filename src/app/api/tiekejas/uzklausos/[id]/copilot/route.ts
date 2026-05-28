@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { checkEligibility } from "@/lib/provider-eligibility";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import { isLeadUnlocked } from "@/lib/credits";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateLeadCopilot, AiLeadCopilotError } from "@/lib/ai/lead-copilot";
@@ -61,6 +62,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           rating: true,
           reviewCount: true,
           categories: {
+            where: activeCategoryFilter(),
             select: {
               category: { select: { id: true, rootId: true, name: true } },
             },

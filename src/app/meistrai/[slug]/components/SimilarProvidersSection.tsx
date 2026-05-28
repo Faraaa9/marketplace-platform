@@ -4,6 +4,7 @@ import { MapPin, Star } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
+import { activeCategoryFilter } from "@/lib/category-matching";
 
 interface SimilarProvidersSectionProps {
   providerId: string;
@@ -27,7 +28,9 @@ async function getSimilarProviders(
       providerProfile: {
         isActive: true,
         moderationStatus: "APPROVED",
-        categories: { some: { categoryId: primaryCategoryId } },
+        categories: {
+          some: { categoryId: primaryCategoryId, ...activeCategoryFilter() },
+        },
         ...(location ? { location } : {}),
       },
     },

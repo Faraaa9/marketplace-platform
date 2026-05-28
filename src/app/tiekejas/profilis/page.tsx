@@ -12,11 +12,12 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown } from "lucide-react";
+import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown, Lock, Plus } from "lucide-react";
+import { FREE_CATEGORY_LIMIT, CREDITS_PER_CATEGORY_MONTH, MAX_CATEGORY_MONTHS } from "@/lib/category-pricing";
 import SectionHeader from "./components/SectionHeader";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 
-const MAX_CATEGORIES = 20;
+type PaidCategory = { categoryId: string; expiresAt: string };
 
 interface ProviderImage {
   url: string;
@@ -61,6 +62,13 @@ export default function ProviderProfilePage() {
     website: "",
   });
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
+  const [paidCategories, setPaidCategories] = useState<PaidCategory[]>([]);
+  const [creditBalance, setCreditBalance] = useState<number>(0);
+  // Paid-category unlock control state.
+  const [unlockCategoryId, setUnlockCategoryId] = useState<string>("");
+  const [unlockMonths, setUnlockMonths] = useState<number>(1);
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const [unlockError, setUnlockError] = useState("");
   // True once the provider has toggled any category by hand. Locks the
   // auto-suggest effect from touching the selection further so we never
   // override an explicit choice.
@@ -73,9 +81,15 @@ export default function ProviderProfilePage() {
       fetch("/api/tiekejas/profilis").then((r) => r.json()),
       fetch("/api/provider/stories").then((r) => r.json()),
       fetch("/api/service-categories").then((r) => r.json()),
+      fetch("/api/tiekejas/kreditai").then((r) => r.json()).catch(() => null),
     ])
-      .then(([profileData, storiesData, categoriesData]) => {
+      .then(([profileData, storiesData, categoriesData, creditsData]) => {
         if (profileData.success && profileData.data) {
+          setPaidCategories(
+            Array.isArray(profileData.data.paidCategories)
+              ? profileData.data.paidCategories
+              : [],
+          );
           setForm({
             description: profileData.data.description || "",
             headline: profileData.data.headline || "",
@@ -105,6 +119,9 @@ export default function ProviderProfilePage() {
         }
         if (categoriesData.success) {
           setCategoryGroups(categoriesData.data || []);
+        }
+        if (creditsData?.success && typeof creditsData.data?.balance === "number") {
+          setCreditBalance(creditsData.data.balance);
         }
       })
       .finally(() => setLoading(false));
@@ -192,9 +209,47 @@ export default function ProviderProfilePage() {
       if (prev.categoryIds.includes(id)) {
         return { ...prev, categoryIds: prev.categoryIds.filter((c) => c !== id) };
       }
-      if (prev.categoryIds.length >= MAX_CATEGORIES) return prev;
+      if (prev.categoryIds.length >= FREE_CATEGORY_LIMIT) return prev;
       return { ...prev, categoryIds: [...prev.categoryIds, id] };
     });
+  }
+
+  async function handleUnlockCategory() {
+    if (!unlockCategoryId || unlockBusy) return;
+    setUnlockBusy(true);
+    setUnlockError("");
+    try {
+      const res = await fetch("/api/tiekejas/profilis/categories/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId: unlockCategoryId, months: unlockMonths }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setUnlockError(
+          data.code === "INSUFFICIENT_CREDITS"
+            ? "Nepakanka kreditų. Papildykite balansą."
+            : data.error || "Nepavyko atrakinti",
+        );
+        return;
+      }
+      // Re-read the authoritative paid list; update the cached balance.
+      const profileRes = await fetch("/api/tiekejas/profilis").then((r) => r.json());
+      if (profileRes.success && profileRes.data) {
+        setPaidCategories(
+          Array.isArray(profileRes.data.paidCategories)
+            ? profileRes.data.paidCategories
+            : [],
+        );
+      }
+      if (typeof data.data?.balance === "number") setCreditBalance(data.data.balance);
+      setUnlockCategoryId("");
+      setUnlockMonths(1);
+    } catch {
+      setUnlockError("Nepavyko atrakinti");
+    } finally {
+      setUnlockBusy(false);
+    }
   }
 
   // Flat id → display name lookup so selected specializations render as
@@ -262,7 +317,7 @@ export default function ProviderProfilePage() {
           if (prev.categoryIds.length > 0) return prev;
           const next = [...prev.categoryIds];
           for (const s of suggestions) {
-            if (next.length >= MAX_CATEGORIES) break;
+            if (next.length >= FREE_CATEGORY_LIMIT) break;
             if (!next.includes(s.id)) next.push(s.id);
           }
           return { ...prev, categoryIds: next };
@@ -538,13 +593,13 @@ export default function ProviderProfilePage() {
                   Veiklos sritys
                 </label>
                 <span className={`text-micro tabular-nums font-medium ${
-                  form.categoryIds.length >= MAX_CATEGORIES ? "text-amber-500" : "text-surface-400"
+                  form.categoryIds.length >= FREE_CATEGORY_LIMIT ? "text-amber-500" : "text-surface-400"
                 }`}>
-                  {form.categoryIds.length}/{MAX_CATEGORIES}
+                  {form.categoryIds.length}/{FREE_CATEGORY_LIMIT}
                 </span>
               </div>
               <p className="text-micro text-surface-400 mb-2">
-                Pasirinkite konkrečias paslaugas, kurias teikiate — pagal jas gausite tinkamas užklausas.
+                Pasirinkite konkrečias paslaugas, kurias teikiate — pagal jas gausite tinkamas užklausas. Iki {FREE_CATEGORY_LIMIT} sričių nemokamai.
                 {form.categoryIds.length === 0 && !categoryManuallyEdited && (
                   <span className="ml-1 inline-flex items-center gap-1 text-brand-600 dark:text-brand-400">
                     <Sparkles className="h-3 w-3" />
@@ -582,6 +637,86 @@ export default function ProviderProfilePage() {
                   ))}
                 </div>
               )}
+
+              {/* Paid extra categories — broader visibility, unlocked with credits. */}
+              <div className="mt-5 border-t border-surface-200/70 pt-4 dark:border-surface-700/60">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="flex items-center gap-1.5 text-body-sm font-medium text-surface-700 dark:text-surface-300">
+                    <Lock className="h-3.5 w-3.5 opacity-60" />
+                    Papildomos sritys (mokamos)
+                  </label>
+                  <span className="text-micro tabular-nums text-surface-400">
+                    Balansas: {creditBalance} kr.
+                  </span>
+                </div>
+                <p className="text-micro text-surface-400 mb-2">
+                  Nori būti matomas plačiau? Atrakink papildomą sritį — {CREDITS_PER_CATEGORY_MONTH} kr./mėn. Pasibaigus laikui, vieta toje srityje tiesiog pasislepia, kol pratęsi.
+                </p>
+
+                {paidCategories.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {paidCategories.map((pc) => (
+                      <div
+                        key={pc.categoryId}
+                        className="flex items-center justify-between rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-caption dark:border-surface-700 dark:bg-surface-800/50"
+                      >
+                        <span className="font-medium text-surface-700 dark:text-surface-200">
+                          {categoryNameById.get(pc.categoryId) ?? "Kategorija"}
+                        </span>
+                        <span className="flex items-center gap-2 text-surface-400">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            iki {new Date(pc.expiresAt).toLocaleDateString("lt-LT")}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setUnlockCategoryId(pc.categoryId)}
+                            className="rounded-md px-2 py-0.5 text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950"
+                          >
+                            Pratęsti
+                          </button>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <GroupedCategoryPicker
+                  groups={categoryGroups}
+                  value={unlockCategoryId}
+                  onChange={setUnlockCategoryId}
+                  mode="id"
+                  variant="form"
+                  placeholder="Pasirinkite sritį, kurią norite atrakinti"
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <select
+                    value={unlockMonths}
+                    onChange={(e) => setUnlockMonths(Number(e.target.value))}
+                    className="rounded-xl border border-surface-300 bg-white px-3 py-2.5 text-body-sm text-surface-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none dark:border-surface-600 dark:bg-surface-800 dark:text-white"
+                  >
+                    {Array.from({ length: MAX_CATEGORY_MONTHS }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={m}>
+                        {m} mėn.
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleUnlockCategory}
+                    disabled={!unlockCategoryId || unlockBusy}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2.5 text-body-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {unlockBusy
+                      ? "Atrakinama…"
+                      : `Atrakinti už ${unlockMonths * CREDITS_PER_CATEGORY_MONTH} kr.`}
+                  </button>
+                </div>
+                {unlockError && (
+                  <p className="mt-1.5 text-micro text-red-500">{unlockError}</p>
+                )}
+              </div>
             </div>
           </div>
         </Card>

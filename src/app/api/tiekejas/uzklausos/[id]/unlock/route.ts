@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { checkEligibility } from "@/lib/provider-eligibility";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import { unlockLead } from "@/lib/credits";
 
 /**
@@ -30,7 +31,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       prisma.providerProfile.findUnique({
         where: { id: guard.providerProfileId },
         select: {
-          categories: { select: { category: { select: { id: true, rootId: true } } } },
+          categories: {
+            where: activeCategoryFilter(),
+            select: { category: { select: { id: true, rootId: true } } },
+          },
         },
       }),
     ]);
