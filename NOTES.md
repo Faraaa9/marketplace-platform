@@ -159,3 +159,17 @@ Konvencija:
   `prisma migrate deploy` per Vercel build, arba sukurti CI step'ą,
   kuris `manual-migrations/*.sql` aplikuoja per `supabase` MCP
   automatiškai po deploy'aus.
+
+## Build / priklausomybės
+
+- [ ] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**
+  `src/lib/image-processor.ts` daro `import sharp from "sharp"`, tačiau
+  `sharp` nėra `dependencies` sąraše — egzistuoja tik kaip tranzityvi
+  priklausomybė pnpm store'e (`node_modules/.pnpm/sharp@0.34.5`).
+  Pagrindiniame repo `node_modules/sharp` atsitiktinai prieinamas top-level
+  (senas install'as), todėl build'as ten praeina. Švariame worktree/CI
+  install'e (`pnpm install` be hoist) sharp nehoistinamas į top-level →
+  `next build` lūžta: `Module not found: Can't resolve 'sharp'` (import trace
+  per `src/app/api/profile/ai-generate/route.ts`). Sprendimas: `pnpm add sharp`
+  (deklaruoti kaip tiesioginę dependency). Aptikta dirbant ant
+  `suspense/foundation-and-paskyra-profilis` — ne to PR'o scope.

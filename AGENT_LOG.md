@@ -17,6 +17,41 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 06:59 — Claude
+
+**Commit:** `a470b59` — perf(paskyra/profilis): hoist static header above the Suspense boundary · push'inta
+
+**Pakeitimai:** 2 files changed, 215 insertions(+), 183 deletions(-)
+
+**Failai:**
+- src/app/paskyra/profilis/ProfileForm.tsx
+- src/app/paskyra/profilis/page.tsx
+
+**Toliau:** PR1 (Suspense foundation, žr. SUSPENSE_PLAN.md) baigtas ant
+`suspense/foundation-and-paskyra-profilis` (push'inta). Sukurta: generinis
+`SessionGate` (`src/components/auth/SessionGate.tsx`, render-prop, `requireRole?`)
++ skeleton lib home (`src/components/ui/skeletons/index.ts`); /paskyra/profilis
+header iškeltas virš `<Suspense>` (route lieka ◐ Partial Prerender). `pnpm build`
+praeina. **PRs 3-7 dabar atblokuoti** — jie importuoja `SessionGate` + skeleton
+lib (per C3 PR1 buvo jų blokeris). Prieš merge į main — Vercel preview QA su
+realiu USER/PROVIDER account'u: logged-in skeleton→form streaming ir redirect'ai
+nebuvo testuoti lokaliai (vengiau live DB / nėra test account'o). NOTES.md
+pridėtas follow-up: `sharp` nedeklaruotas `package.json` (atskiras fix).
+
+
+## 2026-05-28 06:59 — Claude
+
+**Commit:** `5d818b1` — feat(auth,ui): add generic SessionGate and skeleton library home · push'inta
+
+**Pakeitimai:** 2 files changed, 53 insertions(+)
+
+**Failai:**
+- src/components/auth/SessionGate.tsx
+- src/components/ui/skeletons/index.ts
+
+**Toliau:** PR1 foundation — pilnas handoff viršutiniame įraše.
+
+
 ## 2026-05-28 04:50 — Claude
 
 **Commit:** `b15ce8f` — Merge remote-tracking branch 'origin/cache-components/task-f-suspense' · lokalus
