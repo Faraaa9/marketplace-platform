@@ -12,6 +12,7 @@
  *   when data streams in. Build and verify each shape against the live layout
  *   — never pre-build page-specific skeletons speculatively.
  *
- * This PR establishes the home + convention only; no shapes live here yet.
+ * Shapes are added per page as each Suspense PR lands.
  */
-export {};
+export { CreditBadgeSkeleton } from "./CreditBadgeSkeleton";
+export { RequestsListSkeleton } from "./RequestsListSkeleton";
