@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 02:32 — Claude
+
+**Commit:** `812c871` — fix(telegram): prepend + to shared-contact phone so non-LT numbers normalize · lokalus
+
+**Pakeitimai:** 2 files changed, 36 insertions(+), 3 deletions(-)
+
+**Failai:**
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/conversation.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 02:26 — Claude
 
 **Commit:** `a0559c6` — fix(telegram): re-prompt for contact button instead of treating typed text as a new request · lokalus
