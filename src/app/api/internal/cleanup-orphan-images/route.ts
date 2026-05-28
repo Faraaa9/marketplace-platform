@@ -6,7 +6,6 @@ import {
   publicIdFromCloudinaryUrl,
 } from "@/lib/cloudinary";
 
-export const dynamic = "force-dynamic"; // cron endpoint
 export const maxDuration = 60;
 
 const ORPHAN_AGE_HOURS = 24;

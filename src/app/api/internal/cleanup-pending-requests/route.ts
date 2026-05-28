@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic"; // cron endpoint
-
 const PENDING_CLEANUP_DAYS = 7;
 
 /**
