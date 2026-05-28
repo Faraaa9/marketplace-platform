@@ -362,3 +362,101 @@ Konvencija:
   puslapius). Tai atskiras kategorijų-filtro fix.
   **Statusas: ATIDĖTA sąmoningai 2026-05-28** — pre-existing (ne šios dienos
   greičio darbo pasekmė), neskubu, grįžti šviežia galva.
+
+---
+
+## Monetizacija
+
+- [x] **2026-05-29 — Papildomų kategorijų atrakinimas už kreditus (laikinas). ĮGYVENDINTA.**
+  Idėja iškilo gretimame darbe (AI profilio kūrimas + leadų atitikimas pagal
+  kategorijas). Kontekstas: nuo 2026-05-29 AI picker'is profiliui saugo TIK
+  konkrečias po-kategorijas (ne šaknis), o leadų atitikimas
+  (`src/lib/category-matching.ts` → `expandToMatchSet`) plečiasi medžiu. Dėl to
+  platus matomumas atsiranda tik kai teikėjas turi DAUG kategorijų → natūralus
+  taškas monetizacijai + anti-spam filtrui.
+
+  **Modelis (sutarta 2026-05-29):**
+  - **Bazė nemokama ir nuolatinė** — AI parinktos 1–4 sritys (arba riba, pvz. 3)
+    NIEKADA negalioja laikinai. Kitaip teikėjai iškristų visai.
+  - **Papildomos sritys virš bazės = mokamos kreditais** (ta pati esama valiuta,
+    NE nauja mėnesinė prenumerata — sąmoningai, nes Phase 4 atsisakyta
+    subscription'ų; žr. lead-unlock modelį).
+  - **Laikinas galiojimas:** atrakini kategoriją X laikui (mėnesiui / keliems);
+    pasibaigus — vieta toje kategorijoje TIK pasislepia (leadai nustoja eiti),
+    profilis ir kategorija NEIŠTRINAMI; galima atrakinti iš naujo. Kainos
+    pakopos pagal trukmę (1 mėn = X kreditų, keli mėn = pigiau už mėn).
+  - **Įspėjimas prieš pasibaigiant** (notifikacija), kad teikėjas spėtų pratęsti.
+
+  **Kodėl ne paslaugos.lt būdas:** jie ima „nuomos" mokestį už buvimą sąraše
+  (kaina pagal kategoriją + miestą, žr. paslaugos.lt/duk) — mokì iš anksto
+  nepriklausomai nuo rezultato. Mūsų pay-per-lead draugiškesnis; kreditinis
+  laikinas atrakinimas išlaiko VIENĄ valiutą ir vengia atskiros billing
+  infrastruktūros (failed payments / churn / „kodėl nuskaitėt").
+
+  **Apimtis (kai darysim — NE today):** (1) schema: kategorijos atrakinimo
+  įrašas su `expiresAt` ant `provider_profile_categories` arba atskira lentelė;
+  (2) `expandToMatchSet`/listing/notifikacijų užklausos turi gerbti aktyvias-vs-
+  pasibaigusias kategorijas; (3) profilio editor UI — kurios sritys bazinės /
+  apmokėtos / pasibaigę; (4) kreditų nuskaitymas + pakopos; (5) expiry cron +
+  įspėjimo notifikacija; (6) edge case'ai (kas su jau atrakintais leadais kai
+  kategorija baigiasi). Liečia pinigų kelią + gyvą DB su tikrais klientais →
+  daryti su atskira schema/PR'u ir peržiūra, ne greitai.
+
+  **ĮGYVENDINTA 2026-05-29.** Kas padaryta:
+  - Schema: `provider_profile_categories.expiresAt` (null=bazinė/nuolatinė,
+    ateitis=apmokėta aktyvi, praeitis=pasibaigusi/paslėpta) + `credit_transactions.categoryId`
+    + tipas `CATEGORY_UNLOCK`. Migracija: `apply_migration add_category_unlock_fields`.
+  - Kainodara (client-safe): `src/lib/category-pricing.ts` — `FREE_CATEGORY_LIMIT=4`,
+    `CREDITS_PER_CATEGORY_MONTH=2`, `MAX_CATEGORY_MONTHS=12`.
+  - `unlockCategory()` (`src/lib/credits.ts`) — atomiškai nuskaito kreditus,
+    extend'ina `expiresAt` (stack'ina ankstyvą pratęsimą), rašo ledger. Endpoint:
+    `POST /api/tiekejas/profilis/categories/unlock`.
+  - Lazy expiry (be cron'o): `activeCategoryFilter()` (`category-matching.ts`)
+    pritaikytas leadų listinge (server+API), notifikacijose, eligibility (unlock/
+    response/copilot), public direktorijoje, profilio puslapyje, similar-providers,
+    StatsGrid match-count.
+  - Free-limit enforcement: `syncFreeCategories()` (`src/lib/provider-categories.ts`)
+    naudojamas PUT profilio + onboarding PATCH — NIEKADA netrina apmokėtų eilučių,
+    nemokamas riboja iki limito. Editor UI (`/tiekejas/profilis`) rodo bazines vs
+    apmokėtas su galiojimo data + atrakinimo/pratęsimo kontrolę + balansą.
+  - Onboarding confirm picker irgi ribotas iki `FREE_CATEGORY_LIMIT`.
+
+  **Likę follow-up'ai (NE blokeriai):**
+  - [ ] **10 „tik šaknis" teikėjų** (daugiausia TEST/DEMO + Denas, Lukas, Ona,
+    gerasoras) turi TIK depth-0 kategorijas — sąmoningai palikti per valymą
+    (`20260529_strip_root_categories_from_providers.sql`), kad netaptų tušti.
+    Reikia priskirti realias po-kategorijas (AI re-categorize ar rankiniu būdu).
+  - [ ] **Expiry įspėjimo notifikacija** prieš pasibaigiant (pvz. likus 3 d.) —
+    reikėtų cron'o; korektiškumui nebūtina (matching tikrina `expiresAt` lazily),
+    tik UX pratęsimui.
+
+---
+
+## Telegram botas (balso/teksto užklausos)
+
+- [ ] **2026-05-29 — Balso transkripcijos formatas (OGG) nepatikrintas gyvai.**
+  Telegram balso žinutės yra `audio/ogg` (Opus). `transcribeAudio()` dabar
+  priima `format` param'ą (`src/lib/ai-transcribe.ts`), botas perduoda `"ogg"`
+  (`conversation.ts` → `mimeToFormat`). NEAIŠKU, ar OpenRouter `input_audio`
+  priima `format: "ogg"` — web naudoja `"wav"`. PIRMAS dalykas, kurį reikia
+  patikrinti per gyvą botą: įrašyti balso žinutę ir pažiūrėti, ar transkripcija
+  teisinga. Jei OpenRouter atmeta OGG — reiks konvertuoti į WAV (ffmpeg, sunku
+  serverless) arba rasti palaikomą formatą.
+
+- [ ] **2026-05-29 — Rate limit fail-open + per-naudotojo riba.**
+  Botas naudoja `RATE_LIMITS.aiImprove` (15/val) per `telegram:<userId>`.
+  Be Upstash (prod be `UPSTASH_*`) — per-instance memory, neefektyvu serverless.
+  Botas yra neautentikuotas įėjimo taškas → įsitikinti, kad Upstash sukonfigūruota
+  prod'e, kitaip galima AI kaštų abuse.
+
+- [ ] **2026-05-29 — `db:push` dar nepaleistas.** `TelegramSession` modelis
+  pridėtas schema'oje (`telegram_sessions`), bet lentelė dar nesukurta gyvoje DB.
+  Botas neveiks, kol nepaleistas `npm run db:push`.
+
+- [ ] **2026-05-29 — Webhook neregistruotas.** Reikia `TELEGRAM_BOT_TOKEN` +
+  `TELEGRAM_WEBHOOK_SECRET` env, tada `pnpm telegram:set-webhook <prod-url>`.
+  Webhook'ui reikia viešo HTTPS — testuoti prieš prod/preview, ne localhost.
+
+- [ ] **2026-05-29 — Vienetiniai testai be runner'io.** `pnpm test:telegram`
+  paleidžia `conversation.ts` state machine testus per ts-node (projekte nėra
+  jest/vitest). Jei ateity dėsim test runner'į — perkelti čia.

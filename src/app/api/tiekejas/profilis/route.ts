@@ -7,6 +7,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText } from "@/lib/moderation";
 import { publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
 import { revalidateProviderCaches } from "@/lib/cache-invalidation";
+import { syncFreeCategories } from "@/lib/provider-categories";
 
 export async function GET() {
   await connection();
@@ -47,7 +48,7 @@ export async function GET() {
           createdAt: true,
           updatedAt: true,
           categories: {
-            select: { categoryId: true, sortOrder: true },
+            select: { categoryId: true, sortOrder: true, expiresAt: true },
             orderBy: { sortOrder: "asc" },
           },
         },
@@ -65,10 +66,25 @@ export async function GET() {
         }))
       : [];
 
+    const now = Date.now();
+    // Free/base categories drive the picker; active paid (timed) categories are
+    // surfaced separately so the editor can show expiry + a renew action.
+    const freeCategoryIds = profile
+      ? profile.categories
+          .filter((c) => c.expiresAt == null)
+          .map((c) => c.categoryId)
+      : [];
+    const paidCategories = profile
+      ? profile.categories
+          .filter((c) => c.expiresAt != null && c.expiresAt.getTime() > now)
+          .map((c) => ({ categoryId: c.categoryId, expiresAt: c.expiresAt }))
+      : [];
+
     const data = profile ? {
       ...profile,
       images: parsedImages,
-      categoryIds: profile.categories.map((c) => c.categoryId),
+      categoryIds: freeCategoryIds,
+      paidCategories,
       userName: user?.name || null,
       userEmail: user?.email || null,
       emailVerified: !!user?.emailVerified,
@@ -185,54 +201,11 @@ export async function PUT(req: NextRequest) {
         },
       });
 
-      // Sync ProviderProfileCategory rows: drop rows no longer chosen,
-      // create new ones with sortOrder following the submitted order.
-      const existing = await tx.providerProfileCategory.findMany({
-        where: { providerProfileId: updated.id },
-        select: { categoryId: true },
-      });
-      const existingIds = new Set(existing.map((c) => c.categoryId));
-      const nextIds = new Set(categoryIds);
+      // Sync only FREE categories. Paid (timed) categories are managed via the
+      // unlock endpoint and are preserved across profile saves.
+      const freeCategoryIds = await syncFreeCategories(tx, updated.id, categoryIds);
 
-      const toRemove = [...existingIds].filter((id) => !nextIds.has(id));
-      if (toRemove.length > 0) {
-        await tx.providerProfileCategory.deleteMany({
-          where: { providerProfileId: updated.id, categoryId: { in: toRemove } },
-        });
-      }
-
-      const toAdd = categoryIds
-        .map((categoryId, index) => ({ categoryId, sortOrder: index }))
-        .filter((c) => !existingIds.has(c.categoryId));
-      if (toAdd.length > 0) {
-        await tx.providerProfileCategory.createMany({
-          data: toAdd.map((c) => ({
-            providerProfileId: updated.id,
-            categoryId: c.categoryId,
-            sortOrder: c.sortOrder,
-          })),
-        });
-      }
-
-      // Keep sortOrder aligned with the submitted order for kept rows.
-      await Promise.all(
-        categoryIds
-          .map((categoryId, index) => ({ categoryId, sortOrder: index }))
-          .filter((c) => existingIds.has(c.categoryId))
-          .map((c) =>
-            tx.providerProfileCategory.update({
-              where: {
-                providerProfileId_categoryId: {
-                  providerProfileId: updated.id,
-                  categoryId: c.categoryId,
-                },
-              },
-              data: { sortOrder: c.sortOrder },
-            }),
-          ),
-      );
-
-      return { ...updated, categoryIds };
+      return { ...updated, categoryIds: freeCategoryIds };
     });
 
     if (moderation.verdict !== "ok") {

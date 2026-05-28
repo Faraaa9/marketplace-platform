@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { isLeadUnlocked } from "@/lib/credits";
 import { checkEligibility } from "@/lib/provider-eligibility";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import { formatRelativeDate } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -74,7 +75,10 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
     prisma.providerProfile.findUnique({
       where: { id: guard.providerProfileId },
       select: {
-        categories: { select: { category: { select: { id: true, rootId: true } } } },
+        categories: {
+          where: activeCategoryFilter(),
+          select: { category: { select: { id: true, rootId: true } } },
+        },
       },
     }),
     isLeadUnlocked(guard.providerProfileId, id),

@@ -66,6 +66,7 @@ interface AIGenerateRequest {
   location?: string;
   experienceYears?: number;
   phone?: string;
+  website?: string;
 }
 
 interface ScrapedData {
@@ -80,6 +81,7 @@ interface AIResult {
   headline: string;
   phone?: string;
   location?: string;
+  website?: string;
   services?: string;
   experienceYears?: number;
   priceFrom?: number;
@@ -294,6 +296,7 @@ Grąžink TIK JSON (be markdown, be code fence) su laukais:
   "description": "200–300 žodžių pagal struktūrą",
   "phone": "+370XXXXXXXX arba 8XXXXXXXX (vienas, ne array) arba null",
   "location": "Vilnius (originalus formatas iš šaltinio)",
+  "website": "https://teikejo-svetaine.lt arba null",
   "services": "• Paslauga 1\\n• Paslauga 2",
   "experienceYears": 5,
   "priceFrom": 30,
@@ -311,6 +314,7 @@ Patarimai:
 - experienceYears: "5 metų patirtis" → 5; jei nerasta — null.
 - offersInvoices: jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
 - availableForUrgent: jei mini "skubus", "tą pačią dieną", "24/7" → true.
+- website: jei tekste yra teikėjo nuosava svetainė (jo verslo domenas) — grąžink pilną URL. NEIMK social/katalogų nuorodų (facebook, instagram, paslaugos.lt, linkedin) ar nuorodų į svetimus projektus. Jei abejoji — null.
 - Jei nerastas vardas — naudok įmonės/brand pavadinimą iš title'o.`;
 
   const response = await fetch(
@@ -387,6 +391,7 @@ Patarimai:
     phone,
     location:
       typeof parsed.location === "string" ? parsed.location : undefined,
+    website: normalizeWebsite(parsed.website),
     services:
       typeof parsed.services === "string" ? parsed.services : undefined,
     experienceYears:
@@ -438,6 +443,7 @@ async function generateFromScratch(
     location?: string;
     experienceYears?: number;
     phone?: string;
+    website?: string;
   },
 ): Promise<AIResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -451,6 +457,7 @@ Bazinė info nuo vartotojo:
 ${input.location ? `- Lokacija: ${input.location}` : ""}
 ${input.experienceYears ? `- Patirtis: ${input.experienceYears} metų` : ""}
 ${input.phone ? `- Telefonas: ${input.phone}` : ""}
+${input.website ? `- Svetainė: ${input.website}` : ""}
 
 ${SEO_RULES}
 
@@ -462,6 +469,7 @@ Grąžink TIK JSON (be markdown) su laukais:
   "priceFrom": null,
   "offersInvoices": false,
   "availableForUrgent": false,
+  "website": "https://teikejo-svetaine.lt arba null",
   "imagePrompt": "Professional photo of...",
   "seoTitle": "Vardas — pagrindinė paslauga Vilniuje | paslaugurinka.lt",
   "seoDescription": "Pagrindinė paslauga Vilniuje. USP sakinys. Kreipkitės dėl konsultacijos.",
@@ -474,7 +482,8 @@ Grąžink TIK JSON (be markdown) su laukais:
 Patarimai:
 - imagePrompt: ANGLIŠKAI prompt'as photorealistic darbo nuotraukai (no logos, no text, candid photo).
 - Jei vartotojas miesto nenurodė — primaryCity = null, slugSuggestion = "vardas-paslauga" (be miesto).
-- primaryService imk iš servicesText, normalizuok į standartinę terminologiją.`;
+- primaryService imk iš servicesText, normalizuok į standartinę terminologiją.
+- website: jei aprašyme yra nuoroda į teikėjo nuosavą svetainę (jo verslo domeną) — grąžink pilną URL. NEIMK social/katalogų nuorodų (facebook, instagram, paslaugos.lt, linkedin). Jei abejoji — null.`;
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -538,6 +547,8 @@ Patarimai:
     description: parsed.description || "",
     phone: input.phone, // user-provided
     location: input.location, // user-provided
+    // User-provided website wins; otherwise fall back to one the AI spotted in the text.
+    website: normalizeWebsite(input.website) || normalizeWebsite(parsed.website),
     services: typeof parsed.services === "string" ? parsed.services : undefined,
     experienceYears: input.experienceYears, // user-provided
     priceFrom:
@@ -556,6 +567,27 @@ Patarimai:
     // Trust user-provided location over AI guess for primaryCity when both exist.
     primaryCity: input.location || seo.primaryCity,
   };
+}
+
+// Social/aggregator domains are never the provider's own site — reject so the
+// website slot doesn't get polluted with a Facebook page or a paslaugos.lt link.
+const NON_WEBSITE_HOSTS =
+  /(facebook|fb\.com|instagram|linkedin|paslaugos\.lt|paslaugurinka\.lt|tiktok|youtube|twitter|x\.com|t\.me|wa\.me|whatsapp|maps\.google|goo\.gl)/i;
+
+function normalizeWebsite(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  let value = raw.trim();
+  if (!value || value.toLowerCase() === "null") return undefined;
+  if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+    if (!url.hostname.includes(".")) return undefined;
+    if (NON_WEBSITE_HOSTS.test(url.hostname)) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 function slugify(input: string): string {
@@ -585,6 +617,7 @@ const providerProfilePersistenceSelect = {
   slug: true,
   phone: true,
   location: true,
+  website: true,
   services: true,
   experienceYears: true,
   priceFrom: true,
@@ -728,6 +761,7 @@ export async function POST(req: NextRequest) {
           location: body.location,
           experienceYears: body.experienceYears,
           phone: body.phone,
+          website: body.website,
         })
       : await generateWithClaude(scraped, body.url!);
 
@@ -853,6 +887,7 @@ export async function POST(req: NextRequest) {
           headline: aiResult.headline,
           phone: aiResult.phone || null,
           location: aiResult.location || null,
+          website: aiResult.website || null,
           services: aiResult.services || null,
           experienceYears: aiResult.experienceYears ?? null,
           priceFrom: aiResult.priceFrom ?? null,
@@ -887,6 +922,7 @@ export async function POST(req: NextRequest) {
           headline: aiResult.headline,
           phone: aiResult.phone || providerProfile.phone,
           location: aiResult.location || providerProfile.location,
+          website: aiResult.website || providerProfile.website,
           services: aiResult.services || providerProfile.services,
           experienceYears:
             aiResult.experienceYears ?? providerProfile.experienceYears,
@@ -966,6 +1002,8 @@ export async function POST(req: NextRequest) {
       success: true,
       profileId: providerProfile.id,
       slug: providerProfile.slug,
+      // Surfaced so the onboarding UI can prefill the category confirmation step.
+      categoryIds: selectedCategoryIds,
       summary: {
         headline: aiResult.headline,
         descriptionLength: aiResult.description.length,

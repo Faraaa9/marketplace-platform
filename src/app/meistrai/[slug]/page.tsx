@@ -8,6 +8,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
@@ -765,6 +766,7 @@ async function getProviderProfileUncached(
             offersInvoices: true,
             availableForUrgent: true,
             categories: {
+              where: activeCategoryFilter(),
               select: { category: { select: { id: true, name: true, slug: true } } },
               orderBy: { sortOrder: "asc" },
             },

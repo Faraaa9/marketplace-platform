@@ -153,6 +153,10 @@ model ProviderProfileCategory {
   categoryId        String
   sortOrder         Int      @default(0)
   createdAt         DateTime @default(now())
+  // null  = free/base category (permanent, counts against the free limit).
+  // future = paid unlock, active until this time.
+  // past   = expired paid unlock — kept for history but no longer matches leads.
+  expiresAt         DateTime?
 
   providerProfile ProviderProfile @relation(fields: [providerProfileId], references: [id], onDelete: Cascade)
   category        Category        @relation(fields: [categoryId], references: [id])
@@ -740,9 +744,10 @@ model CreditTransaction {
   providerProfileId       String
   amount                  Int // signed: + grant/purchase, - spend
   balanceAfter            Int
-  type                    String // PURCHASE | UNLOCK_SPEND | ADMIN_GRANT | STARTER_GRANT
+  type                    String // PURCHASE | UNLOCK_SPEND | ADMIN_GRANT | STARTER_GRANT | CATEGORY_UNLOCK
   note                    String?
   requestId               String? // reference only (no FK — ledger rows are immutable history)
+  categoryId              String? // reference only — set for CATEGORY_UNLOCK rows
   creditPackId            String?
   stripeCheckoutSessionId String?  @unique // idempotency key for purchases
   adminUserId             String?

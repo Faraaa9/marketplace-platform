@@ -7,11 +7,14 @@ import { prisma } from "@/lib/prisma";
  *         using the user's raw input (not the AI marketing rewrite, which
  *         drowns matching in generic words like "specialistas"/"konsultacija").
  * Pass 2: load depth-1 subcategories ONLY under the selected roots, ask the
- *         model to pick 3–5 most specific ones.
+ *         model to pick only the ones (1–4) that directly match — favouring
+ *         precision over filling a quota.
  *
- * Returns root IDs + leaf IDs combined (deduped) — written 1:1 into
- * provider_profile_categories. Categories from other taxonomy sources
- * (legacy paslaugos.lt rows) are deliberately excluded.
+ * Returns the specific depth-1 sub-category IDs (deduped) — written 1:1 into
+ * provider_profile_categories. The broad roots are NOT saved (less filter
+ * noise); they're only kept as a fallback when no sub-category matched, so a
+ * profile is never left with zero categories. Categories from other taxonomy
+ * sources (legacy paslaugos.lt rows) are deliberately excluded.
  */
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -19,8 +22,8 @@ const MODEL = "anthropic/claude-haiku-4.5";
 const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
 
 const MAX_ROOTS = 3;
-const MAX_LEAVES = 5;
-const MIN_CONFIDENCE = 0.5;
+const MAX_LEAVES = 4;
+const MIN_CONFIDENCE = 0.6;
 const SAMPLE_CHILDREN_PER_ROOT = 8;
 
 export interface CategoryPickerInput {
@@ -141,17 +144,21 @@ export async function pickProviderCategoriesAI(
 
   const selectedLeaves = await pickLeaves(input, leaves, apiKey);
 
-  const dedupedIds = Array.from(
-    new Set([...selectedRootIds, ...selectedLeaves.map((l) => l.id)]),
-  );
-
-  const allSlugs: string[] = [];
-  for (const r of selectedRoots) allSlugs.push(r.slug);
-  for (const l of selectedLeaves) allSlugs.push(l.slug);
+  // Save ONLY the specific sub-categories — keeps profiles precise and avoids
+  // broad-root noise in category filters/search. Fall back to the picked roots
+  // only when no leaf matched, so a provider never ends up with zero categories.
+  const categoryIds =
+    selectedLeaves.length > 0
+      ? Array.from(new Set(selectedLeaves.map((l) => l.id)))
+      : selectedRootIds;
+  const slugs =
+    selectedLeaves.length > 0
+      ? selectedLeaves.map((l) => l.slug)
+      : selectedRoots.map((r) => r.slug);
 
   return {
-    categoryIds: dedupedIds,
-    slugs: allSlugs,
+    categoryIds,
+    slugs,
     pickedRootNames: selectedRoots.map((r) => r.name),
     pickedLeafNames: selectedLeaves.map((l) => l.name),
   };
@@ -273,7 +280,7 @@ async function pickLeaves(
 
   const prompt = `Tu padedi paslaugų teikėjui pasirinkti TIKSLIAS paslaugų po-kategorijas paslaugurinka.lt platformoje.
 
-Pirmame žingsnyje jau parinkome tinkamas šaknis. Dabar iš jų po-kategorijų reikia pasirinkti 3–5, kurios TIKSLIAUSIAI apibūdina šio teikėjo darbą.
+Pirmame žingsnyje jau parinkome tinkamas šaknis. Dabar iš jų po-kategorijų pasirink TIK tas (1–4), kurios TIESIOGIAI atitinka šio teikėjo darbą.
 
 GALIMOS PO-KATEGORIJOS (slug | Šaknis > Vardas):
 ${leafListing}
@@ -282,10 +289,12 @@ PASLAUGŲ TEIKĖJO APRAŠYMAS (vartotojo originalūs žodžiai):
 ${input.title ? `Vardas/įmonė: ${input.title}\n` : ""}${input.rawText.slice(0, 2000)}
 
 Taisyklės:
-- Pasirink 3–5 po-kategorijas TIK iš žemiau pateikto sąrašo (naudok slug stulpelį).
+- Pasirink 1–4 po-kategorijas TIK iš žemiau pateikto sąrašo (naudok slug stulpelį).
+- GERIAU MAŽIAU IR TIKSLIAI. Jei tinka tik viena — grąžink tik vieną. NEPILDYK iki kažkokio skaičiaus.
+- Rink TIK tai, ką teikėjas realiai daro. Pvz. elektrikas NETEIKIA dujų — nesirink "dujų tiekimo" vien todėl, kad jis toje pačioje šaknyje.
 - NEKURK naujų — jei sąraše nėra tikslaus atitikmens, nesirink.
 - Pirmenybę teik konkrečioms (pvz. "Žolininkystė", ne "Sveikata bendrai").
-- Confidence skalė 0–1. Atmesk jei < 0.5.
+- Confidence skalė 0–1. Atmesk jei < 0.6.
 - "reason" trumpas (iki 80 simbolių).
 
 Grąžink TIK galiojantį JSON:
