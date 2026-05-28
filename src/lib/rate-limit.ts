@@ -98,8 +98,17 @@ interface RateLimitResult {
 
 /**
  * Rate limiter — uses Upstash Redis in production, in-memory fallback for local dev.
+ *
+ * On a Redis error the default is to FAIL OPEN (allow) so a transient outage
+ * doesn't lock users out. For endpoints where an unbounded burst is itself the
+ * harm — e.g. paid SMS sends, where fail-open during an outage means unlimited
+ * billable messages — pass `failClosed: true` to block instead.
  */
-export async function rateLimitAsync(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
+export async function rateLimitAsync(
+  key: string,
+  config: RateLimitConfig,
+  options?: { failClosed?: boolean },
+): Promise<RateLimitResult> {
   if (!hasUpstash) {
     warnMissingUpstashOnce();
     return memoryRateLimit(key, config);
@@ -114,6 +123,10 @@ export async function rateLimitAsync(key: string, config: RateLimitConfig): Prom
       resetAt: result.reset,
     };
   } catch (error) {
+    if (options?.failClosed) {
+      console.error("Upstash rate limit error, failing closed:", error);
+      return { success: false, remaining: 0, resetAt: Date.now() + config.windowMs };
+    }
     console.error("Upstash rate limit error, falling back to allow:", error);
     // Fail open — don't block users if Redis is down
     return { success: true, remaining: config.maxRequests, resetAt: Date.now() + config.windowMs };

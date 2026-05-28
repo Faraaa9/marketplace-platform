@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 22:49 — Claude
+
+**Commit:** `7e9ec6f` — feat(provider): harden SMS rate-limit + clearer empty leads state · lokalus
+
+**Pakeitimai:** 3 files changed, 51 insertions(+), 4 deletions(-)
+
+**Failai:**
+- src/app/api/requests/send-phone-code/route.ts
+- src/app/tiekejas/uzklausos/sections/RequestsList.tsx
+- src/lib/rate-limit.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 22:29 — Claude
 
 **Commit:** `0111921` — fix(audit): P1/P2 polish from production-readiness audit · lokalus

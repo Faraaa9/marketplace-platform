@@ -257,9 +257,13 @@ export async function RequestsList({
   }));
 
   const hasFilters = !!(category || location || search);
+  // A provider with no categories has an empty match set, so the lead query can
+  // never return anything — the generic "no active requests" copy would be
+  // misleading. Point them at their profile instead.
+  const hasNoCategories = providerCategoryIds.length === 0;
 
   if (requests.length === 0) {
-    return <EmptyState hasFilters={hasFilters} sort={sort} />;
+    return <EmptyState hasFilters={hasFilters} sort={sort} noCategories={hasNoCategories} />;
   }
 
   return (
@@ -371,10 +375,36 @@ function ListPagination({
 function EmptyState({
   hasFilters,
   sort,
+  noCategories,
 }: {
   hasFilters: boolean;
   sort: string;
+  noCategories: boolean;
 }) {
+  // No categories is the root cause (the match set is empty), so it takes
+  // priority over the filter/empty messaging — clearing filters wouldn't help.
+  if (noCategories) {
+    return (
+      <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-10 text-center sm:p-14 dark:border-surface-700 dark:bg-surface-900">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
+          <FileText className="h-6 w-6 text-surface-400" />
+        </div>
+        <h3 className="text-body font-semibold text-surface-900 dark:text-white">
+          Pasirinkite specializacijas
+        </h3>
+        <p className="mx-auto mt-1.5 max-w-sm text-body-sm text-surface-500 dark:text-surface-400">
+          Užklausos rodomos pagal jūsų paslaugų sritis. Pridėkite specializacijas profilyje, kad matytumėte tinkamas užklausas.
+        </p>
+        <Link
+          href="/tiekejas/profilis"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+        >
+          Pildyti profilį
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-10 text-center sm:p-14 dark:border-surface-700 dark:bg-surface-900">
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">

@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = getClientIp(req);
-    const ipLimit = await rateLimitAsync(`phone-code:ip:${ip}`, RATE_LIMITS.phoneCode);
+    const ipLimit = await rateLimitAsync(`phone-code:ip:${ip}`, RATE_LIMITS.phoneCode, {
+      failClosed: true,
+    });
     if (!ipLimit.success) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Pabandykite vėliau." },
@@ -55,7 +57,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const phoneLimit = await rateLimitAsync(`phone-code:phone:${phone}`, RATE_LIMITS.phoneCode);
+    const phoneLimit = await rateLimitAsync(`phone-code:phone:${phone}`, RATE_LIMITS.phoneCode, {
+      failClosed: true,
+    });
     if (!phoneLimit.success) {
       return NextResponse.json(
         { success: false, error: "Šiam numeriui kodų išsiųsta per daug. Pabandykite vėliau." },
