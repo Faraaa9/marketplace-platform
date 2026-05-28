@@ -335,3 +335,30 @@ Konvencija:
   „atsibus" pats, kai Phase 5 sumigruos provider↔category linkus į tą taksonomiją.
   Sąmoningas sprendimas (2026-05-28) nedaryti laikino slug-tilto, palikti Phase 5.
   Aptikta diegiant miestų/kategorijų daugiapasirinkimą.
+
+  **PATIKSLINTA + ATIDĖTA 2026-05-28 (NESKUBU, ne blokeris):** ištirta giliau.
+  Paprastai: kategorijų sąrašas perdarytas 3 kartus, senų niekas neištrynė →
+  3 sistemos (`categories.externalSource`):
+  - `paslaugurinka-taxonomy` (3255, service) — picker'io/filtro šaltinis
+    (`getServiceCategoryGroups` → `src/lib/service-categories.ts`). FORMOS jau
+    naudoja šitą — NAUJI pick'ai teisingi.
+  - `curated` (svc-*, 140) — senas Phase 1/3 tier
+  - `paslaugos.lt` (840) — originalus importas
+  DB linkai (faktai 2026-05-28): `provider_profile_categories` = 49
+  paslaugurinka-taxonomy (OK) + 21 curated + 27 paslaugos.lt-root (migruotini);
+  `service_requests` categoryId = 7 + 30 + 13. T.y. tik SENI duomenys liko ant
+  senų sistemų → **vienkartinė migracija, ne ongoing**.
+  **Fix = konsoliduoti visus provider/request linkus į paslaugurinka-taxonomy:**
+  mapping old(curated/paslaugos.lt)→new (per `CategoryAlias` / vardo atitikimą;
+  unmapped rankiniu būdu — paslaugos.lt `root` coarse → flag); manual SQL į
+  `prisma/manual-migrations/`, user aplikuoja per Supabase (NE auto-apply),
+  idempotent, dedupe (`[providerProfileId,categoryId]` unique). Po to patikrinti
+  `checkEligibility`/`category-matching`. Template'as: `scripts/backfill-provider-categories.js`,
+  `backfill-request-categories.js`. Pilnas executor promptas paruoštas 2026-05-28
+  sesijoj (per worktree).
+  **Deploy KARTU su multi-select filtro WIP** (commit `e17e73e`, lokaliai ant main,
+  NEpush'inta): filtras be migracijos = 0; migracija be filtro = sena UI.
+  **NB:** tai NE epiko „Phase 5" (= drop Supplier* lentelės + sujungti profilio
+  puslapius). Tai atskiras kategorijų-filtro fix.
+  **Statusas: ATIDĖTA sąmoningai 2026-05-28** — pre-existing (ne šios dienos
+  greičio darbo pasekmė), neskubu, grįžti šviežia galva.

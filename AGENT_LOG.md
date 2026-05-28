@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 18:36 — Claude
+
+**Commit:** `87cb73a` — docs(notes): defer taxonomy category-filter consolidation (not urgent) · lokalus
+
+**Pakeitimai:** 1 file changed, 27 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 15:56 — Claude
 
 **Šaka:** `suspense/provider-secondary` (PR3, push'inta, **NEmergint'a**) — 4 commit'ai:
