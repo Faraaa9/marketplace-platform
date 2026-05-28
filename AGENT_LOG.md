@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 01:53 — Claude
+
+**Commit:** `252c239` — feat(telegram): conversation bot for voice/text request posting · lokalus
+
+**Pakeitimai:** 7 files changed, 818 insertions(+), 12 deletions(-)
+
+**Failai:**
+- package.json
+- src/app/api/telegram/webhook/route.ts
+- src/lib/ai-transcribe.ts
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/bot.ts
+- src/lib/telegram/conversation.ts
+- src/lib/telegram/format.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 01:28 — Claude
 
 **Commit:** `14903aa` — feat(requests): extract createServiceRequest core + phone identity helper · lokalus

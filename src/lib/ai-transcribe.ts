@@ -13,10 +13,18 @@ Tavo vienintelė užduotis — tiksliai užrašyti, ką žmogus pasakė:
 
 export class AiTranscribeError extends Error {}
 
+/** Audio container the model should expect. Web records WAV; Telegram sends OGG/Opus. */
+export type TranscribeAudioFormat = "wav" | "ogg" | "mp3";
+
 /**
- * Transcribes a base64-encoded WAV recording to Lithuanian text via OpenRouter.
+ * Transcribes a base64-encoded audio recording to Lithuanian text via OpenRouter.
+ * `format` defaults to "wav" for the browser recorder; the Telegram bot passes
+ * "ogg" for voice notes.
  */
-export async function transcribeAudio(audioBase64Wav: string): Promise<string> {
+export async function transcribeAudio(
+  audioBase64: string,
+  format: TranscribeAudioFormat = "wav",
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new AiTranscribeError("AI_NOT_CONFIGURED");
@@ -46,7 +54,7 @@ export async function transcribeAudio(audioBase64Wav: string): Promise<string> {
               { type: "text", text: "Transkribuok šį garso įrašą." },
               {
                 type: "input_audio",
-                input_audio: { data: audioBase64Wav, format: "wav" },
+                input_audio: { data: audioBase64, format },
               },
             ],
           },
