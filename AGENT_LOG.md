@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 01:28 — Claude
+
+**Commit:** `14903aa` — feat(requests): extract createServiceRequest core + phone identity helper · lokalus
+
+**Pakeitimai:** 4 files changed, 401 insertions(+), 207 deletions(-)
+
+**Failai:**
+- prisma/schema.prisma
+- src/app/api/requests/route.ts
+- src/lib/service-requests/create.ts
+- src/lib/service-requests/link-user.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 01:24 — Claude
 
 **Commit:** `5404ace` — feat(telegram): transport layer + webhook endpoint for request bot · lokalus
