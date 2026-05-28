@@ -32,5 +32,8 @@ export async function SessionGate({
     redirect("/");
   }
 
-  return children(session.user.id);
+  // Wrap in a fragment so this async component's return type is a concrete
+  // JSX.Element rather than the bare ReactNode union (which now includes bigint
+  // and would make the component invalid as a JSX element under TS).
+  return <>{children(session.user.id)}</>;
 }
