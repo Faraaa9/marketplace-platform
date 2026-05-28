@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { Resend } from "resend";
 import { routeInboundEmail, type InboundEmailInput } from "@/lib/inbound-router";
-
-export const dynamic = "force-dynamic";
 
 /** Resend signs webhooks via Svix — pull the three signature headers it sends. */
 function svixHeaders(headers: Headers): { id: string; timestamp: string; signature: string } {
@@ -24,6 +22,7 @@ function svixHeaders(headers: Headers): { id: string; timestamp: string; signatu
  * `email.received`. Put the signing secret in RESEND_WEBHOOK_SECRET.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET?.trim();
 

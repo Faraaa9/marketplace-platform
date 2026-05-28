@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { isDynamicServerError } from "next/dist/client/components/hooks-server-context";
 import { authOptions } from "@/lib/auth";
@@ -9,9 +9,8 @@ import { getAiUsageStats } from "@/lib/admin/ai-usage";
 import { getMarketplaceIntelligence } from "@/lib/admin/marketplace-intelligence";
 import { getFollowUpAdminSignal } from "@/lib/admin/follow-up-signal";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "ADMIN") {

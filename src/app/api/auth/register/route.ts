@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,7 @@ import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, emailVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const ip = getClientIp(req);
     const rl = await rateLimitAsync(`auth:register:${ip}`, RATE_LIMITS.auth);

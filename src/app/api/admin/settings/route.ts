@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
@@ -10,8 +10,6 @@ import {
   setStoryEnabled,
 } from "@/lib/platform-settings";
 
-export const dynamic = "force-dynamic";
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function loadSettings() {
@@ -22,6 +20,7 @@ async function loadSettings() {
 }
 
 export async function GET() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "ADMIN") {
@@ -37,6 +36,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "ADMIN") {

@@ -1,9 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-export const dynamic = "force-dynamic";
 
 /** Admin CRUD for credit packs — the buyable credit bundles + their prices. */
 
@@ -18,6 +16,7 @@ function parsePositiveInt(value: unknown): number | null {
 }
 
 export async function GET() {
+  await connection();
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -42,6 +41,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  await connection();
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -130,6 +131,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  await connection();
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

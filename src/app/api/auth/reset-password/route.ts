@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const ip = getClientIp(req);
     const rl = await rateLimitAsync(`auth:reset:${ip}`, RATE_LIMITS.auth);

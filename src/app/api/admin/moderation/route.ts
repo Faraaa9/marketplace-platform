@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
@@ -7,10 +7,9 @@ import {
   isModerationStatus,
 } from "@/lib/moderation/admin-actions";
 
-export const dynamic = "force-dynamic";
-
 /** GET /api/admin/moderation?status=&type=&page= — moderation review queue. */
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || session.user.role !== "ADMIN") {

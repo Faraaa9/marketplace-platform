@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, creditPurchaseEmail } from "@/lib/email";
@@ -10,6 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder"
 });
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
