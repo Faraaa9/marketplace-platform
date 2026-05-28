@@ -19,6 +19,19 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-05-28 03:00 — Claude
 
+**Commit:** `8d9f5be` — perf(db): add composite indexes for /meistrai listing filter · lokalus
+
+**Pakeitimai:** 2 files changed, 45 insertions(+), 20 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260528_add_provider_listing_indexes.sql
+- prisma/schema.prisma
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-28 03:00 — Claude
+
 **Commit:** `4f11bb9` — perf(meistrai): cache provider listing and detail data fetches · lokalus
 
 **Pakeitimai:** 2 files changed, 234 insertions(+), 144 deletions(-)

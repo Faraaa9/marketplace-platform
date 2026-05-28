@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String?
-  role          String    @default("CLIENT")
-  emailVerified DateTime?
-  phone         String?
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  password        String?
+  role            String    @default("CLIENT")
+  emailVerified   DateTime?
+  phone           String?
   phoneVerifiedAt DateTime?
-  image         String?
-  lastSeenAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  image           String?
+  lastSeenAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   accounts                Account[]
   providerProfile         ProviderProfile?
@@ -41,6 +41,9 @@ model User {
   claimRequests           ClaimRequest[]           @relation("ClaimRequestUser")
   claimReviews            ClaimRequest[]           @relation("ClaimReviewedBy")
 
+  // Hot path: /meistrai listing filters `role = 'PROVIDER' AND emailVerified IS NOT NULL`.
+  // Without this composite the planner does a full table scan.
+  @@index([role, emailVerified])
   @@map("users")
 }
 
@@ -114,11 +117,11 @@ model ProviderProfile {
   // on /meistrai/[slug]. primaryService + primaryCity drive structured-data
   // (LocalBusiness.areaServed) and a fallback metadata formula for legacy
   // rows where AI hasn't run yet.
-  seoTitle        String?
-  seoDescription  String?
-  primaryService  String?
-  primaryCity     String?
-  serviceArea     String[] @default([])
+  seoTitle       String?
+  seoDescription String?
+  primaryService String?
+  primaryCity    String?
+  serviceArea    String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -134,6 +137,10 @@ model ProviderProfile {
   @@index([status])
   @@index([sourceType])
   @@index([externalSourceUrl])
+  // Provider listing joins on `isActive = true AND moderationStatus = 'APPROVED'`
+  // through the User → ProviderProfile relation. Composite avoids the
+  // second filter step after the moderationStatus single-column index.
+  @@index([isActive, moderationStatus])
   @@map("provider_profiles")
 }
 
@@ -239,8 +246,8 @@ model Response {
 
   // Conversation tracking — denormalized so the provider inbox can sort by
   // recent activity and flag unread threads without scanning all messages.
-  lastMessageAt      DateTime @default(now())
-  providerLastReadAt DateTime @default(now())
+  lastMessageAt      DateTime  @default(now())
+  providerLastReadAt DateTime  @default(now())
   clientLastReadAt   DateTime?
 
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
@@ -387,8 +394,8 @@ model DirectInquiry {
   updatedAt        DateTime  @updatedAt
 
   // Conversation tracking — a DirectInquiry is now a two-way message thread.
-  lastMessageAt      DateTime @default(now())
-  providerLastReadAt DateTime @default(now())
+  lastMessageAt      DateTime  @default(now())
+  providerLastReadAt DateTime  @default(now())
   clientLastReadAt   DateTime?
 
   provider User      @relation("InquiryProvider", fields: [providerId], references: [id], onDelete: Cascade)
