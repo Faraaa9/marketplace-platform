@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 03:00 — Claude
+
+**Commit:** `4f11bb9` — perf(meistrai): cache provider listing and detail data fetches · lokalus
+
+**Pakeitimai:** 2 files changed, 234 insertions(+), 144 deletions(-)
+
+**Failai:**
+- src/app/meistrai/[slug]/page.tsx
+- src/app/meistrai/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 02:51 — Claude
 
 **Commit:** `d923976` — feat(uzklausos): v2 request creation flow with multi-category + inline AI · lokalus
