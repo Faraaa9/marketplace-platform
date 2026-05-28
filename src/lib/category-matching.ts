@@ -1,4 +1,18 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+/**
+ * Prisma relation filter selecting only categories that are currently ACTIVE:
+ * a free/base category (`expiresAt` null) or a paid unlock that hasn't expired.
+ *
+ * Apply on the `categories` relation everywhere provider categories drive lead
+ * MATCHING, NOTIFICATIONS, or public VISIBILITY — so an expired paid category
+ * stops surfacing the provider. Do NOT apply in the profile editor, which must
+ * show every category (incl. expired) so the provider can renew/manage them.
+ */
+export function activeCategoryFilter(): Prisma.ProviderProfileCategoryWhereInput {
+  return { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] };
+}
 
 /**
  * Expand a set of curated category ids into the full set of category ids

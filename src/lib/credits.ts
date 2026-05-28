@@ -14,11 +14,31 @@ import { getFreeStarterCredits } from "@/lib/platform-settings";
 /** A lead unlock always costs exactly one credit. */
 export const CREDITS_PER_UNLOCK = 1;
 
+// Category visibility pricing lives in a client-safe module so the editor UI
+// can import it too; re-exported here for existing server-side callers.
+export {
+  FREE_CATEGORY_LIMIT,
+  CREDITS_PER_CATEGORY_MONTH,
+  CATEGORY_PERIOD_DAYS,
+  MAX_CATEGORY_MONTHS,
+} from "@/lib/category-pricing";
+import {
+  CREDITS_PER_CATEGORY_MONTH,
+  CATEGORY_PERIOD_DAYS,
+  MAX_CATEGORY_MONTHS,
+} from "@/lib/category-pricing";
+
 export type CreditTransactionType =
   | "PURCHASE"
   | "UNLOCK_SPEND"
   | "ADMIN_GRANT"
-  | "STARTER_GRANT";
+  | "STARTER_GRANT"
+  | "CATEGORY_UNLOCK";
+
+/** A paid category counts as active while it has no expiry or expires later. */
+export function isCategoryActive(expiresAt: Date | null | undefined): boolean {
+  return expiresAt == null || expiresAt.getTime() > Date.now();
+}
 
 /**
  * Thrown inside the unlock transaction to roll it back when the provider
@@ -278,6 +298,128 @@ export async function unlockLead(input: {
       return {
         ok: true,
         alreadyUnlocked: true,
+        balance: await getCreditBalance(providerProfileId),
+      };
+    }
+    throw error;
+  }
+}
+
+export type CategoryUnlockResult =
+  | { ok: true; alreadyFree: boolean; balance: number; expiresAt: Date; cost: number }
+  | { ok: false; reason: "INSUFFICIENT_CREDITS"; balance: number };
+
+/**
+ * Unlock (or renew) an extra service category for a provider for `months`
+ * 30-day periods, spending credits atomically.
+ *
+ * - If the category is already a FREE base category (expiresAt null) it stays
+ *   free — no charge, reported as `alreadyFree`.
+ * - Renewing before expiry stacks: the new expiry extends from the later of
+ *   now or the current expiry, so paid time is never lost.
+ * - The conditional decrement (`creditBalance >= cost`) keeps the balance from
+ *   going negative under racing requests; on shortfall the whole transaction
+ *   rolls back.
+ */
+export async function unlockCategory(input: {
+  providerProfileId: string;
+  categoryId: string;
+  months: number;
+}): Promise<CategoryUnlockResult> {
+  const { providerProfileId, categoryId } = input;
+  const months = Math.min(
+    Math.max(1, Math.floor(input.months || 1)),
+    MAX_CATEGORY_MONTHS,
+  );
+  const cost = months * CREDITS_PER_CATEGORY_MONTH;
+  const periodMs = CATEGORY_PERIOD_DAYS * 24 * 60 * 60 * 1000;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.providerProfileCategory.findUnique({
+        where: {
+          providerProfileId_categoryId: { providerProfileId, categoryId },
+        },
+        select: { id: true, expiresAt: true, sortOrder: true },
+      });
+
+      // Already a permanent free/base category — nothing to buy.
+      if (existing && existing.expiresAt == null) {
+        return {
+          ok: true as const,
+          alreadyFree: true,
+          balance: await getCreditBalance(providerProfileId),
+          expiresAt: new Date(8640000000000000), // sentinel "never"
+          cost: 0,
+        };
+      }
+
+      const decremented = await tx.providerProfile.updateMany({
+        where: { id: providerProfileId, creditBalance: { gte: cost } },
+        data: { creditBalance: { decrement: cost } },
+      });
+      if (decremented.count === 0) {
+        throw new InsufficientCreditsError();
+      }
+
+      // Stack on top of remaining paid time if renewing early.
+      const base = Math.max(
+        Date.now(),
+        existing?.expiresAt ? existing.expiresAt.getTime() : Date.now(),
+      );
+      const newExpiry = new Date(base + months * periodMs);
+
+      if (existing) {
+        await tx.providerProfileCategory.update({
+          where: { id: existing.id },
+          data: { expiresAt: newExpiry },
+        });
+      } else {
+        const last = await tx.providerProfileCategory.findFirst({
+          where: { providerProfileId },
+          orderBy: { sortOrder: "desc" },
+          select: { sortOrder: true },
+        });
+        await tx.providerProfileCategory.create({
+          data: {
+            providerProfileId,
+            categoryId,
+            sortOrder: (last?.sortOrder ?? -1) + 1,
+            expiresAt: newExpiry,
+          },
+        });
+      }
+
+      const profile = await tx.providerProfile.findUnique({
+        where: { id: providerProfileId },
+        select: { creditBalance: true },
+      });
+      const balanceAfter = profile?.creditBalance ?? 0;
+
+      await tx.creditTransaction.create({
+        data: {
+          providerProfileId,
+          amount: -cost,
+          balanceAfter,
+          type: "CATEGORY_UNLOCK",
+          categoryId,
+          note: `Kategorijos atrakinimas (${months} mėn.)`,
+        },
+      });
+
+      return {
+        ok: true as const,
+        alreadyFree: false,
+        balance: balanceAfter,
+        expiresAt: newExpiry,
+        cost,
+      };
+    });
+  } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      return {
+        ok: false,
+        reason: "INSUFFICIENT_CREDITS",
         balance: await getCreditBalance(providerProfileId),
       };
     }

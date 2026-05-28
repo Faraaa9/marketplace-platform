@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -12,7 +12,14 @@ import {
   CheckCircle2,
   Link2,
   PencilLine,
+  X,
 } from "lucide-react";
+import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
+import type {
+  ServiceCategoryGroup,
+  ServiceCategoryItem,
+} from "@/lib/service-categories";
+import { FREE_CATEGORY_LIMIT } from "@/lib/category-pricing";
 
 interface LoadingStep {
   icon: typeof Globe;
@@ -110,11 +117,63 @@ export function AIProfileSetup() {
   const [scratchLocation, setScratchLocation] = useState("");
   const [scratchExperience, setScratchExperience] = useState("");
   const [scratchPhone, setScratchPhone] = useState("");
+  const [scratchWebsite, setScratchWebsite] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeStep, setActiveStep] = useState(0);
   const [overtimeMessageIdx, setOvertimeMessageIdx] = useState(0);
+
+  // Post-generation category confirmation step
+  const [generatedSlug, setGeneratedSlug] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
+  const [confirmCategoryIds, setConfirmCategoryIds] = useState<string[]>([]);
+  const [savingCategories, setSavingCategories] = useState(false);
+
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    function add(item: ServiceCategoryItem) {
+      map.set(item.id, item.name);
+      for (const child of item.children ?? []) add(child);
+    }
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) add(cat);
+    }
+    return map;
+  }, [categoryGroups]);
+
+  function toggleConfirmCategory(id: string) {
+    setConfirmCategoryIds((prev) => {
+      if (prev.includes(id)) return prev.filter((c) => c !== id);
+      if (prev.length >= FREE_CATEGORY_LIMIT) return prev;
+      return [...prev, id];
+    });
+  }
+
+  function goToProfile() {
+    if (generatedSlug) {
+      router.push(`/meistrai/${generatedSlug}?welcome=1`);
+    } else {
+      router.push("/tiekejas/profilis");
+    }
+  }
+
+  async function handleConfirmCategories() {
+    setSavingCategories(true);
+    try {
+      await fetch("/api/tiekejas/profilis/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryIds: confirmCategoryIds }),
+      });
+    } catch {
+      // Categories were already saved by the generator; a failed tweak here
+      // shouldn't trap the user on this screen — proceed to the profile.
+    } finally {
+      goToProfile();
+    }
+  }
 
   const loadingSteps = mode === "url" ? LOADING_STEPS_URL : LOADING_STEPS_SCRATCH;
   const stepIntervals = mode === "url" ? STEP_INTERVALS_URL : STEP_INTERVALS_SCRATCH;
@@ -181,6 +240,7 @@ export function AIProfileSetup() {
                 ? parseInt(scratchExperience, 10)
                 : undefined,
               phone: scratchPhone.trim() || undefined,
+              website: scratchWebsite.trim() || undefined,
             };
 
       const response = await fetch("/api/profile/ai-generate", {
@@ -205,11 +265,19 @@ export function AIProfileSetup() {
       }
 
       const result = await response.json();
-      if (result.slug) {
-        router.push(`/meistrai/${result.slug}?welcome=1`);
-      } else {
-        router.push("/tiekejas/profilis");
+      setGeneratedSlug(result.slug ?? null);
+      setConfirmCategoryIds(
+        Array.isArray(result.categoryIds) ? result.categoryIds : []
+      );
+      try {
+        const catRes = await fetch("/api/service-categories");
+        const catData = await catRes.json();
+        setCategoryGroups(catData?.data ?? []);
+      } catch {
+        setCategoryGroups([]);
       }
+      setLoading(false);
+      setConfirming(true);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Nepavyko sugeneruoti profilio"
@@ -217,6 +285,96 @@ export function AIProfileSetup() {
       setLoading(false);
     }
   };
+
+  if (confirming) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-100 mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Profilis sukurtas!</h2>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Patikrink, ar AI teisingai parinko tavo veiklos sritis. Pašalink
+              netinkamas arba pridėk trūkstamas.
+            </p>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                Tavo veiklos sritys
+              </label>
+              <span
+                className={`text-xs tabular-nums font-medium ${
+                  confirmCategoryIds.length >= FREE_CATEGORY_LIMIT
+                    ? "text-amber-500"
+                    : "text-gray-400"
+                }`}
+              >
+                {confirmCategoryIds.length}/{FREE_CATEGORY_LIMIT}
+              </span>
+            </div>
+            <GroupedCategoryPicker
+              groups={categoryGroups}
+              multiple
+              selectedValues={confirmCategoryIds}
+              onToggle={toggleConfirmCategory}
+              onClearAll={() => setConfirmCategoryIds([])}
+              mode="id"
+              variant="form"
+              placeholder="Pasirinkite veiklos sritis"
+            />
+            {confirmCategoryIds.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {confirmCategoryIds.map((id) => (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 py-1 pl-2.5 pr-1 text-xs font-medium text-orange-700"
+                  >
+                    {categoryNameById.get(id) ?? "Kategorija"}
+                    <button
+                      type="button"
+                      onClick={() => toggleConfirmCategory(id)}
+                      aria-label={`Pašalinti ${categoryNameById.get(id) ?? "kategoriją"}`}
+                      className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-orange-200/60"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">
+            <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+            <span>Nuotraukas galėsi įkelti ar pakeisti bet kada savo profilyje.</span>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleConfirmCategories}
+              disabled={savingCategories}
+              className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+            >
+              {savingCategories ? "Saugome..." : "Patvirtinti ir tęsti"}
+            </button>
+            <button
+              type="button"
+              onClick={goToProfile}
+              disabled={savingCategories}
+              className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+            >
+              Praleisti
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     const overtime = activeStep >= loadingSteps.length - 1;
@@ -456,17 +614,31 @@ export function AIProfileSetup() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Telefonas (neprivaloma)
-                </label>
-                <input
-                  type="tel"
-                  value={scratchPhone}
-                  onChange={(e) => setScratchPhone(e.target.value)}
-                  placeholder="+370..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Telefonas (neprivaloma)
+                  </label>
+                  <input
+                    type="tel"
+                    value={scratchPhone}
+                    onChange={(e) => setScratchPhone(e.target.value)}
+                    placeholder="+370..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Tinklalapis (neprivaloma)
+                  </label>
+                  <input
+                    type="url"
+                    value={scratchWebsite}
+                    onChange={(e) => setScratchWebsite(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  />
+                </div>
               </div>
             </>
           )}

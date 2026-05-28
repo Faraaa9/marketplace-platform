@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ChevronLeft, ChevronRight, FileText, Search } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
-import { expandToMatchSet } from "@/lib/category-matching";
+import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 import { getUnlockedRequestIds } from "@/lib/credits";
 import { recordAiRun } from "@/lib/ai/audit";
 import {
@@ -62,6 +62,7 @@ export async function RequestsList({
       specializations: true,
       location: true,
       categories: {
+        where: activeCategoryFilter(),
         select: { categoryId: true, category: { select: { name: true } } },
       },
       user: { select: { emailVerified: true } },

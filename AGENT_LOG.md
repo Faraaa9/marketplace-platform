@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 02:21 — Claude
+
+**Commit:** `cd39276` — feat(categories): precise AI picking + paid timed category unlock · lokalus
+
+**Pakeitimai:** 24 files changed, 967 insertions(+), 103 deletions(-)
+
+**Failai:**
+- NOTES.md
+- prisma/manual-migrations/20260529_strip_root_categories_from_providers.sql
+- prisma/schema.prisma
+- src/app/api/profile/ai-generate/route.ts
+- src/app/api/tiekejas/profilis/categories/route.ts
+- src/app/api/tiekejas/profilis/categories/unlock/route.ts
+- src/app/api/tiekejas/profilis/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/copilot/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/unlock/route.ts
+- src/app/api/tiekejas/uzklausos/route.ts
+- src/app/kontaktai/AIProfileSetup.tsx
+- src/app/meistrai/[slug]/components/SimilarProvidersSection.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 01:53 — Claude
 
 **Commit:** `252c239` — feat(telegram): conversation bot for voice/text request posting · lokalus

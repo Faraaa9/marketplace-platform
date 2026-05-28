@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { prisma } from "@/lib/prisma";
-import { expandToMatchSet } from "@/lib/category-matching";
+import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 import { computeProfileCompleteness } from "@/lib/provider-completeness";
 
 interface NextAction {
@@ -72,7 +72,7 @@ export async function StatsGrid({ userId }: { userId: string }) {
       select: {
         creditBalance: true,
         isActive: true,
-        categories: { select: { categoryId: true } },
+        categories: { where: activeCategoryFilter(), select: { categoryId: true } },
         description: true,
         headline: true,
         services: true,

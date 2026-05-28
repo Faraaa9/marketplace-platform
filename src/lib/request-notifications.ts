@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, newRequestAlertEmail } from "@/lib/email";
-import { expandToMatchSet } from "@/lib/category-matching";
+import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 
 /**
  * Notify providers whose curated categories match a new request. Matching is
@@ -34,7 +34,9 @@ export async function notifyRelevantProviders(
       emailVerified: { not: null },
       providerProfile: {
         isActive: true,
-        categories: { some: { categoryId: { in: matchSet } } },
+        categories: {
+          some: { categoryId: { in: matchSet }, ...activeCategoryFilter() },
+        },
       },
     },
     select: {

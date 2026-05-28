@@ -4,6 +4,7 @@ import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { getPresenceLabel, getPresenceLevel } from "@/lib/presence";
 import { getServiceCategoryGroups } from "@/lib/service-categories";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import type { ProviderCardData } from "@/lib/provider-filters";
 
 const DESC_PREVIEW_LENGTH = 160;
@@ -41,6 +42,7 @@ async function getProvidersListingDataCached() {
             slug: true,
             description: true,
             categories: {
+              where: activeCategoryFilter(),
               select: { category: { select: { id: true, name: true, slug: true } } },
               orderBy: { sortOrder: "asc" },
             },
