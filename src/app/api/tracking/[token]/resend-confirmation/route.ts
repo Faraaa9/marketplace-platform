@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { sendEmail, requestVerificationEmail } from "@/lib/email";
 
-export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
     const ip = getClientIp(req);

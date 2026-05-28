@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpDown, Search, SlidersHorizontal, X } from "lucide-react";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
@@ -20,7 +20,17 @@ interface FilterBarProps {
   totalResults: number;
 }
 
-export default function RequestFilterBar({
+// Cache Components wrap — every useSearchParams caller needs to live inside
+// a Suspense, so we put the boundary right here at the component export.
+export default function RequestFilterBar(props: FilterBarProps) {
+  return (
+    <Suspense fallback={null}>
+      <RequestFilterBarInner {...props} />
+    </Suspense>
+  );
+}
+
+function RequestFilterBarInner({
   activeCategory,
   activeLocation,
   activeSearch,

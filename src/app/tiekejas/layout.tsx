@@ -1,22 +1,10 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
-
-export default async function TiekejasLayout({
+// Auth + role gating for /tiekejas/* is handled by src/proxy.ts (matcher:
+// "/tiekejas/:path*"). Layout intentionally has no server-side data access —
+// keeps it prerender-safe under Cache Components.
+export default function TiekejasLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    redirect("/prisijungti?callbackUrl=/tiekejas");
-  }
-
-  const role = session.user.role;
-  if (role !== "PROVIDER" && role !== "ADMIN") {
-    redirect("/tapti-tiekeju");
-  }
-
   return <>{children}</>;
 }

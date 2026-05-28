@@ -90,10 +90,16 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <LoadingProgressBar />
           </Suspense>
-          <Header />
+          {/* Client components below read session/path — each wrapped in
+              Suspense so Cache Components can prerender the layout shell. */}
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
           <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
           <Footer />
-          <MobileBottomNav />
+          <Suspense fallback={null}>
+            <MobileBottomNav />
+          </Suspense>
           <RegisterSW />
           <InstallPrompt />
         </Providers>

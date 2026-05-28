@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 import { moderateText } from "@/lib/moderation";
 import { directInquiryCodeMatches } from "@/lib/email-verification";
 
-export const dynamic = "force-dynamic";
 
 /**
  * Guest direct inquiry — step 2: verify code and create real DirectInquiry.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const body = await req.json();
     const { pendingId, code } = body;

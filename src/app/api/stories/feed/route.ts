@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 /**
  * GET /api/stories/feed
@@ -11,6 +9,7 @@ export const dynamic = "force-dynamic";
  * Used by the header strip to show all providers with current stories.
  */
 export async function GET() {
+  await connection();
   try {
     const now = new Date();
 

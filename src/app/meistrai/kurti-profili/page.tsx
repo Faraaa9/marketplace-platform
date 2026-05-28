@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -11,9 +12,18 @@ export const metadata: Metadata = {
     "Greitai sukurkite savo meistro profilį su AI pagalba. Tik nurodykite URL ir mes užpildysime visą informaciją.",
 };
 
-export const dynamic = "force-dynamic";
 
-export default async function CreateProviderProfilePage() {
+export default function CreateProviderProfilePage() {
+  // Session + role check streams inside Suspense so the page shell can
+  // prerender (Cache Components requirement).
+  return (
+    <Suspense fallback={null}>
+      <SessionGate />
+    </Suspense>
+  );
+}
+
+async function SessionGate() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {

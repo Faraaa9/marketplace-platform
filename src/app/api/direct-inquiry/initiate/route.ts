@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { directInquirySchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -7,7 +7,6 @@ import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { hashDirectInquiryCode } from "@/lib/email-verification";
 import crypto from "crypto";
 
-export const dynamic = "force-dynamic";
 
 function generateCode(): string {
   return crypto.randomInt(100000, 999999).toString();

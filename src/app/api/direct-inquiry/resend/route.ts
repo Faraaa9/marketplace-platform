@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, directInquiryVerificationEmail } from "@/lib/email";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import crypto from "crypto";
 
-export const dynamic = "force-dynamic";
 
 const MAX_RESENDS = 3;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
@@ -13,6 +12,7 @@ const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
  * Resend verification code for a pending direct inquiry.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const body = await req.json();
     const { pendingId } = body;

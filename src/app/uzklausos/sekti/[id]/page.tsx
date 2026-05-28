@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Skeleton from "@/components/ui/Skeleton";
 import TrackRequestClient from "./TrackRequestClient";
 
-export const dynamic = "force-dynamic";
 
 export default function TrackRequestPage() {
   return (

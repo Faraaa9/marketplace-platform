@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import {
   getCloudinaryErrorDetails,
   getConfiguredCloudinary,
@@ -6,7 +6,6 @@ import {
 } from "@/lib/cloudinary";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
-export const dynamic = "force-dynamic";
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 

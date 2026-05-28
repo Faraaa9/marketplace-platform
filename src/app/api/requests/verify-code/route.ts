@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { emailVerificationCodeMatches } from "@/lib/email-verification";
 
-export const dynamic = "force-dynamic";
 
 const schema = z.object({
   email: z.string().email(),

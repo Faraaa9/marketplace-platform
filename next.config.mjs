@@ -7,6 +7,10 @@ const nextConfig = {
       "./node_modules/playwright-core/**/*",
     ],
   },
+  // Cache Components (Next 16 PPR). Static shell prerenders at build time,
+  // dynamic parts stream via Suspense, cached parts use the `'use cache'`
+  // directive. See NOTES.md "Performance follow-ups" for the migration log.
+  cacheComponents: true,
   experimental: {
     optimizePackageImports: [
       "lucide-react",

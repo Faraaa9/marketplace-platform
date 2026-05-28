@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 import HeroSearch from "@/components/marketing/HeroSearch";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
@@ -154,7 +156,19 @@ async function getHomePageData() {
   }
 }
 
-export default async function HomePage() {
+export default function HomePage() {
+  // Cache Components: the page body fetches data + formats relative dates
+  // (new Date()) — stream it inside a Suspense so the rest of the layout
+  // can prerender.
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+async function HomePageContent() {
+  await connection();
   const [
     { recentRequests, providerCount, requestCount, responseCount },
     categoryGroups,

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
@@ -164,10 +165,18 @@ type ProviderProfileWithCategories = ProviderProfileData & {
   categories: ProviderCategory[];
 };
 
-export default async function PublicProviderProfilePage({
-  params,
-  searchParams,
-}: PageProps) {
+export default function PublicProviderProfilePage(props: PageProps) {
+  // Cache Components: session check + per-request lookups stream inside a
+  // Suspense boundary so the rest of the route can prerender.
+  return (
+    <Suspense fallback={null}>
+      <ProfileContent {...props} />
+    </Suspense>
+  );
+}
+
+async function ProfileContent({ params, searchParams }: PageProps) {
+  await connection();
   const { slug } = await params;
   const { welcome } = await searchParams;
   const lookup = await resolveProvider(slug);

@@ -12,22 +12,23 @@ export const metadata: Metadata = {
   description: "Tvarkykite pagrindinius kliento profilio kontaktus.",
 };
 
-export const dynamic = "force-dynamic";
 
-export default async function ClientProfilePage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect(`/prisijungti?callbackUrl=${encodeURIComponent("/paskyra/profilis")}`);
-  }
-
+export default function ClientProfilePage() {
+  // Cache Components: session-reading must live inside a Suspense boundary so
+  // the page shell can prerender.
   return (
     <Suspense fallback={<ProfileFormSkeleton />}>
-      <ProfileFormLoader userId={session.user.id} />
+      <ProfileFormLoader />
     </Suspense>
   );
 }
 
-async function ProfileFormLoader({ userId }: { userId: string }) {
+async function ProfileFormLoader() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect(`/prisijungti?callbackUrl=${encodeURIComponent("/paskyra/profilis")}`);
+  }
+  const userId = session.user.id;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {

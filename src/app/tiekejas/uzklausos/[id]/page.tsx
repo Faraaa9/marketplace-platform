@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Skeleton from "@/components/ui/Skeleton";
 import RequestDetailClient from "./RequestDetailClient";
 
-export const dynamic = "force-dynamic";
 
 export default function ProviderRequestDetailPage() {
   return (

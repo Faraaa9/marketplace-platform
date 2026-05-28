@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -6,7 +6,6 @@ import { sendEmail, requestCodeVerificationEmail } from "@/lib/email";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { hashEmailVerificationCode } from "@/lib/email-verification";
 
-export const dynamic = "force-dynamic";
 
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_RESENDS = 4;

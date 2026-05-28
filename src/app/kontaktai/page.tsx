@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { getServerSession } from "next-auth";
 
@@ -10,10 +11,7 @@ import { authOptions } from "@/lib/auth";
 import Card from "@/components/ui/Card";
 import ContactForm from "./ContactForm";
 
-export default async function ContactPage() {
-  const session = await getServerSession(authOptions);
-  const isLoggedIn = Boolean(session?.user);
-
+export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <div className="text-center mb-10">
@@ -47,8 +45,18 @@ export default async function ContactPage() {
 
       <Card>
         <h2 className="text-heading-2 font-semibold text-surface-900 dark:text-white mb-6">Parašykite mums</h2>
-        <ContactForm isLoggedIn={isLoggedIn} />
+        {/* ContactForm needs to know if the user is logged in — session check
+            streams inside Suspense so the rest of the page prerenders. */}
+        <Suspense fallback={<ContactForm isLoggedIn={false} />}>
+          <ContactFormLoader />
+        </Suspense>
       </Card>
     </div>
   );
+}
+
+async function ContactFormLoader() {
+  const session = await getServerSession(authOptions);
+  const isLoggedIn = Boolean(session?.user);
+  return <ContactForm isLoggedIn={isLoggedIn} />;
 }

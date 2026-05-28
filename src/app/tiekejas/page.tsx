@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Skeleton from "@/components/ui/Skeleton";
 import ProviderDashboardClient from "./ProviderDashboardClient";
 
-export const dynamic = "force-dynamic";
 
 export default function ProviderDashboardPage() {
   return (

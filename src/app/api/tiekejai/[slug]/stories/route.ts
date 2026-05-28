@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
 
-export const dynamic = "force-dynamic";
 
 /**
  * GET — public endpoint: active stories for a provider.
@@ -13,6 +12,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  await connection();
   try {
     const { slug } = await params;
 

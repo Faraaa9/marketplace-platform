@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -33,7 +33,18 @@ interface DirectInquiryWidgetProps {
   sidebarCTA?: React.ReactNode;
 }
 
-export default function DirectInquiryWidget({
+// Cache Components requires `useSearchParams` callers to live inside a
+// Suspense boundary. Wrapping at the component export means every callsite
+// is automatically prerender-safe.
+export default function DirectInquiryWidget(props: DirectInquiryWidgetProps) {
+  return (
+    <Suspense fallback={null}>
+      <DirectInquiryWidgetInner {...props} />
+    </Suspense>
+  );
+}
+
+function DirectInquiryWidgetInner({
   providerId,
   providerName,
   isSelf,

@@ -85,9 +85,9 @@ export function invalidateServiceCategoryGroups(): void {
  * the UI is being migrated.
  */
 export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]> {
-  if (cachedGroups && cachedGroups.expiresAt > Date.now()) {
-    return cachedGroups.value;
-  }
+  "use cache";
+  // Categories rarely change — 5-minute cache window is plenty.
+  // No tag yet; consumers can tag at their own level.
   const rows = await loadServiceCategoryRows();
   const byParent = new Map<string | null, CategoryRow[]>();
   for (const row of rows) {

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { categorySuggestionsSchema } from "@/lib/validations";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { suggestCategories } from "@/lib/category-suggestions";
 import { recordAiRun } from "@/lib/ai/audit";
 
-export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  await connection();
   let aiStartedAt: number | null = null;
   let mode: string | null = null;
   try {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -9,9 +10,20 @@ export const metadata: Metadata = {
   description: "Pokalbiai, kuriuos pradėjote rašydami tiekėjams.",
 };
 
-export const dynamic = "force-dynamic";
 
-export default async function SentInquiriesPage() {
+// Cache Components requires the session check (uncached) to live inside a
+// Suspense boundary. The page shell prerenders statically; <SessionGate />
+// streams in once the session resolves and either redirects or renders the
+// inquiry view.
+export default function SentInquiriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <SessionGate />
+    </Suspense>
+  );
+}
+
+async function SessionGate() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     redirect(`/prisijungti?callbackUrl=${encodeURIComponent("/paskyra/zinutes")}`);
