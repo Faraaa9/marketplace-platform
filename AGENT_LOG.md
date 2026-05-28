@@ -31,7 +31,28 @@ sprendžia kontekstą iš diff'o.
 - src/lib/telegram/api.ts
 - src/lib/telegram/types.ts
 
-**Toliau:** _(papildyk ranka kai aišku)_
+**Toliau:** Transport sluoksnis paruoštas pokalbio agentui. Webhook
+`src/app/api/telegram/webhook/route.ts` importuoja `handleUpdate(update)` iš
+`@/lib/telegram/bot` — tą modulį kuria pokalbio agentas (jis dar neegzistuoja,
+todėl `tsc`/`build` mes vieną laukiamą TS2307 klaidą iki merge).
+
+API kontraktas, prieš kurį galima koduoti (`@/lib/telegram/api`):
+- `sendMessage(chatId: number, text: string, opts?: SendMessageOptions): Promise<void>`
+  - `SendMessageOptions = { inlineKeyboard?: InlineButton[][]; requestContact?: { buttonText: string }; parseMode?: "HTML" | "MarkdownV2" }`
+  - `InlineButton = { text: string; callback_data: string }`
+  - inlineKeyboard ir requestContact yra vienas-arba-kitas (inline turi pirmenybę).
+- `answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>`
+- `getFileLink(fileId: string): Promise<string>` — pilnas atsisiuntimo URL.
+- `downloadFile(fileId: string): Promise<Buffer>` — voice → transkripcija.
+- Klaidos metamos kaip `TelegramApiError` (eksportuota). Token iš `TELEGRAM_BOT_TOKEN`.
+
+Tipai (`@/lib/telegram/types`): `TgUpdate { update_id; message?; callback_query? }`,
+`TgMessage { message_id; from?; chat; text?; voice?; contact? }`, `TgUser { id; first_name?; username? }`,
+`TgChat { id }`, `TgVoice { file_id; duration; mime_type?; file_size? }`,
+`TgContact { phone_number; user_id?; first_name? }`, `TgCallbackQuery { id; from; data?; message? }`.
+
+Env: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` (jau .env.example).
+Webhook registracija: `pnpm telegram:set-webhook [baseUrl]` — paleidžia žmogus.
 
 
 ## 2026-05-29 00:14 — Claude
