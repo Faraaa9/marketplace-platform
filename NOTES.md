@@ -65,6 +65,20 @@ Konvencija:
   Realus scope = 2-3 darbo dienos, ne valandos. Stash'as drop'intas,
   production stabilus, jokie pakeitimai negit'inti.
 
+  **Antras bandymas 2026-05-28 (Task G)**: pakartotinai flippinta `cacheComponents: true`
+  ant `cache-components/task-g-enable-flag` branch'o (be prep darbų). Build
+  lūžo greitai su lygiai tokiu pattern'u, kokio tikėtasi:
+  - `Route segment config "runtime" is not compatible with nextConfig.cacheComponents.`
+    pirminis trigger'is `src/app/api/stories/feed/route.ts:4` (`export const runtime = "nodejs"`).
+  - 58 sekantiniai error'ai per visus `force-dynamic` eksportus
+    (`src/app/api/admin/*`, `/api/paskyra/*`, `/api/tiekejas/*`, `/api/requests/*`
+    plius 6 puslapiai: `meistrai/kurti-profili`, `paskyra/profilis`,
+    `paskyra/zinutes`, `meistrai/[slug]`, `meistrai`, `tiekejams`).
+  - Build'as nepasiekė `unstable_cache` fail'ų — sustojo per pirmą sluoksnį.
+  Flag'as iš next.config.mjs revert'intas, branch'as `cache-components/task-g-enable-flag`
+  pasiliko lokaliai (uncommitted, neglobalizuotas). Multi-session plan'as
+  (Phases 1-4) lieka galiojantis ir reikalingas prieš flag flip.
+
   **Multi-session migration plan**:
 
   ### Phase 1 — API routes `connection()` (~2-3 val.)
