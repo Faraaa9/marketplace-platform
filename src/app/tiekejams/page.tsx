@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   MessageSquare,
 } from "lucide-react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { creditsLabel } from "@/lib/utils";
 
@@ -27,18 +28,31 @@ export const metadata: Metadata = {
     "AI sukuria meistro profilį per 20 sekundžių. Prisijunkite prie PaslaugųRinka — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
 };
 
+// Marketing page — credit packs change rarely, counts are cosmetic stats.
+// 5-minute cache is more than enough; SWR keeps any miss invisible.
+export const revalidate = 300;
+
+const getForProvidersData = unstable_cache(
+  async () => {
+    const [packs, providerCount, requestCount] = await Promise.all([
+      prisma.creditPack.findMany({
+        where: { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { id: true, name: true, credits: true, priceCents: true },
+      }),
+      prisma.providerProfile.count({
+        where: { isActive: true, moderationStatus: "APPROVED" },
+      }),
+      prisma.serviceRequest.count(),
+    ]);
+    return { packs, providerCount, requestCount };
+  },
+  ["tiekejams-data-v1"],
+  { revalidate: 300, tags: ["tiekejams-data"] },
+);
+
 export default async function ForProvidersPage() {
-  const [packs, providerCount, requestCount] = await Promise.all([
-    prisma.creditPack.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { id: true, name: true, credits: true, priceCents: true },
-    }),
-    prisma.providerProfile.count({
-      where: { isActive: true, moderationStatus: "APPROVED" },
-    }),
-    prisma.serviceRequest.count(),
-  ]);
+  const { packs, providerCount, requestCount } = await getForProvidersData();
 
   return (
     <div>
