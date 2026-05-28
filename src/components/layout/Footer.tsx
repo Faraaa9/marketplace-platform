@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
 
+// Captured at module load (= build time). Cache Components forbids
+// `new Date()` during render in server components. Module scope is
+// fine because the value is baked into the build. Redeploy at year
+// boundary to refresh.
+const CURRENT_YEAR = new Date().getFullYear();
+
 export default function Footer() {
   // Transparent everywhere so the site-wide grid background flows through.
   return (
@@ -58,7 +64,7 @@ export default function Footer() {
 
         <div className="mt-12 border-t border-[#DBD6CB] pt-6 dark:border-surface-800">
           <p className="text-center text-xs text-[#8C877D] dark:text-surface-500">
-            &copy; {new Date().getFullYear()} {APP_NAME}. Visos teisės saugomos.
+            &copy; {CURRENT_YEAR} {APP_NAME}. Visos teisės saugomos.
           </p>
         </div>
       </div>
