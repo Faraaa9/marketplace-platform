@@ -1,0 +1,278 @@
+/**
+ * Conversation state-machine tests. No test framework — the project has none —
+ * so this is a self-contained script: build mocked BotDeps, drive updates
+ * through handleUpdate, and assert observable effects. Run via:
+ *   pnpm test:telegram
+ * conversation.ts only imports ./format at runtime, so this needs no DB or env.
+ */
+import assert from "node:assert/strict";
+import { handleUpdate, type BotDeps, type SessionRow } from "../conversation";
+import type { TgUpdate } from "../types";
+import type { ImproveDescriptionResult } from "@/lib/ai-improve";
+import type { CreateServiceRequestInput } from "@/lib/service-requests/create";
+
+const FROM = { id: 42, first_name: "Jonas" };
+const CHAT = 100;
+
+const IMPROVE_RESULT: ImproveDescriptionResult = {
+  improvedDescription:
+    "Reikia patyrusio plytelių klijuotojo vonios kambariui Vilniuje. Plotas apie 6 kv. m.",
+  title: "Plytelių klijavimas vonioje",
+  categories: ["plyteliu-klijavimas"],
+  category: "plyteliu-klijavimas",
+  location: "Vilnius",
+  budget: "iki 800 EUR",
+  deadline: "gegužės pabaiga",
+  recommendations: [],
+};
+
+interface SentMessage {
+  chatId: number;
+  text: string;
+  opts?: Parameters<BotDeps["sendMessage"]>[2];
+}
+
+function makeDeps(overrides: Partial<BotDeps> = {}) {
+  const sent: SentMessage[] = [];
+  const store = new Map<string, SessionRow>();
+  const calls = { improve: 0, transcribe: 0, create: 0, findOrCreate: 0 };
+  let lastCreateInput: CreateServiceRequestInput | null = null;
+
+  const deps: BotDeps = {
+    async sendMessage(chatId, text, opts) {
+      sent.push({ chatId, text, opts });
+    },
+    async answerCallbackQuery() {},
+    async downloadFile() {
+      return Buffer.from("audio");
+    },
+    async transcribe() {
+      calls.transcribe++;
+      return "Reikia plytelių klijuotojo vonioje Vilniuje iki 800 eurų.";
+    },
+    async improve() {
+      calls.improve++;
+      return IMPROVE_RESULT;
+    },
+    async resolveCategories(slugs) {
+      return slugs.length ? [{ id: "cat1", name: "Plytelių klijavimas" }] : [];
+    },
+    async findOrCreateUserByPhone() {
+      calls.findOrCreate++;
+      return { userId: "user1" };
+    },
+    async getStoredEmail() {
+      return "tg-37060000000@telegram.paslaugurinka.lt";
+    },
+    async createServiceRequest(input) {
+      calls.create++;
+      lastCreateInput = input;
+      return { ok: true, trackingToken: "tok123", moderationStatus: "APPROVED" };
+    },
+    async getSession(telegramUserId, chatId) {
+      return (
+        store.get(String(telegramUserId)) ?? {
+          telegramUserId,
+          chatId,
+          userId: null,
+          state: "idle",
+          draft: null,
+          phone: null,
+        }
+      );
+    },
+    async saveSession(session) {
+      store.set(String(session.telegramUserId), session);
+    },
+    async rateLimit() {
+      return true;
+    },
+    baseUrl: "https://paslaugurinka.lt",
+    ...overrides,
+  };
+
+  return {
+    deps,
+    sent,
+    calls,
+    session: () => store.get(String(FROM.id)),
+    lastCreateInput: () => lastCreateInput,
+    last: () => sent[sent.length - 1],
+  };
+}
+
+const textUpdate = (text: string): TgUpdate => ({
+  update_id: 1,
+  message: { message_id: 1, from: FROM, chat: { id: CHAT }, text },
+});
+const voiceUpdate = (): TgUpdate => ({
+  update_id: 1,
+  message: {
+    message_id: 1,
+    from: FROM,
+    chat: { id: CHAT },
+    voice: { file_id: "f1", duration: 3, mime_type: "audio/ogg" },
+  },
+});
+const callbackUpdate = (data: string): TgUpdate => ({
+  update_id: 1,
+  callback_query: { id: "cb1", from: FROM, data, message: { message_id: 2, chat: { id: CHAT } } },
+});
+const contactUpdate = (): TgUpdate => ({
+  update_id: 1,
+  message: {
+    message_id: 3,
+    from: FROM,
+    chat: { id: CHAT },
+    contact: { phone_number: "+37060000000", user_id: FROM.id, first_name: "Jonas" },
+  },
+});
+
+type Test = [name: string, fn: () => Promise<void>];
+
+const tests: Test[] = [
+  [
+    "full happy path: /start -> text -> confirm -> contact -> published",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("/start"), t.deps);
+      assert.match(t.last().text, /Sveiki/);
+      assert.equal(t.session()!.state, "awaiting_input");
+
+      await handleUpdate(
+        textUpdate("Reikia plytelių klijuotojo vonioje Vilniuje, biudžetas iki 800."),
+        t.deps,
+      );
+      assert.equal(t.calls.improve, 1);
+      assert.ok(t.last().opts?.inlineKeyboard, "draft should carry inline buttons");
+      assert.equal(t.session()!.state, "draft_ready");
+      assert.ok(t.session()!.draft, "draft should be stored");
+
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      assert.equal(t.session()!.state, "awaiting_contact");
+      assert.ok(t.last().opts?.requestContact, "should request contact");
+      assert.equal(t.calls.create, 0, "must not publish before contact");
+
+      await handleUpdate(contactUpdate(), t.deps);
+      assert.equal(t.calls.findOrCreate, 1);
+      assert.equal(t.calls.create, 1);
+      const input = t.lastCreateInput()!;
+      assert.equal(input.contactPreVerified, true);
+      assert.equal(input.clientId, "user1");
+      assert.equal(input.source, "telegram");
+      assert.equal(input.categoryIds.length, 1);
+      assert.match(input.clientEmail, /@/);
+      assert.match(t.last().text, /tok123/);
+      assert.equal(t.session()!.state, "idle");
+      assert.equal(t.session()!.draft, null);
+    },
+  ],
+  [
+    "voice note is transcribed then improved",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(voiceUpdate(), t.deps);
+      assert.equal(t.calls.transcribe, 1);
+      assert.equal(t.calls.improve, 1);
+      assert.equal(t.session()!.state, "draft_ready");
+    },
+  ],
+  [
+    "cancel clears the draft",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("Reikia dažytojo dideliam kambariui Kaune."), t.deps);
+      await handleUpdate(callbackUpdate("cancel"), t.deps);
+      assert.equal(t.session()!.state, "idle");
+      assert.equal(t.session()!.draft, null);
+      assert.match(t.last().text, /Atšaukta/);
+    },
+  ],
+  [
+    "no resolvable category blocks the draft",
+    async () => {
+      const t = makeDeps({ async resolveCategories() { return []; } });
+      await handleUpdate(textUpdate("Noriu kažko visai nesuprantamo ir neaiškaus."), t.deps);
+      assert.match(t.last().text, /kategorij/i);
+      assert.equal(t.session()!.state, "awaiting_input");
+      assert.ok(!t.session()!.draft);
+    },
+  ],
+  [
+    "too-short input never calls the AI",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("trumpa"), t.deps);
+      assert.equal(t.calls.improve, 0);
+      assert.match(t.last().text, /daugiau/);
+    },
+  ],
+  [
+    "pending moderation yields the review message",
+    async () => {
+      const t = makeDeps({
+        async createServiceRequest() {
+          return { ok: true, trackingToken: "tokP", moderationStatus: "PENDING" };
+        },
+      });
+      await handleUpdate(textUpdate("Reikia elektriko buto remontui Klaipėdoje."), t.deps);
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      await handleUpdate(contactUpdate(), t.deps);
+      assert.match(t.last().text, /peržiūr/);
+    },
+  ],
+  [
+    "publish failure keeps the draft for retry",
+    async () => {
+      const t = makeDeps({
+        async createServiceRequest() {
+          return { ok: false, code: "MODERATION_REJECTED", message: "Aptikta netinkamo turinio." };
+        },
+      });
+      await handleUpdate(textUpdate("Reikia santechniko vonios remontui Vilniuje."), t.deps);
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      await handleUpdate(contactUpdate(), t.deps);
+      assert.match(t.last().text, /netinkamo/);
+      assert.equal(t.session()!.state, "draft_ready");
+      assert.ok(t.session()!.draft, "draft retained after failure");
+    },
+  ],
+  [
+    "a forwarded (non-own) contact is rejected",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("Reikia valytojos namams Šiauliuose kartą per savaitę."), t.deps);
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      const forwarded: TgUpdate = {
+        update_id: 1,
+        message: {
+          message_id: 4,
+          from: FROM,
+          chat: { id: CHAT },
+          contact: { phone_number: "+37061111111", user_id: 999, first_name: "Kitas" },
+        },
+      };
+      await handleUpdate(forwarded, t.deps);
+      assert.equal(t.calls.create, 0);
+      assert.match(t.last().text, /savo kontaktu/);
+    },
+  ],
+];
+
+async function run() {
+  let failed = 0;
+  for (const [name, fn] of tests) {
+    try {
+      await fn();
+      console.log(`  ok  - ${name}`);
+    } catch (error) {
+      failed++;
+      console.error(`  FAIL - ${name}`);
+      console.error(error);
+    }
+  }
+  console.log(`\n${tests.length - failed}/${tests.length} passed`);
+  if (failed > 0) process.exitCode = 1;
+}
+
+void run();
