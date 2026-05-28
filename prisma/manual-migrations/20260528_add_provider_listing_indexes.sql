@@ -16,3 +16,14 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "users_role_emailVerified_idx"
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "provider_profiles_isActive_moderationStatus_idx"
   ON "provider_profiles" ("isActive", "moderationStatus");
+
+-- Verify both indexes exist (expect 2 rows). Use a plain string match against
+-- pg_indexes.indexname — `::regclass` would fold the mixed-case names to
+-- lowercase and report "does not exist" even when they're there.
+--
+-- SELECT indexname, tablename FROM pg_indexes
+-- WHERE schemaname = 'public'
+--   AND indexname IN (
+--     'users_role_emailVerified_idx',
+--     'provider_profiles_isActive_moderationStatus_idx'
+--   );
