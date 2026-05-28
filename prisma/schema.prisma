@@ -791,3 +791,19 @@ model InboundEmail {
   @@index([createdAt])
   @@map("inbound_emails")
 }
+
+// Conversation state for the Telegram request bot. Keyed by the Telegram user
+// id so each chat has exactly one in-flight draft. Additive only — no existing
+// table is touched. `draft` holds the partially-built užklausa until publish.
+model TelegramSession {
+  telegramUserId BigInt   @id
+  chatId         BigInt
+  userId         String?
+  state          String   @default("idle")
+  draft          Json?
+  phone          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("telegram_sessions")
+}
