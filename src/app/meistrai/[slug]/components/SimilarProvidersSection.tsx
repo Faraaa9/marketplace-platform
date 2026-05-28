@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 
@@ -10,15 +11,15 @@ interface SimilarProvidersSectionProps {
   location: string | null;
 }
 
-export default async function SimilarProvidersSection({
-  providerId,
-  categoryIds,
-  location,
-}: SimilarProvidersSectionProps) {
-  const primaryCategoryId = categoryIds[0];
-  if (!primaryCategoryId) return null;
-
-  const providers = await prisma.user.findMany({
+async function getSimilarProviders(
+  providerId: string,
+  primaryCategoryId: string,
+  location: string | null,
+) {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("providers", `provider:user:${providerId}`);
+  return prisma.user.findMany({
     where: {
       id: { not: providerId },
       role: "PROVIDER",
@@ -46,6 +47,17 @@ export default async function SimilarProvidersSection({
     orderBy: { createdAt: "desc" },
     take: 3,
   });
+}
+
+export default async function SimilarProvidersSection({
+  providerId,
+  categoryIds,
+  location,
+}: SimilarProvidersSectionProps) {
+  const primaryCategoryId = categoryIds[0];
+  if (!primaryCategoryId) return null;
+
+  const providers = await getSimilarProviders(providerId, primaryCategoryId, location);
 
   if (providers.length === 0) return null;
 

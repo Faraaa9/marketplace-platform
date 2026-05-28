@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
 import TestimonialMarquee from "./TestimonialMarquee";
@@ -10,12 +11,11 @@ interface ReviewsSectionProps {
   totalReviews: number;
 }
 
-export default async function ReviewsSection({
-  providerId,
-  avgRating,
-  totalReviews,
-}: ReviewsSectionProps) {
-  const reviews = await prisma.review.findMany({
+async function getApprovedReviews(providerId: string) {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("reviews", `reviews:user:${providerId}`);
+  return prisma.review.findMany({
     where: { providerId, moderationStatus: "APPROVED" },
     select: {
       id: true,
@@ -30,6 +30,14 @@ export default async function ReviewsSection({
     orderBy: { createdAt: "desc" },
     take: 10,
   });
+}
+
+export default async function ReviewsSection({
+  providerId,
+  avgRating,
+  totalReviews,
+}: ReviewsSectionProps) {
+  const reviews = await getApprovedReviews(providerId);
 
   // Build testimonials for marquee — only reviews with comments, sorted by rating desc
   const testimonials: TestimonialData[] = reviews

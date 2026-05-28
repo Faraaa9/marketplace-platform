@@ -37,6 +37,14 @@ Konvencija:
   Tag'ai jau parašyti cache wrappers'iuose, tiesiog reikia hook'inti
   įvykius. ~30 min darbo.
 
+  **Papildymas 2026-05-28:** `/meistrai/[slug]` `ReviewsSection` ir
+  `SimilarProvidersSection` dabar irgi `'use cache'` (300s revalidate),
+  naudoja tuos pačius tag'us — `reviews:user:${id}` (ReviewsSection) ir
+  `provider:user:${id}` (SimilarProvidersSection). Planuojamas
+  `revalidateTag('reviews:user:${providerId}')` (review approval) ir
+  `revalidateTag('provider:user:${userId}')` (profilio update) wiring'as
+  automatiškai padengia ir šias dvi sekcijas — papildomo darbo nereikia.
+
 - [ ] **Vercel install grąžintas į npm.** `vercel.json` po
   `d5ba0a7` naudoja `npm install`, ne `pnpm install --frozen-lockfile`.
   Priežastis: pnpm switch'as sukėlė deploy'ų "Deploying outputs..."
