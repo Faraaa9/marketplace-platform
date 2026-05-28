@@ -37,6 +37,14 @@ Konvencija:
   Tag'ai jau parašyti cache wrappers'iuose, tiesiog reikia hook'inti
   įvykius. ~30 min darbo.
 
+  **Papildymas 2026-05-28:** `/meistrai/[slug]` `ReviewsSection` ir
+  `SimilarProvidersSection` dabar irgi `'use cache'` (300s revalidate),
+  naudoja tuos pačius tag'us — `reviews:user:${id}` (ReviewsSection) ir
+  `provider:user:${id}` (SimilarProvidersSection). Planuojamas
+  `revalidateTag('reviews:user:${providerId}')` (review approval) ir
+  `revalidateTag('provider:user:${userId}')` (profilio update) wiring'as
+  automatiškai padengia ir šias dvi sekcijas — papildomo darbo nereikia.
+
 - [ ] **Vercel install grąžintas į npm.** `vercel.json` po
   `d5ba0a7` naudoja `npm install`, ne `pnpm install --frozen-lockfile`.
   Priežastis: pnpm switch'as sukėlė deploy'ų "Deploying outputs..."
@@ -162,7 +170,7 @@ Konvencija:
 
 ## Build / priklausomybės
 
-- [ ] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**
+- [x] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**
   `src/lib/image-processor.ts` daro `import sharp from "sharp"`, tačiau
   `sharp` nėra `dependencies` sąraše — egzistuoja tik kaip tranzityvi
   priklausomybė pnpm store'e (`node_modules/.pnpm/sharp@0.34.5`).
@@ -173,3 +181,7 @@ Konvencija:
   per `src/app/api/profile/ai-generate/route.ts`). Sprendimas: `pnpm add sharp`
   (deklaruoti kaip tiesioginę dependency). Aptikta dirbant ant
   `suspense/foundation-and-paskyra-profilis` — ne to PR'o scope.
+  **Sutvarkyta 2026-05-28 (commit `4961710`, branch `fix/declare-sharp-dep`):**
+  `sharp` deklaruotas kaip tiesioginė dependency (`sharp: 0.34.5`, exact pin
+  prod determinizmui su chromium bundle'u), `pnpm-lock.yaml` atnaujintas.
+  Švarūs strict-pnpm worktree/CI build'ai dabar resolvina sharp be hoist'o.
