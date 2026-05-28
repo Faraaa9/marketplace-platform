@@ -37,8 +37,8 @@ export type PresenceFilter = "all" | "online" | "today";
 
 export interface ProviderFilters {
   search: string;
-  location: string;
-  category: string;
+  locations: string[];
+  categories: string[];
   presence: PresenceFilter;
   urgent: boolean;
   top: boolean;
@@ -46,8 +46,8 @@ export interface ProviderFilters {
 
 export const EMPTY_PROVIDER_FILTERS: ProviderFilters = {
   search: "",
-  location: "",
-  category: "",
+  locations: [],
+  categories: [],
   presence: "all",
   urgent: false,
   top: false,
@@ -58,8 +58,8 @@ const TOP_RATING_THRESHOLD = 4.5;
 export function hasActiveProviderFilters(filters: ProviderFilters): boolean {
   return Boolean(
     filters.search ||
-      filters.location ||
-      filters.category ||
+      filters.locations.length > 0 ||
+      filters.categories.length > 0 ||
       filters.presence !== "all" ||
       filters.urgent ||
       filters.top,
@@ -90,17 +90,13 @@ export function buildProviderLocationFilter(location: string) {
 }
 
 /** In-memory equivalent of buildProviderLocationFilter, used for client-side filtering. */
-function matchesLocation(providerLocation: string | null, filter: string): boolean {
-  if (!filter) return true;
+function matchesLocations(providerLocation: string | null, filters: string[]): boolean {
+  if (filters.length === 0) return true;
+  // "Visa Lietuva" picked as a filter means "anywhere" — no city restriction.
+  if (filters.includes("Visa Lietuva")) return true;
   // A provider serving the whole country satisfies every city filter.
   if (providerLocation === "Visa Lietuva") return true;
-  if (filter === "Visa Lietuva") {
-    return (
-      providerLocation !== null &&
-      (LITHUANIAN_CITIES as readonly string[]).includes(providerLocation)
-    );
-  }
-  return providerLocation === filter;
+  return providerLocation !== null && filters.includes(providerLocation);
 }
 
 /** Quality score for sorting providers. Higher = better. */
@@ -143,11 +139,11 @@ export function filterAndSortProviders(
       const haystack = `${p.name ?? ""} ${p.description ?? ""}`.toLowerCase();
       if (!haystack.includes(query)) return false;
     }
-    if (!matchesLocation(p.location, filters.location)) return false;
+    if (!matchesLocations(p.location, filters.locations)) return false;
     if (
-      filters.category &&
+      filters.categories.length > 0 &&
       !p.categories.some(
-        (c) => c.slug === filters.category || c.id === filters.category,
+        (c) => filters.categories.includes(c.slug) || filters.categories.includes(c.id),
       )
     ) {
       return false;

@@ -98,8 +98,8 @@ export default function ProvidersExperience({
       const url = new URL(window.location.href);
       for (const key of FILTER_PARAM_KEYS) url.searchParams.delete(key);
       if (filters.search) url.searchParams.set("search", filters.search);
-      if (filters.location) url.searchParams.set("location", filters.location);
-      if (filters.category) url.searchParams.set("category", filters.category);
+      if (filters.locations.length) url.searchParams.set("location", filters.locations.join(","));
+      if (filters.categories.length) url.searchParams.set("category", filters.categories.join(","));
       if (filters.presence !== "all") url.searchParams.set("presence", filters.presence);
       if (filters.urgent) url.searchParams.set("urgent", "1");
       if (filters.top) url.searchParams.set("top", "1");

@@ -5,6 +5,7 @@ import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { getProvidersListingData, buildProviderCards } from "@/lib/providers-listing";
 import type { ServiceCategoryItem } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
+import { LITHUANIAN_CITIES } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Meistrai ir paslaugų teikėjai",
@@ -54,7 +55,26 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       return slugs;
     }),
   );
-  const rawCategory = params.category ?? "";
+  // Both filters accept several comma-separated values (e.g. `?location=Vilnius,Kaunas`).
+  // Single-value legacy links still parse to a one-item array. Unknown values are
+  // dropped so the filter state always reflects real cities / curated slugs.
+  const validCities = new Set<string>(LITHUANIAN_CITIES as readonly string[]);
+  const locations = [
+    ...new Set(
+      (params.location ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter((city) => validCities.has(city)),
+    ),
+  ];
+  const categories = [
+    ...new Set(
+      (params.category ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter((slug) => validCategorySlugs.has(slug)),
+    ),
+  ];
   // `?active=1` is the legacy alias — old bookmarks land on the closest
   // present-day equivalent ('today' bucket) instead of breaking.
   const presence: ProviderFilters["presence"] =
@@ -65,8 +85,8 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         : "all";
   const initialFilters: ProviderFilters = {
     search: params.search?.trim() || "",
-    location: params.location || "",
-    category: validCategorySlugs.has(rawCategory) ? rawCategory : "",
+    locations,
+    categories,
     presence,
     urgent: params.urgent === "1",
     top: params.top === "1",

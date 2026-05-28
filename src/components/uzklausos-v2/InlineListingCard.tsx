@@ -36,6 +36,12 @@ const AI_BUTTON_VARIANTS = [
   "bg-[#A0834F] hover:bg-[#8A6E40]",
 ] as const;
 
+// Minimum description length before the dependent fields and the AI button
+// unlock. Matches the server's improveDescriptionSchema (.min(15)) and the
+// runAiImprove guard, so the button is enabled exactly when the AI call will
+// accept the text — not a stricter word-count gate that froze normal requests.
+const MIN_DESCRIPTION_CHARS = 15;
+
 export interface SelectedCategory {
   id: string;
   label: string;
@@ -134,7 +140,7 @@ export default function InlineListingCard({
   );
 
   const aiButtonUnlocked = useMemo(
-    () => description.trim().split(/\s+/).filter(Boolean).length > 10,
+    () => description.trim().length >= MIN_DESCRIPTION_CHARS,
     [description],
   );
 
@@ -206,7 +212,8 @@ export default function InlineListingCard({
   // fields. The "AI will fill this" placeholders teach the user that they
   // only need to start with the description. Fields that already hold a
   // value (e.g. AI pre-filled them) stay editable so users can refine.
-  const descriptionStarted = description.trim().length >= 10;
+  const descriptionChars = description.trim().length;
+  const descriptionStarted = descriptionChars >= MIN_DESCRIPTION_CHARS;
   const titleLocked = !descriptionStarted && title.trim().length === 0;
   const categoryLocked = !descriptionStarted && !hasCategory;
   const locationLocked = !descriptionStarted && !hasLocation;
@@ -337,7 +344,10 @@ export default function InlineListingCard({
             <p className="mt-1.5 flex items-start gap-1.5 text-micro text-brand-600/85 dark:text-brand-300/80">
               <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
               <span>
-                AI užpildys likusius laukus už tave, ištraukdamas informaciją iš konteksto.
+                AI užpildys likusius laukus už tave - min. {MIN_DESCRIPTION_CHARS} simbolių.{" "}
+                <span className="font-medium tabular-nums">
+                  ({descriptionChars}/{MIN_DESCRIPTION_CHARS})
+                </span>
               </span>
             </p>
           )}

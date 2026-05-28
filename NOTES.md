@@ -322,3 +322,16 @@ Konvencija:
   `sharp` deklaruotas kaip tiesioginė dependency (`sharp: 0.34.5`, exact pin
   prod determinizmui su chromium bundle'u), `pnpm-lock.yaml` atnaujintas.
   Švarūs strict-pnpm worktree/CI build'ai dabar resolvina sharp be hoist'o.
+
+## Taksonomija / filtrai
+
+- [ ] **2026-05-28 — `/meistrai` kategorijų filtras grąžina 0, kol Phase 5 nesujungs tiekėjų su curated taksonomija.**
+  Provider listingo filtras (`src/lib/provider-filters.ts`) lygina curated
+  taksonomijos slug'us (pvz. `pr-buitines-paslaugos--valymo-paslaugos`), o tiekėjai
+  vis dar susieti su senais paprastais slug'ais (`valymo-paslaugos`). Todėl
+  pasirinkus bet kurią kategoriją rezultatų nėra. Miestų filtras šios problemos
+  neturi (paprastas teksto sutapimas). Miestų + kategorijų **daugiapasirinkimo UI
+  jau veikia** ir parašytas teisingai prieš curated slug'us — kategorijų filtravimas
+  „atsibus" pats, kai Phase 5 sumigruos provider↔category linkus į tą taksonomiją.
+  Sąmoningas sprendimas (2026-05-28) nedaryti laikino slug-tilto, palikti Phase 5.
+  Aptikta diegiant miestų/kategorijų daugiapasirinkimą.

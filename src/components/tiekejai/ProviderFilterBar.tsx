@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Search,
   X,
-  Check,
   MapPin,
   SlidersHorizontal,
   Zap,
@@ -43,14 +42,14 @@ export default function ProviderFilterBar({
   onClear,
   onViewChange,
 }: FilterBarProps) {
-  const { search, location, category, presence, urgent, top } = filters;
+  const { search, locations, categories, presence, urgent, top } = filters;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const locationRef = useRef<HTMLDivElement>(null);
 
-  const [mobileLocation, setMobileLocation] = useState(location);
-  const [mobileCategory, setMobileCategory] = useState(category);
+  const [mobileLocations, setMobileLocations] = useState<string[]>(locations);
+  const [mobileCategories, setMobileCategories] = useState<string[]>(categories);
   const [mobilePresence, setMobilePresence] = useState<PresenceFilter>(presence);
   const [mobileUrgent, setMobileUrgent] = useState(urgent);
   const [mobileTop, setMobileTop] = useState(top);
@@ -65,34 +64,39 @@ export default function ProviderFilterBar({
       .catch(() => {});
   }, []);
 
-  const activeFilterCount = [
-    location,
-    category,
-    presence !== "all" ? presence : "",
-    urgent,
-    top,
-  ].filter(Boolean).length;
-  const activeCategoryLabel = (() => {
+  const activeFilterCount =
+    locations.length +
+    categories.length +
+    (presence !== "all" ? 1 : 0) +
+    (urgent ? 1 : 0) +
+    (top ? 1 : 0);
+
+  // Flat slug → display-name lookup so selected categories render readable chips.
+  const categoryLabelBySlug = useMemo(() => {
+    const map = new Map<string, string>();
     for (const group of categoryGroups) {
       const stack = [group.root];
       while (stack.length > 0) {
         const item = stack.shift();
         if (!item) continue;
-        if (item.slug === category) return item.name;
+        map.set(item.slug, item.name);
         stack.push(...(item.children ?? []));
       }
     }
-    return "";
-  })();
+    return map;
+  }, [categoryGroups]);
+  const categoryLabel = (slug: string) => categoryLabelBySlug.get(slug) ?? slug;
+
+  const availableCities = LITHUANIAN_CITIES.filter((city) => city !== "Visa Lietuva");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMobileLocation(location);
-    setMobileCategory(category);
+    setMobileLocations(locations);
+    setMobileCategories(categories);
     setMobilePresence(presence);
     setMobileUrgent(urgent);
     setMobileTop(top);
-  }, [location, category, presence, urgent, top]);
+  }, [locations, categories, presence, urgent, top]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -112,15 +116,39 @@ export default function ProviderFilterBar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [locationOpen]);
 
-  function selectLocation(city: string) {
-    onChange({ location: location === city ? "" : city });
-    setLocationOpen(false);
+  function toggleLocation(city: string) {
+    onChange({
+      locations: locations.includes(city)
+        ? locations.filter((c) => c !== city)
+        : [...locations, city],
+    });
+    // Keep the dropdown open so several cities can be added in a row.
+  }
+
+  function toggleCategory(slug: string) {
+    onChange({
+      categories: categories.includes(slug)
+        ? categories.filter((c) => c !== slug)
+        : [...categories, slug],
+    });
+  }
+
+  function toggleMobileLocation(city: string) {
+    setMobileLocations((prev) =>
+      prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city],
+    );
+  }
+
+  function toggleMobileCategory(slug: string) {
+    setMobileCategories((prev) =>
+      prev.includes(slug) ? prev.filter((c) => c !== slug) : [...prev, slug],
+    );
   }
 
   function applyMobileFilters() {
     onChange({
-      location: mobileLocation,
-      category: mobileCategory,
+      locations: mobileLocations,
+      categories: mobileCategories,
       presence: mobilePresence,
       urgent: mobileUrgent,
       top: mobileTop,
@@ -129,8 +157,8 @@ export default function ProviderFilterBar({
   }
 
   function clearMobileFilters() {
-    setMobileLocation("");
-    setMobileCategory("");
+    setMobileLocations([]);
+    setMobileCategories([]);
     setMobilePresence("all");
     setMobileUrgent(false);
     setMobileTop(false);
@@ -176,41 +204,38 @@ export default function ProviderFilterBar({
             <button
               onClick={() => setLocationOpen(!locationOpen)}
               className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
-                location
+                locations.length > 0
                   ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
                   : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
               }`}
             >
               <MapPin className="h-3.5 w-3.5" />
-              {location || "Miestas"}
-              {location ? (
-                <span
-                  onClick={(e) => { e.stopPropagation(); onChange({ location: "" }); }}
-                  className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
-                >
-                  <X className="h-3 w-3" />
-                </span>
-              ) : (
-                <ChevronDown className={`h-3.5 w-3.5 text-surface-400 transition-transform ${locationOpen ? "rotate-180" : ""}`} />
-              )}
+              {locations.length === 0
+                ? "Miestas"
+                : locations.length === 1
+                  ? locations[0]
+                  : `Miestai (${locations.length})`}
+              <ChevronDown className={`h-3.5 w-3.5 text-surface-400 transition-transform ${locationOpen ? "rotate-180" : ""}`} />
             </button>
 
             {locationOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
-                {LITHUANIAN_CITIES.map((city) => (
-                  <button
-                    key={city}
-                    onClick={() => selectLocation(city)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm transition-colors ${
-                      location === city
-                        ? "bg-brand-50 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300"
-                        : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-                    }`}
-                  >
-                    {location === city && <Check className="h-3.5 w-3.5 shrink-0" />}
-                    {city}
-                  </button>
-                ))}
+              <div className="absolute left-0 top-full z-50 mt-1.5 max-h-72 w-52 overflow-y-auto rounded-xl border border-surface-200/80 bg-white p-1.5 shadow-xl dark:border-surface-700 dark:bg-surface-900">
+                {availableCities.filter((city) => !locations.includes(city)).length === 0 ? (
+                  <p className="px-3 py-2 text-body-sm text-surface-400">Visi miestai pasirinkti</p>
+                ) : (
+                  availableCities
+                    .filter((city) => !locations.includes(city))
+                    .map((city) => (
+                      <button
+                        key={city}
+                        onClick={() => toggleLocation(city)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-body-sm text-surface-600 transition-colors hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
+                      >
+                        <MapPin className="h-3.5 w-3.5 shrink-0 text-surface-400" />
+                        {city}
+                      </button>
+                    ))
+                )}
               </div>
             )}
           </div>
@@ -218,8 +243,10 @@ export default function ProviderFilterBar({
           {/* Category chip / dropdown — unified across the app */}
           <GroupedCategoryPicker
             groups={categoryGroups}
-            value={category}
-            onChange={(v) => onChange({ category: v })}
+            multiple
+            selectedValues={categories}
+            onToggle={toggleCategory}
+            onClearAll={() => onChange({ categories: [] })}
             mode="slug"
             variant="chip"
             placeholder="Kategorija"
@@ -300,8 +327,20 @@ export default function ProviderFilterBar({
           {(activeFilterCount > 0 || search) && (
             <>
               <div className="h-3.5 w-px bg-surface-200 dark:bg-surface-700" />
-              {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
-              {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
+              {locations.map((loc) => (
+                <ActiveChip
+                  key={`loc-${loc}`}
+                  label={loc}
+                  onRemove={() => onChange({ locations: locations.filter((c) => c !== loc) })}
+                />
+              ))}
+              {categories.map((slug) => (
+                <ActiveChip
+                  key={`cat-${slug}`}
+                  label={categoryLabel(slug)}
+                  onRemove={() => onChange({ categories: categories.filter((c) => c !== slug) })}
+                />
+              ))}
               {presence !== "all" && (
                 <ActiveChip
                   label={presence === "online" ? "Online dabar" : "Šiandien"}
@@ -352,12 +391,12 @@ export default function ProviderFilterBar({
                   Miestas
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {LITHUANIAN_CITIES.map((city) => {
-                    const isActive = mobileLocation === city;
+                  {availableCities.map((city) => {
+                    const isActive = mobileLocations.includes(city);
                     return (
                       <button
                         key={city}
-                        onClick={() => setMobileLocation(isActive ? "" : city)}
+                        onClick={() => toggleMobileLocation(city)}
                         className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-body-sm font-medium transition-all ${
                           isActive
                             ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500"
@@ -388,26 +427,26 @@ export default function ProviderFilterBar({
                         </p>
                         <div className="space-y-2">
                           {group.categories.map((cat) => {
-                            const isActive = mobileCategory === cat.slug;
+                            const isActive = mobileCategories.includes(cat.slug);
                             return (
                               <div key={cat.id}>
                                 <MobileCategoryButton
                                   name={cat.name}
                                   childCount={cat.childCount}
                                   active={isActive}
-                                  onClick={() => setMobileCategory(isActive ? "" : cat.slug)}
+                                  onClick={() => toggleMobileCategory(cat.slug)}
                                 />
                                 {(cat.children?.length ?? 0) > 0 && (
                                   <div className="mt-1 grid grid-cols-2 gap-1.5 pl-3">
                                     {cat.children?.map((child) => {
-                                      const childActive = mobileCategory === child.slug;
+                                      const childActive = mobileCategories.includes(child.slug);
                                       return (
                                         <MobileCategoryButton
                                           key={child.id}
                                           name={child.name}
                                           active={childActive}
                                           compact
-                                          onClick={() => setMobileCategory(childActive ? "" : child.slug)}
+                                          onClick={() => toggleMobileCategory(child.slug)}
                                         />
                                       );
                                     })}
@@ -499,8 +538,20 @@ export default function ProviderFilterBar({
       {(activeFilterCount > 0 || search) && (
         <div className="hidden md:flex items-center gap-2 flex-wrap">
           {search && <ActiveChip label={`"${search}"`} onRemove={() => onChange({ search: "" })} />}
-          {location && <ActiveChip label={location} onRemove={() => onChange({ location: "" })} />}
-          {category && <ActiveChip label={activeCategoryLabel} onRemove={() => onChange({ category: "" })} />}
+          {locations.map((loc) => (
+            <ActiveChip
+              key={`loc-${loc}`}
+              label={loc}
+              onRemove={() => onChange({ locations: locations.filter((c) => c !== loc) })}
+            />
+          ))}
+          {categories.map((slug) => (
+            <ActiveChip
+              key={`cat-${slug}`}
+              label={categoryLabel(slug)}
+              onRemove={() => onChange({ categories: categories.filter((c) => c !== slug) })}
+            />
+          ))}
           {presence !== "all" && (
             <ActiveChip
               label={presence === "online" ? "Online dabar" : "Aktyvūs šiandien"}

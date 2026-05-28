@@ -21,9 +21,18 @@ const normalize = (value: string) =>
 
 export interface GroupedCategoryPickerProps {
   groups: ServiceCategoryGroup[];
-  /** Currently-selected category. The value semantics are controlled by `mode`. */
-  value: string;
-  onChange: (value: string) => void;
+  /** Currently-selected category (single-select mode). The value semantics are controlled by `mode`. */
+  value?: string;
+  onChange?: (value: string) => void;
+  /**
+   * Opt-in multi-select. When true, the picker is driven by `selectedValues`
+   * + `onToggle` (and `onClearAll`) instead of `value`/`onChange`. Selecting a
+   * row toggles it and keeps the popover open; "Visos kategorijos" clears all.
+   */
+  multiple?: boolean;
+  selectedValues?: string[];
+  onToggle?: (value: string) => void;
+  onClearAll?: () => void;
   /** Emit `id` (form-style, sent to API) or `slug` (filter-style, goes into URLs). */
   mode?: "id" | "slug";
   /** Form-input modes use this above the trigger. */
@@ -54,8 +63,12 @@ export interface GroupedCategoryPickerProps {
  */
 export default function GroupedCategoryPicker({
   groups,
-  value,
+  value = "",
   onChange,
+  multiple = false,
+  selectedValues = [],
+  onToggle,
+  onClearAll,
   mode = "slug",
   label,
   placeholder = "Pasirink kategoriją",
@@ -86,6 +99,12 @@ export default function GroupedCategoryPicker({
   }, [groups, mode]);
 
   const activeLabel = value ? labelByValue.get(value) ?? "" : "";
+  const hasSelection = multiple ? selectedValues.length > 0 : Boolean(value);
+  const triggerLabel = multiple
+    ? selectedValues.length > 0
+      ? `${placeholder} (${selectedValues.length})`
+      : placeholder
+    : activeLabel || placeholder;
 
   // Close popover on outside click or Escape — same UX as native <select>.
   useEffect(() => {
@@ -120,14 +139,24 @@ export default function GroupedCategoryPicker({
   }, [open]);
 
   function select(next: string) {
-    onChange(next === value ? "" : next);
+    if (multiple) {
+      // Multi-select: toggle the value and keep the popover open so the user
+      // can pick several in a row. The empty value is the "all categories" reset.
+      if (next === "") {
+        onClearAll?.();
+        return;
+      }
+      onToggle?.(next);
+      return;
+    }
+    onChange?.(next === value ? "" : next);
     setOpen(false);
   }
 
   const triggerClass =
     variant === "chip"
       ? `flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-body-sm font-medium transition-all duration-150 ${
-          value
+          hasSelection
             ? "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
             : "border-surface-200 bg-white text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
         }`
@@ -136,7 +165,7 @@ export default function GroupedCategoryPicker({
             ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600"
             : "border-surface-200 hover:border-surface-300 focus:border-brand-500 dark:border-surface-700 dark:hover:border-surface-600"
         } ${disabled ? "cursor-not-allowed opacity-60" : ""} focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:bg-surface-900 ${
-          value ? "text-surface-900 dark:text-surface-100" : "text-surface-400"
+          hasSelection ? "text-surface-900 dark:text-surface-100" : "text-surface-400"
         }`;
 
   return (
@@ -163,20 +192,20 @@ export default function GroupedCategoryPicker({
         {variant === "chip" ? (
           <>
             <Tag className="h-3.5 w-3.5" />
-            {activeLabel || placeholder}
-            {value ? (
+            {triggerLabel}
+            {!multiple && value ? (
               <span
                 role="button"
                 tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onChange("");
+                  onChange?.("");
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     e.stopPropagation();
-                    onChange("");
+                    onChange?.("");
                   }
                 }}
                 className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
@@ -192,7 +221,7 @@ export default function GroupedCategoryPicker({
           </>
         ) : (
           <>
-            <span className="truncate">{activeLabel || placeholder}</span>
+            <span className="truncate">{triggerLabel}</span>
             <ChevronDown
               className={`ml-2 h-4 w-4 shrink-0 text-surface-400 transition-transform ${open ? "rotate-180" : ""}`}
             />
@@ -215,6 +244,8 @@ export default function GroupedCategoryPicker({
           <CategoryPickerBody
             groups={groups}
             activeValue={value}
+            multiple={multiple}
+            selectedValues={selectedValues}
             mode={mode}
             showAllOption={!required}
             onSelect={select}
@@ -274,6 +305,8 @@ export interface CategoryPickerBodyProps {
   mode: "id" | "slug";
   showAllOption: boolean;
   onSelect: (value: string) => void;
+  multiple?: boolean;
+  selectedValues?: string[];
 }
 
 export function CategoryPickerBody({
@@ -282,12 +315,19 @@ export function CategoryPickerBody({
   mode,
   showAllOption,
   onSelect,
+  multiple = false,
+  selectedValues = [],
 }: CategoryPickerBodyProps) {
   const [query, setQuery] = useState("");
 
+  const isSel = (v: string) =>
+    multiple ? selectedValues.includes(v) : activeValue === v;
+  const noneSelected = multiple ? selectedValues.length === 0 : !activeValue;
+
   const activeGroupId = useMemo(() => {
+    const sel = multiple ? selectedValues : [activeValue].filter(Boolean);
     function hasActive(cat: PickerNode) {
-      if ((mode === "id" ? cat.id : cat.slug) === activeValue) return true;
+      if (sel.includes(mode === "id" ? cat.id : cat.slug)) return true;
       return (cat.children ?? []).some(hasActive);
     }
     for (const group of groups) {
@@ -296,7 +336,7 @@ export function CategoryPickerBody({
       }
     }
     return null;
-  }, [groups, activeValue, mode]);
+  }, [groups, activeValue, mode, multiple, selectedValues]);
 
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(activeGroupId ? [activeGroupId] : []),
@@ -355,9 +395,9 @@ export function CategoryPickerBody({
           <button
             type="button"
             onClick={() => onSelect("")}
-            aria-pressed={!activeValue}
+            aria-pressed={noneSelected}
             className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-caption font-medium transition-colors ${
-              !activeValue
+              noneSelected
                 ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
                 : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
             }`}
@@ -381,7 +421,7 @@ export function CategoryPickerBody({
                     name={cat.name}
                     hint={cat.breadcrumb || cat.group}
                     childCount={cat.childCount}
-                    isSelected={activeValue === v}
+                    isSelected={isSel(v)}
                     onClick={() => onSelect(v)}
                   />
                 );
@@ -425,7 +465,7 @@ export function CategoryPickerBody({
                             <CategoryRow
                               name={cat.name}
                               childCount={cat.childCount}
-                              isSelected={activeValue === v}
+                              isSelected={isSel(v)}
                               onClick={() => onSelect(v)}
                             />
                             {(cat.children?.length ?? 0) > 0 && (
@@ -436,7 +476,7 @@ export function CategoryPickerBody({
                                     <CategoryRow
                                       key={child.id}
                                       name={child.name}
-                                      isSelected={activeValue === childValue}
+                                      isSelected={isSel(childValue)}
                                       onClick={() => onSelect(childValue)}
                                       compact
                                     />
