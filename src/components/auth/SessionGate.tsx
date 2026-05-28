@@ -32,5 +32,8 @@ export async function SessionGate({
     redirect("/");
   }
 
-  return children(session.user.id);
+  // Fragment-wrap so the async component returns a ReactElement: a bare
+  // ReactNode from children() isn't a valid async JSX element type (React 19
+  // types let ReactNode include bigint, which AwaitedReactNode excludes).
+  return <>{children(session.user.id)}</>;
 }
