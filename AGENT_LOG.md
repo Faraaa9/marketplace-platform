@@ -17,6 +17,40 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 15:58 — Claude
+
+**Commit:** `176c8fd` — perf(tiekejas/uzklausos): stream request list via server sections · push'inta
+(+ prereq `c712a8e` — fix(auth): make SessionGate renderable as a JSX component)
+
+**Pakeitimai:** 9 files changed, 1017 insertions(+), 615 deletions(-) (+ SessionGate.tsx)
+
+**Failai:**
+- src/app/tiekejas/uzklausos/page.tsx (thin shell: Suspense → SessionGate requireRole=PROVIDER)
+- src/app/tiekejas/uzklausos/RequestsFilterShell.tsx (NEW, "use client" — search/sort/filter URL state; credit badge + list as slots)
+- src/app/tiekejas/uzklausos/sections/RequestsList.tsx (NEW, async server — query+scoring+getUnlockedRequestIds, await searchParams inside)
+- src/app/tiekejas/uzklausos/sections/CreditBadge.tsx (NEW, async server)
+- src/app/tiekejas/uzklausos/sections/RequestCard.tsx (NEW, server)
+- src/components/ui/skeletons/{RequestsListSkeleton,CreditBadgeSkeleton}.tsx + index.ts
+- (del) src/app/tiekejas/uzklausos/RequestsListClient.tsx (558 eil.)
+- src/components/auth/SessionGate.tsx (Fragment-wrap fix — žr. c712a8e)
+
+**Toliau:** PR7 Task A (list, SUSPENSE_PLAN §Page 2) baigtas. **`c712a8e` SVARBU
+visiems:** generinis `<SessionGate>` iki šiol niekur nebuvo renderintas kaip JSX
+— jis turėjo latentų tipo bug'ą (`Promise<ReactNode>` su @types/react 18.3 bigint
+mismatch). Sutvarkyta (Fragment wrap). **PRs 3,4,6 (mp-pr3/4/6) irgi importuos
+`<SessionGate>` ir be šito fix'o jų build'as lūš** — kas merge'ins pirmas, tas
+atneša fix'ą į main; kitiems reikės rebase. C2 laikytasi: jokio `key` ant Suspense,
+`searchParams` Promise await'inamas `RequestsList` viduje (page lieka statinis ◐ PPR).
+Filter shell paliktas client (URL state); optimistinis in-memory filtravimas
+SĄMONINGAI nedarytas (§Page 2 Risk F — pridėti tik jei latency erzins). Build praeina,
+route = `◐ /tiekejas/uzklausos`. **NETESTUOTA su realiu PROVIDER account'u** (nėra
+test acc; dev server jungiasi prie live DB; `RequestsList` daro `recordAiRun` WRITE)
+— reikia Vercel preview QA: skeleton→cards streaming, filtrų responsyvumas, kreditų
+badge, pagination Link'ai, non-PROVIDER redirect. Unauthenticated→/prisijungti
+patikrinta lokaliai. **Kitas: Task B — `/tiekejas` root dashboard** (toj pačioj
+branch'oj; SUSPENSE_PLAN §Page 1 + C4 restructure-only). Žr. NOTES.md follow-up'us.
+
+
 ## 2026-05-28 06:59 — Claude
 
 **Commit:** `a470b59` — perf(paskyra/profilis): hoist static header above the Suspense boundary · push'inta

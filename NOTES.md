@@ -168,6 +168,36 @@ Konvencija:
   kuris `manual-migrations/*.sql` aplikuoja per `supabase` MCP
   automatiškai po deploy'aus.
 
+## Suspense PR7 follow-ups (tiekejas/uzklausos + dashboard)
+
+- [ ] **2026-05-28 — Optimistinis filtravimas `/tiekejas/uzklausos` (jei reikės).**
+  Lista dabar serverinė: filtro keitimas = URL navigacija → `RequestsList`
+  re-streamina (sena lista lieka matoma per transition, jokio full-page blank).
+  Per §Page 2 Risk F optimistinis in-memory filtravimas SĄMONINGAI nedarytas.
+  Jei QA/vartotojai skųsis filtrų latency (~500-1000ms dėl lėtos užklausos),
+  TADA pridėti optimistinį client filtravimą ant turimo puslapio dataset'o.
+  Nematuota su realiu account'u — pamatuoti pirma.
+
+- [ ] **2026-05-28 — `recordAiRun` dabar kviečiamas iš server-komponento render'io.**
+  Buvo route handler'yje (`/api/tiekejas/uzklausos`), dabar `RequestsList.tsx`
+  viduje (`void recordAiRun(...)`, fire-and-forget). Semantic-match shadow
+  telemetrija turėtų rašytis 1x per request dinamiškame render'e (po
+  `await searchParams` bailout'o — build'e nesirašo). Patikrinti prod logs,
+  kad `semantic_match_shadow` įrašai vis dar atsiranda ir nedubliuojasi.
+
+- [ ] **2026-05-28 — Result count perkeltas į `RequestsList` (serveris).**
+  Anksčiau buvo chip'ų eilutėje (`{total} užklausų`, dešinėje, kartu su filtrų
+  chip'ais). Dabar — virš kortelių sąrašo (dešinėje), nes `total` ateina iš
+  serverinės užklausos, o chip'ai liko client filter shell'e. Smulkmena, bet
+  QA metu patikrinti, kad atrodo tvarkingai (gali būti viena papildoma eilutė).
+
+- [ ] **2026-05-28 — `/api/tiekejas/uzklausos` route ir `ui/Pagination` be UI vartotojo.**
+  Po list refactor'o `/api/tiekejas/uzklausos/route.ts` nebeturi naršyklės
+  vartotojo (logika perkelta į `RequestsList`). `src/components/ui/Pagination.tsx`
+  (client, `onPageChange`) irgi liko be vartotojų — listoj naudojami `<Link>`
+  pagination. Abu palikti (galimi mobile/ateities vartotojai). Prieš trinant —
+  grep per visą repo + mobile klientus. Ne šito PR'o scope.
+
 ## Build / priklausomybės
 
 - [x] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**
