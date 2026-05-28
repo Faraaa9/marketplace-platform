@@ -12,8 +12,10 @@
  *   when data streams in. Build and verify each shape against the live layout
  *   — never pre-build page-specific skeletons speculatively.
  *
- * This PR establishes the home + convention only; no shapes live here yet.
+ * This PR establishes the home + convention only; pages add their shapes here.
  */
 export { ResponsesListSkeleton } from "./ResponsesListSkeleton";
 export { ThreadViewSkeleton } from "./ThreadViewSkeleton";
 export { ConversationListSkeleton } from "./ConversationListSkeleton";
+export { default as InquiriesListSkeleton } from "./InquiriesListSkeleton";
+export { default as MyRequestsListSkeleton } from "./MyRequestsListSkeleton";

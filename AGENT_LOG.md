@@ -55,6 +55,61 @@ fetch'as → vienas data Suspense.
 - Žr. `NOTES.md` PR3 įrašus dėl 2 sąmoningų sprendimų (active-provider gate
   sušvelnintas; inbox unread count nuimtas) + 1 orphaned route.
 
+## 2026-05-28 15:57 — Claude
+
+**Commit:** `1de8ba6` (+ `4947706`, `19b656f`, `a170176`) — PR4
+`suspense/user-cluster` · lokalus (**NEsumerge'inta**, push'inta kaip branch)
+
+**Pakeitimai:** 4 commit'ai, 8 failai
+
+**Failai:**
+- src/components/auth/SessionGate.tsx (fix)
+- src/components/ui/skeletons/InquiriesListSkeleton.tsx (new)
+- src/components/ui/skeletons/MyRequestsListSkeleton.tsx (new)
+- src/components/ui/skeletons/index.ts (barrel)
+- src/app/paskyra/zinutes/page.tsx + SentInquiriesView.tsx
+- src/app/paskyra/uzklausos/page.tsx + MyRequestsList.tsx (new)
+
+**Esmė:** PR4 (SUSPENSE_PLAN §Page 9 + §Page 10). Du user-side puslapiai iš
+client-fetch paversti į server-streamed sekcijas:
+- `/paskyra/zinutes`: `SentInquiriesView` `"use client"` → async server
+  komponentas, fetch'ina inline (tie patys 2 query: approved inquiries +
+  unread NEW_MESSAGE notifications). Page-local `SessionGate` IŠLAIKO abu
+  redirect'us, įsk. cross-role PROVIDER → `/tiekejas/zinutes` (generinis gate
+  to neišreiškia). Fallback `null` → `InquiriesListSkeleton`. Tab'ai →
+  `<Link href="?tab=...">`, awaitinami sekcijoje (ne shell'e, kad liktų static).
+- `/paskyra/uzklausos`: Pattern C → server shell. Generinis `SessionGate`
+  auth-only (be `requireRole` — abu USER ir PROVIDER mato, skiriasi tik title);
+  role nuskaitomas header'iui (title + provider toggle) per pigų JWT decode.
+  `MyRequestsList` ištrauktas (async server, query inline). Status tab'ai →
+  `<Link href="?status=...">`. Default tab `OPEN` (kaip anksčiau).
+- Nauji skeleton'ai `InquiriesListSkeleton` + `MyRequestsListSkeleton`
+  (su `withHeader` outer gate fallback'ui), re-export'inti iš barrel'io.
+
+**SVARBU (cross-agent):** `SessionGate.tsx` pataisytas (`a170176`) —
+`children(userId)` apgaubtas fragmentu. Async komponentas grąžinantis bare
+`ReactNode` nėra validus JSX element type (React 19 `ReactNode` turi `bigint`,
+kurio `AwaitedReactNode` neturi). PR1 sukūrė `SessionGate` bet niekada
+nerenderino, todėl klaida išlindo tik dabar (PR4 = pirmas vartotojas).
+**PR3 (`suspense/provider-secondary`) ir kiti, kurie renderins generinį
+`SessionGate`, turi turėti šitą fix'ą** — jei rebase'ins ant šio PR, gaus
+nemokamai; kitaip turės pakartoti. Galimas trivialus konfliktas tame faile.
+
+**Verifikacija:** `pnpm build` praeina; abu route'ai dabar `◐ Partial
+Prerender` (statinis šeletas + streamina gate/data). Logged-out smoke test
+(lokalus dev :3939): `/paskyra/uzklausos` ir `/paskyra/zinutes` → 307
+(proxy → `/api/auth/signin` → `/prisijungti`, `pages.signIn` sukonfigūruota),
+jokio 500. **Logged-in streaming (skeleton→turinys ant throttle), USER vs
+PROVIDER title, PROVIDER → /tiekejas/zinutes redirect, `?tab`/`?status`
+navigacija — NETESTUOTI lokaliai** (nėra test account'o, live DB su realiais
+duomenimis — vengiau, kaip ir PR1).
+
+**Toliau:** prieš merge — Vercel preview QA su realiu USER + PROVIDER account'u
+(SUSPENSE_PLAN §Merge strategy + DoD): multi-stage streaming ant slow-3g,
+abiejų rolių title, cross-role redirect, filtrų tab navigacija. **NEMERGE'INTI**
+kol nepatikrinta preview'e. Realtime (presence/unread) lieka static-after-load
+— žr. NOTES follow-up.
+
 
 ## 2026-05-28 06:59 — Claude
 

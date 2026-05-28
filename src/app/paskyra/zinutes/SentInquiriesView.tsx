@@ -1,55 +1,95 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import EmptyState from "@/components/ui/EmptyState";
-import Badge from "@/components/ui/Badge";
-import { formatRelativeDate } from "@/lib/utils";
 import { ArrowLeft, MessageCircle, ChevronRight } from "lucide-react";
-import type { PresenceLevel } from "@/lib/presence";
-
-interface Conversation {
-  id: string;
-  trackingToken: string;
-  href: string;
-  providerName: string;
-  providerImage: string | null;
-  presenceLevel: PresenceLevel;
-  presenceLabel: string | null;
-  preview: string;
-  lastMessageAt: string;
-  unread: boolean;
-  fromMe: boolean;
-}
+import { prisma } from "@/lib/prisma";
+import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
+import { getProviderAvatarImage } from "@/lib/provider-image";
+import { formatRelativeDate } from "@/lib/utils";
+import Badge from "@/components/ui/Badge";
+import EmptyState from "@/components/ui/EmptyState";
 
 type Filter = "all" | "unread";
 
-export default function SentInquiriesView() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<Filter>("all");
+interface SentInquiriesViewProps {
+  userId: string;
+  searchParams: Promise<{ tab?: string }>;
+}
 
-  useEffect(() => {
-    fetch("/api/paskyra/zinutes")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) setConversations(data.data.conversations);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+/**
+ * User's sent direct-inquiry threads. Server component: fetches inline so the
+ * gate streams real content under one Suspense boundary instead of bouncing
+ * through a client `fetch`. Unread state is derived from matching unread
+ * NEW_MESSAGE notifications, since the sender side carries no own lastReadAt.
+ */
+export default async function SentInquiriesView({
+  userId,
+  searchParams,
+}: SentInquiriesViewProps) {
+  const sp = await searchParams;
+  const filter: Filter = sp.tab === "unread" ? "unread" : "all";
 
-  const unreadCount = useMemo(
-    () => conversations.filter((c) => c.unread).length,
-    [conversations]
+  const [inquiries, unreadNotifications] = await Promise.all([
+    prisma.directInquiry.findMany({
+      where: { senderUserId: userId, moderationStatus: "APPROVED" },
+      select: {
+        id: true,
+        trackingToken: true,
+        description: true,
+        lastMessageAt: true,
+        provider: {
+          select: {
+            name: true,
+            image: true,
+            lastSeenAt: true,
+            providerProfile: { select: { images: true, heroImageUrl: true } },
+          },
+        },
+        messages: {
+          select: { content: true, senderId: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+      orderBy: { lastMessageAt: "desc" },
+    }),
+    prisma.notification.findMany({
+      where: {
+        userId,
+        type: "NEW_MESSAGE",
+        isRead: false,
+        link: { startsWith: "/zinutes/" },
+      },
+      select: { link: true },
+    }),
+  ]);
+
+  const unreadTokens = new Set(
+    unreadNotifications
+      .map((n) => n.link?.replace(/^\/zinutes\//, "").split("?")[0] ?? "")
+      .filter(Boolean)
   );
 
-  const filtered = useMemo(() => {
-    if (filter === "unread") return conversations.filter((c) => c.unread);
-    return conversations;
-  }, [conversations, filter]);
+  const conversations = inquiries.map((q) => {
+    const last = q.messages[0] ?? null;
+    return {
+      id: q.id,
+      trackingToken: q.trackingToken,
+      href: `/zinutes/${q.trackingToken}`,
+      providerName: q.provider.name || "Tiekėjas",
+      providerImage: getProviderAvatarImage(q.provider),
+      presenceLevel: getPresenceLevel(q.provider.lastSeenAt),
+      presenceLabel: formatLastSeen(q.provider.lastSeenAt),
+      // First send has no chat messages yet → preview the opening inquiry.
+      preview: last ? last.content : q.description,
+      lastMessageAt: q.lastMessageAt,
+      unread: unreadTokens.has(q.trackingToken),
+      fromMe: last ? last.senderId === userId : true,
+    };
+  });
+
+  const unreadCount = conversations.filter((c) => c.unread).length;
+  const filtered =
+    filter === "unread" ? conversations.filter((c) => c.unread) : conversations;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -72,36 +112,39 @@ export default function SentInquiriesView() {
         </p>
       </div>
 
-      {/* Filter tabs */}
+      {/* Filter tabs — URL-driven so the server can re-render the filtered list */}
       {conversations.length > 0 && (
         <div className="flex gap-1 mb-6 rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
           {([
-            { value: "all" as Filter, label: "Visi" },
-            { value: "unread" as Filter, label: "Neperskaityti" },
-          ]).map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setFilter(tab.value)}
-              className={`min-h-[44px] flex-1 rounded-lg px-3 py-2 text-body-sm font-medium transition-colors ${
-                filter === tab.value
-                  ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
-                  : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
-              }`}
-            >
-              {tab.label}
-              {tab.value === "unread" && unreadCount > 0 && (
-                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          ))}
+            { value: "all" as Filter, label: "Visi", href: "?tab=all" },
+            { value: "unread" as Filter, label: "Neperskaityti", href: "?tab=unread" },
+          ]).map((tab) => {
+            const active = filter === tab.value;
+            return (
+              <Link
+                key={tab.value}
+                href={tab.href}
+                scroll={false}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 py-2 text-body-sm font-medium transition-colors ${
+                  active
+                    ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
+                    : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+                }`}
+              >
+                {tab.label}
+                {tab.value === "unread" && unreadCount > 0 && (
+                  <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-micro font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       )}
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState
           title={
             filter === "unread"
