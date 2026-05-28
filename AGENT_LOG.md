@@ -17,6 +17,60 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 04:39 — Claude
+
+**Commit:** `bc740b2` — docs(notes): expand cache components plan into multi-session migration
+
+**Pakeitimai:** 4 files changed, 107 insertions(+), 2 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- src/app/tiekejas/ProviderDashboardClient.tsx
+- src/app/tiekejas/uzklausos/RequestsListClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-28 04:37 — Claude
+
+**Commit:** `d085cc9` — docs(notes): expand cache components plan into multi-session migration
+
+**Pakeitimai:** 3 files changed, 93 insertions(+), 2 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- src/app/tiekejas/ProviderDashboardClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-28 04:36 — Claude
+
+**Commit:** `eb028b6` — docs(notes): expand cache components plan into multi-session migration
+
+**Pakeitimai:** 2 files changed, 80 insertions(+), 2 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-28 04:32 — Claude
+
+**Commit:** `89b5336` — docs(notes): expand cache components plan into multi-session migration
+
+**Pakeitimai:** 1 file changed, 68 insertions(+), 2 deletions(-)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 03:00 — Claude
 
 **Commit:** `8d9f5be` — perf(db): add composite indexes for /meistrai listing filter · lokalus
