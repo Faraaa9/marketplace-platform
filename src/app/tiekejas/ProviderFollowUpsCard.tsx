@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BellRing, ArrowRight } from "lucide-react";
 import Card, { CardTitle } from "@/components/ui/Card";
 
 type FollowUpRecipient = "provider" | "client";
 
-interface FollowUpItem {
+export interface FollowUpItem {
   type: "response" | "direct";
   id: string;
   href: string;
@@ -20,59 +19,27 @@ interface FollowUpItem {
   bucket: string;
 }
 
-interface FollowUpsResponse {
-  success: boolean;
-  data?: {
-    threads: FollowUpItem[];
-    totals: {
-      totalThreads: number;
-      countsByBucket: Record<string, number>;
-    };
-  };
-}
-
 /**
- * Provider-facing Follow-Up Agent card.
+ * Provider-facing Follow-Up Agent card (presentational).
  *
- * Advisory only: fetches `/api/tiekejas/follow-ups` once on mount and lists up
- * to three stalled threads with a short suggested human action. Clicking an
- * item takes the provider to the existing detail page where they can decide
- * what to do — the card never sends messages, never spends credits, never
- * creates notifications.
+ * Advisory only: lists up to three stalled threads with a short suggested human
+ * action. Clicking an item takes the provider to the existing detail page where
+ * they decide what to do — the card never sends messages, never spends credits,
+ * never creates notifications. Data is fetched by the server `FollowUpsCard`
+ * wrapper so the classification happens during the stream.
  *
- * Renders nothing while loading, on error, or when there are no stalled
- * signals, so the dashboard stays calm.
+ * Renders nothing when there are no stalled signals so the dashboard stays calm.
  */
-export default function ProviderFollowUpsCard() {
-  const [items, setItems] = useState<FollowUpItem[] | null>(null);
-  const [total, setTotal] = useState(0);
+export default function ProviderFollowUpsCard({
+  threads,
+  total,
+}: {
+  threads: FollowUpItem[];
+  total: number;
+}) {
+  if (threads.length === 0) return null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/tiekejas/follow-ups", { credentials: "same-origin" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((payload: FollowUpsResponse | null) => {
-        if (cancelled) return;
-        if (payload?.success && payload.data) {
-          setItems(payload.data.threads);
-          setTotal(payload.data.totals.totalThreads);
-        } else {
-          setItems([]);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setItems([]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!items || items.length === 0) return null;
-
-  const top = items.slice(0, 3);
+  const top = threads.slice(0, 3);
 
   return (
     <Card className="mb-6 p-5">
