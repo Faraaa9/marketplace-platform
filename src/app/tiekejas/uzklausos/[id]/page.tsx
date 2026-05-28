@@ -1,69 +1,52 @@
 import { Suspense } from "react";
-import Skeleton from "@/components/ui/Skeleton";
-import RequestDetailClient from "./RequestDetailClient";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { SessionGate } from "@/components/auth/SessionGate";
+import { RequestHeader, RequestHeaderSkeleton } from "./sections/RequestHeader";
+import { RequestBody, RequestBodySkeleton } from "./sections/RequestBody";
+import { ResponseSection, ResponseSectionSkeleton } from "./sections/ResponseSection";
 
-
-export default function ProviderRequestDetailPage() {
-  return (
-    <Suspense fallback={<RequestDetailSkeleton />}>
-      <RequestDetailClient />
-    </Suspense>
-  );
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-function RequestDetailSkeleton() {
+export default function ProviderRequestDetailPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <Skeleton className="mb-4 h-4 w-40" />
+      {/* Static back link — paints with the prerendered shell, outside the gate. */}
+      <Link
+        href="/tiekejas/uzklausos"
+        className="mb-4 inline-flex items-center gap-1.5 text-body-sm text-surface-500 hover:text-surface-700 transition-colors dark:text-surface-400 dark:hover:text-surface-200"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Grįžti į užklausas
+      </Link>
 
-      <div className="mb-6">
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <Skeleton className="h-6 w-24 rounded-lg" />
-          <Skeleton className="h-6 w-20 rounded-lg" />
-        </div>
-        <Skeleton className="mt-3 h-9 w-3/4" />
-        <div className="mt-3 flex flex-wrap gap-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-      </div>
+      {/* Gate is async (reads the session — dynamic under cacheComponents), so it
+          lives inside a Suspense. It redirects unauthorized / non-PROVIDER users
+          before any section streams, so they never see partial UI. */}
+      <Suspense fallback={null}>
+        <SessionGate requireRole="PROVIDER" callbackUrl="/tiekejas/uzklausos">
+          {() => (
+            <>
+              {/* Header → body → response stream in reading order; each section
+                  reads the request independently so a slow query never blocks
+                  the ones above it. */}
+              <Suspense fallback={<RequestHeaderSkeleton />}>
+                <RequestHeader params={params} />
+              </Suspense>
 
-      <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
-        <div className="space-y-2">
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-11/12" />
-          <Skeleton className="h-3 w-5/6" />
-          <Skeleton className="h-3 w-2/3" />
-        </div>
-        <div className="mt-4 border-t border-surface-200/50 dark:border-surface-700 pt-3 flex flex-wrap gap-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </div>
+              <Suspense fallback={<RequestBodySkeleton />}>
+                <RequestBody params={params} />
+              </Suspense>
 
-      <div className="mb-6 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
-        <Skeleton className="h-5 w-40" />
-        <div className="mt-4 space-y-3">
-          <Skeleton className="h-20 w-full rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-lg" />
-          <Skeleton className="h-10 w-40 rounded-lg" />
-        </div>
-      </div>
-
-      <Skeleton className="mb-4 h-7 w-48" />
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-surface-200/60 bg-white p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="flex items-start justify-between gap-3">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-5 w-16" />
-          </div>
-          <div className="mt-3 flex justify-end">
-            <Skeleton className="h-10 w-3/5 rounded-2xl" />
-          </div>
-        </div>
-      </div>
+              <Suspense fallback={<ResponseSectionSkeleton />}>
+                <ResponseSection params={params} />
+              </Suspense>
+            </>
+          )}
+        </SessionGate>
+      </Suspense>
     </div>
   );
 }

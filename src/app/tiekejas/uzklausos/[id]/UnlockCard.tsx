@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Lock, Coins, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -10,11 +11,10 @@ import { creditsLabel } from "@/lib/utils";
 interface UnlockCardProps {
   requestId: string;
   creditBalance: number;
-  /** Called after a successful unlock so the parent can refetch the request. */
-  onUnlocked: () => void;
 }
 
-export default function UnlockCard({ requestId, creditBalance, onUnlocked }: UnlockCardProps) {
+export default function UnlockCard({ requestId, creditBalance }: UnlockCardProps) {
+  const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +31,7 @@ export default function UnlockCard({ requestId, creditBalance, onUnlocked }: Unl
       });
       const data = await res.json();
       if (data.success) {
-        onUnlocked();
+        router.refresh();
         return;
       }
       if (data.code === "INSUFFICIENT_CREDITS") {

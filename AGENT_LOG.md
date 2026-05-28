@@ -149,6 +149,32 @@ account'o) — kodo keliai nepakeisti, tik data-fetch perkeltas į serverį. **P
 merge:** Vercel preview QA su realiu USER/PROVIDER account'u (streaming order +
 two-session realtime). `/api/requests/[id]` paliktas (žr. NOTES follow-up).
 
+## 2026-05-28 16:10 — Claude
+
+**Commit:** `18eeada` — refactor(tiekejas/uzklausos): stream request detail via Suspense sections · NESUMERGINTA (branch `suspense/provider-request-detail`)
+**Commit:** `7908e38` — fix(auth): make SessionGate usable as a JSX element · NESUMERGINTA (tas pats branch)
+
+**Pakeitimai:** PR6 (SUSPENSE_PLAN §Page 3). 9 failai, ~+708 / −505.
+
+**Failai (esmė):**
+- `src/app/tiekejas/uzklausos/[id]/page.tsx` — perrašytas: statinis container + back-link (`<Link>`) VIRŠ gate'o; `<Suspense fallback={null}><SessionGate requireRole="PROVIDER">` apgaubia 3 sekcijas, kiekviena savo `<Suspense>`. Route dabar `◐ Partial Prerender`.
+- `.../sections/RequestHeader.tsx` (naujas, async server) — kategorijos/statusas/title/meta pills. Be provider guard'o (metadata nejautri — ta pati matoma užklausų sąraše).
+- `.../sections/RequestBody.tsx` (naujas, async server) — aprašymas + `RequestPhotos` + kliento info; `isLeadUnlocked()` gate'ina email/telefoną; `requestView.upsert` view-tracking (best-effort).
+- `.../sections/ResponseSection.tsx` (naujas, async server) — eligibility + copilot + unlock + forma + banner'iai (accepted/jau-atsakyta/uždaryta) + atsakymų kortelės + thread; `response.updateMany providerLastReadAt` read-status (best-effort).
+- `.../ResponseForm.tsx` (naujas, `"use client"`) — formos state + `GenerateProposalButton` + POST submit → `router.refresh()`.
+- `.../ResponseThread.tsx` (naujas, `"use client"`) — apgaubia `ThreadChat`, viduje `sendMessage` fetch; server pre-fetch'ina initial messages, klientas subscribe'ina realtime.
+- `.../UnlockCard.tsx` — neserializuojamas `onUnlocked` callback'as pakeistas vidiniu `useRouter().refresh()` (tėvas dabar server komponentas).
+- `.../RequestDetailClient.tsx` — IŠTRINTAS (443 eil., Pattern A).
+- `src/components/auth/SessionGate.tsx` — fix (atskiras commit, žr. žemiau).
+
+**Toliau:**
+- **NESUMERGINTA.** Branch push'intas. Prieš merge — Vercel preview QA su realiu PROVIDER account'u: header→body→response streaming tvarka; copilot / unlock / AI-generate / submit / thread chat + realtime; non-PROVIDER redirect. Lokaliai naršyklėje NETESTUOTA (reikia auth sesijos + realios užklausos; vengiau live DB). `pnpm build` + `tsc` + `eslint` praeina.
+- `/api/tiekejas/uzklausos/[id]` GET puslapio nebenaudojamas (POST vis dar — `ResponseForm` submit). Route paliktas (žr. NOTES follow-up).
+
+**Pastabos kitam agentui:**
+- **SessionGate fix paliečia VISUS PR3-7.** `src/components/auth/SessionGate.tsx` iki šiol nebuvo realiai naudotas kaip `<SessionGate>{...}</SessionGate>` — pirmas panaudojimas atskleidė TS2786 (async komponentas grąžino `ReactNode`, kuris po @types/react atnaujinimo apima `bigint` → nevalidus JSX element type). Sutvarkyta apgaubiant grąžinamą reikšmę fragmentu: `return <>{children(...)}</>` (commit `7908e38`). Jei tavo PR'e jau pridėjai savą fix'ą — tikėkis trivial conflict'o (1 eilutė).
+- 3 sekcijos skaito tą pačią `serviceRequest.findUnique({id})` — **intentional dup** streaming'ui (SUSPENSE_PLAN §Page 3: pool'as parallel read'us tvarko pigiai, viena lėta query neblokuoja kitų). Jei profiling parodys kainą — hoist'inti į `<RequestGate>`, NE dabar.
+- Naujas worktree neturi `.env`/`.env.local` (gitignored, neperkeliami) — nukopijavau iš pagrindinio repo, kad `pnpm build` praeitų (read-only prerender query'ai). Jei statai kitą worktree — padaryk tą patį.
 
 ## 2026-05-28 06:59 — Claude
 
