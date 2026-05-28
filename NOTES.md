@@ -168,6 +168,14 @@ Konvencija:
   kuris `manual-migrations/*.sql` aplikuoja per `supabase` MCP
   automatiškai po deploy'aus.
 
+- [ ] **2026-05-28 — `/api/tiekejas/uzklausos/[id]` GET tampa dead code po PR6.**
+  `suspense/provider-request-detail` perkėlė request-detail duomenis į server
+  sekcijas, todėl puslapis nebekviečia GET `/api/tiekejas/uzklausos/[id]`. POST
+  (atsakymo pateikimas per `ResponseForm`) vis dar naudojamas, todėl route
+  failas paliktas nepaliestas. Follow-up: kai PR6 sumerge'intas, grep'inti ar
+  koks mobile/external klientas naudoja GET'ą; jei ne — ištrinti tik GET
+  handler'į (palikti POST). Ne blokeris.
+
 ## Build / priklausomybės
 
 - [x] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**
