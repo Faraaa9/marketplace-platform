@@ -29,7 +29,32 @@ sprendžia kontekstą iš diff'o.
 - src/lib/service-requests/create.ts
 - src/lib/service-requests/link-user.ts
 
-**Toliau:** _(papildyk ranka kai aišku)_
+**Toliau:** Bot foundation ready — bot agents can wire against these contracts:
+
+- `createServiceRequest(input): Promise<CreateServiceRequestResult>` in
+  `src/lib/service-requests/create.ts`. For Telegram pass `source: "telegram"`,
+  `contactPreVerified: true` (skips email/phone verification-record lookups;
+  moderation + category validation still run), and the linked `clientId`.
+  Returns `{ ok:true, trackingToken, moderationStatus }` or
+  `{ ok:false, code, message }` with code in VALIDATION | CONTACT_UNVERIFIED |
+  CATEGORY_INVALID | MODERATION_REJECTED | RATE_LIMITED | ERROR. `message` is
+  user-safe Lithuanian.
+- `findOrCreateUserByPhone(phone, name?)` in
+  `src/lib/service-requests/link-user.ts` — the ONLY path that writes User rows
+  for the bot. New accounts are CLIENT + phoneVerifiedAt set. Returns
+  `{ userId, email }`; `email` is `null` when the account carries the
+  non-deliverable placeholder (`User.email` is NOT NULL + unique, so phone-only
+  accounts get `tg-<digits>@telegram.paslaugurinka.lt`). `createServiceRequest`
+  auto-skips the confirmation email for placeholder addresses.
+- New `TelegramSession` model (`telegram_sessions`) added to schema for bot
+  conversation state. Prisma client regenerated. NOT pushed to DB — human must
+  run `npm run db:push` after review before the bot can read/write sessions.
+
+Note: `npm run build` is currently red ONLY due to in-flight telegram WIP
+(`src/app/api/telegram/webhook/route.ts`: missing `@/lib/telegram/bot`, and an
+`export const runtime = "nodejs"` that conflicts with `cacheComponents`).
+My four files type-check clean in isolation (`tsc --noEmit` reports errors
+only in that webhook route).
 
 
 ## 2026-05-29 01:24 — Claude
