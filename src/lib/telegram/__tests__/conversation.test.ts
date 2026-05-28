@@ -37,6 +37,7 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
   const store = new Map<string, SessionRow>();
   const calls = { improve: 0, transcribe: 0, create: 0, findOrCreate: 0 };
   let lastCreateInput: CreateServiceRequestInput | null = null;
+  let lastPhoneArg: string | null = null;
 
   const deps: BotDeps = {
     async sendMessage(chatId, text, opts) {
@@ -57,8 +58,9 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     async resolveCategories(slugs) {
       return slugs.length ? [{ id: "cat1", name: "Plytelių klijavimas" }] : [];
     },
-    async findOrCreateUserByPhone() {
+    async findOrCreateUserByPhone(phone) {
       calls.findOrCreate++;
+      lastPhoneArg = phone;
       return { userId: "user1" };
     },
     async getStoredEmail() {
@@ -97,6 +99,7 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     calls,
     session: () => store.get(String(FROM.id)),
     lastCreateInput: () => lastCreateInput,
+    lastPhoneArg: () => lastPhoneArg,
     last: () => sent[sent.length - 1],
   };
 }
@@ -251,6 +254,27 @@ const tests: Test[] = [
       assert.equal(t.calls.create, 0, "typed number must not publish");
       assert.equal(t.session()!.state, "awaiting_contact");
       assert.ok(t.last().opts?.requestContact, "should re-show the contact button");
+    },
+  ],
+  [
+    "international contact without a leading + gets one (E164) before linking",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("Reikia plytelių klijuotojo vonioje Vilniuje iki 800."), t.deps);
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      const noPlus: TgUpdate = {
+        update_id: 1,
+        message: {
+          message_id: 5,
+          from: FROM,
+          chat: { id: CHAT },
+          contact: { phone_number: "66641923382", user_id: FROM.id, first_name: "Jonas" },
+        },
+      };
+      await handleUpdate(noPlus, t.deps);
+      assert.equal(t.lastPhoneArg(), "+66641923382", "should prepend + before normalizing");
+      assert.equal(t.lastCreateInput()!.clientPhone, "+66641923382");
+      assert.equal(t.calls.create, 1);
     },
   ],
   [

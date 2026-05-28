@@ -246,12 +246,16 @@ async function handleContact(
   }
 
   const name = from.first_name?.trim() || contact.first_name?.trim() || undefined;
-  const { userId } = await deps.findOrCreateUserByPhone(contact.phone_number, name);
+  // Telegram sends shared-contact numbers as international digits without a
+  // leading "+", which our E164 normalizer rejects. Contacts are always
+  // international, so restore the "+".
+  const phone = ensurePlusPrefix(contact.phone_number);
+  const { userId } = await deps.findOrCreateUserByPhone(phone, name);
   const linked: SessionRow = {
     ...session,
     chatId,
     userId,
-    phone: contact.phone_number,
+    phone,
     state: "draft_ready",
   };
   await deps.saveSession(linked);
@@ -317,6 +321,11 @@ function normalizeTitle(title: string, description: string): string {
   if (value.length > 100) value = value.slice(0, 100).trim();
   if (value.length < 5) value = "Paslaugos užklausa";
   return value;
+}
+
+function ensurePlusPrefix(phone: string): string {
+  const compact = phone.trim().replace(/[\s().-]/g, "");
+  return compact.startsWith("+") ? compact : `+${compact}`;
 }
 
 function mimeToFormat(mime?: string): "wav" | "ogg" | "mp3" {
