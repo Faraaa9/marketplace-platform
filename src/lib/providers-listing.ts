@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
@@ -16,131 +16,128 @@ const MAX_PROVIDERS = 500;
  *  share this cache: the /meistrai server page (top-20 slice for fast TTFB)
  *  and the /api/meistrai/providers route (full set, fetched after hydration
  *  to restore the local-first filtering experience). */
-const getProvidersListingDataCached = unstable_cache(
-  async () => {
-    const where = {
-      role: "PROVIDER",
-      emailVerified: { not: null },
-      providerProfile: { isActive: true, moderationStatus: "APPROVED" as const },
-    };
+async function getProvidersListingDataCached() {
+  "use cache";
+  cacheLife({ revalidate: 60 });
+  cacheTag("providers-listing");
 
-    const [providers, storyFeatureOn, categoryGroups] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          createdAt: true,
-          lastSeenAt: true,
-          providerProfile: {
-            select: {
-              slug: true,
-              description: true,
-              categories: {
-                select: { category: { select: { id: true, name: true, slug: true } } },
-                orderBy: { sortOrder: "asc" },
-              },
-              location: true,
-              images: true,
-              isVerified: true,
-              isPremium: true,
-              isYoungTalent: true,
-              isGoat: true,
-              availableForUrgent: true,
-              priceFrom: true,
+  const where = {
+    role: "PROVIDER",
+    emailVerified: { not: null },
+    providerProfile: { isActive: true, moderationStatus: "APPROVED" as const },
+  };
+
+  const [providers, storyFeatureOn, categoryGroups] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        createdAt: true,
+        lastSeenAt: true,
+        providerProfile: {
+          select: {
+            slug: true,
+            description: true,
+            categories: {
+              select: { category: { select: { id: true, name: true, slug: true } } },
+              orderBy: { sortOrder: "asc" },
             },
+            location: true,
+            images: true,
+            isVerified: true,
+            isPremium: true,
+            isYoungTalent: true,
+            isGoat: true,
+            availableForUrgent: true,
+            priceFrom: true,
           },
-          _count: { select: { responses: true, reviewsReceived: true } },
         },
-        orderBy: { createdAt: "desc" },
-        take: MAX_PROVIDERS,
-      }),
-      isStoryEnabled(),
-      getServiceCategoryGroups(),
-    ]);
+        _count: { select: { responses: true, reviewsReceived: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: MAX_PROVIDERS,
+    }),
+    isStoryEnabled(),
+    getServiceCategoryGroups(),
+  ]);
 
-    const providerIds = providers.map((p) => p.id);
+  const providerIds = providers.map((p) => p.id);
 
-    const [reviewAggs, acceptedRows, lastResponseRows, avgResponseRows, activeStories] = await Promise.all([
-      providerIds.length > 0
-        ? prisma.review.groupBy({
-            by: ["providerId"],
-            where: { providerId: { in: providerIds }, moderationStatus: "APPROVED" },
-            _avg: { rating: true },
-            _count: { _all: true },
-          })
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; count: bigint }>>`
-            SELECT r."providerId", COUNT(*)::bigint AS count
-            FROM service_requests sr
-            JOIN responses r ON sr."acceptedResponseId" = r.id
-            WHERE r."providerId" = ANY(${providerIds}::text[])
-            GROUP BY r."providerId"
-          `
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; lastAt: Date }>>`
-            SELECT "providerId", MAX("createdAt") AS "lastAt"
-            FROM responses
-            WHERE "providerId" = ANY(${providerIds}::text[])
-            GROUP BY "providerId"
-          `
-        : Promise.resolve([]),
-      providerIds.length > 0
-        ? prisma.$queryRaw<Array<{ providerId: string; avgHours: number | null }>>`
-            SELECT r."providerId",
-                   AVG(EXTRACT(EPOCH FROM (r."createdAt" - sr."createdAt")) / 3600) AS "avgHours"
-            FROM responses r
-            JOIN service_requests sr ON r."requestId" = sr.id
-            WHERE r."providerId" = ANY(${providerIds}::text[])
-              AND r."createdAt" > sr."createdAt"
-            GROUP BY r."providerId"
-          `
-        : Promise.resolve([]),
-      storyFeatureOn && providerIds.length > 0
-        ? prisma.providerStory.groupBy({
-            by: ["providerId"],
-            where: {
-              providerId: { in: providerIds },
-              moderationStatus: "APPROVED",
-              expiresAt: { gt: new Date() },
-            },
-            _count: true,
-          })
-        : Promise.resolve([]),
-    ]);
+  const [reviewAggs, acceptedRows, lastResponseRows, avgResponseRows, activeStories] = await Promise.all([
+    providerIds.length > 0
+      ? prisma.review.groupBy({
+          by: ["providerId"],
+          where: { providerId: { in: providerIds }, moderationStatus: "APPROVED" },
+          _avg: { rating: true },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; count: bigint }>>`
+          SELECT r."providerId", COUNT(*)::bigint AS count
+          FROM service_requests sr
+          JOIN responses r ON sr."acceptedResponseId" = r.id
+          WHERE r."providerId" = ANY(${providerIds}::text[])
+          GROUP BY r."providerId"
+        `
+      : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; lastAt: Date }>>`
+          SELECT "providerId", MAX("createdAt") AS "lastAt"
+          FROM responses
+          WHERE "providerId" = ANY(${providerIds}::text[])
+          GROUP BY "providerId"
+        `
+      : Promise.resolve([]),
+    providerIds.length > 0
+      ? prisma.$queryRaw<Array<{ providerId: string; avgHours: number | null }>>`
+          SELECT r."providerId",
+                 AVG(EXTRACT(EPOCH FROM (r."createdAt" - sr."createdAt")) / 3600) AS "avgHours"
+          FROM responses r
+          JOIN service_requests sr ON r."requestId" = sr.id
+          WHERE r."providerId" = ANY(${providerIds}::text[])
+            AND r."createdAt" > sr."createdAt"
+          GROUP BY r."providerId"
+        `
+      : Promise.resolve([]),
+    storyFeatureOn && providerIds.length > 0
+      ? prisma.providerStory.groupBy({
+          by: ["providerId"],
+          where: {
+            providerId: { in: providerIds },
+            moderationStatus: "APPROVED",
+            expiresAt: { gt: new Date() },
+          },
+          _count: true,
+        })
+      : Promise.resolve([]),
+  ]);
 
-    return {
-      providers,
-      categoryGroups,
-      reviewAggs: reviewAggs.map((r) => ({
-        providerId: r.providerId,
-        avg: r._avg.rating,
-        count: r._count._all,
-      })),
-      acceptedRows: acceptedRows.map((r) => ({
-        providerId: r.providerId,
-        count: Number(r.count),
-      })),
-      lastResponseRows: lastResponseRows.map((r) => ({
-        providerId: r.providerId,
-        lastAt: r.lastAt.toISOString(),
-      })),
-      avgResponseRows: avgResponseRows.map((r) => ({
-        providerId: r.providerId,
-        avgHours: r.avgHours !== null ? Math.round(Number(r.avgHours)) : null,
-      })),
-      activeStoryProviderIds: activeStories.map((s) => s.providerId),
-    };
-  },
-  ["meistrai-listing-v1"],
-  {
-    revalidate: 60,
-    tags: ["providers-listing"],
-  },
-);
+  return {
+    providers,
+    categoryGroups,
+    reviewAggs: reviewAggs.map((r) => ({
+      providerId: r.providerId,
+      avg: r._avg.rating,
+      count: r._count._all,
+    })),
+    acceptedRows: acceptedRows.map((r) => ({
+      providerId: r.providerId,
+      count: Number(r.count),
+    })),
+    lastResponseRows: lastResponseRows.map((r) => ({
+      providerId: r.providerId,
+      lastAt: r.lastAt.toISOString(),
+    })),
+    avgResponseRows: avgResponseRows.map((r) => ({
+      providerId: r.providerId,
+      avgHours: r.avgHours !== null ? Math.round(Number(r.avgHours)) : null,
+    })),
+    activeStoryProviderIds: activeStories.map((s) => s.providerId),
+  };
+}
 
 export type ProvidersListingCachedData = Awaited<ReturnType<typeof getProvidersListingDataCached>>;
 

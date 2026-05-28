@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
@@ -29,13 +29,16 @@ interface PageProps {
   }>;
 }
 
-const getBoardListing = unstable_cache(
-  async (
-    page: number,
-    perPage: number,
-    filters: { category: string; location: string; search: string }
-  ) => {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+async function getBoardListing(
+  page: number,
+  perPage: number,
+  filters: { category: string; location: string; search: string }
+) {
+  "use cache";
+  cacheLife({ revalidate: 30 });
+  cacheTag("requests");
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // The board shows open requests plus ones matched to a provider
     // (IN_PROGRESS / CLOSED) within the last 24h — those linger with a
@@ -114,7 +117,7 @@ const getBoardListing = unstable_cache(
         : [];
     const countByRequest = new Map(responseCounts.map((g) => [g.requestId, g._count._all]));
 
-    // unstable_cache serializes via JSON, so Dates round-trip as strings.
+    // 'use cache' serializes via JSON, so Dates round-trip as strings.
     // Coerce here so consumers get real Date objects. Prefer the join table
     // for multi-category display; fall back to the legacy single relation
     // for any row written before the multi-category migration.
@@ -135,30 +138,27 @@ const getBoardListing = unstable_cache(
       };
     });
 
-    return { requests: serialized, total };
-  },
-  ["open-requests-list"],
-  { revalidate: 30, tags: ["requests"] }
-);
+  return { requests: serialized, total };
+}
 
 // Board-wide counters change slowly relative to the listing; cache them
 // separately with a longer TTL so the listing doesn't pay for three counts
 // (one of them unfiltered on `responses`) on every hit.
-const getBoardStats = unstable_cache(
-  async () => {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [totalActive, newToday, totalProviderResponses] = await Promise.all([
-      prisma.serviceRequest.count({ where: { status: "OPEN", moderationStatus: "APPROVED" } }),
-      prisma.serviceRequest.count({
-        where: { status: "OPEN", moderationStatus: "APPROVED", createdAt: { gte: oneDayAgo } },
-      }),
-      prisma.response.count(),
-    ]);
-    return { totalActive, newToday, totalProviderResponses };
-  },
-  ["board-stats"],
-  { revalidate: 300, tags: ["requests"] }
-);
+async function getBoardStats() {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("requests");
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [totalActive, newToday, totalProviderResponses] = await Promise.all([
+    prisma.serviceRequest.count({ where: { status: "OPEN", moderationStatus: "APPROVED" } }),
+    prisma.serviceRequest.count({
+      where: { status: "OPEN", moderationStatus: "APPROVED", createdAt: { gte: oneDayAgo } },
+    }),
+    prisma.response.count(),
+  ]);
+  return { totalActive, newToday, totalProviderResponses };
+}
 
 export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);

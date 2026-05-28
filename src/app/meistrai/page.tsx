@@ -11,12 +11,6 @@ export const metadata: Metadata = {
   description: "Raskite patikimus paslaugų tiekėjus Lietuvoje. Peržiūrėkite profilius, specializacijas ir atsiliepimus.",
 };
 
-// `revalidate` (not `force-dynamic`) — the data underneath doesn't depend on
-// the visitor, so a 60s cache hides the 6-query fan-out from 95%+ of requests.
-// searchParams still flow through (just for initial filter chips); they don't
-// touch the cached fetch.
-export const revalidate = 60;
-
 // Top slice we render server-side. The rest of the (up to 500) cached
 // providers ship via /api/meistrai/providers after hydration, restoring the
 // local-first filtering UX without paying the full payload cost on FCP.

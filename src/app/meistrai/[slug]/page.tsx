@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
@@ -53,11 +53,6 @@ import {
   Zap,
 } from "lucide-react";
 
-// Per-user session check forces the route to be dynamic; the actual DB
-// fetches below are cached individually so navigation doesn't pay the
-// 4-query fan-out on every visit.
-export const revalidate = 60;
-
 const SITE_NAME = "paslaugurinka.lt";
 const DEFAULT_METADATA: Metadata = {
   title: "Tiekėjo profilis — PaslaugųRinka",
@@ -71,28 +66,28 @@ const DEFAULT_METADATA: Metadata = {
  * a deterministic formula for legacy profiles where AI hasn't run yet, so we
  * never emit the same metadata twice for two different providers.
  */
-const getMetadataRow = (slug: string) =>
-  unstable_cache(
-    async () =>
-      prisma.providerProfile.findUnique({
-        where: { slug },
-        select: {
-          displayName: true,
-          seoTitle: true,
-          seoDescription: true,
-          primaryService: true,
-          primaryCity: true,
-          description: true,
-          headline: true,
-          heroImageUrl: true,
-          moderationStatus: true,
-          isActive: true,
-          user: { select: { name: true } },
-        },
-      }),
-    ["provider-metadata-v1", slug],
-    { revalidate: 300, tags: ["providers", `provider:slug:${slug}`] },
-  )();
+async function getMetadataRow(slug: string) {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("providers", `provider:slug:${slug}`);
+
+  return prisma.providerProfile.findUnique({
+    where: { slug },
+    select: {
+      displayName: true,
+      seoTitle: true,
+      seoDescription: true,
+      primaryService: true,
+      primaryCity: true,
+      description: true,
+      headline: true,
+      heroImageUrl: true,
+      moderationStatus: true,
+      isActive: true,
+      user: { select: { name: true } },
+    },
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -684,47 +679,42 @@ export default async function PublicProviderProfilePage({
 async function resolveProvider(
   slugOrId: string,
 ): Promise<{ userId: string; slug: string } | { __redirectTo: string } | null> {
-  return unstable_cache(
-    async () => {
-      // Try slug lookup first (the hot path).
-      const bySlug = await prisma.providerProfile.findUnique({
-        where: { slug: slugOrId },
-        select: { userId: true, slug: true },
-      });
-      // Imported (unclaimed) providers have no userId — this page resolves by
-      // userId, so they are not surfaced here until Phase 2.3 rewires it.
-      if (bySlug?.slug && bySlug.userId) {
-        return { userId: bySlug.userId, slug: bySlug.slug };
-      }
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("providers", `provider:slug:${slugOrId}`);
 
-      // Legacy URL: the segment looks like a cuid → user.id.
-      if (isCuid(slugOrId)) {
-        const byUserId = await prisma.providerProfile.findUnique({
-          where: { userId: slugOrId },
-          select: { slug: true },
-        });
-        if (byUserId?.slug) {
-          return { __redirectTo: byUserId.slug };
-        }
-      }
+  // Try slug lookup first (the hot path).
+  const bySlug = await prisma.providerProfile.findUnique({
+    where: { slug: slugOrId },
+    select: { userId: true, slug: true },
+  });
+  // Imported (unclaimed) providers have no userId — this page resolves by
+  // userId, so they are not surfaced here until Phase 2.3 rewires it.
+  if (bySlug?.slug && bySlug.userId) {
+    return { userId: bySlug.userId, slug: bySlug.slug };
+  }
 
-      return null;
-    },
-    ["provider-resolve-v1", slugOrId],
-    { revalidate: 300, tags: ["providers", `provider:slug:${slugOrId}`] },
-  )();
+  // Legacy URL: the segment looks like a cuid → user.id.
+  if (isCuid(slugOrId)) {
+    const byUserId = await prisma.providerProfile.findUnique({
+      where: { userId: slugOrId },
+      select: { slug: true },
+    });
+    if (byUserId?.slug) {
+      return { __redirectTo: byUserId.slug };
+    }
+  }
+
+  return null;
 }
 
 async function getProviderProfile(
   id: string,
 ): Promise<ProviderProfileWithCategories | null> {
-  return unstable_cache(
-    async (): Promise<ProviderProfileWithCategories | null> => {
-      return getProviderProfileUncached(id);
-    },
-    ["provider-profile-v1", id],
-    { revalidate: 60, tags: ["providers", `provider:user:${id}`] },
-  )();
+  "use cache";
+  cacheLife({ revalidate: 60 });
+  cacheTag("providers", `provider:user:${id}`);
+  return getProviderProfileUncached(id);
 }
 
 async function getProviderProfileUncached(
@@ -852,11 +842,10 @@ async function getProviderProfileUncached(
 }
 
 async function getActiveStories(providerId: string): Promise<StoryData[]> {
-  return unstable_cache(
-    async () => getActiveStoriesUncached(providerId),
-    ["provider-stories-v1", providerId],
-    { revalidate: 60, tags: ["stories", `stories:user:${providerId}`] },
-  )();
+  "use cache";
+  cacheLife({ revalidate: 60 });
+  cacheTag("stories", `stories:user:${providerId}`);
+  return getActiveStoriesUncached(providerId);
 }
 
 async function getActiveStoriesUncached(providerId: string): Promise<StoryData[]> {
@@ -898,11 +887,10 @@ interface SeoReview {
 }
 
 async function getTopReviewsForSeo(providerId: string): Promise<SeoReview[]> {
-  return unstable_cache(
-    async () => getTopReviewsForSeoUncached(providerId),
-    ["provider-seo-reviews-v1", providerId],
-    { revalidate: 300, tags: ["reviews", `reviews:user:${providerId}`] },
-  )();
+  "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("reviews", `reviews:user:${providerId}`);
+  return getTopReviewsForSeoUncached(providerId);
 }
 
 async function getTopReviewsForSeoUncached(providerId: string): Promise<SeoReview[]> {

@@ -1,39 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import * as categoryService from "@/lib/imported/category-service";
 
 const CACHE_TTL = 3600;
-const CACHE_TAGS = ["categories"];
 
-const getStatsCached = unstable_cache(
-  async () => categoryService.getStats(),
-  ["categories-stats"],
-  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
-);
+async function getStatsCached() {
+  "use cache";
+  cacheLife({ revalidate: CACHE_TTL });
+  cacheTag("categories");
+  return categoryService.getStats();
+}
 
-const getBySlugCached = unstable_cache(
-  async (slug: string) => categoryService.getBySlug(slug),
-  ["categories-by-slug"],
-  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
-);
+async function getBySlugCached(slug: string) {
+  "use cache";
+  cacheLife({ revalidate: CACHE_TTL });
+  cacheTag("categories");
+  return categoryService.getBySlug(slug);
+}
 
-const getChildrenCached = unstable_cache(
-  async (slug: string) => categoryService.getChildren(slug),
-  ["categories-children"],
-  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
-);
+async function getChildrenCached(slug: string) {
+  "use cache";
+  cacheLife({ revalidate: CACHE_TTL });
+  cacheTag("categories");
+  return categoryService.getChildren(slug);
+}
 
-const getSubtreeCached = unstable_cache(
-  async (slug: string) => categoryService.getSubtree(slug),
-  ["categories-subtree"],
-  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
-);
+async function getSubtreeCached(slug: string) {
+  "use cache";
+  cacheLife({ revalidate: CACHE_TTL });
+  cacheTag("categories");
+  return categoryService.getSubtree(slug);
+}
 
-const getRootsCached = unstable_cache(
-  async () => categoryService.getRoots(),
-  ["categories-roots"],
-  { revalidate: CACHE_TTL, tags: CACHE_TAGS }
-);
+async function getRootsCached() {
+  "use cache";
+  cacheLife({ revalidate: CACHE_TTL });
+  cacheTag("categories");
+  return categoryService.getRoots();
+}
 
 /**
  * GET /api/categories — list root categories or query by slug.
