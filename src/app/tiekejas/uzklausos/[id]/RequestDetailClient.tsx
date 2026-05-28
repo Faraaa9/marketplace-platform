@@ -69,7 +69,7 @@ interface RequestData {
   eligibilityMessage?: string;
 }
 
-export default function ProviderRequestDetailPage() {
+export default function RequestDetailClient() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();

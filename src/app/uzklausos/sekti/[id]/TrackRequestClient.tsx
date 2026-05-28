@@ -49,7 +49,7 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
 
-export default function TrackRequestPage() {
+export default function TrackRequestClient() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();

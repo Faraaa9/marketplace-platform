@@ -44,7 +44,7 @@ interface Request {
   _count: { responses: number };
 }
 
-export default function ProviderRequestsPage() {
+export default function RequestsListClient() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <ProviderRequestsContent />

@@ -438,7 +438,7 @@ function getNextAction(stats: Stats): { label: string; description: string; href
   return null;
 }
 
-export default function ProviderDashboard() {
+export default function ProviderDashboardClient() {
   const router = useRouter();
   const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);

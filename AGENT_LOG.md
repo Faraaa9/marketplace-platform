@@ -17,6 +17,26 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 04:40 — Claude
+
+**Commit:** `0ab3113` — perf(pages): add Suspense boundaries for streaming SSR
+
+**Pakeitimai:** 9 files changed, 304 insertions(+), 8 deletions(-)
+
+**Failai:**
+- src/app/paskyra/profilis/page.tsx
+- src/app/tiekejas/ProviderDashboardClient.tsx
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/uzklausos/RequestsListClient.tsx
+- src/app/tiekejas/uzklausos/[id]/RequestDetailClient.tsx
+- src/app/tiekejas/uzklausos/[id]/page.tsx
+- src/app/tiekejas/uzklausos/page.tsx
+- src/app/uzklausos/sekti/[id]/TrackRequestClient.tsx
+- src/app/uzklausos/sekti/[id]/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 04:39 — Claude
 
 **Commit:** `bc740b2` — docs(notes): expand cache components plan into multi-session migration
