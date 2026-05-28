@@ -97,6 +97,15 @@ Konvencija:
   ar perkelti chromium loading'ą į runtime fetch (Vercel Blob/S3).
   Tikslas: grįžti į pnpm install, sutaupyti ~30-60s per build.
 
+- [ ] **`/api/requests/[id]` (GET-by-token) — likę vartotojai po PR5.**
+  Request tracker (`/uzklausos/sekti/[id]`) po PR5 (Suspense, branch
+  `suspense/tracker-page`) duomenis ima serverio pusėje (`data.ts`), nebe per
+  šį API. Endpoint'as paliktas, nes jį dar naudoja `redaguoti/page.tsx`
+  (edit forma) ir `components/guest/RecentRequestBanner.tsx` (svečio
+  banneris). Kai/jei tie du pereis prie serverio fetch'o, route'ą galima
+  šalinti. Migracijos metu suvienodinti su `data.ts` select/transform, kad
+  nedrift'intų.
+
 - [x] **2026-05-28 — Cache Components (PPR) įjungta production'e.** Visi
   Phase 1-5 darbai padaryti per paralelinę 5 agentų sesiją + kelias
   iteracijas finišuojant ant `main` branch'o. `cacheComponents: true`
