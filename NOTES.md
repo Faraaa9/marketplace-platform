@@ -49,6 +49,19 @@ Konvencija:
   ar perkelti chromium loading'ą į runtime fetch (Vercel Blob/S3).
   Tikslas: grįžti į pnpm install, sutaupyti ~30-60s per build.
 
+- [x] **2026-05-28 — Cache Components (PPR) įjungta production'e.** Visi
+  Phase 1-5 darbai padaryti per paralelinę 5 agentų sesiją + kelias
+  iteracijas finišuojant ant `main` branch'o. `cacheComponents: true`
+  next.config.mjs'e, build'as praeina, deploy'as Ready, daug routes
+  prerender'inami kaip `◐ Partial Prerender` (statinis šeletas iš CDN
+  + dinamika streamina per Suspense). `Cache-Control` headeris dabar
+  `public, max-age=0, must-revalidate` (anksčiau buvo `private, no-store`)
+  — Next.js nebepriverstinai blokuoja edge cache. Performance:
+  /tiekejams ~107ms warm (instant CDN HIT), / ~500ms, /meistrai ~750ms
+  (didesnis payload). Per-user puslapiai (paskyra, tiekejas/*) dabar
+  rodo statinį šeletą iškart, dinamika streamina į Suspense'us.
+  Originalus follow-up (kuris dabar baigtas):
+
 - [ ] **Per-user puslapiai negali būti public edge cache'inami — reikia Cache Components.**
   `/meistrai/[slug]` (owner preview PENDING), `/uzklausos` (session-aware),
   visi `/tiekejas/*`, `/paskyra/*`, `/admin/*` — turi per-vartotojo
