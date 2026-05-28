@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
-import type { ServiceCategoryGroup } from "@/lib/service-categories";
+import type { ServiceCategoryGroup, ServiceCategoryItem } from "@/lib/service-categories";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import Select from "@/components/ui/Select";
@@ -14,7 +14,7 @@ import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown } from "lucide-react";
 import SectionHeader from "./components/SectionHeader";
-import CategoryChecklist from "./components/CategoryChecklist";
+import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 
 const MAX_CATEGORIES = 20;
 
@@ -196,6 +196,20 @@ export default function ProviderProfilePage() {
       return { ...prev, categoryIds: [...prev.categoryIds, id] };
     });
   }
+
+  // Flat id → display name lookup so selected specializations render as
+  // readable, removable chips below the picker.
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    function add(item: ServiceCategoryItem) {
+      map.set(item.id, item.name);
+      for (const child of item.children ?? []) add(child);
+    }
+    for (const group of categoryGroups) {
+      for (const cat of group.categories) add(cat);
+    }
+    return map;
+  }, [categoryGroups]);
 
   const suggestionText = useMemo(
     () => [form.services, form.description, form.headline].filter(Boolean).join("\n\n"),
@@ -538,12 +552,36 @@ export default function ProviderProfilePage() {
                   </span>
                 )}
               </p>
-              <CategoryChecklist
+              <GroupedCategoryPicker
                 groups={categoryGroups}
-                selectedIds={form.categoryIds}
+                multiple
+                selectedValues={form.categoryIds}
                 onToggle={toggleCategory}
-                maxReached={form.categoryIds.length >= MAX_CATEGORIES}
+                onClearAll={() => setForm((prev) => ({ ...prev, categoryIds: [] }))}
+                mode="id"
+                variant="form"
+                placeholder="Pasirinkite veiklos sritis"
               />
+              {form.categoryIds.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {form.categoryIds.map((id) => (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 py-1 pl-2.5 pr-1 text-caption font-medium text-brand-700 dark:border-brand-700 dark:bg-brand-950 dark:text-brand-300"
+                    >
+                      {categoryNameById.get(id) ?? "Kategorija"}
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(id)}
+                        aria-label={`Pašalinti ${categoryNameById.get(id) ?? "kategoriją"}`}
+                        className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-brand-200/60 dark:hover:bg-brand-800/60"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </Card>

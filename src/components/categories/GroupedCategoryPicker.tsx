@@ -239,7 +239,7 @@ export default function GroupedCategoryPicker({
           ref={panelRef}
           role="dialog"
           aria-label="Kategorijų pasirinkimas"
-          className="absolute left-0 top-full z-50 mt-2 hidden max-h-[72vh] w-80 overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 sm:block"
+          className="absolute left-0 top-full z-50 mt-2 hidden max-h-[72vh] w-80 overflow-y-auto overscroll-contain rounded-xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 sm:block"
         >
           <CategoryPickerBody
             groups={groups}

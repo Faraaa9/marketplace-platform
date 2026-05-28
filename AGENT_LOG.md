@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 00:14 — Claude
+
+**Commit:** `1d2c290` — fix(categories): scrollable dropdown + unified provider profile picker · lokalus
+
+**Pakeitimai:** 3 files changed, 44 insertions(+), 177 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/profilis/components/CategoryChecklist.tsx
+- src/app/tiekejas/profilis/page.tsx
+- src/components/categories/GroupedCategoryPicker.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-28 22:49 — Claude
 
 **Commit:** `7e9ec6f` — feat(provider): harden SMS rate-limit + clearer empty leads state · lokalus
