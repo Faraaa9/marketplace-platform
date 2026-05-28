@@ -23,6 +23,15 @@ Konvencija:
 
 ## Performance follow-ups (po 2026-05-28 audit'o)
 
+- [ ] **2026-05-28 — User-side žinutės be realtime po Suspense konversijos
+  (PR4 `suspense/user-cluster`).** `/paskyra/zinutes` (ir `/paskyra/uzklausos`
+  atsakymų count) dabar fetch'ina serveryje, todėl presence/unread rodikliai
+  static-after-load — reikia reload, kad pamatytum naują žinutę. Kai dėsim
+  realtime user-side žinutėms, reikės klientinio island'o, kuris hidratuojasi
+  su server-fetch'intais initial duomenimis ir subscribe'inasi į Supabase
+  (tas pats pattern kaip planuojama `/uzklausos/sekti/[id]` ir
+  `/tiekejas/zinutes/[id]`). Ne blokeris — sąmoningai out of scope perf PR'ui.
+
 - [ ] **Cache invalidation hooks neimplementuoti.** `/meistrai`,
   `/meistrai/[slug]`, `/`, `/tiekejams` puslapiai naudoja
   `unstable_cache` su 60-300s revalidate. Reiškia, kad provider
