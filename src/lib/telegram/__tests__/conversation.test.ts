@@ -238,6 +238,22 @@ const tests: Test[] = [
     },
   ],
   [
+    "typing a number while awaiting contact re-prompts for the button (never trusts typed text)",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(textUpdate("Reikia stogdengio dvišlaičiam stogui Panevėžyje."), t.deps);
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      assert.equal(t.session()!.state, "awaiting_contact");
+
+      const improveBefore = t.calls.improve;
+      await handleUpdate(textUpdate("+37067188547"), t.deps);
+      assert.equal(t.calls.improve, improveBefore, "typed number must not start a new draft");
+      assert.equal(t.calls.create, 0, "typed number must not publish");
+      assert.equal(t.session()!.state, "awaiting_contact");
+      assert.ok(t.last().opts?.requestContact, "should re-show the contact button");
+    },
+  ],
+  [
     "a forwarded (non-own) contact is rejected",
     async () => {
       const t = makeDeps();

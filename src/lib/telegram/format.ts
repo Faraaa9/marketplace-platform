@@ -72,6 +72,9 @@ export const MSG = {
     "Beveik baigta. Paspauskite mygtuką, kad pasidalintumėte telefono numeriu - " +
     "jis reikalingas, kad tiekėjai galėtų su jumis susisiekti.",
   shareContactBtn: "Bendrinti kontaktą",
+  useContactButton:
+    "Paspauskite mygtuką „Bendrinti kontaktą“ žemiau - telefono numerio rašyti " +
+    "ranka nereikia (taip jį patvirtina pats Telegram).",
   contactNotOwn: "Pasidalinkite savo kontaktu, ne kito žmogaus.",
   genericError: "Įvyko klaida. Pabandykite dar kartą.",
 

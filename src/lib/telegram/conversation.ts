@@ -79,6 +79,17 @@ async function handleMessage(msg: TgMessage, deps: BotDeps): Promise<void> {
     return;
   }
 
+  // While waiting for the shared contact, a plain text message (e.g. the user
+  // typing their number by hand) must NOT be treated as a new description, and
+  // a typed number must never be trusted — only a Telegram-shared contact is
+  // verified. Nudge them back to the button.
+  if (session.state === "awaiting_contact") {
+    await deps.sendMessage(chatId, MSG.useContactButton, {
+      requestContact: { buttonText: MSG.shareContactBtn },
+    });
+    return;
+  }
+
   // A voice note or any free text is treated as a (re-)description. This also
   // serves the "edit" path: the user can simply send a new message.
   if (!msg.voice && !text) {
