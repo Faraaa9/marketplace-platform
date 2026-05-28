@@ -21,6 +21,37 @@ Konvencija:
   (commit `ebe05af`) — Server Component, `getServerSession`, redirect į
   `/` jei rolė ne `ADMIN`. Ne blokeris, bet vertas kito PR'o.
 
+- [ ] **2026-05-28 — `/tiekejas/{atsakymai,zinutes,zinutes/[id]}` peržiūros
+  gate sušvelnintas (PR3 Suspense konversija).** Šie puslapiai dabar gate'inami
+  `SessionGate requireRole="PROVIDER"` (sesija + rolė). Anksčiau client'as
+  fetch'ino API route'ą su `requireActiveProvider()`, kuris PAPILDOMAI bouncin'o
+  el. paštą nepatvirtinusius / neaktyvius (suspend'intus) tiekėjus į `/tiekejas`
+  (per 403 code → client redirect). Tas patikrinimas dabar lieka TIK ant
+  mutacijų (archyvo PATCH, žinučių POST — vis dar per `requireActiveProvider`),
+  ne ant peržiūros. Pasekmė: suspend'intas/nepatvirtintas tiekėjas dabar mato
+  (read-only) savo atsakymus/žinutes, bet negali archyvuoti/rašyti. `proxy.ts`
+  gate'ina `/tiekejas/*` tik pagal rolę, tad jis šito nepadengia. Jei norima
+  senos elgsenos — pridėti page-lygio active-provider redirect'ą (redirect
+  versija `requireActiveProvider`) į server sekcijas.
+
+## PR3 cleanup / UI follow-ups (2026-05-28)
+
+- [ ] **`/api/tiekejas/atsakymai` route'as liko be vartotojų.** Po PR3 jį
+  fetch'ino tik ištrintas `AtsakymaiClient`; `ResponsesList` daro Prisma query
+  tiesiogiai. Paliktas vietoje (konservatyviai — „keep unless unused"), bet
+  kandidatas ištrynimui atskirame cleanup PR'e. PASTABA: `/api/tiekejas/zinutes`
+  ir `/api/tiekejas/zinutes/[id]` LIEKA (naudoja `MobileBottomNav` unread badge,
+  dashboard, archyvo PATCH, žinučių POST); tik `[id]` GET handler'is liko be
+  vartotojų (jo query perkeltas į `ThreadView`).
+
+- [ ] **Inbox neperskaitytų skaičius nuimtas nuo chrome (PR3).**
+  `/tiekejas/zinutes` antraštės subtitle („{n} neperskaitytos") ir „Neperskaityti"
+  tab'o badge'as pašalinti — client filter shell'as (`InboxFilterShell`) neturi
+  duomenų jiems skaičiuoti (plan'as: „label-only / counts derive from list").
+  Globalus neperskaitytų badge'as vis dar yra `MobileBottomNav`'e. Jei norima
+  in-page skaičiaus grįžimo — reikia mažos dedikuotos server sekcijos,
+  streaminančios count'ą atskiru Suspense'u (nestreaminti per visą sąrašą).
+
 ## Performance follow-ups (po 2026-05-28 audit'o)
 
 - [ ] **Cache invalidation hooks neimplementuoti.** `/meistrai`,
