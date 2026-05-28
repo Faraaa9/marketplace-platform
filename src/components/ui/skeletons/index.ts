@@ -16,3 +16,7 @@
  */
 export { CreditBadgeSkeleton } from "./CreditBadgeSkeleton";
 export { RequestsListSkeleton } from "./RequestsListSkeleton";
+export { AccountCardSkeleton } from "./AccountCardSkeleton";
+export { StatsGridSkeleton } from "./StatsGridSkeleton";
+export { ProfileCompletenessSkeleton } from "./ProfileCompletenessSkeleton";
+export { FollowUpsSkeleton } from "./FollowUpsSkeleton";
