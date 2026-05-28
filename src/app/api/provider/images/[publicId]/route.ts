@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +10,7 @@ import {
 } from "@/lib/cloudinary";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
+  await connection();
   try {
     const { publicId } = await params;
     const session = await getServerSession(authOptions);

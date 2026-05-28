@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -16,6 +16,7 @@ function isThreadKind(value: string | undefined): value is ThreadKind {
 }
 
 export async function POST(req: Request) {
+  await connection();
   try {
     const body = (await req.json().catch(() => null)) as ReadPayload | null;
     if (!body || !isThreadKind(body.threadKind) || !body.threadId) {

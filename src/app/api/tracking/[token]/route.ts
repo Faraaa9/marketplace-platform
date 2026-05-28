@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +20,7 @@ import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation"
  */
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
 
@@ -148,6 +149,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
 

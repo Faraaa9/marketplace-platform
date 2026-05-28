@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +12,7 @@ import { createMessageNotification } from "@/lib/message-notifications";
  * params.id = response ID (the thread)
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);

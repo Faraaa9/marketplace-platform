@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
@@ -12,8 +12,6 @@ import {
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { isTelnyxSmsConfigured, sendTelnyxSms } from "@/lib/telnyx";
 
-export const dynamic = "force-dynamic";
-
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_RESENDS = 4;
 
@@ -22,6 +20,7 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     if (!isTelnyxSmsConfigured()) {
       return NextResponse.json(

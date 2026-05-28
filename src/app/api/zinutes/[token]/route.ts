@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +12,7 @@ import { getProviderAvatarImage } from "@/lib/provider-image";
  * must match the inquiry's sender when the inquiry has a known sender account.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  await connection();
   try {
     const { token } = await params;
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,9 +8,8 @@ import { moderateText } from "@/lib/moderation";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { getDirectInquiryNotificationData } from "@/lib/direct-inquiry-notifications";
 
-export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();

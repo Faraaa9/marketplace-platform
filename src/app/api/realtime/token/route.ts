@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import type { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { SignJWT } from "jose";
@@ -17,6 +17,7 @@ const THREAD_KINDS = new Set(["response", "directInquiry"]);
 // Settings → API → JWT Secret) — the same secret Supabase uses to verify
 // every Realtime / PostgREST request, so claims are trusted server-side.
 export async function GET(req: NextRequest) {
+  await connection();
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const threadKind = req.nextUrl.searchParams.get("threadKind");

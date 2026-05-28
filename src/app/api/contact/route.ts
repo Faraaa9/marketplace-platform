@@ -1,12 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
 import { sanitizeHtml } from "@/lib/sanitize";
-
-export const dynamic = "force-dynamic";
 
 // Public contact form destination — the platform owner's real inbox.
 // Reuses INBOUND_FORWARD_TO (same env that the inbound-router uses to forward
@@ -35,6 +33,7 @@ const contactSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
