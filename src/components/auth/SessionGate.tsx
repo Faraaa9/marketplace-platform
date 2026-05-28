@@ -32,5 +32,8 @@ export async function SessionGate({
     redirect("/");
   }
 
-  return children(session.user.id);
+  // Wrap in a Fragment so the async component resolves to a JSX element rather
+  // than a bare ReactNode (which includes `bigint` and isn't a valid JSX
+  // component return). PR3 is the first consumer to render <SessionGate/>.
+  return <>{children(session.user.id)}</>;
 }
