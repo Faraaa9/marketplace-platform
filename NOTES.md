@@ -12,7 +12,7 @@ Konvencija:
 
 ## Saugumas / access control
 
-- [ ] **2026-05-26 — `/admin/layout.tsx` neturi server-side guard'o.**
+- [x] **2026-05-26 — `/admin/layout.tsx` neturi server-side guard'o.**
   `src/app/admin/layout.tsx` yra `"use client"` ir netikrina sesijos
   rolio. Bet kas, kas žino URL'ą, gali patekti į admin panelę — API
   endpoint'ai (pvz. `/api/admin/stats`) 403'ina, bet UI vis tiek
@@ -20,6 +20,13 @@ Konvencija:
   Sprendimas: sukurti analogišką pattern'ą kaip `src/app/tiekejas/layout.tsx`
   (commit `ebe05af`) — Server Component, `getServerSession`, redirect į
   `/` jei rolė ne `ADMIN`. Ne blokeris, bet vertas kito PR'o.
+  **Sutvarkyta 2026-05-28 (kodo nereikia):** `src/proxy.ts` JAU role-gat'ina
+  `/admin/*` (eil. 28-30: ne-ADMIN → redirect į `/prisijungti` PRIEŠ render'į,
+  edge'e; `authorized` callback reikalauja `!!token`). Tai uždaro spragą geriau
+  nei layout check — ne-admin'as niekada nepasiekia UI. Šis įrašas rašytas prieš
+  proxy gating'ą. NOTES siūlytas `getServerSession` layout'e dabar net netiktų:
+  su `cacheComponents` jis laužytų prerender'į (žr. landmines). Proxy = teisingas
+  auth-gating sluoksnis.
 
 - [ ] **2026-05-28 — `/tiekejas/{atsakymai,zinutes,zinutes/[id]}` peržiūros
   gate sušvelnintas (PR3 Suspense konversija).** Šie puslapiai dabar gate'inami
@@ -63,7 +70,7 @@ Konvencija:
   (tas pats pattern kaip planuojama `/uzklausos/sekti/[id]` ir
   `/tiekejas/zinutes/[id]`). Ne blokeris — sąmoningai out of scope perf PR'ui.
 
-- [ ] **Cache invalidation hooks neimplementuoti.** `/meistrai`,
+- [x] **Cache invalidation hooks neimplementuoti.** `/meistrai`,
   `/meistrai/[slug]`, `/`, `/tiekejams` puslapiai naudoja
   `unstable_cache` su 60-300s revalidate. Reiškia, kad provider
   profile update, naujas review, ar approved registracija
@@ -84,6 +91,21 @@ Konvencija:
   `revalidateTag('reviews:user:${providerId}')` (review approval) ir
   `revalidateTag('provider:user:${userId}')` (profilio update) wiring'as
   automatiškai padengia ir šias dvi sekcijas — papildomo darbo nereikia.
+
+  **Sutvarkyta 2026-05-28 (branch `fix/cache-invalidation-hooks`):** pridėtas
+  `src/lib/cache-invalidation.ts` (centralizuoti helper'iai
+  `revalidateProviderCaches` / `revalidateReviewCaches`). Prijungta:
+  - `/api/tiekejas/profilis` PUT/PATCH/DELETE → `revalidateProviderCaches(userId)`
+    (tag'ai `providers`, `providers-listing`, `home-data`, `provider:user:${id}`)
+  - `/api/paskyra/profilis` PATCH → tas pats, bet tik jei rolė `PROVIDER`
+    (vardas rodomas tiekėjų kortelėse)
+  - `moderateEntity` (`admin-actions.ts`) → profile/review/story approval IR
+    reject invaliduoja atitinkamas sekcijas (anksčiau tik `requests` ant approve)
+  - New ServiceRequest jau buvo prijungtas (`/api/requests/route.ts:223`)
+  Pastabos: NOTES nurodė `/api/paskyra/profilis`, bet listingo duomenys realiai
+  keičiami per `/api/tiekejas/profilis` — prijungti abu. Naudoti broad tag'ai
+  (`providers`/`reviews`/`stories`), nes jie yra ant VISŲ reliuojančių cache'ų;
+  specifiniai `:user:` tik kur turim userId.
 
 - [ ] **Vercel install grąžintas į npm.** `vercel.json` po
   `d5ba0a7` naudoja `npm install`, ne `pnpm install --frozen-lockfile`.

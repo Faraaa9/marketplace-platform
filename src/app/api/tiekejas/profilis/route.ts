@@ -6,6 +6,7 @@ import { providerProfileSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText } from "@/lib/moderation";
 import { publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
+import { revalidateProviderCaches } from "@/lib/cache-invalidation";
 
 export async function GET() {
   await connection();
@@ -246,6 +247,7 @@ export async function PUT(req: NextRequest) {
       });
     }
 
+    revalidateProviderCaches(session.user.id);
     return NextResponse.json({ success: true, data: profile });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -285,6 +287,7 @@ export async function PATCH(req: NextRequest) {
       select: { id: true, isActive: true },
     });
 
+    revalidateProviderCaches(session.user.id);
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error("Toggle profile error:", error);
@@ -329,6 +332,7 @@ export async function DELETE() {
       data: { role: "CLIENT" },
     });
 
+    revalidateProviderCaches(session.user.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete profile error:", error);
