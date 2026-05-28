@@ -131,6 +131,20 @@ const nextConfig = {
           },
         ],
       },
+      // /meistrai is a fully-public listing with no per-user data — override
+      // Next.js's default `no-store` for dynamic routes so Vercel's edge can
+      // serve repeat hits without invoking a function. s-maxage matches the
+      // 60s revalidate window on the page's data fetch; SWR lets stale
+      // responses ship instantly while the background revalidation runs.
+      {
+        source: "/meistrai",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=300",
+          },
+        ],
+      },
     ];
   },
 };
