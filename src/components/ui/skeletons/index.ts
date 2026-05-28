@@ -15,3 +15,4 @@
  * This PR establishes the home + convention only; no shapes live here yet.
  */
 export { ResponsesListSkeleton } from "./ResponsesListSkeleton";
+export { ThreadViewSkeleton } from "./ThreadViewSkeleton";
