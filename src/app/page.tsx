@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import HeroSearch from "@/components/marketing/HeroSearch";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
 import RecentRequestBanner from "@/components/guest/RecentRequestBanner";
@@ -109,50 +109,50 @@ const FAQ_ITEMS = [
   },
 ];
 
-const getHomePageData = unstable_cache(
-  async () => {
-    try {
-      const [recentRequests, providerCount, requestCount, responseCount] = await Promise.all([
-        prisma.serviceRequest.findMany({
-          where: { status: "OPEN", moderationStatus: "APPROVED" },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            categoryRef: { select: { name: true, slug: true } },
-            location: true,
-            budget: true,
-            createdAt: true,
-            _count: { select: { responses: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 6,
-        }),
-        prisma.user.count({
-          where: {
-            role: "PROVIDER",
-            emailVerified: { not: null },
-            providerProfile: { isActive: true, moderationStatus: "APPROVED" },
-          },
-        }),
-        prisma.serviceRequest.count(),
-        prisma.response.count(),
-      ]);
+async function getHomePageData() {
+  "use cache";
+  cacheLife({ revalidate: 60 });
+  cacheTag("home-data", "providers", "requests");
 
-      return {
-        recentRequests,
-        providerCount,
-        requestCount,
-        responseCount,
-      };
-    } catch (error) {
-      console.error("Home page data error:", error);
-      return HOME_PAGE_FALLBACK_DATA;
-    }
-  },
-  ["home-page-data"],
-  { revalidate: 60, tags: ["home-data", "providers", "requests"] }
-);
+  try {
+    const [recentRequests, providerCount, requestCount, responseCount] = await Promise.all([
+      prisma.serviceRequest.findMany({
+        where: { status: "OPEN", moderationStatus: "APPROVED" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          categoryRef: { select: { name: true, slug: true } },
+          location: true,
+          budget: true,
+          createdAt: true,
+          _count: { select: { responses: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+      prisma.user.count({
+        where: {
+          role: "PROVIDER",
+          emailVerified: { not: null },
+          providerProfile: { isActive: true, moderationStatus: "APPROVED" },
+        },
+      }),
+      prisma.serviceRequest.count(),
+      prisma.response.count(),
+    ]);
+
+    return {
+      recentRequests,
+      providerCount,
+      requestCount,
+      responseCount,
+    };
+  } catch (error) {
+    console.error("Home page data error:", error);
+    return HOME_PAGE_FALLBACK_DATA;
+  }
+}
 
 export default async function HomePage() {
   const [
