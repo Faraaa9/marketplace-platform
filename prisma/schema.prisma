@@ -18,6 +18,9 @@ model User {
   phoneVerifiedAt DateTime?
   image           String?
   lastSeenAt      DateTime?
+  blocked         Boolean   @default(false)
+  blockedAt       DateTime?
+  adminNote       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

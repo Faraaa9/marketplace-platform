@@ -47,6 +47,7 @@ export const authOptions: NextAuthOptions = {
                   role: true,
                   image: true,
                   emailVerified: true,
+                  blocked: true,
                 },
               },
             },
@@ -58,6 +59,10 @@ export const authOptions: NextAuthOptions = {
 
           if (!tokenRow.user.emailVerified) {
             throw new Error("El. paštas dar nepatvirtintas");
+          }
+
+          if (tokenRow.user.blocked) {
+            throw new Error("Paskyra užblokuota");
           }
 
           // Burn the token so it can't be replayed.
@@ -89,6 +94,7 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             image: true,
+            blocked: true,
           },
         });
 
@@ -99,6 +105,10 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error("Neteisingas el. paštas arba slaptažodis");
+        }
+
+        if (user.blocked) {
+          throw new Error("Paskyra užblokuota");
         }
 
         return {
@@ -135,8 +145,11 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google" && user?.email) {
         const existing = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { password: true, emailVerified: true },
+          select: { password: true, emailVerified: true, blocked: true },
         });
+        if (existing?.blocked) {
+          return false;
+        }
         if (existing?.password && !existing.emailVerified) {
           return false;
         }
