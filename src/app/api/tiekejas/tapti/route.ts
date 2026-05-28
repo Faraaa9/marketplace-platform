@@ -1,10 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { grantStarterCredits } from "@/lib/credits";
-
-export const dynamic = "force-dynamic";
 
 /**
  * POST /api/tiekejas/tapti
@@ -12,6 +10,7 @@ export const dynamic = "force-dynamic";
  * and updating the user role. Idempotent — safe to call if already a provider.
  */
 export async function POST() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

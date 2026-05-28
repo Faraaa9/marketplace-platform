@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
-
-export const dynamic = "force-dynamic";
 
 /**
  * Every request this provider has responded to, with the outcome of each
  * offer derived from its parent request. Powers the "Mano atsakymai" page.
  */
 export async function GET() {
+  await connection();
   try {
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { expandToMatchSet } from "@/lib/category-matching";
@@ -6,9 +6,8 @@ import { getUnlockedRequestIds } from "@/lib/credits";
 import { recordAiRun } from "@/lib/ai/audit";
 import { calculateSemanticMatch, summarizeSemanticScores } from "@/lib/semantic-match";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(req: NextRequest) {
+  await connection();
   try {
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;

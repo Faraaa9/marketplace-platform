@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { responseSchema } from "@/lib/validations";
 import { sendEmail, newResponseEmail } from "@/lib/email";
@@ -15,6 +15,7 @@ import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
  * Returns the request, provider's own response + messages, and eligibility info.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();
@@ -163,6 +164,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  await connection();
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();

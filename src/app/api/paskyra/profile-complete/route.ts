@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +11,7 @@ interface CompleteProfileRequest {
 }
 
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {

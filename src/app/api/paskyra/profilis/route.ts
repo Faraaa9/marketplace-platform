@@ -1,12 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { sanitizeHtml } from "@/lib/sanitize";
-
-export const dynamic = "force-dynamic";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Vardas turi būti bent 2 simbolių").max(100),
@@ -34,6 +32,7 @@ const userSelect = {
 } as const;
 
 export async function GET() {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -57,6 +56,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

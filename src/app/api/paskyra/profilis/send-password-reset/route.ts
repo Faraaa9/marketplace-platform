@@ -1,12 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import crypto from "crypto";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, passwordResetEmail } from "@/lib/email";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
-
-export const dynamic = "force-dynamic";
 
 const RESEND_COOLDOWN_MS = 60 * 1000;
 
@@ -23,6 +21,7 @@ function maskEmail(email: string): string {
  * current address. Reuses the existing PasswordResetToken + reset-password flow.
  */
 export async function POST(req: NextRequest) {
+  await connection();
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
