@@ -176,6 +176,87 @@ two-session realtime). `/api/requests/[id]` paliktas (žr. NOTES follow-up).
 - 3 sekcijos skaito tą pačią `serviceRequest.findUnique({id})` — **intentional dup** streaming'ui (SUSPENSE_PLAN §Page 3: pool'as parallel read'us tvarko pigiai, viena lėta query neblokuoja kitų). Jei profiling parodys kainą — hoist'inti į `<RequestGate>`, NE dabar.
 - Naujas worktree neturi `.env`/`.env.local` (gitignored, neperkeliami) — nukopijavau iš pagrindinio repo, kad `pnpm build` praeitų (read-only prerender query'ai). Jei statai kitą worktree — padaryk tą patį.
 
+## 2026-05-28 16:25 — Claude
+
+**Commit:** `172c5e7` — perf(tiekejas): stream provider dashboard via server sections · push'inta
+(+ `e4aa5e5` — perf(tiekejas): add provider dashboard section skeletons)
+
+**Pakeitimai:** 14 files changed, 1275 insertions(+), 1116 deletions(-) (+ 4 skeletonai e4aa5e5)
+
+**Failai:**
+- src/app/api/tiekejas/stats/route.ts
+- src/app/tiekejas/AccountStoryAvatar.tsx
+- src/app/tiekejas/ProviderDashboardClient.tsx
+- src/app/tiekejas/ProviderFollowUpsCard.tsx
+- src/app/tiekejas/ResendVerificationBanner.tsx
+- src/app/tiekejas/StoryModal.tsx
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/sections/AccountCard.tsx
+- src/app/tiekejas/sections/FollowUpsCard.tsx
+- src/app/tiekejas/sections/InboxUnreadBadge.tsx
+- src/app/tiekejas/sections/ProfileCompletenessCard.tsx
+- src/app/tiekejas/sections/QuickLinksGrid.tsx
+- src/app/tiekejas/sections/StatsGrid.tsx + InboxUnreadBadge.tsx
+- src/app/tiekejas/{StoryModal,AccountStoryAvatar,ResendVerificationBanner}.tsx (client leaves)
+- src/lib/provider-completeness.ts (NEW shared helper)
+- (del) ProviderDashboardClient.tsx (878 eil.) + api/tiekejas/stats/route.ts
+
+**Toliau:** **PR7 BAIGTAS** — abu puslapiai (list + root dashboard) ant
+`suspense/provider-dashboard`, push'inta, NEMERGE'inta. Task B (root, §Page 1):
+878-eil. klientas → statinis header (h1) virš gate + 5 sekcijos kiekviena savam
+`<Suspense>`. **C4 laikytasi — JOKIŲ naujų sekcijų:** "recent matching requests"
+ir "recent reviews" NEDARYTI (šiandien dashboard rodo tik count'us). nextAction
+CTA įdėtas į `StatsGrid` (jam reikia matchingRequests → `expandToMatchSet`
+sumokamas VIENĄ kartą). acceptedCount header subtitle nuimtas (h1-only static
+header per §C sketch; acceptedCount lieka "Priimti" tile'e). `/api/tiekejas/stats`
+ištrintas (grep — vienintelis vartotojas buvo ištrintas klientas).
+**SĄMONINGAS pakeitimas:** quick-links nebešviesina disabled būsenos
+unverified/suspended tiekėjams (sync grid negali skaityti canAccess be fetch'o).
+Mitiguota — destination puslapiai gate'ina + AccountCard rodo banner'ius;
+jei reviewer'is nori atgal — daryti QuickLinksGrid async + savo Suspense (žr.
+NOTES.md). **NETESTUOTA su realiu PROVIDER account'u** (nėra test acc; dev server
+→ live DB; `FollowUpsCard`/`InboxUnreadBadge` daro reads, `recordFollowUpScan`
+WRITE per render). Vercel preview QA reikalinga: multi-stage streaming
+(account→stats→completeness→follow-ups, NE vienas spinner→viskas), story modal,
+quick-links + unread badge, non-PROVIDER redirect, no-profile CTA. Build praeina,
+`◐ /tiekejas`. Unauthenticated→/prisijungti patikrinta lokaliai. Žr. NOTES.md
+PR7 follow-up'us (recordFollowUpScan/recordAiRun-in-render, canAccess per-section
+dubliavimas, quick-links disabling).
+
+
+## 2026-05-28 15:58 — Claude
+
+**Commit:** `176c8fd` — perf(tiekejas/uzklausos): stream request list via server sections · push'inta
+(+ prereq `c712a8e` — fix(auth): make SessionGate renderable as a JSX component)
+
+**Pakeitimai:** 9 files changed, 1017 insertions(+), 615 deletions(-) (+ SessionGate.tsx)
+
+**Failai:**
+- src/app/tiekejas/uzklausos/page.tsx (thin shell: Suspense → SessionGate requireRole=PROVIDER)
+- src/app/tiekejas/uzklausos/RequestsFilterShell.tsx (NEW, "use client" — search/sort/filter URL state; credit badge + list as slots)
+- src/app/tiekejas/uzklausos/sections/RequestsList.tsx (NEW, async server — query+scoring+getUnlockedRequestIds, await searchParams inside)
+- src/app/tiekejas/uzklausos/sections/CreditBadge.tsx (NEW, async server)
+- src/app/tiekejas/uzklausos/sections/RequestCard.tsx (NEW, server)
+- src/components/ui/skeletons/{RequestsListSkeleton,CreditBadgeSkeleton}.tsx + index.ts
+- (del) src/app/tiekejas/uzklausos/RequestsListClient.tsx (558 eil.)
+- src/components/auth/SessionGate.tsx (Fragment-wrap fix — žr. c712a8e)
+
+**Toliau:** PR7 Task A (list, SUSPENSE_PLAN §Page 2) baigtas. **`c712a8e` SVARBU
+visiems:** generinis `<SessionGate>` iki šiol niekur nebuvo renderintas kaip JSX
+— jis turėjo latentų tipo bug'ą (`Promise<ReactNode>` su @types/react 18.3 bigint
+mismatch). Sutvarkyta (Fragment wrap). **PRs 3,4,6 (mp-pr3/4/6) irgi importuos
+`<SessionGate>` ir be šito fix'o jų build'as lūš** — kas merge'ins pirmas, tas
+atneša fix'ą į main; kitiems reikės rebase. C2 laikytasi: jokio `key` ant Suspense,
+`searchParams` Promise await'inamas `RequestsList` viduje (page lieka statinis ◐ PPR).
+Filter shell paliktas client (URL state); optimistinis in-memory filtravimas
+SĄMONINGAI nedarytas (§Page 2 Risk F — pridėti tik jei latency erzins). Build praeina,
+route = `◐ /tiekejas/uzklausos`. **NETESTUOTA su realiu PROVIDER account'u** (nėra
+test acc; dev server jungiasi prie live DB; `RequestsList` daro `recordAiRun` WRITE)
+— reikia Vercel preview QA: skeleton→cards streaming, filtrų responsyvumas, kreditų
+badge, pagination Link'ai, non-PROVIDER redirect. Unauthenticated→/prisijungti
+patikrinta lokaliai. **Kitas: Task B — `/tiekejas` root dashboard** (toj pačioj
+branch'oj; SUSPENSE_PLAN §Page 1 + C4 restructure-only). Žr. NOTES.md follow-up'us.
+
 ## 2026-05-28 06:59 — Claude
 
 **Commit:** `a470b59` — perf(paskyra/profilis): hoist static header above the Suspense boundary · push'inta

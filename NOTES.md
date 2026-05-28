@@ -225,6 +225,64 @@ Konvencija:
   koks mobile/external klientas naudoja GET'ą; jei ne — ištrinti tik GET
   handler'į (palikti POST). Ne blokeris.
 
+## Suspense PR7 follow-ups (tiekejas/uzklausos + dashboard)
+
+- [ ] **2026-05-28 — Optimistinis filtravimas `/tiekejas/uzklausos` (jei reikės).**
+  Lista dabar serverinė: filtro keitimas = URL navigacija → `RequestsList`
+  re-streamina (sena lista lieka matoma per transition, jokio full-page blank).
+  Per §Page 2 Risk F optimistinis in-memory filtravimas SĄMONINGAI nedarytas.
+  Jei QA/vartotojai skųsis filtrų latency (~500-1000ms dėl lėtos užklausos),
+  TADA pridėti optimistinį client filtravimą ant turimo puslapio dataset'o.
+  Nematuota su realiu account'u — pamatuoti pirma.
+
+- [ ] **2026-05-28 — `recordAiRun` dabar kviečiamas iš server-komponento render'io.**
+  Buvo route handler'yje (`/api/tiekejas/uzklausos`), dabar `RequestsList.tsx`
+  viduje (`void recordAiRun(...)`, fire-and-forget). Semantic-match shadow
+  telemetrija turėtų rašytis 1x per request dinamiškame render'e (po
+  `await searchParams` bailout'o — build'e nesirašo). Patikrinti prod logs,
+  kad `semantic_match_shadow` įrašai vis dar atsiranda ir nedubliuojasi.
+
+- [ ] **2026-05-28 — Result count perkeltas į `RequestsList` (serveris).**
+  Anksčiau buvo chip'ų eilutėje (`{total} užklausų`, dešinėje, kartu su filtrų
+  chip'ais). Dabar — virš kortelių sąrašo (dešinėje), nes `total` ateina iš
+  serverinės užklausos, o chip'ai liko client filter shell'e. Smulkmena, bet
+  QA metu patikrinti, kad atrodo tvarkingai (gali būti viena papildoma eilutė).
+
+- [ ] **2026-05-28 — `/api/tiekejas/uzklausos` route ir `ui/Pagination` be UI vartotojo.**
+  Po list refactor'o `/api/tiekejas/uzklausos/route.ts` nebeturi naršyklės
+  vartotojo (logika perkelta į `RequestsList`). `src/components/ui/Pagination.tsx`
+  (client, `onPageChange`) irgi liko be vartotojų — listoj naudojami `<Link>`
+  pagination. Abu palikti (galimi mobile/ateities vartotojai). Prieš trinant —
+  grep per visą repo + mobile klientus. Ne šito PR'o scope.
+
+- [ ] **2026-05-28 — `/tiekejas` quick-links nebešviesina disabled būsenos.**
+  Anksčiau Užklausos/Žinutės kortelės buvo grayed-out + "Patvirtinkite el. paštą"
+  / "Paskyra sustabdyta" kai `!canAccessRequests`. `QuickLinksGrid` dabar sync
+  (per planą), tad nemato canAccess be fetch'o — kortelės visada enabled.
+  Mitigacija: destination puslapiai gate'ina (`/tiekejas/uzklausos` redirect'ina
+  unverified/suspended į /tiekejas; patikrinti, ar `/tiekejas/zinutes` +
+  `/tiekejas/atsakymai` daro tą patį) + AccountCard rodo verif/suspension
+  banner'ius. Jei norisi disabling atgal: `QuickLinksGrid` → async server su savo
+  `<Suspense>`, skaityti canAccess (emailVerified+isActive), rodyti disabled
+  korteles.
+
+- [ ] **2026-05-28 — Telemetrija rašoma iš server-komponento render'io (2 vietos).**
+  `RequestsList` (`void recordAiRun`) ir `FollowUpsCard` (`await
+  recordFollowUpScan`) — abu buvo route handler'iuose, dabar render'e.
+  Faithful (1x per request dinamiškame render'e), bet side-effect render'e.
+  Švaresnis variantas: `import { after } from "next/server"` ir įdėti rašymą į
+  `after(() => ...)` kad nestabdytų stream'o ir tikrai nebūtų dropinamas.
+  Patikrinti prod logs, kad `semantic_match_shadow` + follow-up scan įrašai
+  vis dar atsiranda.
+
+- [ ] **2026-05-28 — canAccess (emailVerified+isActive) skaitomas per-sekciją.**
+  `/tiekejas` 5 sekcijos (AccountCard, StatsGrid, ProfileCompleteness,
+  FollowUps, QuickLinks/InboxUnreadBadge) kiekviena nepriklausomai skaito
+  user/profile. Per Suspense planą tai sąmoninga (nepriklausomas streaming,
+  connection pool atlaiko paralelinius reads). Jei profiling parodys, kad svarbu
+  — galima hoist'inti canAccess į vieną wrapper'į ir paduoti props'ais (kaina:
+  ~30-50ms blokavimas prieš sekcijų streaming'ą).
+
 ## Build / priklausomybės
 
 - [x] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**

@@ -12,10 +12,16 @@
  *   when data streams in. Build and verify each shape against the live layout
  *   — never pre-build page-specific skeletons speculatively.
  *
- * This PR establishes the home + convention only; pages add their shapes here.
+ * Shapes are added per page as each Suspense PR lands.
  */
 export { ResponsesListSkeleton } from "./ResponsesListSkeleton";
 export { ThreadViewSkeleton } from "./ThreadViewSkeleton";
 export { ConversationListSkeleton } from "./ConversationListSkeleton";
 export { default as InquiriesListSkeleton } from "./InquiriesListSkeleton";
 export { default as MyRequestsListSkeleton } from "./MyRequestsListSkeleton";
+export { CreditBadgeSkeleton } from "./CreditBadgeSkeleton";
+export { RequestsListSkeleton } from "./RequestsListSkeleton";
+export { AccountCardSkeleton } from "./AccountCardSkeleton";
+export { StatsGridSkeleton } from "./StatsGridSkeleton";
+export { ProfileCompletenessSkeleton } from "./ProfileCompletenessSkeleton";
+export { FollowUpsSkeleton } from "./FollowUpsSkeleton";
