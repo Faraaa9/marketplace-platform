@@ -17,6 +17,46 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 15:59 — Claude
+
+**Commit:** `d1bde0f` — perf(uzklausos/sekti): stream request tracker via granular Suspense · lokalus
+
+**Pakeitimai:** 11 files changed, 949 insertions(+), 632 deletions(-)
+
+**Failai:**
+- src/app/uzklausos/sekti/[id]/ProposalsClient.tsx
+- src/app/uzklausos/sekti/[id]/TrackRequestClient.tsx
+- src/app/uzklausos/sekti/[id]/ViewerBanner.tsx
+- src/app/uzklausos/sekti/[id]/data.ts
+- src/app/uzklausos/sekti/[id]/loading.tsx
+- src/app/uzklausos/sekti/[id]/not-found.tsx
+- src/app/uzklausos/sekti/[id]/page.tsx
+- src/app/uzklausos/sekti/[id]/sections/ProposalsSection.tsx
+- src/app/uzklausos/sekti/[id]/sections/RequestBody.tsx
+- src/app/uzklausos/sekti/[id]/sections/RequestHeader.tsx
+- src/app/uzklausos/sekti/[id]/skeletons.tsx
+
+**Toliau:** PR5 (SUSPENSE_PLAN.md §Page 11) baigtas ant `suspense/tracker-page`
+(push'inta, **NEMERGE'INTA**). `/uzklausos/sekti/[id]` Pattern A → PPR: statinis
+shell + 3 Suspense boundaries — `RequestHeader` (badge/title/meta/alerts/timeline/
+view-count/banneriai, paišo pirmas), `RequestBody` (aprašymas + `ViewerBanner`),
+`ProposalsSection` (lėtas responses+messages query, streamina paskutinis →
+`ProposalsClient`). `ViewerBanner` client island su session loading-gate (nerodo
+"sukurti paskyrą" CTA flash'o login'usiems). `ThreadChat` lieka realtime client
+leaf — serveris pre-fetchina initialMessages, klientas subscribe'ina (Suspense
+nevaldo subscription'o). `data.ts` centralizuoja serverio reads (cached light
+summary header+body; heavy proposals su `after()` read-receipt). Mutacijos
+(accept/close/delete/review/claim) → `router.refresh()`. `pnpm build` praeina
+(route ◐ Partial Prerender), `tsc --noEmit` švarus. Lokalus QA (3 realūs token'ai,
+anon): header/body/proposals/ThreadChat OK; ViewerBanner matrica OK (claimed→tik
+bookmark; unclaimed→create-account; IN_PROGRESS→accepted card + ReviewForm); jokių
+console/hydration error'ų. **Netestuota live:** login'usio owner'io claim CTA +
+dviejų sesijų realtime žinučių apsikeitimas (vengiau mutuoti live DB / nėra test
+account'o) — kodo keliai nepakeisti, tik data-fetch perkeltas į serverį. **Prieš
+merge:** Vercel preview QA su realiu USER/PROVIDER account'u (streaming order +
+two-session realtime). `/api/requests/[id]` paliktas (žr. NOTES follow-up).
+
+
 ## 2026-05-28 06:59 — Claude
 
 **Commit:** `a470b59` — perf(paskyra/profilis): hoist static header above the Suspense boundary · push'inta
