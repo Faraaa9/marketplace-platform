@@ -96,7 +96,7 @@ importers:
         specifier: 0.34.5
         version: 0.34.5
       stripe:
-        specifier: ^22.0.0
+        specifier: 22.1.1
         version: 22.1.1(@types/node@20.19.41)
       tailwind-merge:
         specifier: ^3.5.0
