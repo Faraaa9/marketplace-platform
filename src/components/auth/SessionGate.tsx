@@ -32,5 +32,9 @@ export async function SessionGate({
     redirect("/");
   }
 
-  return children(session.user.id);
+  // Wrap in a Fragment so the async component's inferred return type is
+  // Promise<JSX.Element> rather than the broad Promise<ReactNode> — the latter
+  // is rejected as a JSX element type under @types/react 18.3 (the bigint vs.
+  // AwaitedReactNode mismatch). Behaviourally identical.
+  return <>{children(session.user.id)}</>;
 }
