@@ -198,6 +198,34 @@ Konvencija:
   pagination. Abu palikti (galimi mobile/ateities vartotojai). Prieš trinant —
   grep per visą repo + mobile klientus. Ne šito PR'o scope.
 
+- [ ] **2026-05-28 — `/tiekejas` quick-links nebešviesina disabled būsenos.**
+  Anksčiau Užklausos/Žinutės kortelės buvo grayed-out + "Patvirtinkite el. paštą"
+  / "Paskyra sustabdyta" kai `!canAccessRequests`. `QuickLinksGrid` dabar sync
+  (per planą), tad nemato canAccess be fetch'o — kortelės visada enabled.
+  Mitigacija: destination puslapiai gate'ina (`/tiekejas/uzklausos` redirect'ina
+  unverified/suspended į /tiekejas; patikrinti, ar `/tiekejas/zinutes` +
+  `/tiekejas/atsakymai` daro tą patį) + AccountCard rodo verif/suspension
+  banner'ius. Jei norisi disabling atgal: `QuickLinksGrid` → async server su savo
+  `<Suspense>`, skaityti canAccess (emailVerified+isActive), rodyti disabled
+  korteles.
+
+- [ ] **2026-05-28 — Telemetrija rašoma iš server-komponento render'io (2 vietos).**
+  `RequestsList` (`void recordAiRun`) ir `FollowUpsCard` (`await
+  recordFollowUpScan`) — abu buvo route handler'iuose, dabar render'e.
+  Faithful (1x per request dinamiškame render'e), bet side-effect render'e.
+  Švaresnis variantas: `import { after } from "next/server"` ir įdėti rašymą į
+  `after(() => ...)` kad nestabdytų stream'o ir tikrai nebūtų dropinamas.
+  Patikrinti prod logs, kad `semantic_match_shadow` + follow-up scan įrašai
+  vis dar atsiranda.
+
+- [ ] **2026-05-28 — canAccess (emailVerified+isActive) skaitomas per-sekciją.**
+  `/tiekejas` 5 sekcijos (AccountCard, StatsGrid, ProfileCompleteness,
+  FollowUps, QuickLinks/InboxUnreadBadge) kiekviena nepriklausomai skaito
+  user/profile. Per Suspense planą tai sąmoninga (nepriklausomas streaming,
+  connection pool atlaiko paralelinius reads). Jei profiling parodys, kad svarbu
+  — galima hoist'inti canAccess į vieną wrapper'į ir paduoti props'ais (kaina:
+  ~30-50ms blokavimas prieš sekcijų streaming'ą).
+
 ## Build / priklausomybės
 
 - [x] **2026-05-28 — `sharp` importuojamas, bet nedeklaruotas `package.json`.**

@@ -17,6 +17,54 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-28 16:25 — Claude
+
+**Commit:** `172c5e7` — perf(tiekejas): stream provider dashboard via server sections · push'inta
+(+ `e4aa5e5` — perf(tiekejas): add provider dashboard section skeletons)
+
+**Pakeitimai:** 14 files changed, 1275 insertions(+), 1116 deletions(-) (+ 4 skeletonai e4aa5e5)
+
+**Failai:**
+- src/app/api/tiekejas/stats/route.ts
+- src/app/tiekejas/AccountStoryAvatar.tsx
+- src/app/tiekejas/ProviderDashboardClient.tsx
+- src/app/tiekejas/ProviderFollowUpsCard.tsx
+- src/app/tiekejas/ResendVerificationBanner.tsx
+- src/app/tiekejas/StoryModal.tsx
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/sections/AccountCard.tsx
+- src/app/tiekejas/sections/FollowUpsCard.tsx
+- src/app/tiekejas/sections/InboxUnreadBadge.tsx
+- src/app/tiekejas/sections/ProfileCompletenessCard.tsx
+- src/app/tiekejas/sections/QuickLinksGrid.tsx
+- src/app/tiekejas/sections/StatsGrid.tsx + InboxUnreadBadge.tsx
+- src/app/tiekejas/{StoryModal,AccountStoryAvatar,ResendVerificationBanner}.tsx (client leaves)
+- src/lib/provider-completeness.ts (NEW shared helper)
+- (del) ProviderDashboardClient.tsx (878 eil.) + api/tiekejas/stats/route.ts
+
+**Toliau:** **PR7 BAIGTAS** — abu puslapiai (list + root dashboard) ant
+`suspense/provider-dashboard`, push'inta, NEMERGE'inta. Task B (root, §Page 1):
+878-eil. klientas → statinis header (h1) virš gate + 5 sekcijos kiekviena savam
+`<Suspense>`. **C4 laikytasi — JOKIŲ naujų sekcijų:** "recent matching requests"
+ir "recent reviews" NEDARYTI (šiandien dashboard rodo tik count'us). nextAction
+CTA įdėtas į `StatsGrid` (jam reikia matchingRequests → `expandToMatchSet`
+sumokamas VIENĄ kartą). acceptedCount header subtitle nuimtas (h1-only static
+header per §C sketch; acceptedCount lieka "Priimti" tile'e). `/api/tiekejas/stats`
+ištrintas (grep — vienintelis vartotojas buvo ištrintas klientas).
+**SĄMONINGAS pakeitimas:** quick-links nebešviesina disabled būsenos
+unverified/suspended tiekėjams (sync grid negali skaityti canAccess be fetch'o).
+Mitiguota — destination puslapiai gate'ina + AccountCard rodo banner'ius;
+jei reviewer'is nori atgal — daryti QuickLinksGrid async + savo Suspense (žr.
+NOTES.md). **NETESTUOTA su realiu PROVIDER account'u** (nėra test acc; dev server
+→ live DB; `FollowUpsCard`/`InboxUnreadBadge` daro reads, `recordFollowUpScan`
+WRITE per render). Vercel preview QA reikalinga: multi-stage streaming
+(account→stats→completeness→follow-ups, NE vienas spinner→viskas), story modal,
+quick-links + unread badge, non-PROVIDER redirect, no-profile CTA. Build praeina,
+`◐ /tiekejas`. Unauthenticated→/prisijungti patikrinta lokaliai. Žr. NOTES.md
+PR7 follow-up'us (recordFollowUpScan/recordAiRun-in-render, canAccess per-section
+dubliavimas, quick-links disabling).
+
+
 ## 2026-05-28 15:58 — Claude
 
 **Commit:** `176c8fd` — perf(tiekejas/uzklausos): stream request list via server sections · push'inta
