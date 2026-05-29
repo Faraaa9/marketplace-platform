@@ -504,6 +504,31 @@ export async function resolveModel(touchpointId: string, fallback: string): Prom
 }
 
 /**
+ * Whether an activated admin override is in effect for a touchpoint. Used by the
+ * AI modules to stamp ai_runs.promptVersion (e.g. "...-v1+override") so the audit
+ * can tell default vs overridden runs apart. Reads the same short-TTL cache.
+ */
+export async function getActiveOverrideFlags(
+  touchpointId: string,
+): Promise<{ model: boolean; prompt: boolean }> {
+  const map = await loadActiveConfigs();
+  const cfg = map[touchpointId];
+  return {
+    model: Boolean(cfg?.model && cfg.model.trim()),
+    prompt: Boolean(cfg?.prompts && Object.keys(cfg.prompts).length > 0),
+  };
+}
+
+/** Append "+override" to a base prompt version when an admin prompt override is active. */
+export async function resolvePromptVersion(
+  touchpointId: string,
+  baseVersion: string,
+): Promise<string> {
+  const flags = await getActiveOverrideFlags(touchpointId);
+  return flags.prompt ? `${baseVersion}+override` : baseVersion;
+}
+
+/**
  * Resolve a prompt for a touchpoint+key, interpolating {{tokens}}. An activated
  * admin override wins; otherwise the code default template is used.
  */

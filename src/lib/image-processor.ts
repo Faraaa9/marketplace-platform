@@ -1,6 +1,8 @@
 import sharp from "sharp";
 import { getConfiguredCloudinary, isCloudinaryConfigured } from "./cloudinary";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter } from "@/lib/ai/openrouter";
+import { recordAiRun } from "@/lib/ai/audit";
 
 interface ProcessOptions {
   // Crop the bottom % of the image — useful for paslaugos.lt watermark
@@ -101,6 +103,8 @@ export async function processAndUploadImage(
 // Must be at least Gemini 3.1 quality — older Gemini 2.x image models and the
 // previously used Pollinations flux model are not acceptable for new profiles.
 export const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+const IMAGE_TIMEOUT_MS = 60_000;
+const IMAGE_PROMPT_VERSION = "image-generate-v1";
 
 /**
  * Generate an AI image from a prompt via OpenRouter using a Gemini 3-class
@@ -113,96 +117,115 @@ export async function generateAIImage(
 ): Promise<string | null> {
   if (!prompt.trim()) return null;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    console.warn("OPENROUTER_API_KEY not configured — skipping AI image gen");
-    return null;
-  }
-
   const model = await resolveModel(
     "image_generate",
     process.env.OPENROUTER_IMAGE_MODEL || DEFAULT_IMAGE_MODEL,
   );
+  const promptVersion = await resolvePromptVersion("image_generate", IMAGE_PROMPT_VERSION);
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
+    console.warn("OPENROUTER_API_KEY not configured — skipping AI image gen");
+    await recordAiRun({
+      feature: "image_generate",
+      status: "error",
+      provider: "openrouter",
+      model,
+      promptVersion,
+      errorCode: "AI_NOT_CONFIGURED",
+    });
+    return null;
+  }
+
   const width = options.width ?? 1024;
   const height = options.height ?? 768;
   const userPrompt = await resolvePrompt("image_generate", "user", { prompt, width, height });
 
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: IMAGE_TIMEOUT_MS,
+    modalities: ["image", "text"],
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const logImage = (
+    status: "success" | "error",
+    errorCode?: string,
+    extra?: Record<string, unknown>,
+  ) =>
+    recordAiRun({
+      feature: "image_generate",
+      status,
+      provider: "openrouter",
+      model: call.model,
+      promptVersion,
+      latencyMs: call.latencyMs,
+      errorCode,
+      metadata: {
+        attempts: call.attempts,
+        promptTokens: call.usage?.promptTokens ?? null,
+        completionTokens: call.usage?.completionTokens ?? null,
+        totalTokens: call.usage?.totalTokens ?? null,
+        ...extra,
+      },
+    });
+
+  if (!call.ok) {
+    await logImage("error", call.errorKind === "timeout" ? "AI_TIMEOUT" : "AI_REQUEST_FAILED");
+    return null;
+  }
+
+  const message = (
+    call.raw as {
+      choices?: Array<{
+        message?: { images?: Array<{ image_url?: { url?: string }; url?: string }> };
+      }>;
+    } | null
+  )?.choices?.[0]?.message;
+  const imageUrl: string | undefined =
+    message?.images?.[0]?.image_url?.url || message?.images?.[0]?.url || undefined;
+
+  if (!imageUrl) {
+    await logImage("error", "AI_EMPTY_RESPONSE");
+    console.warn("AI image generation: no image in response", { model: call.model });
+    return null;
+  }
+
   try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          modalities: ["image", "text"],
-          messages: [
-            {
-              role: "user",
-              content: userPrompt,
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.warn(
-        `AI image generation HTTP ${response.status}: ${detail.slice(0, 200)}`
-      );
-      return null;
-    }
-
-    const data = await response.json();
-    const message = data?.choices?.[0]?.message;
-    const imageUrl: string | undefined =
-      message?.images?.[0]?.image_url?.url ||
-      message?.images?.[0]?.url ||
-      (typeof message?.content === "string" ? undefined : undefined);
-
-    if (!imageUrl) {
-      console.warn("AI image generation: no image in response", {
-        model,
-        hasMessage: Boolean(message),
-      });
-      return null;
-    }
-
     // The image comes back as a base64 data URL (data:image/png;base64,...)
     const buffer = await dataUrlOrHttpToBuffer(imageUrl);
     if (!buffer) {
+      await logImage("error", "IMAGE_DECODE_FAILED");
       console.warn("AI image generation: failed to decode image data");
       return null;
     }
 
     if (!isCloudinaryConfigured()) {
+      await logImage("success", undefined, { cloudinary: false });
       return imageUrl;
     }
 
     const cloudinary = getConfiguredCloudinary();
-    const uploadResult = await new Promise<{ secure_url: string }>(
-      (resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: options.folder || "provider-ai-generated",
-            resource_type: "image",
-            transformation: [{ quality: "auto", fetch_format: "auto" }],
-          },
-          (err, result) => {
-            if (err || !result) return reject(err);
-            resolve(result as { secure_url: string });
-          }
-        );
-        stream.end(buffer);
-      }
-    );
+    const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: options.folder || "provider-ai-generated",
+          resource_type: "image",
+          transformation: [{ quality: "auto", fetch_format: "auto" }],
+        },
+        (err, result) => {
+          if (err || !result) return reject(err);
+          resolve(result as { secure_url: string });
+        }
+      );
+      stream.end(buffer);
+    });
 
+    await logImage("success", undefined, { cloudinary: true });
     return uploadResult.secure_url;
   } catch (error) {
+    await logImage("error", "IMAGE_UPLOAD_FAILED");
     console.warn(
       "AI image generation failed:",
       error instanceof Error ? error.message : error

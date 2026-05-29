@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateProposalDraft, AiProposalError } from "@/lib/ai-proposal";
-import { recordAiRun } from "@/lib/ai/audit";
 
 /**
  * Generates an AI proposal draft for the provider, built from their own
@@ -16,7 +15,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   let requestId: string | null = null;
   let actorUserId: string | null = null;
   let providerProfileId: string | null = null;
-  let aiStartedAt: number | null = null;
   try {
     const { id } = await params;
     requestId = id;
@@ -76,7 +74,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     const categoryLabel = request.categoryRef?.name ?? "";
 
-    aiStartedAt = Date.now();
     const result = await generateProposalDraft(
       {
         name: user?.name?.trim() || "Tiekėjas",
@@ -100,41 +97,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         deadline: request.deadline,
         clientName: request.clientName,
       },
-    );
-    await recordAiRun({
-      feature: "proposal_draft",
-      status: "success",
-      provider: "openrouter",
-      model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
-      promptVersion: "proposal-draft-v1",
-      latencyMs: Date.now() - aiStartedAt,
-      actorUserId: actorUserId ?? undefined,
-      entityType: "ServiceRequest",
-      entityId: requestId ?? undefined,
-      metadata: {
+      {
+        actorUserId: actorUserId ?? undefined,
+        requestId: requestId ?? undefined,
         providerProfileId,
-        messageLength: result.message.length,
-        reviews: reviews.length,
       },
-    });
+    );
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    if (aiStartedAt) {
-      await recordAiRun({
-        feature: "proposal_draft",
-        status: "error",
-        provider: "openrouter",
-        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
-        promptVersion: "proposal-draft-v1",
-        latencyMs: Date.now() - aiStartedAt,
-        actorUserId: actorUserId ?? undefined,
-        entityType: requestId ? "ServiceRequest" : undefined,
-        entityId: requestId ?? undefined,
-        errorCode: error instanceof AiProposalError ? error.message : "PROPOSAL_DRAFT_FAILED",
-        metadata: { providerProfileId },
-      });
-    }
     if (error instanceof AiProposalError) {
       if (error.message === "AI_NOT_CONFIGURED") {
         return NextResponse.json(

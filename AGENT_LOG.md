@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 23:09 — Claude
+
+**Commit:** `7153210` — feat(ai): shared OpenRouter client + log the real model/usage per touchpoint
+
+**Pakeitimai:** 18 files changed, 997 insertions(+), 742 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/api/category-suggestions/route.ts
+- src/app/api/profile/ai-generate/route.ts
+- src/app/api/requests/improve/route.ts
+- src/app/api/requests/transcribe/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/juodrastis/route.ts
+- src/lib/ai-improve.ts
+- src/lib/ai-proposal.ts
+- src/lib/ai-transcribe.ts
+- src/lib/ai/lead-copilot.ts
+- src/lib/ai/openrouter.ts
+- src/lib/ai/prompt-config.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 22:28 — Claude
 
 **Commit:** `97a4b64` — feat(stories): view tracking, reactions, contact CTA, seen-state
