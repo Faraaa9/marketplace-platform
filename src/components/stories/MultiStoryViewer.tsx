@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, X } from "lucide-react";
+import StoryEngagementBar from "./StoryEngagementBar";
+import { useStoryEngagement, useStoryPlayer } from "./story-viewer-hooks";
 
 export interface StoryItem {
   id: string;
@@ -19,6 +21,7 @@ export interface StoryProvider {
   providerImage: string | null;
   providerSlug: string;
   stories: StoryItem[];
+  seen?: boolean;
 }
 
 interface MultiStoryViewerProps {
@@ -29,6 +32,8 @@ interface MultiStoryViewerProps {
   onChange: (providerIdx: number, storyIdx: number) => void;
 }
 
+const STORY_DURATION = 6000;
+
 export default function MultiStoryViewer({
   providers,
   providerIndex,
@@ -38,7 +43,6 @@ export default function MultiStoryViewer({
 }: MultiStoryViewerProps) {
   const provider = providers[providerIndex];
   const story = provider?.stories[storyIndex];
-  const touchStartX = useRef(0);
   const [mounted, setMounted] = useState(false);
 
   // Render into document.body via portal — avoids stacking/containing-block
@@ -57,13 +61,33 @@ export default function MultiStoryViewer({
     };
   }, []);
 
-  // Auto-advance: 6s per story; jump to next provider when finished
-  useEffect(() => {
-    if (!provider || !story) return;
-    const timer = setTimeout(() => advance(), 6000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerIndex, storyIndex]);
+  const advance = useCallback(() => {
+    if (!provider) return;
+    if (storyIndex < provider.stories.length - 1) {
+      onChange(providerIndex, storyIndex + 1);
+    } else if (providerIndex < providers.length - 1) {
+      onChange(providerIndex + 1, 0);
+    } else {
+      onClose();
+    }
+  }, [provider, providerIndex, storyIndex, providers, onChange, onClose]);
+
+  const retreat = useCallback(() => {
+    if (storyIndex > 0) {
+      onChange(providerIndex, storyIndex - 1);
+    } else if (providerIndex > 0) {
+      const prev = providers[providerIndex - 1];
+      onChange(providerIndex - 1, prev.stories.length - 1);
+    }
+  }, [storyIndex, providerIndex, providers, onChange]);
+
+  const { myReaction, react } = useStoryEngagement(story?.id);
+  const { paused, pointerHandlers } = useStoryPlayer({
+    duration: STORY_DURATION,
+    onAdvance: advance,
+    onRetreat: retreat,
+    resetKey: `${providerIndex}:${storyIndex}`,
+  });
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -73,41 +97,10 @@ export default function MultiStoryViewer({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerIndex, storyIndex]);
-
-  function advance() {
-    if (!provider) return;
-    if (storyIndex < provider.stories.length - 1) {
-      onChange(providerIndex, storyIndex + 1);
-    } else if (providerIndex < providers.length - 1) {
-      onChange(providerIndex + 1, 0);
-    } else {
-      onClose();
-    }
-  }
-
-  function retreat() {
-    if (storyIndex > 0) {
-      onChange(providerIndex, storyIndex - 1);
-    } else if (providerIndex > 0) {
-      const prev = providers[providerIndex - 1];
-      onChange(providerIndex - 1, prev.stories.length - 1);
-    }
-  }
-
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
-  }
-
-  function handleTouchEnd(e: React.TouchEvent) {
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) <= 50) return;
-    if (diff > 0) advance();
-    else retreat();
-  }
+  }, [advance, retreat, onClose]);
 
   function timeAgo(dateStr: string) {
+    // eslint-disable-next-line react-hooks/purity
     const ms = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(ms / 60000);
     if (mins < 60) return `${Math.max(1, mins)} min.`;
@@ -144,7 +137,8 @@ export default function MultiStoryViewer({
                     ? { width: "100%" }
                     : i === storyIndex
                       ? {
-                          animation: "story-progress 6s linear forwards",
+                          animation: `story-progress ${STORY_DURATION}ms linear forwards`,
+                          animationPlayState: paused ? "paused" : "running",
                         }
                       : { width: "0%" }
                 }
@@ -193,46 +187,52 @@ export default function MultiStoryViewer({
           </button>
         </div>
 
-        {/* Story image */}
+        {/* Story image — tap zones / hold-to-pause / swipe handled here */}
         <div
-          className="relative aspect-[9/16] max-h-[70vh] overflow-hidden rounded-2xl bg-surface-900"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          className="relative aspect-[9/16] max-h-[70vh] touch-none select-none overflow-hidden rounded-2xl bg-surface-900"
+          {...pointerHandlers}
         >
           <Image
             src={story.imageUrl}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 448px"
-            className="object-cover"
+            className="pointer-events-none object-cover"
             priority
           />
 
           {story.text && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4">
               <p className="text-sm leading-relaxed text-white">{story.text}</p>
             </div>
           )}
 
           {hasPrev && (
-            <button
-              onClick={retreat}
-              className="absolute inset-y-0 left-0 flex w-1/3 items-center justify-start pl-2"
-              aria-label="Ankstesnė"
-            >
-              <ChevronLeft className="h-8 w-8 text-white/50 drop-shadow transition-colors hover:text-white/90" />
-            </button>
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex w-1/3 items-center justify-start pl-2">
+              <ChevronLeft className="h-8 w-8 text-white/40 drop-shadow" />
+            </div>
           )}
           {hasNext && (
-            <button
-              onClick={advance}
-              className="absolute inset-y-0 right-0 flex w-1/3 items-center justify-end pr-2"
-              aria-label="Kita"
-            >
-              <ChevronRight className="h-8 w-8 text-white/50 drop-shadow transition-colors hover:text-white/90" />
-            </button>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex w-1/3 items-center justify-end pr-2">
+              <ChevronRight className="h-8 w-8 text-white/40 drop-shadow" />
+            </div>
           )}
         </div>
+
+        <StoryEngagementBar
+          myReaction={myReaction}
+          onReact={react}
+          contact={
+            <Link
+              href={`/meistrai/${provider.providerSlug}#zinute`}
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+            >
+              <Send className="h-4 w-4" />
+              Susisiekti
+            </Link>
+          }
+        />
       </div>
     </div>,
     document.body

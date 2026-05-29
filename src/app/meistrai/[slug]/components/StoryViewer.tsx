@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, X } from "lucide-react";
 import type { StoryData } from "./types";
+import StoryEngagementBar from "@/components/stories/StoryEngagementBar";
+import {
+  useStoryEngagement,
+  useStoryPlayer,
+} from "@/components/stories/story-viewer-hooks";
 
 interface StoryViewerProps {
   stories: StoryData[];
@@ -12,7 +17,11 @@ interface StoryViewerProps {
   providerImage: string | null;
   onClose: () => void;
   onIndexChange: (index: number) => void;
+  /** Opens the profile's inquiry form. Omitted on the provider's own profile. */
+  onContact?: () => void;
 }
+
+const STORY_DURATION = 6000;
 
 export default function StoryViewer({
   stories,
@@ -21,11 +30,11 @@ export default function StoryViewer({
   providerImage,
   onClose,
   onIndexChange,
+  onContact,
 }: StoryViewerProps) {
   const story = stories[index];
   const hasNext = index < stories.length - 1;
   const hasPrev = index > 0;
-  const touchStartX = useRef(0);
 
   useEffect(() => {
     const original = document.body.style.overflow;
@@ -35,34 +44,32 @@ export default function StoryViewer({
     };
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (hasNext) onIndexChange(index + 1);
-      else onClose();
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, [index, hasNext, onClose, onIndexChange]);
+  const advance = useCallback(() => {
+    if (index < stories.length - 1) onIndexChange(index + 1);
+    else onClose();
+  }, [index, stories.length, onIndexChange, onClose]);
+
+  const retreat = useCallback(() => {
+    if (index > 0) onIndexChange(index - 1);
+  }, [index, onIndexChange]);
+
+  const { myReaction, react } = useStoryEngagement(story?.id);
+  const { paused, pointerHandlers } = useStoryPlayer({
+    duration: STORY_DURATION,
+    onAdvance: advance,
+    onRetreat: retreat,
+    resetKey: index,
+  });
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight" && hasNext) onIndexChange(index + 1);
-      if (e.key === "ArrowLeft" && hasPrev) onIndexChange(index - 1);
+      if (e.key === "ArrowRight") advance();
+      if (e.key === "ArrowLeft") retreat();
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [index, hasNext, hasPrev, onClose, onIndexChange]);
-
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
-  }
-
-  function handleTouchEnd(e: React.TouchEvent) {
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) <= 50) return;
-    if (diff > 0 && hasNext) onIndexChange(index + 1);
-    if (diff < 0 && hasPrev) onIndexChange(index - 1);
-  }
+  }, [advance, retreat, onClose]);
 
   function timeAgo(dateStr: string) {
     // eslint-disable-next-line react-hooks/purity
@@ -89,7 +96,10 @@ export default function StoryViewer({
                   i < index
                     ? { width: "100%" }
                     : i === index
-                      ? { animation: "story-progress 6s linear forwards" }
+                      ? {
+                          animation: `story-progress ${STORY_DURATION}ms linear forwards`,
+                          animationPlayState: paused ? "paused" : "running",
+                        }
                       : { width: "0%" }
                 }
               />
@@ -126,44 +136,53 @@ export default function StoryViewer({
           </button>
         </div>
 
+        {/* Story image — tap zones / hold-to-pause / swipe handled here */}
         <div
-          className="relative aspect-[9/16] max-h-[70vh] overflow-hidden rounded-2xl bg-surface-900"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          className="relative aspect-[9/16] max-h-[70vh] touch-none select-none overflow-hidden rounded-2xl bg-surface-900"
+          {...pointerHandlers}
         >
           <Image
             src={story.imageUrl}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 448px"
-            className="object-cover"
+            className="pointer-events-none object-cover"
           />
 
           {story.text && (
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4">
               <p className="text-sm leading-relaxed text-white">{story.text}</p>
             </div>
           )}
 
           {hasPrev && (
-            <button
-              onClick={() => onIndexChange(index - 1)}
-              className="absolute inset-y-0 left-0 flex w-1/3 items-center justify-start pl-2"
-              aria-label="Ankstesnė story"
-            >
-              <ChevronLeft className="h-8 w-8 text-white/50 drop-shadow transition-colors hover:text-white/90" />
-            </button>
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex w-1/3 items-center justify-start pl-2">
+              <ChevronLeft className="h-8 w-8 text-white/40 drop-shadow" />
+            </div>
           )}
           {hasNext && (
-            <button
-              onClick={() => onIndexChange(index + 1)}
-              className="absolute inset-y-0 right-0 flex w-1/3 items-center justify-end pr-2"
-              aria-label="Kita story"
-            >
-              <ChevronRight className="h-8 w-8 text-white/50 drop-shadow transition-colors hover:text-white/90" />
-            </button>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex w-1/3 items-center justify-end pr-2">
+              <ChevronRight className="h-8 w-8 text-white/40 drop-shadow" />
+            </div>
           )}
         </div>
+
+        <StoryEngagementBar
+          myReaction={myReaction}
+          onReact={react}
+          contact={
+            onContact ? (
+              <button
+                type="button"
+                onClick={onContact}
+                className="flex items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+              >
+                <Send className="h-4 w-4" />
+                Susisiekti
+              </button>
+            ) : undefined
+          }
+        />
       </div>
     </div>
   );

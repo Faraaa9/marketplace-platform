@@ -1,5 +1,6 @@
 import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resolveViewerIdentity } from "@/lib/stories/identity";
 
 
 /**
@@ -39,6 +40,18 @@ export async function GET() {
       },
       take: 200,
     });
+
+    // Which of these stories has the current viewer already seen? Read-only:
+    // a brand-new visitor (no cookie yet) has simply seen nothing.
+    const { dedupeKey } = await resolveViewerIdentity({ createAnon: false });
+    const seenIds = new Set<string>();
+    if (dedupeKey && stories.length > 0) {
+      const seen = await prisma.storyView.findMany({
+        where: { dedupeKey, storyId: { in: stories.map((s) => s.id) } },
+        select: { storyId: true },
+      });
+      for (const v of seen) seenIds.add(v.storyId);
+    }
 
     // Group by provider
     const byProvider = new Map<
@@ -98,6 +111,7 @@ export async function GET() {
       .map((p) => ({
         ...p,
         stories: [...p.stories].reverse(),
+        seen: p.stories.every((s) => seenIds.has(s.id)),
       }))
       .sort((a, b) => b.latestCreatedAt.localeCompare(a.latestCreatedAt));
 
