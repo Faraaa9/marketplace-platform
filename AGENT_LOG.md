@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 23:23 — Claude
+
+**Commit:** `5d2c33f` — feat(ai): per-touchpoint cost + token visibility in /admin/ai
+
+**Pakeitimai:** 12 files changed, 81 insertions(+), 8 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/admin/ai/page.tsx
+- src/lib/admin/ai-usage.ts
+- src/lib/ai-improve.ts
+- src/lib/ai-proposal.ts
+- src/lib/ai-transcribe.ts
+- src/lib/ai/lead-copilot.ts
+- src/lib/ai/openrouter.ts
+- src/lib/category-picker-ai.ts
+- src/lib/category-suggestions.ts
+- src/lib/image-processor.ts
+- src/lib/moderation/index.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 23:09 — Claude
 
 **Commit:** `7153210` — feat(ai): shared OpenRouter client + log the real model/usage per touchpoint

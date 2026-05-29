@@ -67,6 +67,8 @@ interface FeatureUsage {
   avgLatencyMs: number | null;
   lastRunAt: string | null;
   lastErrorCode: string | null;
+  totalTokens: number;
+  costUsd: number | null;
 }
 interface ModelOption {
   id: string;
@@ -105,6 +107,16 @@ function formatRunTime(value: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatCost(value: number | null | undefined): string {
+  if (value == null) return "—";
+  if (value === 0) return "$0";
+  return `$${value < 1 ? value.toFixed(value < 0.01 ? 4 : 3) : value.toFixed(2)}`;
+}
+
+function formatTokens(value: number): string {
+  return value > 0 ? value.toLocaleString("lt-LT") : "—";
 }
 
 function ParamPill({ label, value }: { label: string; value: string }) {
@@ -251,6 +263,11 @@ function TouchpointCard({
             ) : (
               <span className="rounded-lg bg-surface-100 px-2.5 py-1 text-micro text-surface-400 dark:bg-surface-800">
                 nėra kvietimų / {windowDays} d.
+              </span>
+            )}
+            {usage && usage.costUsd != null && usage.costUsd > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-2.5 py-1 text-micro font-medium text-surface-600 dark:bg-surface-800 dark:text-surface-300">
+                ≈ {formatCost(usage.costUsd)} / {windowDays} d.
               </span>
             )}
           </div>
@@ -449,11 +466,13 @@ function TouchpointCard({
           </div>
 
           {usage && usage.total > 0 && (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
               <ParamPill label={`Kvietimai / ${windowDays} d.`} value={String(usage.total)} />
               <ParamPill label="Klaidos" value={String(usage.errors)} />
               <ParamPill label="Vid. trukmė" value={formatLatency(usage.avgLatencyMs)} />
               <ParamPill label="Paskutinis" value={formatRunTime(usage.lastRunAt)} />
+              <ParamPill label={`≈ Kaina / ${windowDays} d.`} value={formatCost(usage.costUsd)} />
+              <ParamPill label={`Žetonai / ${windowDays} d.`} value={formatTokens(usage.totalTokens)} />
             </div>
           )}
 
@@ -568,6 +587,9 @@ export default function AdminAiRegistryPage() {
   const llmCount = data.touchpoints.filter((t) => t.kind === "llm").length;
   const totalCalls = Object.values(data.usage).reduce((sum, u) => sum + u.total, 0);
   const totalErrors = Object.values(data.usage).reduce((sum, u) => sum + u.errors, 0);
+  const usageValues = Object.values(data.usage);
+  const anyCost = usageValues.some((u) => u.costUsd != null);
+  const totalCost = usageValues.reduce((sum, u) => sum + (u.costUsd ?? 0), 0);
 
   return (
     <div className="p-6 lg:p-8">
@@ -583,7 +605,7 @@ export default function AdminAiRegistryPage() {
         produkcijoje tik po „Aktyvuoti“. Skaičiai — paskutinės {data.windowDays} dienos iš audito žurnalo.
       </p>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Card className="p-4">
           <p className="text-micro text-surface-500">AI keliai</p>
           <p className="mt-1 text-heading-2 font-bold text-surface-900 dark:text-white">{llmCount}</p>
@@ -608,6 +630,12 @@ export default function AdminAiRegistryPage() {
             }`}
           >
             {totalErrors}
+          </p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-micro text-surface-500">≈ Kaina / {data.windowDays} d.</p>
+          <p className="mt-1 text-heading-2 font-bold text-surface-900 dark:text-white">
+            {anyCost ? formatCost(totalCost) : "—"}
           </p>
         </Card>
       </div>

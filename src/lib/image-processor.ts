@@ -167,6 +167,7 @@ export async function generateAIImage(
         promptTokens: call.usage?.promptTokens ?? null,
         completionTokens: call.usage?.completionTokens ?? null,
         totalTokens: call.usage?.totalTokens ?? null,
+        costUsd: call.usage?.costUsd ?? null,
         ...extra,
       },
     });

@@ -36,6 +36,10 @@ export type AiFeatureUsage = {
   avgLatencyMs: number | null;
   lastRunAt: string | null;
   lastErrorCode: string | null;
+  /** Sum of total tokens across runs (parsed from metadata). */
+  totalTokens: number;
+  /** Sum of per-run USD cost from OpenRouter; null if no run reported a cost. */
+  costUsd: number | null;
 };
 
 /**
@@ -55,6 +59,7 @@ export async function getAiFeatureUsage(
         latencyMs: true,
         errorCode: true,
         createdAt: true,
+        metadataJson: true,
       },
       orderBy: { createdAt: "desc" },
       take: 5000,
@@ -62,7 +67,12 @@ export async function getAiFeatureUsage(
 
     const acc = new Map<
       string,
-      AiFeatureUsage & { latencyTotal: number; latencyCount: number }
+      AiFeatureUsage & {
+        latencyTotal: number;
+        latencyCount: number;
+        costTotal: number;
+        costCount: number;
+      }
     >();
 
     for (const run of runs) {
@@ -75,11 +85,29 @@ export async function getAiFeatureUsage(
           avgLatencyMs: null,
           lastRunAt: null,
           lastErrorCode: null,
+          totalTokens: 0,
+          costUsd: null,
           latencyTotal: 0,
           latencyCount: 0,
+          costTotal: 0,
+          costCount: 0,
         };
 
       current.total += 1;
+      if (run.metadataJson) {
+        try {
+          const meta = JSON.parse(run.metadataJson) as Record<string, unknown>;
+          if (typeof meta.totalTokens === "number" && Number.isFinite(meta.totalTokens)) {
+            current.totalTokens += meta.totalTokens;
+          }
+          if (typeof meta.costUsd === "number" && Number.isFinite(meta.costUsd)) {
+            current.costTotal += meta.costUsd;
+            current.costCount += 1;
+          }
+        } catch {
+          // ignore malformed metadata
+        }
+      }
       if (run.status === "error") current.errors += 1;
       else if (run.status === "success") current.success += 1;
 
@@ -111,6 +139,8 @@ export async function getAiFeatureUsage(
             : null,
         lastRunAt: value.lastRunAt,
         lastErrorCode: value.lastErrorCode,
+        totalTokens: value.totalTokens,
+        costUsd: value.costCount > 0 ? value.costTotal : null,
       };
     }
     return result;

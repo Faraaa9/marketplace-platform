@@ -614,6 +614,7 @@ export async function suggestCategories(
       promptTokens: rerank.usage?.promptTokens ?? null,
       completionTokens: rerank.usage?.completionTokens ?? null,
       totalTokens: rerank.usage?.totalTokens ?? null,
+      costUsd: rerank.usage?.costUsd ?? null,
     },
   });
 
