@@ -40,6 +40,8 @@ model User {
   directInquiriesSent     DirectInquiry[]          @relation("InquirySender")
   directInquiriesReceived DirectInquiry[]          @relation("InquiryProvider")
   stories                 ProviderStory[]
+  storyViews              StoryView[]              @relation("StoryViewer")
+  storyReactions          StoryReaction[]          @relation("StoryReactor")
   supplierIdentities      SupplierIdentity[]
   claimRequests           ClaimRequest[]           @relation("ClaimRequestUser")
   claimReviews            ClaimRequest[]           @relation("ClaimReviewedBy")
@@ -148,11 +150,11 @@ model ProviderProfile {
 }
 
 model ProviderProfileCategory {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   providerProfileId String
   categoryId        String
-  sortOrder         Int      @default(0)
-  createdAt         DateTime @default(now())
+  sortOrder         Int       @default(0)
+  createdAt         DateTime  @default(now())
   // null  = free/base category (permanent, counts against the free limit).
   // future = paid unlock, active until this time.
   // past   = expired paid unlock — kept for history but no longer matches leads.
@@ -495,11 +497,51 @@ model ProviderStory {
   expiresAt        DateTime
   createdAt        DateTime  @default(now())
 
-  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  provider  User            @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  views     StoryView[]
+  reactions StoryReaction[]
 
   @@index([providerId, expiresAt])
   @@index([moderationStatus])
   @@map("provider_stories")
+}
+
+// One row per viewer per story. `dedupeKey` is "u:<userId>" for a logged-in
+// viewer or "a:<anonId>" (cookie) for an anonymous one, so a single non-null
+// unique key drives upserts for both cases. viewerId is kept separately so the
+// provider can see named viewers.
+model StoryView {
+  id        String   @id @default(cuid())
+  storyId   String
+  viewerId  String?
+  dedupeKey String
+  createdAt DateTime @default(now())
+
+  story  ProviderStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User?         @relation("StoryViewer", fields: [viewerId], references: [id], onDelete: SetNull)
+
+  @@unique([storyId, dedupeKey])
+  @@index([storyId])
+  @@index([viewerId])
+  @@map("story_views")
+}
+
+// One reaction per viewer per story (emoji can be changed = upsert).
+model StoryReaction {
+  id        String   @id @default(cuid())
+  storyId   String
+  viewerId  String?
+  dedupeKey String
+  emoji     String   @db.VarChar(16)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  story  ProviderStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User?         @relation("StoryReactor", fields: [viewerId], references: [id], onDelete: SetNull)
+
+  @@unique([storyId, dedupeKey])
+  @@index([storyId])
+  @@map("story_reactions")
 }
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -28,11 +28,14 @@ export default function GlobalStoriesStrip() {
   }, []);
 
   const hasStories = providers.length > 0;
+  const allSeen = hasStories && providers.every((p) => p.seen);
 
   function openViewer(e: React.MouseEvent) {
     if (!hasStories) return;
     e.preventDefault();
-    setProviderIndex(0);
+    // Jump to the first provider with unseen stories, like a story tray.
+    const firstUnseen = providers.findIndex((p) => !p.seen);
+    setProviderIndex(firstUnseen >= 0 ? firstUnseen : 0);
     setStoryIndex(0);
     setViewerOpen(true);
   }
@@ -54,7 +57,11 @@ export default function GlobalStoriesStrip() {
           <button
             type="button"
             onClick={openViewer}
-            className="rounded-full p-[2px] bg-gradient-to-tr from-brand-700 via-brand-400 to-brand-600 bg-[length:200%_200%] animate-gradient transition-transform hover:scale-105"
+            className={`rounded-full p-[2px] transition-transform hover:scale-105 ${
+              allSeen
+                ? "bg-surface-300 dark:bg-surface-600"
+                : "bg-gradient-to-tr from-brand-700 via-brand-400 to-brand-600 bg-[length:200%_200%] animate-gradient"
+            }`}
             aria-label={`Žiūrėti ${providers.length} aktyvių story`}
           >
             {logoCircle}

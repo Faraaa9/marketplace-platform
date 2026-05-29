@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 22:28 — Claude
+
+**Commit:** `97a4b64` — feat(stories): view tracking, reactions, contact CTA, seen-state
+
+**Pakeitimai:** 17 files changed, 1015 insertions(+), 138 deletions(-)
+
+**Failai:**
+- NOTES.md
+- prisma/schema.prisma
+- src/app/api/provider/stories/[id]/viewers/route.ts
+- src/app/api/stories/[id]/reaction/route.ts
+- src/app/api/stories/[id]/view/route.ts
+- src/app/api/stories/feed/route.ts
+- src/app/api/stories/seen-state/route.ts
+- src/app/globals.css
+- src/app/meistrai/[slug]/components/StoryAvatarButton.tsx
+- src/app/meistrai/[slug]/components/StoryViewer.tsx
+- src/app/tiekejas/StoryModal.tsx
+- src/components/stories/GlobalStoriesStrip.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 18:30 — Claude
 
 **Commit:** `9f21448` — feat(ai): central prompt/model registry + admin AI control panel · lokalus

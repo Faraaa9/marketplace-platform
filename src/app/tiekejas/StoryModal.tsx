@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { X, Sparkles, Clock, Camera, Trash2 } from "lucide-react";
+import { X, Sparkles, Clock, Camera, Trash2, Eye, ChevronDown, ChevronUp } from "lucide-react";
 
 interface StoryItem {
   id: string;
@@ -11,6 +11,24 @@ interface StoryItem {
   expiresAt: string;
   createdAt: string;
 }
+
+interface StoryStats {
+  viewCount: number;
+  viewers: { id: string; name: string; image: string | null }[];
+  anonymousCount: number;
+  reactions: { emoji: string; count: number }[];
+  reactionCount: number;
+  reactors: { id: string; name: string; image: string | null; emoji: string }[];
+}
+
+const EMPTY_STATS: StoryStats = {
+  viewCount: 0,
+  viewers: [],
+  anonymousCount: 0,
+  reactions: [],
+  reactionCount: 0,
+  reactors: [],
+};
 
 function storyTimeLeft(expiresAt: string): string {
   const ms = new Date(expiresAt).getTime() - Date.now();
@@ -37,6 +55,19 @@ export default function StoryModal({
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [stats, setStats] = useState<Record<string, StoryStats>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const loadStats = useCallback((ids: string[]) => {
+    for (const id of ids) {
+      fetch(`/api/provider/stories/${id}/viewers`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res?.success) setStats((prev) => ({ ...prev, [id]: res.data }));
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   // Fetch stories when modal opens
   useEffect(() => {
@@ -47,11 +78,15 @@ export default function StoryModal({
     fetch("/api/provider/stories")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success) setStories(data.data || []);
+        if (data.success) {
+          const list: StoryItem[] = data.data || [];
+          setStories(list);
+          loadStats(list.map((s) => s.id));
+        }
       })
       .catch(() => setError("Nepavyko užkrauti story"))
       .finally(() => setLoadingStories(false));
-  }, [open]);
+  }, [open, loadStats]);
 
   // Lock body scroll
   useEffect(() => {
@@ -101,6 +136,7 @@ export default function StoryModal({
       const data = await res.json();
       if (data.success) {
         setStories((prev) => [data.data, ...prev]);
+        setStats((prev) => ({ ...prev, [data.data.id]: EMPTY_STATS }));
         setText("");
         onStoryChange(1);
       } else {
@@ -121,6 +157,12 @@ export default function StoryModal({
       const data = await res.json();
       if (data.success) {
         setStories((prev) => prev.filter((s) => s.id !== id));
+        setStats((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        setExpandedId((cur) => (cur === id ? null : cur));
         onStoryChange(-1);
       } else {
         setError(data.error || "Nepavyko pašalinti");
@@ -208,33 +250,103 @@ export default function StoryModal({
               {stories.length > 0 && (
                 <div className="mb-4 space-y-2">
                   <p className="text-micro font-medium uppercase tracking-wider text-surface-500">Aktyvios story</p>
-                  {stories.map((story) => (
-                    <div
-                      key={story.id}
-                      className={`flex items-center gap-3 rounded-xl border border-surface-200/60 bg-surface-50/50 p-2.5 transition-opacity dark:border-surface-700/50 dark:bg-surface-800/30 ${deleting === story.id ? "pointer-events-none opacity-50" : ""}`}
-                    >
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-700">
-                        <Image src={story.imageUrl} alt="" width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={`truncate text-body-sm ${story.text ? "text-surface-700 dark:text-surface-300" : "italic text-surface-400"}`}>
-                          {story.text || "Be teksto"}
-                        </p>
-                        <p className="flex items-center gap-1 text-micro text-surface-400">
-                          <Clock className="h-3 w-3" />
-                          {storyTimeLeft(story.expiresAt)}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(story.id)}
-                        disabled={deleting === story.id}
-                        className="shrink-0 rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-500/10"
-                        aria-label="Pašalinti story"
+                  {stories.map((story) => {
+                    const st = stats[story.id];
+                    const expanded = expandedId === story.id;
+                    const reactionByViewer = new Map(
+                      (st?.reactors ?? []).map((r) => [r.id, r.emoji] as const),
+                    );
+                    const canExpand =
+                      !!st && (st.viewers.length > 0 || st.anonymousCount > 0);
+                    return (
+                      <div
+                        key={story.id}
+                        className={`overflow-hidden rounded-xl border border-surface-200/60 bg-surface-50/50 transition-opacity dark:border-surface-700/50 dark:bg-surface-800/30 ${deleting === story.id ? "pointer-events-none opacity-50" : ""}`}
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-3 p-2.5">
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-700">
+                            <Image src={story.imageUrl} alt="" width={48} height={48} sizes="48px" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-body-sm ${story.text ? "text-surface-700 dark:text-surface-300" : "italic text-surface-400"}`}>
+                              {story.text || "Be teksto"}
+                            </p>
+                            <p className="flex items-center gap-1 text-micro text-surface-400">
+                              <Clock className="h-3 w-3" />
+                              {storyTimeLeft(story.expiresAt)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDelete(story.id)}
+                            disabled={deleting === story.id}
+                            className="shrink-0 rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-500/10"
+                            aria-label="Pašalinti story"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        {/* Engagement summary — tap to see who viewed */}
+                        <button
+                          type="button"
+                          onClick={() => canExpand && setExpandedId(expanded ? null : story.id)}
+                          className={`flex w-full items-center justify-between border-t border-surface-200/60 px-2.5 py-2 text-micro dark:border-surface-700/50 ${canExpand ? "transition-colors hover:bg-surface-100/60 dark:hover:bg-surface-800/40" : "cursor-default"}`}
+                          aria-expanded={expanded}
+                        >
+                          <span className="flex items-center gap-3 text-surface-500">
+                            <span className="flex items-center gap-1 font-medium">
+                              <Eye className="h-3.5 w-3.5" />
+                              {st ? st.viewCount : "–"}
+                            </span>
+                            {st && st.reactions.length > 0 && (
+                              <span className="flex items-center gap-1.5">
+                                {st.reactions.map((r) => (
+                                  <span key={r.emoji} className="flex items-center gap-0.5">
+                                    <span aria-hidden>{r.emoji}</span>
+                                    <span className="tabular-nums">{r.count}</span>
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                          {canExpand &&
+                            (expanded ? (
+                              <ChevronUp className="h-3.5 w-3.5 text-surface-400" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5 text-surface-400" />
+                            ))}
+                        </button>
+
+                        {expanded && st && (
+                          <div className="space-y-1.5 border-t border-surface-200/60 px-2.5 py-2.5 dark:border-surface-700/50">
+                            {st.viewers.map((v) => {
+                              const emoji = reactionByViewer.get(v.id);
+                              return (
+                                <div key={v.id} className="flex items-center gap-2">
+                                  <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-micro font-bold text-brand-600 dark:bg-brand-900/50">
+                                    {v.image ? (
+                                      <Image src={v.image} alt="" width={24} height={24} sizes="24px" className="h-full w-full object-cover" />
+                                    ) : (
+                                      v.name[0]?.toUpperCase() || "?"
+                                    )}
+                                  </div>
+                                  <span className="min-w-0 flex-1 truncate text-body-sm text-surface-700 dark:text-surface-300">
+                                    {v.name}
+                                  </span>
+                                  {emoji && <span aria-hidden>{emoji}</span>}
+                                </div>
+                              );
+                            })}
+                            {st.anonymousCount > 0 && (
+                              <p className="text-micro text-surface-400">
+                                ir {st.anonymousCount} anoniminių
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
