@@ -27,6 +27,8 @@ export interface BotDeps {
   sendMessage(chatId: number, text: string, opts?: SendMessageOptions): Promise<void>;
   answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void>;
   downloadFile(fileId: string): Promise<Buffer>;
+  /** Upload an image buffer to Cloudinary, returning its res.cloudinary.com URL. */
+  uploadPhoto(buffer: Buffer): Promise<string>;
   transcribe(audioBase64: string, format: "wav" | "ogg" | "mp3"): Promise<string>;
   improve(description: string): Promise<ImproveDescriptionResult>;
   /** Resolve AI category slugs to DB categories, preserving order, capped at 3. */
@@ -37,12 +39,26 @@ export interface BotDeps {
   createServiceRequest(input: CreateServiceRequestInput): Promise<CreateServiceRequestResult>;
   getSession(telegramUserId: bigint, chatId: number): Promise<SessionRow>;
   saveSession(session: SessionRow): Promise<void>;
-  /** Returns true if the action is allowed (under the rate limit). */
+  /** Returns true if the action is allowed (under the AI rate limit). */
   rateLimit(key: string): Promise<boolean>;
+  /** Separate, looser limit for photo uploads (protects Cloudinary usage). */
+  rateLimitPhoto(key: string): Promise<boolean>;
   baseUrl: string;
 }
 
 const MIN_DESCRIPTION_LEN = 15;
+const MAX_ATTACHMENTS = 5;
+
+const EMPTY_DRAFT: DraftData = {
+  title: "",
+  description: "",
+  categoryIds: [],
+  categoryNames: [],
+  location: "",
+  budget: "",
+  deadline: "",
+  attachmentUrls: [],
+};
 
 export async function handleUpdate(update: TgUpdate, deps: BotDeps): Promise<void> {
   try {
@@ -87,6 +103,11 @@ async function handleMessage(msg: TgMessage, deps: BotDeps): Promise<void> {
     await deps.sendMessage(chatId, MSG.useContactButton, {
       requestContact: { buttonText: MSG.shareContactBtn },
     });
+    return;
+  }
+
+  if (msg.photo && msg.photo.length > 0) {
+    await handlePhoto(msg, session, deps);
     return;
   }
 
@@ -170,6 +191,8 @@ async function buildAndShowDraft(
     location: result.location,
     budget: result.budget,
     deadline: result.deadline,
+    // Carry over any photos the user already sent before describing.
+    attachmentUrls: (session.draft?.attachmentUrls ?? []).slice(0, MAX_ATTACHMENTS),
   };
 
   await deps.saveSession({ ...session, chatId, state: "draft_ready", draft });
@@ -177,6 +200,60 @@ async function buildAndShowDraft(
     parseMode: "HTML",
     inlineKeyboard: draftButtons(),
   });
+}
+
+async function handlePhoto(msg: TgMessage, session: SessionRow, deps: BotDeps): Promise<void> {
+  const chatId = msg.chat.id;
+  const from = msg.from!;
+  const existing = session.draft?.attachmentUrls ?? [];
+
+  if (existing.length >= MAX_ATTACHMENTS) {
+    await deps.sendMessage(chatId, MSG.tooManyPhotos(MAX_ATTACHMENTS));
+    return;
+  }
+
+  if (!(await deps.rateLimitPhoto(`telegram-photo:${from.id}`))) {
+    await deps.sendMessage(chatId, MSG.rateLimited);
+    return;
+  }
+
+  // Telegram sends renditions small→large; the last is the highest resolution.
+  const largest = msg.photo![msg.photo!.length - 1];
+  let url: string;
+  try {
+    const buffer = await deps.downloadFile(largest.file_id);
+    url = await deps.uploadPhoto(buffer);
+  } catch (error) {
+    console.error("[telegram] photo upload failed:", error);
+    await deps.sendMessage(chatId, MSG.photoFailed);
+    return;
+  }
+
+  const attachmentUrls = [...existing, url].slice(0, MAX_ATTACHMENTS);
+  const withPhoto: SessionRow = {
+    ...session,
+    chatId,
+    draft: { ...(session.draft ?? EMPTY_DRAFT), attachmentUrls },
+  };
+
+  // A caption rich enough to be a description doubles as the request text.
+  const caption = msg.caption?.trim();
+  if (caption && caption.length >= MIN_DESCRIPTION_LEN) {
+    await deps.saveSession(withPhoto);
+    await buildAndShowDraft(chatId, withPhoto, caption, deps);
+    return;
+  }
+
+  await deps.saveSession(withPhoto);
+  if (withPhoto.state === "draft_ready" && withPhoto.draft) {
+    // Re-render the draft so the photo count is visible.
+    await deps.sendMessage(chatId, formatDraft(withPhoto.draft), {
+      parseMode: "HTML",
+      inlineKeyboard: draftButtons(),
+    });
+  } else {
+    await deps.sendMessage(chatId, MSG.photoAdded(attachmentUrls.length, MAX_ATTACHMENTS));
+  }
 }
 
 async function handleCallback(cq: TgCallbackQuery, deps: BotDeps): Promise<void> {
@@ -290,6 +367,7 @@ async function publish(
     location: draft.location,
     budget: draft.budget,
     deadline: draft.deadline,
+    attachmentUrls: draft.attachmentUrls,
     clientName,
     clientEmail: email,
     clientPhone: session.phone ?? undefined,

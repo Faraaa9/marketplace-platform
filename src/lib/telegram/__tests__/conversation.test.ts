@@ -35,7 +35,7 @@ interface SentMessage {
 function makeDeps(overrides: Partial<BotDeps> = {}) {
   const sent: SentMessage[] = [];
   const store = new Map<string, SessionRow>();
-  const calls = { improve: 0, transcribe: 0, create: 0, findOrCreate: 0 };
+  const calls = { improve: 0, transcribe: 0, create: 0, findOrCreate: 0, upload: 0 };
   let lastCreateInput: CreateServiceRequestInput | null = null;
   let lastPhoneArg: string | null = null;
 
@@ -45,7 +45,11 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     },
     async answerCallbackQuery() {},
     async downloadFile() {
-      return Buffer.from("audio");
+      return Buffer.from("media");
+    },
+    async uploadPhoto() {
+      calls.upload++;
+      return `https://res.cloudinary.com/demo/image/upload/v1/requests/telegram/p${calls.upload}.jpg`;
     },
     async transcribe() {
       calls.transcribe++;
@@ -89,6 +93,9 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     async rateLimit() {
       return true;
     },
+    async rateLimitPhoto() {
+      return true;
+    },
     baseUrl: "https://paslaugurinka.lt",
     ...overrides,
   };
@@ -120,6 +127,19 @@ const voiceUpdate = (): TgUpdate => ({
 const callbackUpdate = (data: string): TgUpdate => ({
   update_id: 1,
   callback_query: { id: "cb1", from: FROM, data, message: { message_id: 2, chat: { id: CHAT } } },
+});
+const photoUpdate = (caption?: string): TgUpdate => ({
+  update_id: 1,
+  message: {
+    message_id: 9,
+    from: FROM,
+    chat: { id: CHAT },
+    photo: [
+      { file_id: "p_small", file_unique_id: "u1", width: 90, height: 90 },
+      { file_id: "p_large", file_unique_id: "u2", width: 1280, height: 1280 },
+    ],
+    ...(caption ? { caption } : {}),
+  },
 });
 const contactUpdate = (): TgUpdate => ({
   update_id: 1,
@@ -275,6 +295,48 @@ const tests: Test[] = [
       assert.equal(t.lastPhoneArg(), "+66641923382", "should prepend + before normalizing");
       assert.equal(t.lastCreateInput()!.clientPhone, "+66641923382");
       assert.equal(t.calls.create, 1);
+    },
+  ],
+  [
+    "photo sent before text is uploaded, stashed, then carried into the published request",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(photoUpdate(), t.deps);
+      assert.equal(t.calls.upload, 1);
+      assert.equal(t.session()!.draft?.attachmentUrls.length, 1, "photo stashed on session");
+      assert.match(t.last().text, /1\/5/);
+
+      await handleUpdate(textUpdate("Reikia plytelių klijuotojo vonioje Vilniuje iki 800."), t.deps);
+      assert.equal(t.session()!.state, "draft_ready");
+      assert.equal(t.session()!.draft?.attachmentUrls.length, 1, "photo carried into the draft");
+
+      await handleUpdate(callbackUpdate("confirm"), t.deps);
+      await handleUpdate(contactUpdate(), t.deps);
+      assert.equal(t.lastCreateInput()!.attachmentUrls?.length, 1, "photo published with request");
+    },
+  ],
+  [
+    "photo with a caption builds the draft immediately",
+    async () => {
+      const t = makeDeps();
+      await handleUpdate(photoUpdate("Reikia dažytojo dideliam kambariui Kaune."), t.deps);
+      assert.equal(t.calls.upload, 1);
+      assert.equal(t.calls.improve, 1, "caption drives the draft build");
+      assert.equal(t.session()!.state, "draft_ready");
+      assert.equal(t.session()!.draft?.attachmentUrls.length, 1);
+    },
+  ],
+  [
+    "photos are capped at 5",
+    async () => {
+      const t = makeDeps();
+      for (let i = 0; i < 5; i++) await handleUpdate(photoUpdate(), t.deps);
+      assert.equal(t.session()!.draft?.attachmentUrls.length, 5);
+      const uploadsAfterFive = t.calls.upload;
+      await handleUpdate(photoUpdate(), t.deps);
+      assert.equal(t.calls.upload, uploadsAfterFive, "6th photo must not upload");
+      assert.match(t.last().text, /daugiau/);
+      assert.equal(t.session()!.draft?.attachmentUrls.length, 5);
     },
   ],
   [
