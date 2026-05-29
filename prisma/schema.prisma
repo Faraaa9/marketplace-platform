@@ -722,6 +722,24 @@ model AiRun {
   @@map("ai_runs")
 }
 
+// Admin-editable per-touchpoint overrides for AI model + prompts.
+// Draft fields are edited freely; production reads ONLY the active* fields,
+// which are populated when an admin explicitly activates the draft. When both
+// active fields are null the code defaults apply.
+model AiTouchpointConfig {
+  id                String    @id @default(cuid())
+  touchpointId      String    @unique
+  draftModel        String?
+  draftPromptsJson  String?   @db.Text
+  activeModel       String?
+  activePromptsJson String?   @db.Text
+  activatedAt       DateTime?
+  updatedAt         DateTime  @updatedAt
+  updatedBy         String?
+
+  @@map("ai_touchpoint_configs")
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // Phase 4 — pay-per-lead credit model
 // ═══════════════════════════════════════════════════════════════════════

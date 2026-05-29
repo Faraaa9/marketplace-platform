@@ -1,15 +1,9 @@
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini 2.5 Flash transcribes Lithuanian speech well and accepts audio input.
 const MODEL = "google/gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 45_000;
-
-const SYSTEM_PROMPT = `Tau pateikiamas garso įrašas, kuriame žmogus lietuvių kalba diktuoja, kokios paslaugos jam reikia (platforma „paslaugurinka.lt").
-
-Tavo vienintelė užduotis — tiksliai užrašyti, ką žmogus pasakė:
-- Rašyk taisyklinga lietuvių kalba su skyrybos ženklais ir didžiosiomis raidėmis.
-- Užrašyk TIK tai, kas pasakyta. Nieko nepridėk, neperfrazuok, nekomentuok.
-- Negrąžink pavadinimų, antraščių, kabučių ar paaiškinimų — tik patį tekstą.
-- Jei įraše nieko nesigirdi arba kalbos suprasti neįmanoma, grąžink tuščią eilutę.`;
 
 export class AiTranscribeError extends Error {}
 
@@ -30,6 +24,9 @@ export async function transcribeAudio(
     throw new AiTranscribeError("AI_NOT_CONFIGURED");
   }
 
+  const model = await resolveModel("audio_transcribe", MODEL);
+  const systemPrompt = await resolvePrompt("audio_transcribe", "system");
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -42,12 +39,12 @@ export async function transcribeAudio(
         "X-Title": "paslaugurinka.lt",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         temperature: 0,
         max_tokens: 2000,
         reasoning: { enabled: false },
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [

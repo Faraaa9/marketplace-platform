@@ -29,6 +29,97 @@ const EMPTY: AiUsageStats = {
   recentErrors: [],
 };
 
+export type AiFeatureUsage = {
+  total: number;
+  success: number;
+  errors: number;
+  avgLatencyMs: number | null;
+  lastRunAt: string | null;
+  lastErrorCode: string | null;
+};
+
+/**
+ * Per-feature usage keyed by the `feature` column, for joining with the AI
+ * touchpoint registry. Only operational metadata is read — never prompts or
+ * user content. Returns an empty map on any error.
+ */
+export async function getAiFeatureUsage(
+  since: Date,
+): Promise<Record<string, AiFeatureUsage>> {
+  try {
+    const runs = await prisma.aiRun.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        feature: true,
+        status: true,
+        latencyMs: true,
+        errorCode: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    });
+
+    const acc = new Map<
+      string,
+      AiFeatureUsage & { latencyTotal: number; latencyCount: number }
+    >();
+
+    for (const run of runs) {
+      const current =
+        acc.get(run.feature) ??
+        {
+          total: 0,
+          success: 0,
+          errors: 0,
+          avgLatencyMs: null,
+          lastRunAt: null,
+          lastErrorCode: null,
+          latencyTotal: 0,
+          latencyCount: 0,
+        };
+
+      current.total += 1;
+      if (run.status === "error") current.errors += 1;
+      else if (run.status === "success") current.success += 1;
+
+      if (typeof run.latencyMs === "number") {
+        current.latencyTotal += run.latencyMs;
+        current.latencyCount += 1;
+      }
+
+      // runs are sorted desc, so the first one seen per feature is the latest.
+      if (current.lastRunAt === null) {
+        current.lastRunAt = run.createdAt.toISOString();
+      }
+      if (current.lastErrorCode === null && run.status === "error") {
+        current.lastErrorCode = run.errorCode ?? "AI_ERROR";
+      }
+
+      acc.set(run.feature, current);
+    }
+
+    const result: Record<string, AiFeatureUsage> = {};
+    for (const [feature, value] of acc) {
+      result[feature] = {
+        total: value.total,
+        success: value.success,
+        errors: value.errors,
+        avgLatencyMs:
+          value.latencyCount > 0
+            ? Math.round(value.latencyTotal / value.latencyCount)
+            : null,
+        lastRunAt: value.lastRunAt,
+        lastErrorCode: value.lastErrorCode,
+      };
+    }
+    return result;
+  } catch (error) {
+    console.error("Admin AI feature usage error:", error);
+    return {};
+  }
+}
+
 /**
  * Rolling AI health snapshot for the admin dashboard. Only operational
  * metadata is read from `ai_runs`; nothing here touches user content or

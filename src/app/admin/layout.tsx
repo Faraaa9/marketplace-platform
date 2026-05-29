@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox } from "lucide-react";
+import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { href: "/admin/claims", label: "Perėmimai", icon: Shield, badgeKey: "pendingClaims" as const },
   { href: "/admin/moderacija", label: "Moderacija", icon: ShieldAlert, badgeKey: "pendingModeration" as const },
   { href: "/admin/laiskai", label: "Laiškai", icon: Inbox, badgeKey: null },
+  { href: "/admin/ai", label: "AI", icon: Sparkles, badgeKey: null },
   { href: "/admin/nustatymai", label: "Nustatymai", icon: Settings, badgeKey: null },
 ];
 

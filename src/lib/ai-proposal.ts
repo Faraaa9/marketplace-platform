@@ -1,3 +1,5 @@
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Same model as ai-improve.ts — Gemini 2.5-flash handles Lithuanian best and
 // lets us turn reasoning off, keeping this short generative task fast.
@@ -6,30 +8,6 @@ const REQUEST_TIMEOUT_MS = 30_000;
 // Headroom under responseSchema's 2000-char limit so the draft always submits.
 const MAX_MESSAGE_CHARS = 1900;
 const MAX_REVIEW_CHARS = 300;
-
-const SYSTEM_PROMPT = `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Paslaugų tiekėjas nori atsakyti į kliento užklausą ir nusiųsti jam pasiūlymą. Tavo užduotis — tiekėjo vardu parašyti profesionalų, įtikinamą ir šiltą pasiūlymo tekstą.
-
-Gausi du blokus:
-- INFORMACIJA APIE TIEKĖJĄ — jo patirtis, paslaugos, veiklos sritys, klientų atsiliepimai.
-- KLIENTO UŽKLAUSA — ką klientas nori, kad būtų padaryta.
-
-Grąžink TIK galiojantį JSON objektą:
-{"message": "..."}
-
-"message" — pasiūlymo tekstas, kurį tiekėjas siųs klientui. Reikalavimai:
-- Rašyk pirmu asmeniu, tiekėjo vardu („galiu", „turiu patirties", „pasiūlyčiau atvykti apžiūrai").
-- Taisyklinga, sklandi, natūrali lietuvių kalba. Tonas profesionalus, bet draugiškas ir žmogiškas.
-- Pradėk trumpu pasisveikinimu. Jei pateiktas kliento vardas — kreipkis vardu.
-- Konkrečiai atsiliepk į kliento užklausą — parodyk, kad supratai, ko jam reikia.
-- Pasiremk TIK tikra tiekėjo informacija (patirtis, veiklos sritys, paslaugos, atsiliepimai). NEIŠGALVOK faktų, projektų, skaičių, datų ar atsiliepimų.
-- Jei informacijos apie tiekėją mažai — parašyk trumpesnį, paprastą pasiūlymą. Geriau trumpiau, nei prikurti.
-- NENURODYK konkrečių kainų ar sumų — kainą tiekėjas nurodys atskirai.
-- Jei užklausoje trūksta svarbios informacijos darbui įvertinti — pabaigoje mandagiai paklausk 1–3 trumpų, konkrečių patikslinančių klausimų.
-- Baik trumpu, mandagiu sakiniu (pvz. kvietimu susisiekti ar aptarti detales).
-- Tekstas turi būti pilnas ir paruoštas siųsti — be vietaženklių, be laužtinių skliaustų, be parašo su vardu ir pavarde.
-- Glaustai — daugiausia 1600 simbolių. Be antraščių, be Markdown ženklų, be emoji.
-
-Grąžink TIK JSON objektą, be jokio papildomo teksto.`;
 
 export class AiProposalError extends Error {}
 
@@ -132,6 +110,8 @@ export async function generateProposalDraft(
   }
 
   const userContent = `INFORMACIJA APIE TIEKĖJĄ:\n${buildProviderBlock(provider)}\n\nKLIENTO UŽKLAUSA:\n${buildRequestBlock(request)}`;
+  const model = await resolveModel("proposal_draft", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
+  const systemPrompt = await resolvePrompt("proposal_draft", "system");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -145,13 +125,13 @@ export async function generateProposalDraft(
         "X-Title": "paslaugurinka.lt",
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
+        model,
         temperature: 0.4,
         max_tokens: 1500,
         reasoning: { enabled: false },
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
       }),

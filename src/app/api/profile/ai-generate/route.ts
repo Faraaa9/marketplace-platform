@@ -9,6 +9,7 @@ import { rateLimitAsync } from "@/lib/rate-limit";
 import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 export const maxDuration = 300;
 
@@ -99,26 +100,6 @@ interface AIResult {
 
 // Shared SEO discipline injected into both URL and scratch prompts. Keeps the
 // rules in one place so they don't drift between modes.
-const SEO_RULES = `SEO TAISYKLĖS (privalomos):
-- seoTitle: 50–60 simbolių. Formatas "{Vardas} — {pagrindinė paslauga} {mieste} | paslaugurinka.lt". Pirmas žodis = vardas, NE raktažodis.
-- seoDescription: 140–160 simbolių. Pradžioje pagrindinė paslauga + miestas, pabaigoje implicit CTA ("Kreipkitės dėl konsultacijos.", "Susisiekite šiandien." ir pan.).
-- description: pirmas sakinys (~120 simb.) natūraliai turi PAGRINDINĘ paslaugą + MIESTĄ. Toliau 3 dalys: (a) ką darai konkrečiai (su sinonimais — pvz. "klijavimas, dėjimas, montavimas"), (b) kuo išsiskiri (patirtis, medžiagos, garantija), (c) kur dirbi + kaip susisiekti.
-- slugSuggestion: vardas-paslauga-miestas, kebab-case, max 60 simb., BE lietuviškų raidžių (ą→a, č→c, ę→e, ė→e, į→i, š→s, ų→u, ū→u, ž→z), be metų/atributų. Pvz. "jonas-jonaitis-pliuteliu-klijavimas-kaunas".
-- primaryService: VIENA frazė standartinia lietuvių paslaugų terminologija (pvz. "Plytelių klijavimas", NE "darau plyteles").
-- primaryCity: vienas pagrindinis miestas iš input'o (pirmas, jei minimi keli).
-- serviceArea: 1–5 tikrų Lietuvos miestų/rajonų, kuriuose dirba (string array, ne išgalvoti).
-- headline: trumpas titulas UI'ui (ne SEO!) — max 80 simb., be miesto, jei jis jau seoTitle.
-
-NORMALIZAVIMAS:
-- Vartotojo input'as gali būti padrikas — ekstraktuok faktus ir VERSK į standartinius lietuviškus paslaugų terminus.
-  Pvz.: "darau plyteles vonioj" → primaryService "Plytelių klijavimas"; "elektra" → "Elektros instaliacija"; "remontuoju mašinas" → "Automobilių remontas".
-
-DRAUDŽIAMA:
-- Spam'inti raktažodžiais ("pigiai geriausias profesionalus" stack'as).
-- Klišės ("kokybiškai", "atsakingai", "profesionaliai") kaip pildiklis be konteksto.
-- Pridėti raktažodžius į vardą — vardas = realus žmogus arba įmonės pavadinimas.
-- Išgalvoti faktus (jei input'e nėra patirties metų — palik null).`;
-
 async function fetchAndScrape(url: string): Promise<ScrapedData> {
   let browser;
   try {
@@ -282,40 +263,13 @@ async function generateWithClaude(
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const prompt = `Tu esi lietuvių paslaugų rinkos SEO copywriter'is. Analizuok puslapio turinį ir sukurk SEO-optimizuotą paskyrą.
-
-Šaltinis: ${url}
-Pavadinimas: ${scraped.title || "(nežinoma)"}
-Turinys: ${scraped.text.slice(0, 4000)}
-
-${SEO_RULES}
-
-Grąžink TIK JSON (be markdown, be code fence) su laukais:
-{
-  "headline": "trumpas UI titulas, max 80 simb.",
-  "description": "200–300 žodžių pagal struktūrą",
-  "phone": "+370XXXXXXXX arba 8XXXXXXXX (vienas, ne array) arba null",
-  "location": "Vilnius (originalus formatas iš šaltinio)",
-  "website": "https://teikejo-svetaine.lt arba null",
-  "services": "• Paslauga 1\\n• Paslauga 2",
-  "experienceYears": 5,
-  "priceFrom": 30,
-  "offersInvoices": true,
-  "availableForUrgent": false,
-  "seoTitle": "Vardas — pagrindinė paslauga Vilniuje | paslaugurinka.lt",
-  "seoDescription": "Pagrindinė paslauga Vilniuje. USP sakinys. Kreipkitės dėl konsultacijos.",
-  "primaryService": "Plytelių klijavimas",
-  "primaryCity": "Vilnius",
-  "serviceArea": ["Vilnius", "Vilniaus r."],
-  "slugSuggestion": "vardas-paslauga-vilnius"
-}
-
-Patarimai:
-- experienceYears: "5 metų patirtis" → 5; jei nerasta — null.
-- offersInvoices: jei mini "sutartys", "PVM", "sąskaitos-faktūros" → true.
-- availableForUrgent: jei mini "skubus", "tą pačią dieną", "24/7" → true.
-- website: jei tekste yra teikėjo nuosava svetainė (jo verslo domenas) — grąžink pilną URL. NEIMK social/katalogų nuorodų (facebook, instagram, paslaugos.lt, linkedin) ar nuorodų į svetimus projektus. Jei abejoji — null.
-- Jei nerastas vardas — naudok įmonės/brand pavadinimą iš title'o.`;
+  const model = await resolveModel("profile_generate", PROFILE_MODEL);
+  const systemPrompt = await resolvePrompt("profile_generate", "system_url");
+  const prompt = await resolvePrompt("profile_generate", "user_url", {
+    url,
+    title: scraped.title || "(nežinoma)",
+    scrapedText: scraped.text.slice(0, 4000),
+  });
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -326,13 +280,9 @@ Patarimai:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: PROFILE_MODEL,
+        model,
         messages: [
-          {
-            role: "system",
-            content:
-              "Grąžini TIK galiojantį JSON. Be markdown, be code fences. Visi tekstai turi būti tinkamai escape'inti (kabutės, eilutės).",
-          },
+          { role: "system", content: systemPrompt },
           { role: "user", content: prompt },
         ],
         response_format: { type: "json_object" },
@@ -449,41 +399,16 @@ async function generateFromScratch(
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
-  const prompt = `Tu esi lietuvių paslaugų rinkos SEO copywriter'is. Vartotojas pateikia padriką informaciją — tu paverti ją SEO-optimizuota paskyra.
-
-Bazinė info nuo vartotojo:
-- Vardas/įmonė: ${input.businessName}
-- Teikiamos paslaugos (savais žodžiais): ${input.servicesText}
-${input.location ? `- Lokacija: ${input.location}` : ""}
-${input.experienceYears ? `- Patirtis: ${input.experienceYears} metų` : ""}
-${input.phone ? `- Telefonas: ${input.phone}` : ""}
-${input.website ? `- Svetainė: ${input.website}` : ""}
-
-${SEO_RULES}
-
-Grąžink TIK JSON (be markdown) su laukais:
-{
-  "headline": "trumpas UI titulas, max 80 simb.",
-  "description": "180–280 žodžių pagal struktūrą",
-  "services": "• Paslauga 1\\n• Paslauga 2",
-  "priceFrom": null,
-  "offersInvoices": false,
-  "availableForUrgent": false,
-  "website": "https://teikejo-svetaine.lt arba null",
-  "imagePrompt": "Professional photo of...",
-  "seoTitle": "Vardas — pagrindinė paslauga Vilniuje | paslaugurinka.lt",
-  "seoDescription": "Pagrindinė paslauga Vilniuje. USP sakinys. Kreipkitės dėl konsultacijos.",
-  "primaryService": "Plytelių klijavimas",
-  "primaryCity": "Vilnius",
-  "serviceArea": ["Vilnius"],
-  "slugSuggestion": "vardas-paslauga-vilnius"
-}
-
-Patarimai:
-- imagePrompt: ANGLIŠKAI prompt'as photorealistic darbo nuotraukai (no logos, no text, candid photo).
-- Jei vartotojas miesto nenurodė — primaryCity = null, slugSuggestion = "vardas-paslauga" (be miesto).
-- primaryService imk iš servicesText, normalizuok į standartinę terminologiją.
-- website: jei aprašyme yra nuoroda į teikėjo nuosavą svetainę (jo verslo domeną) — grąžink pilną URL. NEIMK social/katalogų nuorodų (facebook, instagram, paslaugos.lt, linkedin). Jei abejoji — null.`;
+  const model = await resolveModel("profile_generate", PROFILE_MODEL);
+  const systemPrompt = await resolvePrompt("profile_generate", "system_scratch");
+  const prompt = await resolvePrompt("profile_generate", "user_scratch", {
+    businessName: input.businessName,
+    servicesText: input.servicesText,
+    locationLine: input.location ? `- Lokacija: ${input.location}\n` : "",
+    experienceLine: input.experienceYears ? `- Patirtis: ${input.experienceYears} metų\n` : "",
+    phoneLine: input.phone ? `- Telefonas: ${input.phone}\n` : "",
+    websiteLine: input.website ? `- Svetainė: ${input.website}\n` : "",
+  });
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -494,12 +419,9 @@ Patarimai:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: PROFILE_MODEL,
+        model,
         messages: [
-          {
-            role: "system",
-            content: "Grąžini TIK galiojantį JSON. Be markdown, be code fences.",
-          },
+          { role: "system", content: systemPrompt },
           { role: "user", content: prompt },
         ],
         response_format: { type: "json_object" },

@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 18:30 — Claude
+
+**Commit:** `9f21448` — feat(ai): central prompt/model registry + admin AI control panel · lokalus
+
+**Pakeitimai:** 17 files changed, 2044 insertions(+), 328 deletions(-)
+
+**Failai:**
+- prisma/schema.prisma
+- src/app/admin/ai/page.tsx
+- src/app/admin/layout.tsx
+- src/app/api/admin/ai-config/route.ts
+- src/app/api/admin/ai-registry/route.ts
+- src/app/api/profile/ai-generate/route.ts
+- src/lib/admin/ai-usage.ts
+- src/lib/ai-improve.ts
+- src/lib/ai-proposal.ts
+- src/lib/ai-transcribe.ts
+- src/lib/ai/lead-copilot.ts
+- src/lib/ai/prompt-config.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 03:22 — Claude
 
 **Commit:** `8797468` — feat(telegram): attach photos to requests via the bot · lokalus
