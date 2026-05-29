@@ -264,6 +264,7 @@ async function pickRoots(
       promptTokens: call.usage?.promptTokens ?? null,
       completionTokens: call.usage?.completionTokens ?? null,
       totalTokens: call.usage?.totalTokens ?? null,
+      costUsd: call.usage?.costUsd ?? null,
     },
   });
 
@@ -362,6 +363,7 @@ async function pickLeaves(
       promptTokens: call.usage?.promptTokens ?? null,
       completionTokens: call.usage?.completionTokens ?? null,
       totalTokens: call.usage?.totalTokens ?? null,
+      costUsd: call.usage?.costUsd ?? null,
     },
   });
 

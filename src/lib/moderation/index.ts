@@ -139,6 +139,7 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
       promptTokens: aiCall.usage?.promptTokens ?? null,
       completionTokens: aiCall.usage?.completionTokens ?? null,
       totalTokens: aiCall.usage?.totalTokens ?? null,
+      costUsd: aiCall.usage?.costUsd ?? null,
     },
   });
 
@@ -230,6 +231,7 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
       promptTokens: aiCall.usage?.promptTokens ?? null,
       completionTokens: aiCall.usage?.completionTokens ?? null,
       totalTokens: aiCall.usage?.totalTokens ?? null,
+      costUsd: aiCall.usage?.costUsd ?? null,
     },
   });
 

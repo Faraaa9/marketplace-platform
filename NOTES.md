@@ -23,11 +23,13 @@ Konvencija:
   kelią. `prompt-config.ts` pridėti `resolvePromptVersion` / `getActiveOverrideFlags`.
   Build + `tsc` žali.
 
-- [ ] **2026-05-29 — A2: token/kainos stulpeliai + kainos rodymas `/admin/ai`.**
-  `usage` jau renkamas į `ai_runs.metadataJson`. A2: pridėti `promptTokens` /
-  `completionTokens` / `costUsd` stulpelius prie `AiRun` (Prisma migracija — LIEČIA
-  produkcijos DB, derinti prieš `db:push`), modelio kainų žemėlapį, agreguoti `ai-usage.ts`
-  ir parodyti „Kaina / 30 d." skyde. Gat'inta — laukia patvirtinimo.
+- [x] **2026-05-29 — A2: kaina + žetonai `/admin/ai` (be DB migracijos).**
+  OpenRouter automatiškai grąžina `usage.cost` (USD) — `usage:{include:true}` deprecated,
+  nereikia. Klientas parsina `costUsd`; kiekvienas touchpoint logina `costUsd` + token sumas
+  į `metadataJson`. `getAiFeatureUsage` jas agreguoja (BE schemos pakeitimo), skydas rodo
+  „≈ Kaina / N d." + „Žetonai / N d." per touchpoint'ą ir bendrą kainą viršuje. Pradinis
+  „pridėti AiRun stulpelius + Prisma migracija" planas atmestas — DB liesti neprireikė.
+  PASTABA: `profile_generate` kainos/žetonų nerodo, kol nemigruotas į klientą (žr. žemiau).
 
 - [ ] **2026-05-29 — `profile_generate` pilna kliento migracija.**
   Šiuo metu pataisytas tik audito modelis. `generateWithClaude`/`generateFromScratch`

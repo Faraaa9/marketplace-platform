@@ -19,6 +19,8 @@ export interface OpenRouterUsage {
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;
+  /** Authoritative per-request cost in USD (OpenRouter includes this automatically). */
+  costUsd: number | null;
 }
 
 /** Transporto lygio nesėkmės priežastis (ne verslo logika). */
@@ -80,6 +82,7 @@ function parseUsage(raw: unknown): OpenRouterUsage | null {
     promptTokens: num(rec.prompt_tokens),
     completionTokens: num(rec.completion_tokens),
     totalTokens: num(rec.total_tokens),
+    costUsd: num(rec.cost),
   };
 }
 
