@@ -1,6 +1,7 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
 import { getFlatServiceCategories } from "@/lib/service-categories";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini handles Lithuanian grammar/nuance best of the OpenRouter models.
@@ -90,45 +91,6 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
     return `${category.slug} (${breadcrumb})`;
   });
   return { list: lines.join("\n"), validSlugs };
-}
-
-function buildSystemPrompt(categoryList: string): string {
-  return `Tu esi asistentas Lietuvos paslaugų platformoje „paslaugurinka.lt". Klientas rašo užklausą — aprašo, kokios paslaugos jam reikia. Tavo tikslas, kad paslaugų tiekėjas iškart suprastų užduotį ir galėtų ją tiksliai įkainoti.
-
-Grąžink TIK galiojantį JSON objektą su laukais:
-{"improvedDescription": "...", "title": "...", "categories": ["...", "..."], "category": "...", "location": "...", "budget": "...", "deadline": "...", "recommendations": [{"prompt": "...", "field": "...", "yesAnswer": "...", "noAnswer": "..."}]}
-
-"improvedDescription" — sutvarkytas kliento aprašymas. PRIVALU grąžinti šį lauką su turinio:
-- Ištaisyk rašybos ir gramatikos klaidas, rašyk taisyklinga, natūralia lietuvių kalba.
-- Sutvarkyk struktūrą: jei yra keli atskiri dalykai — išdėstyk trumpais punktais (kiekvienas iš naujos eilutės, pradžioje „- "). Jei mintis viena — palik tvarkingą sakinį ar du.
-- Glaustai — ne ilgiau nei originalas (daugiausia 1800 simbolių).
-- NEIŠGALVOK faktų. Nenaudok detalių, kurių klientas nepaminėjo. Remkis tik kliento pateikta informacija.
-- Jei žodis atrodo nestandartinis arba nežinomas, palik jį tokį pat, bet paprašyk kliento patikslinti recommendations dalyje.
-- Nepridėk pasisveikinimų, parašų ar komentarų.
-- Jei aprašymas jau gerai sutvarktas, grąžink jo struktūruotą versiją su punktais.
-
-"title" — trumpas, konkretus užklausos pavadinimas lietuvių kalba (3–8 žodžiai, daugiausia 70 simbolių). Pvz. „Trinkelių klojimas kieme".
-
-"categories" — masyvas iš 1–3 kategorijos kodų (slug) iš žemiau pateikto sąrašo, surūšiuotų pagal tinkamumą (pirmas — labiausiai tinkantis). Daugumai užklausų vienos kategorijos pakanka. Pridėk antrą ar trečią TIK jei užklausa aiškiai jungia kelias skirtingas kompetencijas (pvz. „vonios remontas + santechnikos pakeitimas" → 2 kategorijos; „šventė + fotografas + muzika" → 3). NIEKADA nepilnaviršyk dirbtinai — geriau viena tiksli, nei trys silpnos. Jei nieko gero nerandi — grąžink tuščią masyvą [].
-Kategorijos:
-${categoryList}
-
-"category" — pirmas slug iš "categories" masyvo (suderinamumui su senesne versija). Jei "categories" tuščias — grąžink tuščią eilutę "".
-
-"location" — vietovė. Jei aprašyme paminėtas miestas, rajonas, miestelis ar kaimas (Lietuvos arba užsienio) — grąžink jį vardininko linksniu ir taisyklinga rašyba (pvz. „Trakų rajone" → „Trakai", „darbai Kaune" → „Kaunas"). Jei vietovė aprašyme nepaminėta — grąžink tuščią eilutę "".
-
-"budget" — biudžetas. Jei aprašyme klientas paminėjo sumą, kainų ribas ar norą derėtis — grąžink trumpai (pvz. „500 €", „300–500 €", „derinama"). Jei apie biudžetą ar pinigus nieko nepasakyta — grąžink tuščią eilutę "".
-
-"deadline" — darbų terminas. Jei klientas paminėjo, kada reikia atlikti darbą (pvz. „skubu", „iki gegužės pabaigos", „per 2 savaites", „šią savaitę") — grąžink trumpai. Jei apie terminą nieko nepasakyta — grąžink tuščią eilutę "".
-
-"recommendations" — 2–4 patikslinimo klausimai TAIP/NE formatu, kurie padės tiekėjui geriau įkainoti darbą. Kiekvienas objektas:
-- "prompt": trumpas TAIP/NE formato klausimas (pvz. „Ar reikalingas senos tvoros demontavimas?", „Ar reikalingas pamatų betonavimas?").
-- "field": labai trumpa to dalyko žyma (1–3 žodžiai, pvz. „Demontavimas", „Pamatai", „Medžiagos").
-- "yesAnswer": viena trumpa, taisyklinga eilutė, kuri bus pridėta prie aprašymo, jei klientas pasirenka TAIP (pvz. „Sena tvora yra ir ją reikia demontuoti.").
-- "noAnswer": viena trumpa, taisyklinga eilutė, kuri bus pridėta prie aprašymo, jei klientas pasirenka NE (pvz. „Senos tvoros demontuoti nereikia.").
-Visi klausimai PRIVALO būti TAIP/NE tipo — neklausk atvirų klausimų („Koks plotas?", „Kokios spalvos?"). Jei kažko negali patikrinti TAIP/NE klausimu, geriau praleisk. Neklausk to, kas jau parašyta. Jei aprašymas jau išsamus — grąžink tuščią sąrašą [].
-
-Grąžink TIK JSON, be jokio papildomo teksto.`;
 }
 
 export class AiImproveError extends Error {}
@@ -262,7 +224,8 @@ export async function improveDescription(
   }
 
   const { list: categoryList, validSlugs } = await getCategoryPromptData(input);
-  const systemPrompt = buildSystemPrompt(categoryList);
+  const systemPrompt = await resolvePrompt("request_improve", "system", { categoryList });
+  const model = await resolveModel("request_improve", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
 
   const context: string[] = [];
   if (input.category) context.push(`Kategorija: ${input.category}`);
@@ -281,7 +244,7 @@ export async function improveDescription(
         "X-Title": "paslaugurinka.lt",
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
+        model,
         temperature: 0.3,
         max_tokens: 1400,
         reasoning: { enabled: false },

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 /**
  * Two-pass AI category picker for provider profile auto-generation.
@@ -179,27 +180,15 @@ async function pickRoots(
     })
     .join("\n");
 
-  const prompt = `Tu padedi paslaugų teikėjui Lietuvoje pasirinkti tinkamas kategorijų grupes paslaugurinka.lt platformoje.
-
-Žemiau yra 26 PAGRINDINĖS kategorijų grupės (šaknys). Tavo užduotis: pažiūrėti į pateiktą paslaugų teikėjo aprašymą ir nustatyti, kurios 1–3 ŠAKNYS semantiškai geriausiai atitinka jo darbą.
-
-PAGRINDINĖS KATEGORIJOS:
-${rootListing}
-
-PASLAUGŲ TEIKĖJO APRAŠYMAS (vartotojo originalūs žodžiai):
-${input.title ? `Vardas/įmonė: ${input.title}\n` : ""}${input.rawText.slice(0, 2000)}
-
-Taisyklės:
-- Pasirink 1–3 šaknis, kurios geriausiai apibrėžia šio teikėjo veiklą.
-- ŽIŪRĖK į VISĄ kontekstą, ne į atskirus žodžius. Pvz., "10 metų patirtis" NEREIŠKIA, kad žmogus moko.
-- Žolelininkas → "Sveikata, gydymas" + galbūt "Ezoterika, dvasinės paslaugos". NE "Mokymai".
-- Santechnikas → "Statybos, apdaila". NE "Buitinės paslaugos", net jei kviečia į namus.
-- IT konsultantas → "Internetas, IT". NE "Dokumentai, tyrimai, konsultavimas" vien dėl žodžio "konsultacija".
-- Vengk "Kitos paslaugos" — naudok TIK kai tikrai nieko kito nebepritaiko.
-- Confidence skalė 0–1. Atmesk jei < 0.5.
-
-Grąžink TIK galiojantį JSON (be markdown, be code fence):
-{"roots":[{"name":"Sveikata, gydymas","confidence":0.95,"reason":"trumpas paaiškinimas"}]}`;
+  const titleLine = input.title ? `Vardas/įmonė: ${input.title}\n` : "";
+  const rawText = input.rawText.slice(0, 2000);
+  const prompt = await resolvePrompt("category_picker", "roots_user", {
+    rootListing,
+    titleLine,
+    rawText,
+  });
+  const systemPrompt = await resolvePrompt("category_picker", "system");
+  const model = await resolveModel("category_picker", MODEL);
 
   try {
     const response = await fetch(OPENROUTER_URL, {
@@ -210,11 +199,11 @@ Grąžink TIK galiojantį JSON (be markdown, be code fence):
         "X-Title": "paslaugurinka.lt ai-category-pass1",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         messages: [
           {
             role: "system",
-            content: "Grąžini TIK galiojantį JSON. Be markdown.",
+            content: systemPrompt,
           },
           { role: "user", content: prompt },
         ],
@@ -278,27 +267,15 @@ async function pickLeaves(
     })
     .join("\n");
 
-  const prompt = `Tu padedi paslaugų teikėjui pasirinkti TIKSLIAS paslaugų po-kategorijas paslaugurinka.lt platformoje.
-
-Pirmame žingsnyje jau parinkome tinkamas šaknis. Dabar iš jų po-kategorijų pasirink TIK tas (1–4), kurios TIESIOGIAI atitinka šio teikėjo darbą.
-
-GALIMOS PO-KATEGORIJOS (slug | Šaknis > Vardas):
-${leafListing}
-
-PASLAUGŲ TEIKĖJO APRAŠYMAS (vartotojo originalūs žodžiai):
-${input.title ? `Vardas/įmonė: ${input.title}\n` : ""}${input.rawText.slice(0, 2000)}
-
-Taisyklės:
-- Pasirink 1–4 po-kategorijas TIK iš žemiau pateikto sąrašo (naudok slug stulpelį).
-- GERIAU MAŽIAU IR TIKSLIAI. Jei tinka tik viena — grąžink tik vieną. NEPILDYK iki kažkokio skaičiaus.
-- Rink TIK tai, ką teikėjas realiai daro. Pvz. elektrikas NETEIKIA dujų — nesirink "dujų tiekimo" vien todėl, kad jis toje pačioje šaknyje.
-- NEKURK naujų — jei sąraše nėra tikslaus atitikmens, nesirink.
-- Pirmenybę teik konkrečioms (pvz. "Žolininkystė", ne "Sveikata bendrai").
-- Confidence skalė 0–1. Atmesk jei < 0.6.
-- "reason" trumpas (iki 80 simbolių).
-
-Grąžink TIK galiojantį JSON:
-{"leaves":[{"slug":"existing-slug","confidence":0.92,"reason":"..."}]}`;
+  const titleLine = input.title ? `Vardas/įmonė: ${input.title}\n` : "";
+  const rawText = input.rawText.slice(0, 2000);
+  const prompt = await resolvePrompt("category_picker", "leaves_user", {
+    leafListing,
+    titleLine,
+    rawText,
+  });
+  const systemPrompt = await resolvePrompt("category_picker", "system");
+  const model = await resolveModel("category_picker", MODEL);
 
   try {
     const response = await fetch(OPENROUTER_URL, {
@@ -309,11 +286,11 @@ Grąžink TIK galiojantį JSON:
         "X-Title": "paslaugurinka.lt ai-category-pass2",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         messages: [
           {
             role: "system",
-            content: "Grąžini TIK galiojantį JSON. Be markdown.",
+            content: systemPrompt,
           },
           { role: "user", content: prompt },
         ],

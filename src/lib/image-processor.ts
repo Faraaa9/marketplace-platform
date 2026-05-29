@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { getConfiguredCloudinary, isCloudinaryConfigured } from "./cloudinary";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 interface ProcessOptions {
   // Crop the bottom % of the image — useful for paslaugos.lt watermark
@@ -99,7 +100,7 @@ export async function processAndUploadImage(
 // (e.g. when a newer preview ID becomes available) via OPENROUTER_IMAGE_MODEL.
 // Must be at least Gemini 3.1 quality — older Gemini 2.x image models and the
 // previously used Pollinations flux model are not acceptable for new profiles.
-const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+export const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
 
 /**
  * Generate an AI image from a prompt via OpenRouter using a Gemini 3-class
@@ -118,9 +119,13 @@ export async function generateAIImage(
     return null;
   }
 
-  const model = process.env.OPENROUTER_IMAGE_MODEL || DEFAULT_IMAGE_MODEL;
+  const model = await resolveModel(
+    "image_generate",
+    process.env.OPENROUTER_IMAGE_MODEL || DEFAULT_IMAGE_MODEL,
+  );
   const width = options.width ?? 1024;
   const height = options.height ?? 768;
+  const userPrompt = await resolvePrompt("image_generate", "user", { prompt, width, height });
 
   try {
     const response = await fetch(
@@ -137,7 +142,7 @@ export async function generateAIImage(
           messages: [
             {
               role: "user",
-              content: `${prompt}\n\nAspect ratio: ${width}x${height}. Photorealistic, no text, no logos, no watermarks.`,
+              content: userPrompt,
             },
           ],
         }),
