@@ -10,11 +10,13 @@ import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 
 export const maxDuration = 300;
 
 const PROFILE_MODEL = "anthropic/claude-haiku-4.5";
 const PROFILE_PROMPT_VERSION = "provider_profile_v1";
+const PROFILE_TIMEOUT_MS = 60_000;
 
 function isServerlessEnv(): boolean {
   return (
@@ -259,7 +261,7 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
 async function generateWithClaude(
   scraped: ScrapedData,
   url: string,
-): Promise<AIResult> {
+): Promise<{ result: AIResult; usage: OpenRouterUsage | null }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
@@ -271,49 +273,38 @@ async function generateWithClaude(
     scrapedText: scraped.text.slice(0, 4000),
   });
 
-  const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.5,
-        max_tokens: 1500,
-      }),
-    }
-  ).catch((err: Error) => {
-    throw new Error(`OpenRouter network error: ${err.message}`);
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: PROFILE_TIMEOUT_MS,
+    temperature: 0.5,
+    maxTokens: 1500,
+    jsonObject: true,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ],
   });
 
-  if (!response.ok) {
-    let errorDetail = "";
-    try {
-      const error = await response.json();
-      errorDetail = JSON.stringify(error).slice(0, 200);
-    } catch {
-      errorDetail = `HTTP ${response.status}`;
-    }
+  if (!call.ok) {
     console.error("OpenRouter API error (generateWithClaude):", {
-      status: response.status,
-      errorDetail,
+      status: call.status,
+      errorKind: call.errorKind,
     });
-    if (response.status === 429) {
+    if (call.status === 429) {
       throw new Error("AI servisas per apkrautas. Bandykite per kelias minutes.");
     }
-    throw new Error(`OpenRouter error (${response.status})`);
+    throw new Error(
+      call.errorKind === "timeout"
+        ? "AI atsakymas užtruko per ilgai. Bandykite dar kartą."
+        : `OpenRouter error (${call.status})`,
+    );
   }
 
-  const data = await response.json();
-  const content = data.choices[0].message.content;
+  const content = call.content;
+  if (!content) {
+    throw new Error("AI grąžino netinkamą atsakymą. Bandykite dar kartą.");
+  }
 
   let parsed;
   try {
@@ -335,7 +326,7 @@ async function generateWithClaude(
     phone = parsed.phone.trim();
   }
 
-  return {
+  const result: AIResult = {
     headline: parsed.headline || "",
     description: parsed.description || "",
     phone,
@@ -360,6 +351,7 @@ async function generateWithClaude(
         : undefined,
     ...extractSeoFields(parsed),
   };
+  return { result, usage: call.usage };
 }
 
 // Shared SEO field extraction — used by both URL and scratch modes since the
@@ -395,7 +387,7 @@ async function generateFromScratch(
     phone?: string;
     website?: string;
   },
-): Promise<AIResult> {
+): Promise<{ result: AIResult; usage: OpenRouterUsage | null }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
@@ -410,49 +402,38 @@ async function generateFromScratch(
     websiteLine: input.website ? `- Svetainė: ${input.website}\n` : "",
   });
 
-  const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.6,
-        max_tokens: 1500,
-      }),
-    }
-  ).catch((err: Error) => {
-    throw new Error(`OpenRouter network error: ${err.message}`);
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: PROFILE_TIMEOUT_MS,
+    temperature: 0.6,
+    maxTokens: 1500,
+    jsonObject: true,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ],
   });
 
-  if (!response.ok) {
-    let errorDetail = "";
-    try {
-      const error = await response.json();
-      errorDetail = JSON.stringify(error).slice(0, 200);
-    } catch {
-      errorDetail = `HTTP ${response.status}`;
-    }
+  if (!call.ok) {
     console.error("OpenRouter API error (generateFromScratch):", {
-      status: response.status,
-      errorDetail,
+      status: call.status,
+      errorKind: call.errorKind,
     });
-    if (response.status === 429) {
+    if (call.status === 429) {
       throw new Error("AI servisas per apkrautas. Bandykite per kelias minutes.");
     }
-    throw new Error(`OpenRouter error (${response.status})`);
+    throw new Error(
+      call.errorKind === "timeout"
+        ? "AI atsakymas užtruko per ilgai. Bandykite dar kartą."
+        : `OpenRouter error (${call.status})`,
+    );
   }
 
-  const data = await response.json();
-  const content = data.choices[0].message.content;
+  const content = call.content;
+  if (!content) {
+    throw new Error("AI grąžino netinkamą atsakymą");
+  }
 
   let parsed;
   try {
@@ -464,7 +445,7 @@ async function generateFromScratch(
   }
 
   const seo = extractSeoFields(parsed);
-  return {
+  const result: AIResult = {
     headline: parsed.headline || "",
     description: parsed.description || "",
     phone: input.phone, // user-provided
@@ -489,6 +470,7 @@ async function generateFromScratch(
     // Trust user-provided location over AI guess for primaryCity when both exist.
     primaryCity: input.location || seo.primaryCity,
   };
+  return { result, usage: call.usage };
 }
 
 // Social/aggregator domains are never the provider's own site — reject so the
@@ -683,7 +665,7 @@ export async function POST(req: NextRequest) {
     // and so the error path logs the right model too.
     profileAuditModel = await resolveModel("profile_generate", PROFILE_MODEL);
     profileAuditVersion = await resolvePromptVersion("profile_generate", PROFILE_PROMPT_VERSION);
-    const aiResult = isScratchMode
+    const { result: aiResult, usage: aiUsage } = isScratchMode
       ? await generateFromScratch({
           businessName: body.businessName!,
           servicesText: body.servicesText!,
@@ -923,6 +905,10 @@ export async function POST(req: NextRequest) {
         categoriesCount: selectedCategoryIds.length,
         imagesCount: imagesToSave.length,
         generatedImageAttempted: Boolean(isScratchMode && aiResult.imagePrompt),
+        promptTokens: aiUsage?.promptTokens ?? null,
+        completionTokens: aiUsage?.completionTokens ?? null,
+        totalTokens: aiUsage?.totalTokens ?? null,
+        costUsd: aiUsage?.costUsd ?? null,
       },
     });
     aiAuditRecorded = true;

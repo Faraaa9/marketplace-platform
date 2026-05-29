@@ -31,20 +31,30 @@ Konvencija:
   „pridėti AiRun stulpelius + Prisma migracija" planas atmestas — DB liesti neprireikė.
   PASTABA: `profile_generate` kainos/žetonų nerodo, kol nemigruotas į klientą (žr. žemiau).
 
-- [ ] **2026-05-29 — `profile_generate` pilna kliento migracija.**
-  Šiuo metu pataisytas tik audito modelis. `generateWithClaude`/`generateFromScratch`
-  vis dar turi savo `fetch` BE timeout (`route.ts` ~274, ~413). Migruoti į `callOpenRouter`
-  (timeout + retry + usage). Atidėta dėl failo dydžio (1010 eil.) ir onboarding rizikos.
+- [x] **2026-05-29 — `profile_generate` pilna kliento migracija.**
+  `generateWithClaude`/`generateFromScratch` migruoti į `callOpenRouter` (timeout 60 s +
+  retry + usage). Funkcijos grąžina `{ result, usage }`; route logina `costUsd` + token sumas.
+  Onboarding'as nebepakimba dėl pakibusio OpenRouter kvietimo. Build + `tsc` žali.
 
-- [ ] **2026-05-29 — `transcribe` web garso formatas.**
-  Web route siunčia hardkodintą `"wav"`, bet naršyklės MediaRecorder dažnai įrašo
-  webm/ogg. Detektuoti formatą (data URL / magic bytes) arba pridėti į schemą ir perduoti.
+- [x] **2026-05-29 — `category_picker` confidence + `category_suggest` reason (C-fazė).**
+  Picker Pass 1 promptas suderintas su kodo 0.6 (anksčiau 0.5 → tyliai prarandamos šaknys).
+  `category_suggest` override nebeturi hardkodintų „kriauklė/vanduo" — tuščias matchedTokens,
+  reason grįžta į sąžiningą „Atitinka kategoriją …".
 
-- [ ] **2026-05-29 — Likę C-fazės kokybės fix'ai (iš `/admin/ai` analizės).**
-  `moderation_image` `modelKind:"text"` (admino dropdown siūlo tekstinius modelius
-  nuotraukoms — vienas klikas sugriautų moderaciją); >10 nuotraukų tyliai numetamos;
-  `category_picker` Pass 1 confidence kodas 0.6 vs promptas 0.5; `lead_copilot` trūkstamas
-  confidence tyliai virsta 0.5; `ai-usage` tipo pavadinimas `14d` vs realus 30 d. langas.
+- [x] **2026-05-29 — `lead_copilot` confidence → null (C-fazė).**
+  Trūkstamas confidence nebevirsta tyliu 0.5; `confidence: number | null`, UI rodo „įvertis
+  neprieinamas". Tiekėjas nebesiremia fiktyviu skaičiumi sprendžiant, ar atrakinti kontaktus.
+
+- [x] **2026-05-29 — NON-ISSUE (patikrinta, kodo nereikia).** Kelios analizės įžvalgos
+  neatlaikė patikros: `transcribe` web VISADA perkoduoja į 16kHz mono WAV
+  (`use-voice-recorder.ts`), tad route'o „wav" teisinga; `ai-usage` `14d` pavadinimai TEISINGI
+  (`getAiUsageStats` kviečiamas su 14 d. langu per `/api/admin/stats` — atskira funkcija nuo
+  30 d. `getAiFeatureUsage`); `moderation_image` `modelKind:"text"` nepavojinga — visi 6
+  kuruoti modeliai yra multimodalūs.
+
+- [ ] **Liko (smulku, ne prioritetas):** `moderation_image` >10 nuotraukų tyliai numetamos
+  (batch'inti arba priverstinai „review"); `ai-usage` JS agregacija ties `take:5000/1000`
+  augant srautui (Prisma `groupBy` optimizacija — ne dabar).
 
 ---
 
