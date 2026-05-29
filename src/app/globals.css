@@ -135,6 +135,20 @@
     pointer-events: none;
   }
 
+  /* Seen state — muted grey ring, no animation */
+  .story-ring-seen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 3px;
+    background-image: linear-gradient(to top right, #d6d3d1, #a8a29e);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
 }
 
 @layer utilities {

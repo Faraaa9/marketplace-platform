@@ -460,3 +460,10 @@ Konvencija:
 - [ ] **2026-05-29 — Vienetiniai testai be runner'io.** `pnpm test:telegram`
   paleidžia `conversation.ts` state machine testus per ts-node (projekte nėra
   jest/vitest). Jei ateity dėsim test runner'į — perkelti čia.
+
+- [ ] **2026-05-29 — Story peržiūrų/reakcijų valymas.** Story po 24 val. tik
+  paslepiamos (`expiresAt`), bet neištrinamos, todėl `story_views` ir
+  `story_reactions` eilutės kaupiasi neribotai. Kai story ištrinama — kaskaduoja
+  (onDelete: Cascade), bet pasibaigusios lieka. Vertėtų cron'ą (pvz. prie
+  `cleanup-pending-requests`), kuris prune'ina views/reactions, kai susijusi
+  story pasibaigusi senesnė nei N dienų.

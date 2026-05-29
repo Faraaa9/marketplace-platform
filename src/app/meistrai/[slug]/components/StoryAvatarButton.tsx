@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import StoryViewer from "./StoryViewer";
 import type { StoryData } from "./types";
@@ -22,8 +22,34 @@ export default function StoryAvatarButton({
   const isStoryOpen = useUIStore((s) => s.isStoryOpen);
   const openStory = useUIStore((s) => s.openStory);
   const closeStory = useUIStore((s) => s.closeStory);
+  const openMessageModal = useUIStore((s) => s.openMessageModal);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [seen, setSeen] = useState(false);
   const hasStories = stories.length > 0;
+  const storyIdsKey = stories.map((s) => s.id).join(",");
+
+  // Per-viewer seen-state can't live in the cached page render, so resolve it
+  // client-side: grey the ring once every active story has been viewed.
+  useEffect(() => {
+    if (!storyIdsKey) return;
+    let cancelled = false;
+    const ids = storyIdsKey.split(",");
+    fetch("/api/stories/seen-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storyIds: ids }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled || !res?.success) return;
+        const seenSet = new Set<string>(res.seenIds ?? []);
+        setSeen(ids.every((id) => seenSet.has(id)));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [storyIdsKey]);
 
   return (
     <>
@@ -33,11 +59,12 @@ export default function StoryAvatarButton({
           onClick={() => {
             if (!hasStories) return;
             setStoryIndex(0);
+            setSeen(true);
             openStory(stories[0]?.id ?? null);
           }}
           className={`relative h-[70px] w-[70px] shrink-0 rounded-full transition-all sm:h-[78px] sm:w-[78px] ${
             hasStories
-              ? "cursor-pointer story-ring hover:scale-[1.03]"
+              ? `cursor-pointer hover:scale-[1.03] ${seen ? "story-ring-seen" : "story-ring"}`
               : "cursor-default"
           }`}
           disabled={!hasStories}
@@ -84,6 +111,10 @@ export default function StoryAvatarButton({
           providerImage={providerImage}
           onClose={closeStory}
           onIndexChange={setStoryIndex}
+          onContact={() => {
+            closeStory();
+            openMessageModal();
+          }}
         />
       )}
     </>
