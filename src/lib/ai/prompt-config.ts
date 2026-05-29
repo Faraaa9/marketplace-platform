@@ -196,7 +196,7 @@ Taisyklės:
 - Santechnikas → "Statybos, apdaila". NE "Buitinės paslaugos", net jei kviečia į namus.
 - IT konsultantas → "Internetas, IT". NE "Dokumentai, tyrimai, konsultavimas" vien dėl žodžio "konsultacija".
 - Vengk "Kitos paslaugos" — naudok TIK kai tikrai nieko kito nebepritaiko.
-- Confidence skalė 0–1. Atmesk jei < 0.5.
+- Confidence skalė 0–1. Atmesk jei < 0.6.
 
 Grąžink TIK galiojantį JSON (be markdown, be code fence):
 {"roots":[{"name":"Sveikata, gydymas","confidence":0.95,"reason":"trumpas paaiškinimas"}]}`;

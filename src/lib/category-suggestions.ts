@@ -533,7 +533,10 @@ export async function suggestCategories(
         candidate: overrideCandidate,
         breadcrumb: buildBreadcrumb(overrideCandidate, byId),
         score: Number.MAX_SAFE_INTEGER,
-        matchedTokens: new Set(["kriauklė", "vanduo"]),
+        // Empty — the override matches by rule, not by these specific words, so
+        // reasonFor falls back to the honest "Atitinka kategoriją ..." instead of
+        // naming words the user never wrote.
+        matchedTokens: new Set<string>(),
       }
     : null;
 
