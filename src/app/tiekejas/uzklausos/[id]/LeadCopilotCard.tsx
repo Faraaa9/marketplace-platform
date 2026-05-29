@@ -19,7 +19,7 @@ interface LeadCopilotResult {
   questions: string[];
   riskSignals: string[];
   nextStep: string;
-  confidence: number;
+  confidence: number | null;
 }
 
 interface LeadCopilotCardProps {
@@ -108,7 +108,9 @@ export default function LeadCopilotCard({ requestId }: LeadCopilotCardProps) {
               </h2>
               {result && (
                 <p className="text-micro font-medium text-surface-500 dark:text-surface-400">
-                  Tinkamumas: {confidenceLabel(result.confidence)} ({Math.round(result.confidence * 100)}%)
+                  {result.confidence != null
+                    ? `Tinkamumas: ${confidenceLabel(result.confidence)} (${Math.round(result.confidence * 100)}%)`
+                    : "Tinkamumas: įvertis neprieinamas"}
                 </p>
               )}
             </div>

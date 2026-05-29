@@ -45,7 +45,8 @@ export interface LeadCopilotResult {
   questions: string[];
   riskSignals: string[];
   nextStep: string;
-  confidence: number;
+  /** 0–1, arba null kai modelis jo nepateikė (UI rodo „įvertis neprieinamas"). */
+  confidence: number | null;
 }
 
 function clampText(value: unknown, max: number): string {
@@ -81,8 +82,12 @@ function parseResult(raw: string): LeadCopilotResult | null {
   const questions = clampList(obj.questions, 4, 180);
   const riskSignals = clampList(obj.riskSignals, 3, 180);
   const nextStep = clampText(obj.nextStep, 220);
-  const confidenceRaw = typeof obj.confidence === "number" ? obj.confidence : 0.5;
-  const confidence = Math.round(Math.max(0, Math.min(1, confidenceRaw)) * 100) / 100;
+  // null (ne 0.5) kai modelis nepateikė — UI taip atskiria realų vidutinį įvertį
+  // nuo „nežinoma", o tiekėjas nesiremia fiktyviu skaičiumi sprendžiant atrakinti.
+  const confidence =
+    typeof obj.confidence === "number"
+      ? Math.round(Math.max(0, Math.min(1, obj.confidence)) * 100) / 100
+      : null;
 
   if (!fitSummary || fitReasons.length === 0 || !nextStep) return null;
 
