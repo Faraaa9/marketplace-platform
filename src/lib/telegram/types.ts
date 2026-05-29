@@ -27,13 +27,24 @@ export interface TgContact {
   first_name?: string;
 }
 
+/** One rendition of a photo. Telegram sends an array sorted small→large. */
+export interface TgPhotoSize {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
+}
+
 export interface TgMessage {
   message_id: number;
   from?: TgUser;
   chat: TgChat;
   text?: string;
+  caption?: string;
   voice?: TgVoice;
   contact?: TgContact;
+  photo?: TgPhotoSize[];
 }
 
 export interface TgCallbackQuery {

@@ -14,6 +14,8 @@ export interface DraftData {
   location: string;
   budget: string;
   deadline: string;
+  /** Cloudinary URLs of photos attached via the bot (max 5). */
+  attachmentUrls: string[];
 }
 
 /** Escape the small set of characters Telegram's HTML parse mode reserves. */
@@ -32,6 +34,7 @@ export function formatDraft(d: DraftData): string {
     field("Miestas", d.location),
     field("Biudžetas", d.budget),
     field("Terminas", d.deadline),
+    d.attachmentUrls.length > 0 ? `<b>Nuotraukos:</b> ${d.attachmentUrls.length}` : null,
     "",
     esc(d.description),
   ].filter((line): line is string => line !== null);
@@ -65,6 +68,11 @@ export const MSG = {
     "Nepavyko parinkti kategorijos. Patikslinkite, kokios paslaugos ieškote.",
   rateLimited: "Per daug užklausų. Pabandykite po valandos.",
   aiUnavailable: "Šiuo metu nepavyksta apdoroti. Pabandykite po kelių minučių.",
+  photoFailed: "Nepavyko įkelti nuotraukos. Pabandykite dar kartą.",
+  photoAdded: (n: number, max: number): string =>
+    `Nuotrauka pridėta (${n}/${max}). Siųskite dar arba aprašykite, ko reikia.`,
+  tooManyPhotos: (max: number): string =>
+    `Jau pridėta ${max} nuotraukos - daugiau pridėti negalima.`,
   editPrompt: "Gerai - parašykite arba įrašykite naują aprašymą.",
   cancelled: "Atšaukta. Kai norėsite, parašykite iš naujo.",
   nothingToPost: "Nėra ką skelbti. Pirma aprašykite, kokios paslaugos ieškote.",

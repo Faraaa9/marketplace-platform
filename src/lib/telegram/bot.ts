@@ -6,6 +6,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
+import { getConfiguredCloudinary } from "@/lib/cloudinary";
 import { transcribeAudio } from "@/lib/ai-transcribe";
 import { improveDescription } from "@/lib/ai-improve";
 import { getFlatServiceCategories } from "@/lib/service-categories";
@@ -84,6 +85,12 @@ const deps: BotDeps = {
   sendMessage,
   answerCallbackQuery,
   downloadFile,
+  uploadPhoto: async (buffer) => {
+    const cld = getConfiguredCloudinary();
+    const dataUri = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+    const result = await cld.uploader.upload(dataUri, { folder: "requests/telegram" });
+    return result.secure_url;
+  },
   transcribe: (audioBase64, format) => transcribeAudio(audioBase64, format),
   improve: (description) => improveDescription({ description }),
   resolveCategories,
@@ -103,6 +110,10 @@ const deps: BotDeps = {
   saveSession,
   rateLimit: async (key) => {
     const result = await rateLimitAsync(key, RATE_LIMITS.aiImprove);
+    return result.success;
+  },
+  rateLimitPhoto: async (key) => {
+    const result = await rateLimitAsync(key, { maxRequests: 20, windowMs: 60 * 60 * 1000 });
     return result.success;
   },
   baseUrl: baseUrl(),
