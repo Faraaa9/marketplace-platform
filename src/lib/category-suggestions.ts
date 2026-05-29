@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -360,39 +361,21 @@ async function aiRerank(
     .join("\n");
   const validSlugs = new Set(topCandidates.map((entry) => entry.candidate.slug));
 
-  const systemPrompt = `Tu esi kategorijų parinkimo asistentas Lietuvos paslaugų marketplace „paslaugurinka.lt".
-
-Tavo tikslas: pagal vartotojo tekstą parinkti tinkamiausias esamas paslaugų kategorijas iš pateikto sąrašo.
-
-Taisyklės:
-- Grąžink TIK galiojantį JSON objektą.
-- Nekurk naujų kategorijų. Gali naudoti tik kategorijas iš pateikto kandidatų sąrašo (slug stulpelis).
-- Jei vartotojo tekstas neaiškus, grąžink mažiau kandidatų ir užduok patikslinimo klausimą.
-- Prioritetą teik konkrečiai paslaugai, ne plačiai kategorijai.
-- Jei yra keli galimi variantai, grąžink 3–5 kandidatus.
-- Confidence skalė: 0–1.
-- "reason" turi būti trumpas (iki 90 simbolių), lietuviškai, paaiškinantis kodėl ši kategorija tinka.
-
-JSON schema:
-{"suggestions":[{"slug":"existing-slug","confidence":0.92,"reason":"..."}],"clarificationQuestion":""}
-
-Kandidatų sąrašas:
-${candidateList}`;
-
-  const userPrompt =
-    input.mode === "provider"
-      ? `Režimas: paslaugų teikėjas pildo profilį.
-
-Tiekėjo tekstas:
-${input.text}
-
-${input.title ? `Antraštė: ${input.title}\n` : ""}Parink konkrečias paslaugas, kurias šis tiekėjas tikėtina teikia. Nesiūlyk per plačių kategorijų, jei yra konkretesnė paslauga.`
-      : `Režimas: klientas kuria paslaugos užklausą.
-
-Kliento tekstas:
-${input.text}
-
-${input.title ? `Pavadinimas: ${input.title}\n` : ""}Parink tinkamiausias paslaugų kategorijas.`;
+  const systemPrompt = await resolvePrompt("category_suggest", "system", { candidateList });
+  const userKey = input.mode === "provider" ? "user_provider" : "user_request";
+  const titleLine = input.title
+    ? input.mode === "provider"
+      ? `Antraštė: ${input.title}\n`
+      : `Pavadinimas: ${input.title}\n`
+    : "";
+  const userPrompt = await resolvePrompt("category_suggest", userKey, {
+    text: input.text,
+    titleLine,
+  });
+  const model = await resolveModel(
+    "category_suggest",
+    process.env.OPENROUTER_MODEL || DEFAULT_RERANK_MODEL,
+  );
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RERANK_TIMEOUT_MS);
@@ -406,7 +389,7 @@ ${input.title ? `Pavadinimas: ${input.title}\n` : ""}Parink tinkamiausias paslau
         "X-Title": "paslaugurinka.lt category-suggest",
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || DEFAULT_RERANK_MODEL,
+        model,
         temperature: 0.2,
         max_tokens: 600,
         reasoning: { enabled: false },

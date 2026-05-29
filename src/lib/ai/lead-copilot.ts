@@ -1,9 +1,10 @@
 import { recordAiRun } from "@/lib/ai/audit";
+import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 18_000;
-const PROMPT_VERSION = "lead-copilot-v1";
+export const PROMPT_VERSION = "lead-copilot-v1";
 
 export class AiLeadCopilotError extends Error {}
 
@@ -46,32 +47,6 @@ export interface LeadCopilotResult {
   nextStep: string;
   confidence: number;
 }
-
-const SYSTEM_PROMPT = `Tu esi paslaugų tiekėjo co-pilot asistentas Lietuvos marketplace „paslaugurinka.lt".
-
-Tavo užduotis: padėti tiekėjui greitai suprasti, ar verta reaguoti į kliento užklausą ir ką protingai paklausti prieš pateikiant pasiūlymą.
-
-Grąžink TIK galiojantį JSON objektą:
-{
-  "fitSummary": "...",
-  "fitReasons": ["..."],
-  "questions": ["..."],
-  "riskSignals": ["..."],
-  "nextStep": "...",
-  "confidence": 0.78
-}
-
-Taisyklės:
-- Rašyk lietuviškai, trumpai, profesionaliai.
-- Remkis TIK pateikta tiekėjo ir užklausos informacija. Neišgalvok patirties, kainų, garantijų, terminų ar klientų detalių.
-- "fitSummary": vienas sakinys, kodėl lead'as atrodo tinkamas arba ribinis.
-- "fitReasons": 2-4 konkretūs atitikimo signalai.
-- "questions": 2-4 trumpi klausimai, kuriuos tiekėjui verta paklausti kliento. Neklausk to, kas jau aiškiai pateikta.
-- "riskSignals": 0-3 atsargumo signalai (pvz. trūksta masto, neaiškus terminas, neaiškus biudžetas). Jei rizikų nėra, [].
-- "nextStep": vienas saugus veiksmo sakinys. Negali liepti automatiškai siųsti ar atrakinti; tik pasiūlyk, ką žmogui verta padaryti.
-- "confidence": 0-1, kiek užklausa pagal pateiktą info tinka šiam tiekėjui.
-- Jei tiekėjo profilis tuščias arba kategorijos neaiškios, aiškiai pasakyk, kad vertinimas ribotas.
-- Jokio Markdown, jokių emoji, jokio papildomo teksto.`;
 
 function clampText(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -161,7 +136,7 @@ export async function generateLeadCopilot(
   audit: LeadCopilotAuditContext,
 ): Promise<LeadCopilotResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+  const model = await resolveModel("lead_copilot", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
   const startedAt = Date.now();
 
   if (!apiKey) {
@@ -184,6 +159,7 @@ export async function generateLeadCopilot(
   }
 
   const userContent = `TIEKĖJO PROFILIS:\n${buildProviderBlock(provider)}\n\nKLIENTO UŽKLAUSA:\n${buildRequestBlock(request)}`;
+  const systemPrompt = await resolvePrompt("lead_copilot", "system");
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -202,7 +178,7 @@ export async function generateLeadCopilot(
         reasoning: { enabled: false },
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
       }),
