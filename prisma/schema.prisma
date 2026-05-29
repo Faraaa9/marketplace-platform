@@ -209,6 +209,7 @@ model ServiceRequest {
   clientEmail                  String
   clientName                   String
   clientPhone                  String?
+  source                       String    @default("web") // "web" | "telegram"
   createdAt                    DateTime  @default(now())
   updatedAt                    DateTime  @updatedAt
 
