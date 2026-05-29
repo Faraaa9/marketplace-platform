@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-29 03:22 — Claude
+
+**Commit:** `8797468` — feat(telegram): attach photos to requests via the bot · lokalus
+
+**Pakeitimai:** 5 files changed, 173 insertions(+), 3 deletions(-)
+
+**Failai:**
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/bot.ts
+- src/lib/telegram/conversation.ts
+- src/lib/telegram/format.ts
+- src/lib/telegram/types.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 02:32 — Claude
 
 **Commit:** `812c871` — fix(telegram): prepend + to shared-contact phone so non-LT numbers normalize · lokalus
