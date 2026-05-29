@@ -91,7 +91,7 @@ const deps: BotDeps = {
     const result = await cld.uploader.upload(dataUri, { folder: "requests/telegram" });
     return result.secure_url;
   },
-  transcribe: (audioBase64, format) => transcribeAudio(audioBase64, format),
+  transcribe: (audioBase64, format) => transcribeAudio(audioBase64, format, { source: "telegram" }),
   improve: (description) => improveDescription({ description }),
   resolveCategories,
   findOrCreateUserByPhone: async (phone, name) => {

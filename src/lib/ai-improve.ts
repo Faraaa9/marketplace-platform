@@ -1,14 +1,16 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
 import { getFlatServiceCategories } from "@/lib/service-categories";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter } from "@/lib/ai/openrouter";
+import { recordAiRun } from "@/lib/ai/audit";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 // Gemini handles Lithuanian grammar/nuance best of the OpenRouter models.
 // 2.5-flash lets us turn reasoning off (3.x flash forces it), so this short
 // cleanup task stays fast and the whole token budget goes to the answer.
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 30_000;
+const PROMPT_VERSION = "request-improve-v1";
 
 /**
  * Build the curated-category prompt list (`slug (Pavadinimas)`, grouped by
@@ -226,70 +228,85 @@ export async function improveDescription(
   const { list: categoryList, validSlugs } = await getCategoryPromptData(input);
   const systemPrompt = await resolvePrompt("request_improve", "system", { categoryList });
   const model = await resolveModel("request_improve", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
+  const promptVersion = await resolvePromptVersion("request_improve", PROMPT_VERSION);
 
   const context: string[] = [];
   if (input.category) context.push(`Kategorija: ${input.category}`);
   if (input.title) context.push(`Pavadinimas: ${input.title}`);
   const userContent = `${context.length ? `${context.join("\n")}\n\n` : ""}Aprašymas:\n${input.description}`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: REQUEST_TIMEOUT_MS,
+    temperature: 0.3,
+    maxTokens: 1400,
+    reasoning: false,
+    jsonObject: true,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ],
+  });
 
-  try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "paslaugurinka.lt",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.3,
-        max_tokens: 1400,
-        reasoning: { enabled: false },
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-      }),
-      signal: controller.signal,
+  // Auditas loginamas čia (ne route), kad būtų užfiksuotas REALIAI naudotas
+  // modelis, prompto versija ir token sąnaudos.
+  const logError = (errorCode: string, extra?: Record<string, unknown>) =>
+    recordAiRun({
+      feature: "request_improve",
+      status: "error",
+      provider: "openrouter",
+      model: call.model,
+      promptVersion,
+      latencyMs: call.latencyMs,
+      errorCode,
+      metadata: { attempts: call.attempts, ...extra },
     });
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      console.error("OpenRouter klaida:", res.status, detail);
-      throw new AiImproveError("AI_REQUEST_FAILED");
-    }
-
-    const data = (await res.json().catch(() => null)) as
-      | { choices?: Array<{ message?: { content?: string } }> }
-      | null;
-    const raw = data?.choices?.[0]?.message?.content;
-    if (typeof raw !== "string" || raw.trim().length === 0) {
-      throw new AiImproveError("AI_EMPTY_RESPONSE");
-    }
-
-    const result = parseResult(raw, validSlugs);
-    if (!result) {
-      throw new AiImproveError("AI_EMPTY_RESPONSE");
-    }
-    const overrideCategory = pickCategoryOverrideSlug(userContent, validSlugs);
-    if (overrideCategory) {
-      result.category = overrideCategory;
-      // Promote the override slug to the front of the categories list.
-      result.categories = [
-        overrideCategory,
-        ...result.categories.filter((slug) => slug !== overrideCategory),
-      ].slice(0, 3);
-    }
-    return result;
-  } catch (err) {
-    if (err instanceof AiImproveError) throw err;
-    const name = (err as { name?: string } | null)?.name;
-    throw new AiImproveError(name === "AbortError" ? "AI_TIMEOUT" : "AI_REQUEST_FAILED");
-  } finally {
-    clearTimeout(timeout);
+  if (!call.ok || call.content === null) {
+    const errorCode =
+      call.errorKind === "timeout"
+        ? "AI_TIMEOUT"
+        : !call.ok
+          ? "AI_REQUEST_FAILED"
+          : "AI_EMPTY_RESPONSE";
+    await logError(errorCode);
+    throw new AiImproveError(errorCode);
   }
+
+  const result = parseResult(call.content, validSlugs);
+  if (!result) {
+    await logError("AI_EMPTY_RESPONSE", { parseFailed: true });
+    throw new AiImproveError("AI_EMPTY_RESPONSE");
+  }
+
+  const overrideCategory = pickCategoryOverrideSlug(userContent, validSlugs);
+  if (overrideCategory) {
+    result.category = overrideCategory;
+    // Promote the override slug to the front of the categories list.
+    result.categories = [
+      overrideCategory,
+      ...result.categories.filter((slug) => slug !== overrideCategory),
+    ].slice(0, 3);
+  }
+
+  await recordAiRun({
+    feature: "request_improve",
+    status: "success",
+    provider: "openrouter",
+    model: call.model,
+    promptVersion,
+    latencyMs: call.latencyMs,
+    metadata: {
+      attempts: call.attempts,
+      hasTitle: Boolean(result.title),
+      hasCategory: Boolean(result.category),
+      recommendations: result.recommendations.length,
+      promptTokens: call.usage?.promptTokens ?? null,
+      completionTokens: call.usage?.completionTokens ?? null,
+      totalTokens: call.usage?.totalTokens ?? null,
+    },
+  });
+
+  return result;
 }

@@ -1,7 +1,7 @@
 import { recordAiRun } from "@/lib/ai/audit";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter } from "@/lib/ai/openrouter";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 18_000;
 export const PROMPT_VERSION = "lead-copilot-v1";
@@ -137,7 +137,6 @@ export async function generateLeadCopilot(
 ): Promise<LeadCopilotResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = await resolveModel("lead_copilot", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
-  const startedAt = Date.now();
 
   if (!apiKey) {
     await recordAiRun({
@@ -160,86 +159,39 @@ export async function generateLeadCopilot(
 
   const userContent = `TIEKĖJO PROFILIS:\n${buildProviderBlock(provider)}\n\nKLIENTO UŽKLAUSA:\n${buildRequestBlock(request)}`;
   const systemPrompt = await resolvePrompt("lead_copilot", "system");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const promptVersion = await resolvePromptVersion("lead_copilot", PROMPT_VERSION);
 
-  try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "paslaugurinka.lt lead-copilot",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.25,
-        max_tokens: 900,
-        reasoning: { enabled: false },
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-      }),
-      signal: controller.signal,
-    });
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: REQUEST_TIMEOUT_MS,
+    temperature: 0.25,
+    maxTokens: 900,
+    reasoning: false,
+    jsonObject: true,
+    title: "paslaugurinka.lt lead-copilot",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ],
+  });
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      console.error("Lead co-pilot OpenRouter klaida:", res.status, detail);
-      throw new AiLeadCopilotError("AI_REQUEST_FAILED");
-    }
+  const result = call.ok && call.content !== null ? parseResult(call.content) : null;
 
-    const data = (await res.json().catch(() => null)) as
-      | { choices?: Array<{ message?: { content?: string } }> }
-      | null;
-    const raw = data?.choices?.[0]?.message?.content;
-    if (typeof raw !== "string" || raw.trim().length === 0) {
-      throw new AiLeadCopilotError("AI_EMPTY_RESPONSE");
-    }
-
-    const result = parseResult(raw);
-    if (!result) {
-      throw new AiLeadCopilotError("AI_EMPTY_RESPONSE");
-    }
-
-    await recordAiRun({
-      feature: "lead_copilot",
-      status: "success",
-      provider: "openrouter",
-      model,
-      promptVersion: PROMPT_VERSION,
-      latencyMs: Date.now() - startedAt,
-      actorUserId: audit.actorUserId,
-      entityType: "ServiceRequest",
-      entityId: request.id,
-      metadata: {
-        providerProfileId: audit.providerProfileId,
-        unlocked: request.isUnlocked,
-        confidence: result.confidence,
-        questions: result.questions.length,
-        risks: result.riskSignals.length,
-      },
-    });
-
-    return result;
-  } catch (error) {
-    const name = (error as { name?: string } | null)?.name;
+  if (!result) {
     const code =
-      error instanceof AiLeadCopilotError
-        ? error.message
-        : name === "AbortError"
-          ? "AI_TIMEOUT"
-          : "AI_REQUEST_FAILED";
-
+      call.errorKind === "timeout"
+        ? "AI_TIMEOUT"
+        : !call.ok
+          ? "AI_REQUEST_FAILED"
+          : "AI_EMPTY_RESPONSE";
     await recordAiRun({
       feature: "lead_copilot",
       status: "error",
       provider: "openrouter",
-      model,
-      promptVersion: PROMPT_VERSION,
-      latencyMs: Date.now() - startedAt,
+      model: call.model,
+      promptVersion,
+      latencyMs: call.latencyMs,
       actorUserId: audit.actorUserId,
       entityType: "ServiceRequest",
       entityId: request.id,
@@ -247,12 +199,34 @@ export async function generateLeadCopilot(
       metadata: {
         providerProfileId: audit.providerProfileId,
         unlocked: request.isUnlocked,
+        attempts: call.attempts,
       },
     });
-
-    if (error instanceof AiLeadCopilotError) throw error;
     throw new AiLeadCopilotError(code);
-  } finally {
-    clearTimeout(timeout);
   }
+
+  await recordAiRun({
+    feature: "lead_copilot",
+    status: "success",
+    provider: "openrouter",
+    model: call.model,
+    promptVersion,
+    latencyMs: call.latencyMs,
+    actorUserId: audit.actorUserId,
+    entityType: "ServiceRequest",
+    entityId: request.id,
+    metadata: {
+      providerProfileId: audit.providerProfileId,
+      unlocked: request.isUnlocked,
+      confidence: result.confidence,
+      questions: result.questions.length,
+      risks: result.riskSignals.length,
+      attempts: call.attempts,
+      promptTokens: call.usage?.promptTokens ?? null,
+      completionTokens: call.usage?.completionTokens ?? null,
+      totalTokens: call.usage?.totalTokens ?? null,
+    },
+  });
+
+  return result;
 }

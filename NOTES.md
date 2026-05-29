@@ -10,6 +10,42 @@ Konvencija:
 
 ---
 
+## AI stebėsena ir bendras OpenRouter klientas (A fazė)
+
+- [x] **2026-05-29 — A1: bendras OpenRouter klientas + audito „tiesos sluoksnis".**
+  Naujas `src/lib/ai/openrouter.ts` (vienas `fetch`, timeout, 1 retry per 5xx/429/tinklą,
+  `usage` ištraukimas, grąžina realiai naudotą modelį). Visi 10 LLM touchpoint'ų migruoti.
+  `ai_runs` nuo šiol logina REALŲ modelį (ne hardkodintą `OPENROUTER_MODEL`) + dinamišką
+  `promptVersion` (`+override` kai aktyvus admino promptas) + token sąnaudas `metadataJson`.
+  `category_picker` ir `image_generate` pradėti logginti (anksčiau visai nelogino) ir gavo
+  timeout (anksčiau neturėjo). `category_suggest` nebelogina netikro „success" per
+  deterministinį fallback (žymi `aiUsed`/`aiAttempted`). `transcribe` logina ir Telegram
+  kelią. `prompt-config.ts` pridėti `resolvePromptVersion` / `getActiveOverrideFlags`.
+  Build + `tsc` žali.
+
+- [ ] **2026-05-29 — A2: token/kainos stulpeliai + kainos rodymas `/admin/ai`.**
+  `usage` jau renkamas į `ai_runs.metadataJson`. A2: pridėti `promptTokens` /
+  `completionTokens` / `costUsd` stulpelius prie `AiRun` (Prisma migracija — LIEČIA
+  produkcijos DB, derinti prieš `db:push`), modelio kainų žemėlapį, agreguoti `ai-usage.ts`
+  ir parodyti „Kaina / 30 d." skyde. Gat'inta — laukia patvirtinimo.
+
+- [ ] **2026-05-29 — `profile_generate` pilna kliento migracija.**
+  Šiuo metu pataisytas tik audito modelis. `generateWithClaude`/`generateFromScratch`
+  vis dar turi savo `fetch` BE timeout (`route.ts` ~274, ~413). Migruoti į `callOpenRouter`
+  (timeout + retry + usage). Atidėta dėl failo dydžio (1010 eil.) ir onboarding rizikos.
+
+- [ ] **2026-05-29 — `transcribe` web garso formatas.**
+  Web route siunčia hardkodintą `"wav"`, bet naršyklės MediaRecorder dažnai įrašo
+  webm/ogg. Detektuoti formatą (data URL / magic bytes) arba pridėti į schemą ir perduoti.
+
+- [ ] **2026-05-29 — Likę C-fazės kokybės fix'ai (iš `/admin/ai` analizės).**
+  `moderation_image` `modelKind:"text"` (admino dropdown siūlo tekstinius modelius
+  nuotraukoms — vienas klikas sugriautų moderaciją); >10 nuotraukų tyliai numetamos;
+  `category_picker` Pass 1 confidence kodas 0.6 vs promptas 0.5; `lead_copilot` trūkstamas
+  confidence tyliai virsta 0.5; `ai-usage` tipo pavadinimas `14d` vs realus 30 d. langas.
+
+---
+
 ## Saugumas / access control
 
 - [x] **2026-05-26 — `/admin/layout.tsx` neturi server-side guard'o.**

@@ -9,7 +9,7 @@ import { rateLimitAsync } from "@/lib/rate-limit";
 import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 
 export const maxDuration = 300;
 
@@ -588,6 +588,8 @@ export async function POST(req: NextRequest) {
   let profileEntityId: string | undefined;
   let aiAuditStarted = false;
   let aiAuditRecorded = false;
+  let profileAuditModel = PROFILE_MODEL;
+  let profileAuditVersion = PROFILE_PROMPT_VERSION;
   const started = Date.now();
   try {
     const session = await getServerSession(authOptions);
@@ -676,6 +678,11 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate marketing copy with Claude (no category picking here)
     aiAuditStarted = true;
+    // Resolve the model/prompt version once up front so the audit records what
+    // really ran (honouring any admin override), not the hardcoded default —
+    // and so the error path logs the right model too.
+    profileAuditModel = await resolveModel("profile_generate", PROFILE_MODEL);
+    profileAuditVersion = await resolvePromptVersion("profile_generate", PROFILE_PROMPT_VERSION);
     const aiResult = isScratchMode
       ? await generateFromScratch({
           businessName: body.businessName!,
@@ -904,8 +911,8 @@ export async function POST(req: NextRequest) {
       feature: "profile_generate",
       status: "success",
       provider: "openrouter",
-      model: PROFILE_MODEL,
-      promptVersion: PROFILE_PROMPT_VERSION,
+      model: profileAuditModel,
+      promptVersion: profileAuditVersion,
       latencyMs: Date.now() - started,
       actorUserId,
       entityType: "ProviderProfile",
@@ -956,8 +963,8 @@ export async function POST(req: NextRequest) {
         feature: "profile_generate",
         status: "error",
         provider: "openrouter",
-        model: PROFILE_MODEL,
-        promptVersion: PROFILE_PROMPT_VERSION,
+        model: profileAuditModel,
+        promptVersion: profileAuditVersion,
         latencyMs: Date.now() - started,
         actorUserId,
         entityType: profileEntityId ? "ProviderProfile" : undefined,

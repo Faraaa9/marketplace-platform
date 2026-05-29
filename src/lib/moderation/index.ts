@@ -3,6 +3,7 @@ import { checkBlocklist } from "./blocklist";
 import { moderateWithAi, moderateImagesWithAi } from "./ai";
 import { writeModerationLog } from "./log";
 import { recordAiRun } from "@/lib/ai/audit";
+import { resolvePromptVersion } from "@/lib/ai/prompt-config";
 
 export type ModerationVerdict = "ok" | "review" | "reject";
 export type ModerationSource = "blocklist" | "ai" | "ai_fallback";
@@ -29,7 +30,6 @@ const REJECT_USER_MESSAGE =
   "Tekste aptikta netinkamo turinio. Pataisykite tekstą ir bandykite dar kartą.";
 const MIN_TEXT_LENGTH = 3;
 const TEXT_SAMPLE_MAX = 500;
-const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
 function combineFields(fields: Record<string, string | null | undefined>): string {
   return Object.values(fields)
@@ -88,7 +88,8 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
   }
 
   // 3. AI moderacija (timeout / klaida -> fallback į rankinę peržiūrą).
-  const ai = await moderateWithAi(combined);
+  const aiCall = await moderateWithAi(combined);
+  const ai = aiCall.result;
   const result: ModerationResult = ai
     ? {
         verdict: ai.verdict,
@@ -115,7 +116,7 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
     categories: result.categories,
     reason: result.reason,
     textSample: sample,
-    model: ai ? MODEL : null,
+    model: ai ? aiCall.model : null,
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId,
   });
@@ -124,8 +125,8 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
     feature: "moderation",
     status: ai ? "success" : "error",
     provider: "openrouter",
-    model: MODEL,
-    promptVersion: "moderation_text_v1",
+    model: aiCall.model,
+    promptVersion: await resolvePromptVersion("moderation_text", "moderation_text_v1"),
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId ?? undefined,
     entityType: input.entityType,
@@ -135,6 +136,9 @@ export async function moderateText(input: ModerateInput): Promise<ModerationResu
       modality: "text",
       verdict: result.verdict,
       source: result.source,
+      promptTokens: aiCall.usage?.promptTokens ?? null,
+      completionTokens: aiCall.usage?.completionTokens ?? null,
+      totalTokens: aiCall.usage?.totalTokens ?? null,
     },
   });
 
@@ -174,7 +178,8 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
     };
   }
 
-  const ai = await moderateImagesWithAi(urls);
+  const aiCall = await moderateImagesWithAi(urls);
+  const ai = aiCall.result;
   const result: ModerationResult = ai
     ? {
         verdict: ai.verdict,
@@ -201,7 +206,7 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
     categories: result.categories,
     reason: result.reason,
     textSample: `[${urls.length} nuotrauka(-os)]`,
-    model: ai ? MODEL : null,
+    model: ai ? aiCall.model : null,
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId,
   });
@@ -210,8 +215,8 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
     feature: "moderation",
     status: ai ? "success" : "error",
     provider: "openrouter",
-    model: MODEL,
-    promptVersion: "moderation_image_v1",
+    model: aiCall.model,
+    promptVersion: await resolvePromptVersion("moderation_image", "moderation_image_v1"),
     latencyMs: Date.now() - started,
     actorUserId: input.actorUserId ?? undefined,
     entityType: input.entityType,
@@ -222,6 +227,9 @@ export async function moderateImages(input: ModerateImagesInput): Promise<Modera
       imageCount: urls.length,
       verdict: result.verdict,
       source: result.source,
+      promptTokens: aiCall.usage?.promptTokens ?? null,
+      completionTokens: aiCall.usage?.completionTokens ?? null,
+      totalTokens: aiCall.usage?.totalTokens ?? null,
     },
   });
 

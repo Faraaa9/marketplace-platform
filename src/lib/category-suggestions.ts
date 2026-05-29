@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
+import { recordAiRun } from "@/lib/ai/audit";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -17,9 +19,9 @@ import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
 
 const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_RERANK_MODEL = "google/gemini-2.5-flash";
 const RERANK_TIMEOUT_MS = 12_000;
+const PROMPT_VERSION = "category-suggest-v1";
 
 export type SuggestionMode = "request" | "provider";
 
@@ -348,12 +350,27 @@ interface AiRerankResult {
   clarificationQuestion?: string;
 }
 
+interface AiRerankOutcome {
+  /** null = nebandyta arba nepavyko (merge praleidžia ir lieka deterministika). */
+  result: AiRerankResult | null;
+  /** true kai buvo API raktas IR kandidatų — t.y. AI realiai bandytas. */
+  attempted: boolean;
+  /** true kai gautas ir suparsintas galiojantis atsakymas. */
+  ok: boolean;
+  model: string | null;
+  usage: OpenRouterUsage | null;
+  latencyMs: number;
+  errorKind?: "timeout" | "http" | "network" | "empty";
+}
+
 async function aiRerank(
   input: SuggestCategoriesInput,
   topCandidates: ScoredCandidate[],
-): Promise<AiRerankResult | null> {
+): Promise<AiRerankOutcome> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey || topCandidates.length === 0) return null;
+  if (!apiKey || topCandidates.length === 0) {
+    return { result: null, attempted: false, ok: false, model: null, usage: null, latencyMs: 0 };
+  }
 
   const candidateList = topCandidates
     .slice(0, 30)
@@ -377,76 +394,77 @@ async function aiRerank(
     process.env.OPENROUTER_MODEL || DEFAULT_RERANK_MODEL,
   );
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), RERANK_TIMEOUT_MS);
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: RERANK_TIMEOUT_MS,
+    temperature: 0.2,
+    maxTokens: 600,
+    reasoning: false,
+    jsonObject: true,
+    title: "paslaugurinka.lt category-suggest",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+  });
 
+  const failed = (errorKind: AiRerankOutcome["errorKind"]): AiRerankOutcome => ({
+    result: null,
+    attempted: true,
+    ok: false,
+    model: call.model,
+    usage: call.usage,
+    latencyMs: call.latencyMs,
+    errorKind,
+  });
+
+  if (!call.ok || call.content === null) {
+    return failed(call.errorKind ?? "empty");
+  }
+
+  let parsed: unknown;
   try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "paslaugurinka.lt category-suggest",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        max_tokens: 600,
-        reasoning: { enabled: false },
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-      signal: controller.signal,
-    });
-
-    if (!res.ok) return null;
-    const data = (await res.json().catch(() => null)) as
-      | { choices?: Array<{ message?: { content?: string } }> }
-      | null;
-    const raw = data?.choices?.[0]?.message?.content;
-    if (typeof raw !== "string" || raw.trim().length === 0) return null;
-
-    const cleaned = raw
+    const cleaned = call.content
       .trim()
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```$/i, "")
       .trim();
-    const parsed = JSON.parse(cleaned) as unknown;
-    if (!parsed || typeof parsed !== "object") return null;
-    const obj = parsed as Record<string, unknown>;
-
-    const rawSuggestions = Array.isArray(obj.suggestions) ? obj.suggestions : [];
-    const ranking = rawSuggestions
-      .map((item): { slug: string; confidence: number; reason: string } | null => {
-        if (!item || typeof item !== "object") return null;
-        const entry = item as Record<string, unknown>;
-        const slug = typeof entry.slug === "string" ? entry.slug.trim() : "";
-        if (!validSlugs.has(slug)) return null;
-        const confidenceRaw = typeof entry.confidence === "number" ? entry.confidence : 0;
-        const confidence = Math.max(0, Math.min(1, confidenceRaw));
-        const reason =
-          typeof entry.reason === "string" ? entry.reason.trim().slice(0, 200) : "";
-        return { slug, confidence, reason };
-      })
-      .filter((x): x is { slug: string; confidence: number; reason: string } => x !== null);
-
-    const clarificationQuestion =
-      typeof obj.clarificationQuestion === "string"
-        ? obj.clarificationQuestion.trim().slice(0, 200)
-        : "";
-
-    return {
-      ranking,
-      clarificationQuestion: clarificationQuestion || undefined,
-    };
+    parsed = JSON.parse(cleaned);
   } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
+    return failed("empty");
   }
+  if (!parsed || typeof parsed !== "object") return failed("empty");
+  const obj = parsed as Record<string, unknown>;
+
+  const rawSuggestions = Array.isArray(obj.suggestions) ? obj.suggestions : [];
+  const ranking = rawSuggestions
+    .map((item): { slug: string; confidence: number; reason: string } | null => {
+      if (!item || typeof item !== "object") return null;
+      const entry = item as Record<string, unknown>;
+      const slug = typeof entry.slug === "string" ? entry.slug.trim() : "";
+      if (!validSlugs.has(slug)) return null;
+      const confidenceRaw = typeof entry.confidence === "number" ? entry.confidence : 0;
+      const confidence = Math.max(0, Math.min(1, confidenceRaw));
+      const reason =
+        typeof entry.reason === "string" ? entry.reason.trim().slice(0, 200) : "";
+      return { slug, confidence, reason };
+    })
+    .filter((x): x is { slug: string; confidence: number; reason: string } => x !== null);
+
+  const clarificationQuestion =
+    typeof obj.clarificationQuestion === "string"
+      ? obj.clarificationQuestion.trim().slice(0, 200)
+      : "";
+
+  return {
+    result: { ranking, clarificationQuestion: clarificationQuestion || undefined },
+    attempted: true,
+    ok: true,
+    model: call.model,
+    usage: call.usage,
+    latencyMs: call.latencyMs,
+  };
 }
 
 function mergeWithAi(
@@ -485,6 +503,7 @@ function mergeWithAi(
 export async function suggestCategories(
   input: SuggestCategoriesInput,
 ): Promise<SuggestCategoriesResult> {
+  const started = Date.now();
   const text = `${input.title ?? ""} ${input.text ?? ""}`.trim();
   if (text.length < 5) {
     return {
@@ -536,12 +555,14 @@ export async function suggestCategories(
   );
   const bestScore = deterministicPicked[0]?.score ?? scoredWithOverride[0].score;
 
-  const ai = await aiRerank(input, scoredWithOverride.slice(0, 30));
+  const rerank = await aiRerank(input, scoredWithOverride.slice(0, 30));
+  const ai = rerank.result;
 
   let pickedEntries = deterministicPicked;
   let reasonBySlug: Map<string, string> | null = null;
   let confidenceBySlug: Map<string, number> | null = null;
   let aiClarification: string | undefined;
+  const aiUsed = Boolean(ai && ai.ranking.length > 0);
 
   if (ai && ai.ranking.length > 0) {
     const merged = mergeWithAi(scoredWithOverride, ai, limit);
@@ -567,6 +588,34 @@ export async function suggestCategories(
     aiClarification && aiClarification.length > 0
       ? aiClarification
       : maybeClarification(pickedEntries, input.mode);
+
+  // Auditas: žymim REALŲ AI rezultatą, ne tik "ar buvo raktas". AI bandytas bet
+  // nepavykęs (timeout/klaida) -> error; be rakto nukritęs į deterministiką ->
+  // provider "deterministic". Loginam realiai naudotą modelį ir token sąnaudas.
+  await recordAiRun({
+    feature: "category_suggest",
+    status: rerank.attempted ? (rerank.ok ? "success" : "error") : "success",
+    provider: rerank.attempted ? "openrouter" : "deterministic",
+    model: rerank.model ?? undefined,
+    promptVersion: await resolvePromptVersion("category_suggest", PROMPT_VERSION),
+    latencyMs: rerank.attempted ? rerank.latencyMs : Date.now() - started,
+    errorCode:
+      rerank.attempted && !rerank.ok
+        ? rerank.errorKind === "timeout"
+          ? "AI_TIMEOUT"
+          : "AI_REQUEST_FAILED"
+        : undefined,
+    metadata: {
+      mode: input.mode,
+      suggestions: suggestions.length,
+      hasClarification: Boolean(clarificationQuestion),
+      aiUsed,
+      aiAttempted: rerank.attempted,
+      promptTokens: rerank.usage?.promptTokens ?? null,
+      completionTokens: rerank.usage?.completionTokens ?? null,
+      totalTokens: rerank.usage?.totalTokens ?? null,
+    },
+  });
 
   return {
     suggestions,

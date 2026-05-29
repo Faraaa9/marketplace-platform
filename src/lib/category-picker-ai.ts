@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
+import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import { callOpenRouter } from "@/lib/ai/openrouter";
+import { recordAiRun } from "@/lib/ai/audit";
 
 /**
  * Two-pass AI category picker for provider profile auto-generation.
@@ -18,9 +20,10 @@ import { resolveModel, resolvePrompt } from "@/lib/ai/prompt-config";
  * sources (legacy paslaugos.lt rows) are deliberately excluded.
  */
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "anthropic/claude-haiku-4.5";
 const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
+const PICKER_TIMEOUT_MS = 15_000;
+const PROMPT_VERSION = "category-picker-v1";
 
 const MAX_ROOTS = 3;
 const MAX_LEAVES = 4;
@@ -189,68 +192,82 @@ async function pickRoots(
   });
   const systemPrompt = await resolvePrompt("category_picker", "system");
   const model = await resolveModel("category_picker", MODEL);
+  const promptVersion = await resolvePromptVersion("category_picker", PROMPT_VERSION);
 
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "paslaugurinka.lt ai-category-pass1",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-        max_tokens: 500,
-      }),
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: PICKER_TIMEOUT_MS,
+    temperature: 0.2,
+    maxTokens: 500,
+    jsonObject: true,
+    title: "paslaugurinka.lt ai-category-pass1",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ],
+  });
+
+  const parsed =
+    call.ok && call.content !== null
+      ? (parseJsonLoose(call.content) as {
+          roots?: Array<{ name?: string; confidence?: number }>;
+        } | null)
+      : null;
+
+  if (!parsed) {
+    await recordAiRun({
+      feature: "category_picker",
+      status: "error",
+      provider: "openrouter",
+      model: call.model,
+      promptVersion,
+      latencyMs: call.latencyMs,
+      errorCode:
+        call.errorKind === "timeout"
+          ? "AI_TIMEOUT"
+          : !call.ok
+            ? "AI_REQUEST_FAILED"
+            : "AI_EMPTY_RESPONSE",
+      metadata: { pass: 1, attempts: call.attempts },
     });
-
-    if (!response.ok) {
-      console.error("pickRoots: OpenRouter HTTP", response.status);
-      return [];
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== "string") return [];
-
-    const parsed = parseJsonLoose(content) as {
-      roots?: Array<{ name?: string; confidence?: number }>;
-    } | null;
-    if (!parsed) return [];
-
-    const nameToRoot = new Map(
-      roots.map((r) => [r.name.toLowerCase().trim(), r]),
-    );
-    const picks = (parsed.roots ?? []).filter(
-      (p): p is { name: string; confidence: number } =>
-        typeof p.name === "string" && (p.confidence ?? 0) >= MIN_CONFIDENCE,
-    );
-
-    const result: RootRow[] = [];
-    const seen = new Set<string>();
-    for (const pick of picks) {
-      const root = nameToRoot.get(pick.name.toLowerCase().trim());
-      if (!root || seen.has(root.id)) continue;
-      seen.add(root.id);
-      result.push(root);
-      if (result.length >= MAX_ROOTS) break;
-    }
-    return result;
-  } catch (err) {
-    console.error("pickRoots error:", err);
     return [];
   }
+
+  const nameToRoot = new Map(roots.map((r) => [r.name.toLowerCase().trim(), r]));
+  const picks = (parsed.roots ?? []).filter(
+    (p): p is { name: string; confidence: number } =>
+      typeof p.name === "string" && (p.confidence ?? 0) >= MIN_CONFIDENCE,
+  );
+
+  const result: RootRow[] = [];
+  const seen = new Set<string>();
+  for (const pick of picks) {
+    const root = nameToRoot.get(pick.name.toLowerCase().trim());
+    if (!root || seen.has(root.id)) continue;
+    seen.add(root.id);
+    result.push(root);
+    if (result.length >= MAX_ROOTS) break;
+  }
+
+  await recordAiRun({
+    feature: "category_picker",
+    status: "success",
+    provider: "openrouter",
+    model: call.model,
+    promptVersion,
+    latencyMs: call.latencyMs,
+    metadata: {
+      pass: 1,
+      pickedRoots: result.length,
+      attempts: call.attempts,
+      promptTokens: call.usage?.promptTokens ?? null,
+      completionTokens: call.usage?.completionTokens ?? null,
+      totalTokens: call.usage?.totalTokens ?? null,
+    },
+  });
+
+  return result;
 }
 
 async function pickLeaves(
@@ -276,61 +293,77 @@ async function pickLeaves(
   });
   const systemPrompt = await resolvePrompt("category_picker", "system");
   const model = await resolveModel("category_picker", MODEL);
+  const promptVersion = await resolvePromptVersion("category_picker", PROMPT_VERSION);
 
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "paslaugurinka.lt ai-category-pass2",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.2,
-        max_tokens: 800,
-      }),
+  const call = await callOpenRouter({
+    apiKey,
+    model,
+    timeoutMs: PICKER_TIMEOUT_MS,
+    temperature: 0.2,
+    maxTokens: 800,
+    jsonObject: true,
+    title: "paslaugurinka.lt ai-category-pass2",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt },
+    ],
+  });
+
+  const parsed =
+    call.ok && call.content !== null
+      ? (parseJsonLoose(call.content) as {
+          leaves?: Array<{ slug?: string; confidence?: number }>;
+        } | null)
+      : null;
+
+  if (!parsed) {
+    await recordAiRun({
+      feature: "category_picker",
+      status: "error",
+      provider: "openrouter",
+      model: call.model,
+      promptVersion,
+      latencyMs: call.latencyMs,
+      errorCode:
+        call.errorKind === "timeout"
+          ? "AI_TIMEOUT"
+          : !call.ok
+            ? "AI_REQUEST_FAILED"
+            : "AI_EMPTY_RESPONSE",
+      metadata: { pass: 2, attempts: call.attempts },
     });
-
-    if (!response.ok) {
-      console.error("pickLeaves: OpenRouter HTTP", response.status);
-      return [];
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== "string") return [];
-
-    const parsed = parseJsonLoose(content) as {
-      leaves?: Array<{ slug?: string; confidence?: number }>;
-    } | null;
-    if (!parsed) return [];
-
-    const slugToLeaf = new Map(leaves.map((l) => [l.slug, l]));
-    const result: LeafRow[] = [];
-    const seen = new Set<string>();
-    for (const pick of parsed.leaves ?? []) {
-      if (typeof pick.slug !== "string") continue;
-      if ((pick.confidence ?? 0) < MIN_CONFIDENCE) continue;
-      const leaf = slugToLeaf.get(pick.slug);
-      if (!leaf || seen.has(leaf.id)) continue;
-      seen.add(leaf.id);
-      result.push(leaf);
-      if (result.length >= MAX_LEAVES) break;
-    }
-    return result;
-  } catch (err) {
-    console.error("pickLeaves error:", err);
     return [];
   }
+
+  const slugToLeaf = new Map(leaves.map((l) => [l.slug, l]));
+  const result: LeafRow[] = [];
+  const seen = new Set<string>();
+  for (const pick of parsed.leaves ?? []) {
+    if (typeof pick.slug !== "string") continue;
+    if ((pick.confidence ?? 0) < MIN_CONFIDENCE) continue;
+    const leaf = slugToLeaf.get(pick.slug);
+    if (!leaf || seen.has(leaf.id)) continue;
+    seen.add(leaf.id);
+    result.push(leaf);
+    if (result.length >= MAX_LEAVES) break;
+  }
+
+  await recordAiRun({
+    feature: "category_picker",
+    status: "success",
+    provider: "openrouter",
+    model: call.model,
+    promptVersion,
+    latencyMs: call.latencyMs,
+    metadata: {
+      pass: 2,
+      pickedLeaves: result.length,
+      attempts: call.attempts,
+      promptTokens: call.usage?.promptTokens ?? null,
+      completionTokens: call.usage?.completionTokens ?? null,
+      totalTokens: call.usage?.totalTokens ?? null,
+    },
+  });
+
+  return result;
 }
