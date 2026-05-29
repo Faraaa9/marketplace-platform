@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import TelegramSourceBadge from "@/components/TelegramSourceBadge";
 import { formatRelativeDate } from "@/lib/utils";
 import { StatusTimeline } from "../components/TrackingHelpers";
 import { getTrackedRequestSummary } from "../data";
@@ -60,6 +61,7 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
+            {request.source === "telegram" && <TelegramSourceBadge />}
             {categoryLabels.length > 0 && (
               <span className="truncate text-body-sm text-surface-500">
                 {categoryLabels.join(" · ")}

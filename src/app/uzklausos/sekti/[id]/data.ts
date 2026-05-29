@@ -30,6 +30,7 @@ export interface TrackerSummary {
   moderationStatus: string;
   acceptedResponseId: string | null;
   clientId: string | null;
+  source: "web" | "telegram";
   createdAt: string;
   viewCount: number;
   responseCount: number;
@@ -70,6 +71,7 @@ export const getTrackedRequestSummary = cache(
         moderationStatus: true,
         acceptedResponseId: true,
         clientId: true,
+        source: true,
         createdAt: true,
         _count: { select: { views: true, responses: true } },
       },
@@ -102,6 +104,7 @@ export const getTrackedRequestSummary = cache(
       moderationStatus: request.moderationStatus,
       acceptedResponseId: request.acceptedResponseId,
       clientId: request.clientId,
+      source: request.source === "telegram" ? "telegram" : "web",
       createdAt: request.createdAt.toISOString(),
       viewCount: request._count.views,
       responseCount: request._count.responses,

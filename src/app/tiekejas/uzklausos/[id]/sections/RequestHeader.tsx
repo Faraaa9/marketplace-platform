@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Skeleton from "@/components/ui/Skeleton";
+import TelegramSourceBadge from "@/components/TelegramSourceBadge";
 
 const STATUS_MAP: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
   OPEN: { label: "Atidaryta", variant: "success" },
@@ -28,6 +29,7 @@ export async function RequestHeader({ params }: { params: Promise<{ id: string }
       budget: true,
       deadline: true,
       status: true,
+      source: true,
       createdAt: true,
     },
   });
@@ -53,6 +55,7 @@ export async function RequestHeader({ params }: { params: Promise<{ id: string }
           <Badge key={name} variant="brand">{name}</Badge>
         ))}
         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+        {request.source === "telegram" && <TelegramSourceBadge />}
       </div>
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mt-3">{request.title}</h1>
       <div className="mt-3 flex flex-wrap gap-4 text-body-sm text-surface-500">

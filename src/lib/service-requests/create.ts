@@ -211,6 +211,7 @@ export async function createServiceRequest(
         clientName: data.clientName,
         clientPhone: phone ? sanitizeHtml(phone) : null,
         clientId,
+        source: input.source === "telegram" ? "telegram" : "web",
         trackingToken: crypto.randomBytes(32).toString("hex"),
       },
       select: {
