@@ -123,19 +123,29 @@ export async function generateMetadata({
   }
 
   const name = row.displayName || row.user?.name || "Paslaugų tiekėjas";
-  const title =
-    row.seoTitle ||
-    [
-      name,
-      row.primaryService
-        ? `— ${row.primaryService}${row.primaryCity ? ` ${row.primaryCity}e` : ""}`
-        : row.headline
-          ? `— ${row.headline}`
-          : "",
-      `| ${SITE_NAME}`,
-    ]
-      .filter(Boolean)
-      .join(" ");
+  // Only trim titles that would trip Semrush "Title too long" (>70 chars);
+  // shorter keyword-rich titles are left untouched. When trimming, keep the
+  // provider name in full and clamp the headline/service tail to ~65 total at a
+  // word boundary with an ellipsis.
+  const SUFFIX = ` | ${SITE_NAME}`;
+  const TITLE_HARD_MAX = 70;
+  const TITLE_TARGET = 65;
+  const detail = row.primaryService
+    ? `${row.primaryService}${row.primaryCity ? ` ${row.primaryCity}e` : ""}`
+    : row.headline || "";
+  const base = detail ? `${name} — ${detail}` : name;
+  const leadMax = TITLE_TARGET - SUFFIX.length;
+  const lead =
+    base.length + SUFFIX.length <= TITLE_HARD_MAX
+      ? base
+      : (() => {
+          const cut = base.slice(0, leadMax - 1);
+          const lastSpace = cut.lastIndexOf(" ");
+          const trimmed = lastSpace > 20 ? cut.slice(0, lastSpace) : cut;
+          // Drop any trailing separator/space so we never end on " –…".
+          return trimmed.replace(/[\s–—-]+$/u, "") + "…";
+        })();
+  const title = row.seoTitle || `${lead}${SUFFIX}`;
 
   const fallbackDesc = row.description
     ? row.description.replace(/\s+/g, " ").slice(0, 157).trim() +
