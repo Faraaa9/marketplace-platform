@@ -100,6 +100,47 @@ const PAGES: Record<string, Shot[]> = {
     { key: "work", width: 1024, height: 1024, prompt: `Close-up of a paint roller applying warm beige paint to a wall in clean even strokes, paint tray in the foreground, soft side light, no faces, ${NO_TEXT}` },
     { key: "consult", width: 1024, height: 1024, prompt: `An interior finisher and a woman homeowner reviewing a colour and material sample board together in a room mid-renovation, natural window light, collaborative mood, ${NO_TEXT}` },
   ],
+
+  "grindu-betonavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two Lithuanian construction workers in rubber boots leveling wet grey concrete with a long screed board across a large empty floor of a building under construction, cool industrial daylight, wide scene, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a power trowel machine smoothing a fresh wet concrete floor surface, glossy grey finish, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A construction foreman in a hard hat reviewing a floor plan on a clipboard with a client inside a bare concrete shell of a new building, ${NO_TEXT}` },
+  ],
+  "laminato-klojimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian flooring installer kneeling and clicking light oak laminate planks together on the floor of a bright modern living room, warm wood tones, knee pads, tidy, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands tapping a laminate floor plank into place with a tapping block and mallet, warm wood texture, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A flooring specialist showing laminate sample boards to a young couple on a freshly prepared subfloor in a bright apartment, ${NO_TEXT}` },
+  ],
+  "fasado-siltinimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Workers on scaffolding fixing white polystyrene insulation panels to the exterior facade of a multi-storey Lithuanian house, bright daylight, outdoor renovation scene, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of gloved hands pressing a white EPS foam insulation board onto an adhesive-covered exterior wall, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A facade insulation specialist in a hard hat pointing at a house wall and explaining the plan to a homeowner outdoors, ${NO_TEXT}` },
+  ],
+  "tvoros-montavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two workers installing a modern grey horizontal-slat metal fence along the edge of a residential garden, sunny day, green lawn, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands using a level and drill to fix a fence panel to a metal post, neat alignment, outdoor, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A fencing contractor measuring a garden boundary with a tape and discussing options with a homeowner, sunny yard, ${NO_TEXT}` },
+  ],
+  "duru-montavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian carpenter fitting a white interior door into a doorway frame in a bright modern apartment, level and screwdriver, focused, warm light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands adjusting a door hinge with a screwdriver on a white interior door, precise detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A door installer showing door handle and finish samples to a homeowner in a bright hallway, ${NO_TEXT}` },
+  ],
+  "kaminu-valymas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A professional chimney sweep in dark clothing and cap cleaning a red brick chimney with a long brush on the rooftop of a Lithuanian house, blue sky, golden light, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands feeding a round chimney-cleaning brush on flexible rods into a flue, soot, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A chimney sweep talking with a homeowner next to a wood stove inside a cozy house, holding cleaning tools, ${NO_TEXT}` },
+  ],
+  "baldu-surinkimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A friendly Lithuanian handyman assembling a white flat-pack wardrobe with an allen key in a bright modern Vilnius bedroom, cardboard packaging nearby, tidy, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands tightening a furniture cam-lock screw on a white particle-board shelf with a screwdriver, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A handyman with a cordless drill smiling next to a newly assembled bookshelf in a bright living room, satisfied client in background, ${NO_TEXT}` },
+  ],
+  "stogo-dengimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A roofer fastening dark ceramic roof tiles on a pitched roof of a townhouse, viewed from a lower angle against a soft cloudy sky, Vilnius suburb, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands aligning and nailing a ceramic roof tile on roof battens, precise detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A roofing contractor showing roof tile samples and a sketch to a homeowner in front of a house, daylight, ${NO_TEXT}` },
+  ],
 };
 
 async function main() {
