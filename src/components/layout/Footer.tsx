@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-[#DBD6CB] dark:border-surface-800">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <div className="md:col-span-1">
             <div className="mb-4 flex items-center gap-2.5">
               <span
@@ -37,6 +37,19 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li><FooterLink href="/uzklausos/nauja">Pateikti užklausą</FooterLink></li>
               <li><FooterLink href="/uzklausos">Visos užklausos</FooterLink></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#26231F] dark:text-surface-100">
+              Populiarios paslaugos
+            </h4>
+            <ul className="space-y-2.5">
+              <li><FooterLink href="/paslaugos/elektrikas-kaune">Elektrikas Kaune</FooterLink></li>
+              <li><FooterLink href="/paslaugos/santechnikas-kaune">Santechnikas Kaune</FooterLink></li>
+              <li><FooterLink href="/paslaugos/stogo-dengimas-kaune">Stogo dengimas Kaune</FooterLink></li>
+              <li><FooterLink href="/paslaugos/kondicionieriu-montavimas-kaune">Kondicionierių montavimas Kaune</FooterLink></li>
+              <li><FooterLink href="/paslaugos/apdailos-darbai-kaune">Apdailos darbai Kaune</FooterLink></li>
             </ul>
           </div>
 
