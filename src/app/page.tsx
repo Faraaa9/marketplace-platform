@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description:
     "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt",
+  },
 };
 
 const AVATARS = [

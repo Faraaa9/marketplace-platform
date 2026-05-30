@@ -251,7 +251,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <JsonLd schema={localBusinessSchema} />
+      {localBusinessSchema && <JsonLd schema={localBusinessSchema} />}
       <JsonLd schema={breadcrumbSchema} />
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -925,20 +925,27 @@ async function getTopReviewsForSeoUncached(providerId: string): Promise<SeoRevie
     }));
 }
 
+// LocalBusiness rich results require `image`. A profile without one produces a
+// schema Google/Semrush flag as invalid — and an invalid schema is worse than
+// none. So we emit LocalBusiness ONLY when the required fields are present and
+// return null otherwise (the caller then skips the block). See NOTES.md
+// "LocalBusiness — užpildyti trūkstamus laukus" for the backfill follow-up.
 function buildLocalBusinessSchema(
   provider: ProviderProfileWithCategories,
   profileUrl: string
-): Record<string, unknown> {
+): Record<string, unknown> | null {
+  // `image` is the one required field many profiles lack — gate on it.
+  if (!provider.image) {
+    return null;
+  }
+
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: provider.name,
     url: profileUrl,
+    image: provider.image,
   };
-
-  if (provider.image) {
-    schema.image = provider.image;
-  }
 
   const description = provider.description
     ? provider.description.length > 500

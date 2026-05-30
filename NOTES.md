@@ -627,9 +627,27 @@ neįtraukiam į sitemap. Įvykdo barjerą → automatiškai įsijungia.
        neįskaito tiekėjų kortelių (papildomas turinys); pirminis thinness guard
        lieka ≥3 tiekėjai.
 
-### Liko (kita sesija)
-6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai arba neįdėti visai.
-7. [ ] CI SEO gate (1 URL/tipą) + periodinis prod crawl.
+6. [x] **LocalBusiness schema** — nevalidi (be `image`) nebeemituojama visai
+       (invalid blogiau nei jokia). `buildLocalBusinessSchema` grąžina `null`,
+       kai nėra `image`; render guard praleidžia bloką. Breadcrumb/Review lieka.
+       - [ ] **Backfill (kažkada):** profiliai be `image` neturi LocalBusiness
+         schemos → praranda rich-result šansą. Vertėtų paskatinti/užpildyti hero
+         nuotraukas (arba generuoti placeholder OG vaizdą) ir tada schema
+         įsijungs automatiškai. Galimai pridėti `telephone`/`streetAddress`
+         pilnesnei schemai, jei turėsim tuos duomenis.
+
+7. [x] **CI SEO gate** — `scripts/seo-check.ts` (`pnpm seo:check [baseUrl]`).
+       Crawl'ina po 1 URL/route tipą (iš sitemap'o atranda profilio + kategorijos
+       pavyzdžius) ir tikrina: 1×`<title>` netuščias+unikalus, `description`,
+       `canonical`, 1×`<h1>`, JSON-LD parse+`@context`; ir kad sitemap URL nėra
+       `noindex`. Exit 1 → tinka CI / post-deploy. Default base = prod www.
+       - Paleidus prieš prod (dar be šio deploy) lieka 3 canonical „failai"
+         (`/`, `/meistrai`, `/uzklausos`) — būtent tai, ką šis deploy ištaiso;
+         po deploy gate turi būti žalias. Home gavo self-canonical.
+
+### SEO epopėja — BAIGTA (2–7). Liko tik backfill follow-up'ai
+- LocalBusiness `image` backfill (žr. step 6 pažymą).
+- Periodinis prod `pnpm seo:check` (pvz. cron po deploy).
 5. [ ] Dinaminiai title/description/turinys kategorijų puslapiams
        (tiekėjų sk., top tiekėjai, kategorijos aprašas — unikalumui).
 6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai (address/image)

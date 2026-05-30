@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 06:22 — Claude
+
+**Commit:** `efba5c7` — feat(seo): drop invalid LocalBusiness schema + add SEO gate script · lokalus
+
+**Pakeitimai:** 5 files changed, 210 insertions(+), 10 deletions(-)
+
+**Failai:**
+- NOTES.md
+- package.json
+- scripts/seo-check.ts
+- src/app/meistrai/[slug]/page.tsx
+- src/app/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 06:15 — Claude
 
 **Commit:** `f71f4dd` — feat(seo): dynamic category content unlocks indexing gate · lokalus
