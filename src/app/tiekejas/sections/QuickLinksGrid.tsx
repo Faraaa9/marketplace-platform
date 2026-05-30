@@ -9,7 +9,7 @@ import { InboxUnreadBadge } from "./InboxUnreadBadge";
  * dynamic element is the Messages unread badge, which streams in its own small
  * Suspense boundary so it never delays the nav.
  */
-export function QuickLinksGrid({ userId }: { userId: string }) {
+export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string | null }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Link href="/tiekejas/uzklausos" className="group">
@@ -53,7 +53,7 @@ export function QuickLinksGrid({ userId }: { userId: string }) {
         </Card>
       </Link>
 
-      <Link href={`/meistrai/${userId}`} className="group">
+      <Link href={`/meistrai/${slug ?? userId}`} className="group">
         <Card hover>
           <div className="flex items-center justify-between">
             <div>

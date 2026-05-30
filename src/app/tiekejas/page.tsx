@@ -40,7 +40,7 @@ async function DashboardBody({ userId }: { userId: string }) {
   // misleading "suspended" state off a null profile.
   const profile = await prisma.providerProfile.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, slug: true },
   });
 
   if (!profile) return <NoProviderProfile />;
@@ -63,7 +63,7 @@ async function DashboardBody({ userId }: { userId: string }) {
         <FollowUpsCard userId={userId} />
       </Suspense>
 
-      <QuickLinksGrid userId={userId} />
+      <QuickLinksGrid userId={userId} slug={profile.slug} />
     </>
   );
 }

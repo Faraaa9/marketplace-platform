@@ -73,8 +73,11 @@ async function getMetadataRow(slug: string) {
   cacheLife({ revalidate: 300 });
   cacheTag("providers", `provider:slug:${slug}`);
 
-  return prisma.providerProfile.findUnique({
-    where: { slug },
+  // Resolve slug first (hot path); fall back to a legacy cuid lookup so a
+  // directly-hit /meistrai/[cuid] URL still emits real per-provider metadata
+  // instead of the duplicate DEFAULT_METADATA before the page redirects.
+  return prisma.providerProfile.findFirst({
+    where: isCuid(slug) ? { OR: [{ slug }, { userId: slug }] } : { slug },
     select: {
       displayName: true,
       seoTitle: true,

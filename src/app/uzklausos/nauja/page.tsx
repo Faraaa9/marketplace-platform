@@ -33,6 +33,25 @@ export default function NewRequestV2Page() {
   );
 }
 
+// Server-prerenderable shell: gives the static (no-JS) HTML a real <h1> and
+// intro copy so crawlers index the page properly. Replaced by the live form
+// once the search-param-dependent client form hydrates.
+function NewRequestShell() {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
+        Tavo skelbimas
+      </h1>
+      <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
+        Aprašyk, ko reikia — tiekėjai patys pateiks pasiūlymus.
+      </p>
+      <div className="mt-8">
+        <LoadingSpinner />
+      </div>
+    </div>
+  );
+}
+
 interface FormState {
   title: string;
   description: string;
@@ -543,11 +562,7 @@ function NewRequestV2Form() {
   }
 
   if (sessionStatus === "loading") {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
-        <LoadingSpinner />
-      </div>
-    );
+    return <NewRequestShell />;
   }
 
   const selectedCategories = form.categoryIds.map((id) => ({

@@ -37,6 +37,7 @@ async function getSimilarProviders(
       image: true,
       providerProfile: {
         select: {
+          slug: true,
           description: true,
           images: true,
           location: true,
@@ -72,6 +73,7 @@ export default async function SimilarProvidersSection({
 
     return {
       id: provider.id,
+      slug: provider.providerProfile?.slug ?? null,
       name: provider.name || "Tiekėjas",
       image: getSafeProviderImageUrl(images[0] || provider.image),
       description: provider.providerProfile?.description || null,
@@ -89,7 +91,7 @@ export default async function SimilarProvidersSection({
         {mapped.map((provider) => (
           <Link
             key={provider.id}
-            href={`/meistrai/${provider.id}`}
+            href={`/meistrai/${provider.slug ?? provider.id}`}
             className="group rounded-xl border border-surface-200/60 p-3 transition-all hover:border-brand-200 hover:bg-brand-50/40 dark:border-surface-700/50 dark:hover:border-brand-800 dark:hover:bg-brand-950/20"
           >
             <div className="mb-2 flex items-center gap-2.5">

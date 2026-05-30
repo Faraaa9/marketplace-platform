@@ -15,6 +15,18 @@ export const revalidate = 3600;
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
+// Next's sitemap serializer emits `<loc>${url}</loc>` verbatim with no XML
+// escaping, so any `&` in a query-string URL produces invalid XML and crawlers
+// reject the whole file. Escape the XML-significant characters ourselves.
+function xmlSafeUrl(url: string): string {
+  return url
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
@@ -110,7 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const city of LITHUANIAN_CITIES) {
       const qs = new URLSearchParams({ category: categorySlug, location: city }).toString();
       comboEntries.push({
-        url: `${BASE_URL}/uzklausos?${qs}`,
+        url: xmlSafeUrl(`${BASE_URL}/uzklausos?${qs}`),
         lastModified: now,
         changeFrequency: "weekly",
         priority: 0.5,

@@ -443,7 +443,7 @@ function SheetContent({
       <div className="shrink-0 border-t border-surface-200 bg-white px-6 py-4 dark:border-surface-700 dark:bg-surface-900">
         <div className="flex gap-3">
           <Link
-            href={`/meistrai/${detail.id}`}
+            href={`/meistrai/${detail.slug ?? detail.id}`}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition-colors active:scale-[0.98]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -451,7 +451,7 @@ function SheetContent({
             <ExternalLink className="h-4 w-4" />
           </Link>
           <Link
-            href={`/meistrai/${detail.id}#zinute`}
+            href={`/meistrai/${detail.slug ?? detail.id}#zinute`}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-surface-200 bg-white px-5 py-3 text-sm font-semibold text-surface-700 hover:bg-surface-50 transition-colors active:scale-[0.98] dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
             onClick={(e) => e.stopPropagation()}
           >
@@ -635,7 +635,7 @@ export default function ProviderListingClient({
               return (
                 <li key={p.id}>
                   <a
-                    href={`/meistrai/${p.id}`}
+                    href={`/meistrai/${p.slug ?? p.id}`}
                     className="block cursor-pointer select-none"
                     onMouseEnter={() => handleMouseEnter(p.id)}
                     onClick={(e) => handleCardClick(e, p.id)}
@@ -755,7 +755,7 @@ export default function ProviderListingClient({
             return (
               <a
                 key={p.id}
-                href={`/meistrai/${p.id}`}
+                href={`/meistrai/${p.slug ?? p.id}`}
                 className="block h-full cursor-pointer select-none"
                 onMouseEnter={() => handleMouseEnter(p.id)}
                 onClick={(e) => handleCardClick(e, p.id)}

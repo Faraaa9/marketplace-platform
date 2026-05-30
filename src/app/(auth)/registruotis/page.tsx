@@ -12,9 +12,24 @@ import { CheckCircle2 } from "lucide-react";
 
 export default function RegisterPage() {
   return (
-    <Suspense>
-      <RegisterForm />
-    </Suspense>
+    <div className="relative flex min-h-[85vh] items-center justify-center px-4 py-12">
+      <div className="relative w-full max-w-md">
+        <div className="rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90">
+          <div className="text-center mb-8">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20">
+              <span className="text-white font-bold text-lg">P</span>
+            </div>
+            <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Sukurti paskyrą</h1>
+            <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
+              Pateikite užklausas arba tapkite tiekėju
+            </p>
+          </div>
+          <Suspense>
+            <RegisterForm />
+          </Suspense>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -88,24 +103,12 @@ function RegisterForm() {
   }
 
   return (
-    <div className="relative flex min-h-[85vh] items-center justify-center px-4 py-12">
-      <div className="relative w-full max-w-md">
-        <div className="rounded-2xl border border-surface-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-elevated dark:border-surface-700/50 dark:bg-surface-900/90">
-          <div className="text-center mb-8">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-600/20">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            <h1 className="text-heading-2 font-bold text-surface-900 dark:text-white">Sukurti paskyrą</h1>
-            <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
-              Pateikite užklausas arba tapkite tiekėju
-            </p>
-          </div>
-
-          {error && (
-            <div className="mb-4 rounded-xl bg-red-50 border border-red-100 p-3 text-body-sm text-red-600 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
+    <>
+      {error && (
+        <div className="mb-4 rounded-xl bg-red-50 border border-red-100 p-3 text-body-sm text-red-600 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
+          {error}
+        </div>
+      )}
 
           <div className="mb-5 space-y-3">
             <GoogleSignInButton label="Registruotis su Google" />
@@ -176,8 +179,6 @@ function RegisterForm() {
               </Link>
             </p>
           </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
