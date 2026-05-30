@@ -54,6 +54,12 @@ export interface ServiceLandingConfig {
 
   faq: { q: string; a: string }[];
 
+  /**
+   * Optional "what to know / how to choose" block — trade-specific, researched
+   * per article. Renders before the FAQ. Keeps pages from feeling identical.
+   */
+  insights?: { heading: string; items: { title: string; text: string }[] };
+
   /** Prefilled, ready-to-post request. */
   request: { title: string; description: string };
   finalCtaTitle: string;
@@ -261,6 +267,30 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
           ))}
         </div>
       </section>
+
+      {/* Insights — trade-specific "what to know", varies per article */}
+      {config.insights && (
+        <section className="border-t border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
+            <h2 className="text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">
+              {config.insights.heading}
+            </h2>
+            <div className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+              {config.insights.items.map((item, i) => (
+                <div key={item.title} className="flex gap-4">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-body-sm font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-body font-semibold text-surface-900 dark:text-white">{item.title}</h3>
+                    <p className="mt-1 text-body-sm leading-relaxed text-surface-600 dark:text-surface-300">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="border-t border-surface-100 dark:border-surface-800">
