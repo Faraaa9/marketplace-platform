@@ -38,10 +38,14 @@ const TITLE = "Elektrikas Kaune — gaukite pasiūlymus iš patikimų specialist
 const DESCRIPTION =
   "Reikia elektriko Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų elektrikų. Instaliacija, rozetės, gedimai, skubus iškvietimas.";
 
-// Prefilled request description so the CTA lands users straight into the flow.
-const REQUEST_HREF = `/uzklausos/nauja?description=${encodeURIComponent(
-  "Reikalingas elektrikas Kaune. Trumpai aprašykite darbą (pvz. rozečių ar jungiklių montavimas, elektros instaliacija, gedimo paieška, skydinės keitimas) ir gaukite pasiūlymus.",
-)}`;
+// Prefilled request so a user who arrived via "elektrikas Kaune" only needs to
+// sign in: category + city are known from the keyword, description is seeded.
+const REQUEST_HREF =
+  `/uzklausos/nauja?category=${encodeURIComponent(ELECTRICIAN_CATEGORY)}` +
+  `&location=${encodeURIComponent(CITY)}` +
+  `&description=${encodeURIComponent(
+    "Reikalingas elektrikas Kaune. Trumpai aprašykite darbą (pvz. rozečių ar jungiklių montavimas, elektros instaliacija, gedimo paieška, skydinės keitimas) ir gaukite pasiūlymus.",
+  )}`;
 const BROWSE_HREF = `/meistrai?category=${encodeURIComponent(ELECTRICIAN_CATEGORY)}&location=${encodeURIComponent(CITY)}`;
 
 const SERVICES: { icon: typeof Plug; title: string; text: string }[] = [

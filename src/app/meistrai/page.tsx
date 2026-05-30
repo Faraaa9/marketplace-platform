@@ -171,18 +171,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         </div>
       </div>
 
-      {categoryView && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
-          <div className="prose prose-sm max-w-3xl text-surface-600 dark:text-surface-300">
-            {categoryView.content.paragraphs.map((paragraph, i) => (
-              <p key={i} className="text-body-sm leading-relaxed mb-3 last:mb-0">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </section>
-      )}
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <ProvidersExperience
           initialProviders={initialProviders}
@@ -205,6 +193,24 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+
+        {/* SEO context block — kept in the DOM for indexing but tucked into a
+            collapsible at the bottom so it never dominates the listing UI. */}
+        {categoryView && (
+          <details className="group mt-8 border-t border-surface-100 pt-6 dark:border-surface-800">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-body-sm font-semibold text-surface-700 dark:text-surface-200">
+              <span className="text-surface-400 transition-transform group-open:rotate-45">+</span>
+              Apie „{categoryView.facet.name}“ paslaugas
+            </summary>
+            <div className="mt-4 max-w-3xl space-y-3">
+              {categoryView.content.paragraphs.map((paragraph, i) => (
+                <p key={i} className="text-body-sm leading-relaxed text-surface-500 dark:text-surface-400">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );
