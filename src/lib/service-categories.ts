@@ -97,16 +97,18 @@ export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]
     byParent.set(key, list);
   }
 
+  // Only the fields the UI (GroupedCategoryPicker) actually reads are kept on
+  // the serialized node: id, name, slug, childCount, children. parentId/rootId/
+  // depth/path are intentionally dropped — they are never read off the grouped
+  // output (the matching/suggestion libs work off raw rows), and on a 4k-node
+  // tree they bloated the RSC payload streamed to the client (the /uzklausos
+  // board shipped ~2.5 MB of HTML, tripping Semrush "Large HTML page size").
   function toItem(row: CategoryRow): ServiceCategoryItem {
     const children = (byParent.get(row.id) ?? []).map(toItem);
     return {
       id: row.id,
       name: row.name,
       slug: row.slug,
-      parentId: row.parentId,
-      rootId: row.rootId,
-      depth: row.depth,
-      path: row.path,
       childCount: children.length,
       children,
     };
@@ -116,10 +118,12 @@ export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]
     .filter((row) => row.depth === 0 || row.parentId === null)
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "lt"));
 
-  const value: ServiceCategoryGroup[] = roots.map((root) => ({
-    root: toItem(root),
-    categories: (byParent.get(root.id) ?? []).map(toItem),
-  }));
+  // `categories` reuses the very same node instances as `root.children` (not a
+  // second `toItem` pass), so the tree is built — and serialized — once.
+  const value: ServiceCategoryGroup[] = roots.map((root) => {
+    const item = toItem(root);
+    return { root: item, categories: item.children ?? [] };
+  });
   cachedGroups = { value, expiresAt: Date.now() + CACHE_TTL_MS };
   return value;
 }
