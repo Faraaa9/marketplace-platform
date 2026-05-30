@@ -6,6 +6,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Registracija",
   description: "Sukurkite paskyrą ir pradėkite naudotis PaslaugųRinka.",
+  // /registruotis?intent=provider is the same page — consolidate it onto the
+  // bare URL so the variant doesn't read as duplicate content.
+  alternates: { canonical: "/registruotis" },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
