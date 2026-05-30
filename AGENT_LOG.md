@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 07:15 — Claude
+
+**Commit:** `5bacfc9` — feat(seo): "Elektrikas Kaune" lead-gen landing page
+
+**Pakeitimai:** 5 files changed, 471 insertions(+), 1 deletion(-)
+
+**Failai:**
+- scripts/_register-paths.js
+- scripts/generate-landing-images.ts
+- src/app/paslaugos/elektrikas-kaune/page.tsx
+- src/app/sitemap.ts
+- src/lib/seo/page-seo.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 06:22 — Claude
 
 **Commit:** `efba5c7` — feat(seo): drop invalid LocalBusiness schema + add SEO gate script · lokalus

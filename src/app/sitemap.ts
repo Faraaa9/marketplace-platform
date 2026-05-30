@@ -1,8 +1,5 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
-import { getProvidersListingData } from "@/lib/providers-listing";
-import { buildCategoryView } from "@/lib/seo/category-view";
-import { buildPageSeo } from "@/lib/seo/page-seo";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
@@ -46,6 +43,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${BASE_URL}/tiekejams`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/paslaugos/elektrikas-kaune`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/paslaugos/santechnikas-kaune`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/paslaugos/stogo-dengimas-kaune`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/paslaugos/kondicionieriu-montavimas-kaune`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/paslaugos/apdailos-darbai-kaune`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
@@ -95,38 +122,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  // Category pages (/meistrai?category=) are emitted ONLY when they pass the
-  // index gate — same buildCategoryView + buildPageSeo the route uses, so the
-  // sitemap can never list a noindex URL. Request combos (/uzklausos?...) stay
-  // permanently transient → noindex → never here. City combos are omitted: the
-  // category-only pages are the high-value, stable asset.
-  const listing = await getProvidersListingData();
-  const categorySlugs = listing.categoryGroups.flatMap((group) =>
-    group.categories.map((category) => category.slug),
-  );
-  const categoryEntries: SitemapEntry[] = [];
-  for (const slug of categorySlugs) {
-    const view = buildCategoryView(listing, slug, null);
-    if (!view) continue;
-    const { verdict } = buildPageSeo({
-      kind: "providers-category",
-      category: view.facet,
-      providerCount: view.providerCount,
-      wordCount: view.content.wordCount,
-    });
-    if (!verdict.index) continue;
-    categoryEntries.push({
-      url: `${BASE_URL}/meistrai?category=${encodeURIComponent(slug)}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    });
-  }
-
+  // Faceted /meistrai?category= pages are functional search views, not SEO
+  // assets — they carry no on-page prose, so they are noindex and intentionally
+  // NOT in the sitemap. Keyword SEO lives on dedicated /paslaugos/* landing
+  // pages (added as static entries). Request combos (/uzklausos?...) stay
+  // permanently transient → noindex → never here.
   const all: SitemapEntry[] = [
     ...staticEntries,
     ...providerEntries,
-    ...categoryEntries,
   ];
 
   if (all.length > SITEMAP_URL_LIMIT) {

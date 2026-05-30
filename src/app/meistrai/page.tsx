@@ -49,6 +49,10 @@ export async function generateMetadata({
     return buildPageSeo({ kind: "providers-index" }).metadata;
   }
 
+  // Category filter pages carry no on-page SEO prose (that content now lives on
+  // dedicated /paslaugos/* landing pages). They are functional faceted-search
+  // views → noindex + canonical to /meistrai. wordCount 0 enforces that via the
+  // gate; the dynamic title/H1 stay for a clear browser tab and shared links.
   return buildPageSeo(
     view.city
       ? {
@@ -56,13 +60,13 @@ export async function generateMetadata({
           category: view.facet,
           city: view.city,
           providerCount: view.providerCount,
-          wordCount: view.content.wordCount,
+          wordCount: 0,
         }
       : {
           kind: "providers-category",
           category: view.facet,
           providerCount: view.providerCount,
-          wordCount: view.content.wordCount,
+          wordCount: 0,
         },
   ).metadata;
 }
@@ -171,18 +175,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
         </div>
       </div>
 
-      {categoryView && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
-          <div className="prose prose-sm max-w-3xl text-surface-600 dark:text-surface-300">
-            {categoryView.content.paragraphs.map((paragraph, i) => (
-              <p key={i} className="text-body-sm leading-relaxed mb-3 last:mb-0">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </section>
-      )}
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <ProvidersExperience
           initialProviders={initialProviders}
@@ -205,6 +197,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
+
       </div>
     </div>
   );

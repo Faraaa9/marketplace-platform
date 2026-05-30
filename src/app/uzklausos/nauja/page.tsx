@@ -77,13 +77,23 @@ function NewRequestV2Form() {
   const { data: session, status: sessionStatus } = useSession();
 
   const initialDescription = (searchParams.get("description") || "").slice(0, 2000);
-  const cameFromHero = initialDescription.trim().length >= 15;
+  // Prefill from keyword landing pages (e.g. /paslaugos/elektrikas-kaune):
+  // title + category slug + city come in the URL so a user who arrived via a
+  // specific intent gets a ready-to-post listing — they only need to sign in.
+  const initialTitle = (searchParams.get("title") || "").trim().slice(0, 120);
+  const initialCategorySlug = (searchParams.get("category") || "").trim();
+  const initialLocation = (searchParams.get("location") || searchParams.get("city") || "").trim().slice(0, 60);
+  // A fully prefilled listing (explicit title + category) should NOT be
+  // overwritten by the hero AI auto-run — keep it stable and immediately
+  // postable. The free-text hero flow (description only) still auto-runs AI.
+  const isPrefilled = initialTitle.length > 0 && initialCategorySlug.length > 0;
+  const cameFromHero = !isPrefilled && initialDescription.trim().length >= 15;
 
   const [form, setForm] = useState<FormState>({
-    title: "",
+    title: initialTitle,
     description: initialDescription,
     categoryIds: [],
-    location: "",
+    location: initialLocation,
     budget: "",
     deadline: "",
     attachmentUrls: [],
@@ -95,8 +105,11 @@ function NewRequestV2Form() {
 
   const [categoryGroups, setCategoryGroups] = useState<ServiceCategoryGroup[]>([]);
   // Slugs returned by AI before categoryGroups loaded; resolved to IDs once
-  // the picker options arrive.
-  const [pendingAiCategorySlugs, setPendingAiCategorySlugs] = useState<string[]>([]);
+  // the picker options arrive. Seeded from the URL `?category=` slug so landing
+  // pages can pre-pick the category once options load.
+  const [pendingAiCategorySlugs, setPendingAiCategorySlugs] = useState<string[]>(
+    initialCategorySlug ? [initialCategorySlug] : [],
+  );
   const [aiFields, setAiFields] = useState<Set<AiField>>(new Set());
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiStatus, setAiStatus] = useState<AiStatus>(cameFromHero ? "running" : "idle");

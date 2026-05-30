@@ -63,17 +63,17 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   // 1) Intro — what this page is, with the real inventory figure.
   paragraphs.push(
     `Ieškote ${catLower} specialisto${where}? Platformoje paslaugurinka.lt rasite ${providerCount} ${pluralProviders(providerCount)}, ` +
-      `kurie teikia ${catLower} paslaugas${where}. Kiekvienas tiekėjas turi viešą profilį su darbų pavyzdžiais, klientų atsiliepimais, ` +
+      `kurie teikia šias paslaugas${where}. Kiekvienas tiekėjas turi viešą profilį su darbų pavyzdžiais, klientų atsiliepimais, ` +
       `kainų orientyrais ir kontaktais — galite palyginti kelis variantus ir susisiekti tiesiogiai, be tarpininkų ir paslėptų mokesčių. ` +
       `Visa informacija matoma iš karto, todėl sprendimą priimsite greičiau ir užtikrinčiau.`,
   );
 
   // 2) How to choose — trust signals specific to the marketplace.
   paragraphs.push(
-    `Rinkdamiesi, kas atliks ${catLower} darbus, atkreipkite dėmesį į tiekėjo įvertinimą, atsiliepimų skaičių ir atsakymo greitį. ` +
+    `Rinkdamiesi specialistą, atkreipkite dėmesį į tiekėjo įvertinimą, atsiliepimų skaičių ir atsakymo greitį. ` +
       `Patikrinti profiliai pažymėti atskirai, o realių klientų atsiliepimai padeda įvertinti darbo kokybę ir patikimumą prieš susitariant. ` +
       `Rekomenduojame trumpai aprašyti, ko reikia, ir paprašyti kelių tiekėjų įvertinimo — taip pamatysite kainų ribas ir pasirinksite geriausią pasiūlymą. ` +
-      `Daugumą ${catLower} užsakymų${where} galima suderinti tą pačią ar kitą dieną.`,
+      `Daugumą užsakymų${where} galima suderinti tą pačią ar kitą dieną.`,
   );
 
   // 3) Pricing & process — genuinely useful guidance, always present.
@@ -88,7 +88,7 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   if (subcategoryNames.length > 0) {
     paragraphs.push(
       `Kategorija „${cat}" apima įvairias paslaugas: ${joinLt(subcategoryNames.slice(0, 8))}. ` +
-        `Nesvarbu, ar reikia nedidelio remonto, ar didesnio projekto — tinkamą ${catLower} meistrą rasite pagal savo poreikį ir biudžetą. ` +
+        `Nesvarbu, ar reikia nedidelio remonto, ar didesnio projekto — tinkamą meistrą rasite pagal savo poreikį ir biudžetą. ` +
         `Daugelis specialistų atlieka kelias susijusias paslaugas, todėl vienas tiekėjas dažnai gali pasirūpinti visu darbu.`,
     );
   }
@@ -97,7 +97,7 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   const coverageBits: string[] = [];
   if (topProviderNames.length > 0) {
     coverageBits.push(
-      `Tarp ${catLower} tiekėjų${where} — ${joinLt(topProviderNames.slice(0, 5))}.`,
+      `Tarp tiekėjų${where} — ${joinLt(topProviderNames.slice(0, 5))}.`,
     );
   }
   if (!city && cities.length > 0) {
@@ -107,7 +107,7 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   }
   coverageBits.push(
     `Jei tinkamo specialisto nerandate arba norite gauti kelis pasiūlymus iš karto, paskelbkite nemokamą užklausą — ` +
-      `${catLower} tiekėjai patys susisieks ir pateiks savo pasiūlymus, o jūs ramiai palyginsite kainas bei sąlygas.`,
+      `tiekėjai patys susisieks ir pateiks savo pasiūlymus, o jūs ramiai palyginsite kainas bei sąlygas.`,
   );
   paragraphs.push(coverageBits.join(" "));
 
