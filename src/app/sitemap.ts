@@ -3,6 +3,24 @@ import { prisma } from "@/lib/prisma";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
+// Keyword-targeted service landing pages under /paslaugos/* (one per file).
+// Keep in sync when adding a new landing page.
+const LANDING_SLUGS = [
+  "elektrikas-kaune",
+  "santechnikas-kaune",
+  "stogo-dengimas-kaune",
+  "kondicionieriu-montavimas-kaune",
+  "apdailos-darbai-kaune",
+  "santechnikas-vilniuje",
+  "santechnikas-klaipedoje",
+  "elektrikas-vilniuje",
+  "elektrikas-klaipedoje",
+  "trinkeliu-klojimas-kaune",
+  "plyteliu-klijavimas-kaune",
+  "kanalizacijos-valymas-kaune",
+  "kanalizacijos-valymas-vilniuje",
+] as const;
+
 // Google sitemap limit per file is 50k URLs. If we ever cross that, we should
 // switch to a sitemap index. Keep a safety budget so we fail loudly before then.
 const SITEMAP_URL_LIMIT = 50_000;
@@ -47,36 +65,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.8,
     },
-    {
-      url: `${BASE_URL}/paslaugos/elektrikas-kaune`,
+    ...LANDING_SLUGS.map((slug) => ({
+      url: `${BASE_URL}/paslaugos/${slug}`,
       lastModified: now,
-      changeFrequency: "monthly",
+      changeFrequency: "monthly" as const,
       priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/paslaugos/santechnikas-kaune`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/paslaugos/stogo-dengimas-kaune`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/paslaugos/kondicionieriu-montavimas-kaune`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/paslaugos/apdailos-darbai-kaune`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
+    })),
     {
       url: `${BASE_URL}/kontaktai`,
       lastModified: now,

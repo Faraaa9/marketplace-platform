@@ -44,6 +44,57 @@ const PAGES: Record<string, Shot[]> = {
     { key: "consult", width: 1024, height: 1024, prompt: `A young male technician in a light grey branded polo shirt showing air-conditioner options on a tablet to a smiling young couple in a sunny modern apartment, friendly approachable mood, ${NO_TEXT}` },
   ],
 
+  "santechnikas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male plumber in clean grey work clothes installing a white wall-mounted radiator in a bright modern Vilnius apartment, warm daylight, professional tools, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of plumber hands tightening a chrome valve on heating pipes with a wrench, neat copper connections, clean wall, soft light, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `Plumber in grey uniform discussing a heating and plumbing plan with a homeowner at a kitchen table in a bright apartment, friendly trustworthy mood, ${NO_TEXT}` },
+  ],
+  "santechnikas-klaipedoje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male plumber in dark blue overalls connecting a white wall-mounted water heater / boiler in a bright utility room, cool clean light, professional, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of plumber hands wrapping thread tape and joining a flexible hose to a water heater inlet, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `Plumber showing a tablet with a quote to a young homeowner couple in a bright bathroom doorway, approachable mood, ${NO_TEXT}` },
+  ],
+  "elektrikas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male electrician on a ladder installing a modern ceiling light fixture in a bright stylish Vilnius living room, warm evening light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of electrician hands wiring a white ceiling light connector block, neat colored wires, no faces, soft light, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `Electrician in a branded polo reviewing an electrical layout on paper with a homeowner in a modern apartment, collaborative mood, ${NO_TEXT}` },
+  ],
+  "elektrikas-klaipedoje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male electrician installing a white EV home charging station on an exterior house wall, daylight, modern single-family home in Lithuania, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of electrician hands working inside an open electrical meter cabinet with circuit breakers, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `Electrician with a clipboard talking to a homeowner in a garage next to an electrical panel, practical friendly mood, ${NO_TEXT}` },
+  ],
+  "trinkeliu-klojimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two Lithuanian paving workers laying grey concrete paving stones on a residential driveway in front of a modern house, sunny day, rubber mallet, sand bedding, outdoor scene, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of gloved hands placing a grey concrete paver into sand, perfectly aligned rows, outdoor daylight, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A paving contractor in a hi-vis vest discussing a yard paving plan with a homeowner in a garden, pointing at the ground, golden hour, ${NO_TEXT}` },
+  ],
+  "plyteliu-klijavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male tiler kneeling and applying large light-grey wall tiles in a modern bathroom under renovation, notched trowel and spacers, bright clean light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of tiler hands pressing a square tile onto adhesive comb lines on a wall, tile spacers visible, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A tiler showing tile and grout samples to a woman homeowner in a bathroom being renovated, natural light, collaborative mood, ${NO_TEXT}` },
+  ],
+  "kanalizacijos-valymas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian drainage technician in dark uniform and gloves operating a powered drain-cleaning auger machine next to a bathroom floor drain, focused, indoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of gloved hands feeding a steel drain-cleaning cable into a pipe opening, water and tools, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A drainage technician explaining a clogged-pipe solution to a homeowner in a kitchen, reassuring professional mood, ${NO_TEXT}` },
+  ],
+  "kanalizacijos-valymas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian technician using a high-pressure water jetting hose to clean an outdoor sewer manhole in a residential yard, daylight, service van blurred in background, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a high-pressure jetting nozzle and hose entering a sewer pipe, splashing water, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A uniformed drainage specialist talking with a homeowner near an open outdoor manhole, clipboard, practical mood, ${NO_TEXT}` },
+  ],
+  "gipso-kartono-montavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian male builder screwing a plasterboard / drywall sheet onto a metal stud frame in a half-finished room, dust, bright work light, renovation scene, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands driving a screw into a plasterboard sheet with a cordless screwdriver, metal frame visible, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A drywall installer showing a partition layout plan to a homeowner in a room under construction, natural light, ${NO_TEXT}` },
+  ],
+  "langu-valymas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Lithuanian professional window cleaner using a squeegee on a large floor-to-ceiling window in a bright modern apartment, clear sunny view outside, clean fresh mood, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a hand pulling a squeegee across a soapy glass window leaving a clean streak, sunlight, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A friendly window-cleaning professional in a polo shirt with a bucket and squeegee smiling in a bright living room with large clean windows, ${NO_TEXT}` },
+  ],
+
   "apdailos-darbai-kaune": [
     { key: "hero", width: 1536, height: 1024, prompt: `A plasterer in white overalls smoothing a wall with a wide trowel in a sunlit half-renovated apartment room, bare plaster, a ladder and tools nearby, warm dusty authentic renovation atmosphere, ${NO_TEXT}` },
     { key: "work", width: 1024, height: 1024, prompt: `Close-up of a paint roller applying warm beige paint to a wall in clean even strokes, paint tray in the foreground, soft side light, no faces, ${NO_TEXT}` },
