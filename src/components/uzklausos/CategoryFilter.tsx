@@ -7,6 +7,8 @@ import { CategoryPickerBody } from "@/components/categories/GroupedCategoryPicke
 interface CategoryFilterProps {
   categoryGroups: ServiceCategoryGroup[];
   activeCategory: string;
+  /** True while the category tree is still being fetched (lazy-loaded). */
+  loading?: boolean;
 }
 
 /**
@@ -17,6 +19,7 @@ interface CategoryFilterProps {
 export default function CategoryFilter({
   categoryGroups,
   activeCategory,
+  loading = false,
 }: CategoryFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,6 +31,14 @@ export default function CategoryFilter({
     params.delete("page");
     const qs = params.toString();
     router.push(`/uzklausos${qs ? `?${qs}` : ""}`);
+  }
+
+  if (loading) {
+    return (
+      <div className="px-4 py-8 text-center text-caption text-surface-400">
+        Kraunamos kategorijos…
+      </div>
+    );
   }
 
   return (

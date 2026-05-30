@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
-import { getServiceCategoryGroups, resolveCategoryParam } from "@/lib/service-categories";
+import { getServiceCategoryGroups, getServiceCategoryNameMap, resolveCategoryParam } from "@/lib/service-categories";
 import type { ServiceCategoryItem } from "@/lib/service-categories";
 import { buildPageSeo } from "@/lib/seo/page-seo";
 import { expandToMatchSet } from "@/lib/category-matching";
@@ -212,12 +212,18 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
   const now = new Date();
 
-  const [{ requests, total }, { totalActive, newToday, totalProviderResponses }, categoryGroups] =
+  const [{ requests, total }, { totalActive, newToday, totalProviderResponses }] =
     await Promise.all([
       getBoardListing(page, perPage, { category, location, search }),
       getBoardStats(),
-      getServiceCategoryGroups(),
     ]);
+
+  // Resolve only the active category's display name (cheap, cached) for the
+  // filter chip. The full taxonomy is lazy-loaded client-side by the filter
+  // panel, so it is never serialized into the board's initial HTML.
+  const activeCategoryName = category
+    ? (await getServiceCategoryNameMap()).get(category)
+    : undefined;
 
   // Client-side sort for response count (kept post-cache so it doesn't bloat the key surface)
   if (sort === "responses-asc") {
@@ -339,10 +345,10 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <RequestFilterBar
           activeCategory={category}
+          activeCategoryName={activeCategoryName}
           activeLocation={location}
           activeSearch={search}
           activeSort={sort}
-          categoryGroups={categoryGroups}
           cities={[...LITHUANIAN_CITIES]}
           sortOptions={SORT_OPTIONS}
           totalResults={total}
