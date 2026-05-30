@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 23:58 — Claude
+
+**Commit:** `54b6951` — perf(seo): slim category tree in RSC payload (fix Large HTML on /uzklausos) · lokalus
+
+**Pakeitimai:** 1 file changed, 12 insertions(+), 8 deletions(-)
+
+**Failai:**
+- src/lib/service-categories.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 19:50 — Claude
 
 **Commit:** `9e65608` — fix(seo): noindex utility/seed pages, fix Review schema, shorten titles · lokalus
