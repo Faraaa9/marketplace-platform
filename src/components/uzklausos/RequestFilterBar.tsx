@@ -10,11 +10,12 @@ import DensityToggle from "./DensityToggle";
 
 interface FilterBarProps {
   activeCategory: string;
+  /** Server-resolved name for the active category slug, so the chip renders
+   *  correctly before the (lazy-loaded) category tree arrives. */
+  activeCategoryName?: string;
   activeLocation: string;
   activeSearch: string;
   activeSort: string;
-  /** Grouped curated categories — the filter value is the category `slug`. */
-  categoryGroups: ServiceCategoryGroup[];
   cities: string[];
   sortOptions: { value: string; label: string }[];
   totalResults: number;
@@ -32,10 +33,10 @@ export default function RequestFilterBar(props: FilterBarProps) {
 
 function RequestFilterBarInner({
   activeCategory,
+  activeCategoryName,
   activeLocation,
   activeSearch,
   activeSort,
-  categoryGroups,
   cities,
   sortOptions,
   totalResults,
@@ -49,6 +50,11 @@ function RequestFilterBarInner({
 
   const [searchValue, setSearchValue] = useState(activeSearch);
   const [isOpen, setIsOpen] = useState(false);
+  // The curated taxonomy is ~4k nodes; serializing it into the board's initial
+  // HTML shipped ~2 MB. Instead, fetch it client-side the first time the filter
+  // panel opens.
+  const [groups, setGroups] = useState<ServiceCategoryGroup[] | null>(null);
+  const [loadingGroups, setLoadingGroups] = useState(false);
 
   const activeFilterCount = [activeCategory, activeLocation].filter(Boolean).length;
 
@@ -122,16 +128,32 @@ function RequestFilterBarInner({
     router.push(buildUrl({ sort: value === "newest" ? "" : value }));
   }
 
-  // slug -> name across every group, for the active-category chip label.
-  const categoryNameBySlug = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const group of categoryGroups) {
-      for (const cat of group.categories) map.set(cat.slug, cat.name);
-    }
-    return map;
-  }, [categoryGroups]);
+  // Lazy-load the category tree the first time the panel opens.
+  useEffect(() => {
+    if (!isOpen || groups || loadingGroups) return;
+    setLoadingGroups(true);
+    fetch("/api/service-categories")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.success && Array.isArray(json.data)) {
+          setGroups(json.data as ServiceCategoryGroup[]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingGroups(false));
+  }, [isOpen, groups, loadingGroups]);
 
-  const categoryLabel = categoryNameBySlug.get(activeCategory);
+  // Prefer the server-resolved name; fall back to the loaded tree once present.
+  const categoryLabel = useMemo(() => {
+    if (activeCategoryName) return activeCategoryName;
+    if (!activeCategory || !groups) return undefined;
+    for (const group of groups) {
+      for (const cat of group.categories) {
+        if (cat.slug === activeCategory) return cat.name;
+      }
+    }
+    return undefined;
+  }, [activeCategoryName, activeCategory, groups]);
 
   const resultLabel =
     totalResults === 0
@@ -188,8 +210,9 @@ function RequestFilterBarInner({
               className="absolute right-0 top-full z-50 mt-2 hidden max-h-[72vh] w-96 overflow-y-auto overscroll-contain rounded-xl border border-[#d2c5a1] bg-[#fbfaf6] shadow-lg dark:border-surface-700 dark:bg-surface-900 sm:block"
             >
               <CategoryFilter
-                categoryGroups={categoryGroups}
+                categoryGroups={groups ?? []}
                 activeCategory={activeCategory}
+                loading={loadingGroups || !groups}
               />
             </div>
           )}
@@ -225,8 +248,9 @@ function RequestFilterBarInner({
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <CategoryFilter
-                categoryGroups={categoryGroups}
+                categoryGroups={groups ?? []}
                 activeCategory={activeCategory}
+                loading={loadingGroups || !groups}
               />
             </div>
             <div className="border-t border-surface-100 p-3 dark:border-surface-800">
