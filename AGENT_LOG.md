@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 05:13 — Claude
+
+**Commit:** `d93ebf6` — feat(admin): Telegram overview page — config, webhook, sessions, listings
+
+**Pakeitimai:** 5 files changed, 597 insertions(+), 1 deletion(-)
+
+**Failai:**
+- NOTES.md
+- src/app/admin/layout.tsx
+- src/app/admin/telegram/page.tsx
+- src/app/api/admin/telegram/route.ts
+- src/lib/telegram/api.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 05:00 — Claude
 
 **Commit:** `c5936f0` — docs(seo): add SEO architecture plan for generated pages

@@ -515,6 +515,19 @@ Konvencija:
   `TELEGRAM_WEBHOOK_SECRET` patvirtinti production env. Registracija: prod merge
   (`feat/ai-openrouter-client` → main) deploy'intas, tada `pnpm telegram:set-webhook https://www.paslaugurinka.lt`.
 
+- [x] **2026-05-30 — Admin matomumas: `/admin/telegram`.** Naujas puslapis +
+  `GET /api/admin/telegram` (admin-gated kaip kiti `/api/admin/*`): konfig. sveikata
+  (bot token, webhook secret, @username per `getBotInfo`), webhook būsena per
+  `getWebhookInfo` (registruotas URL vs tikėtasi, laukiantys update'ai, paskutinė
+  klaida), pokalbių statistika iš `telegram_sessions` (viso / susieta / aktyvūs
+  juodraščiai, būsenų skirstinys, 25 naujausi) ir per Telegram paskelbti skelbimai
+  (`service_requests.source="telegram"`: viso / 30 d. / 15 naujausių su moderacijos
+  būsena). Pridėti `getWebhookInfo`/`getBotInfo` į `telegram/api.ts`; nav punktas
+  layout'e. Live Telegram kvietimai try/catch — neparkrenta jei API nepasiekiamas.
+
+- [ ] **Liko (Telegram):** per-chat_id rate-limit webhook lygmenyje (dabar throttle
+  tik AI/foto per `from.id` conversation'e; webhook'as pats neturi atskiro limito).
+
 - [ ] **2026-05-29 — Vienetiniai testai be runner'io.** `pnpm test:telegram`
   paleidžia `conversation.ts` state machine testus per ts-node (projekte nėra
   jest/vitest). Jei ateity dėsim test runner'į — perkelti čia.

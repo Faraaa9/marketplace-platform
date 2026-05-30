@@ -129,3 +129,33 @@ export async function downloadFile(fileId: string): Promise<Buffer> {
   }
   return Buffer.from(await res.arrayBuffer());
 }
+
+export interface WebhookInfo {
+  url: string;
+  has_custom_certificate: boolean;
+  pending_update_count: number;
+  ip_address?: string;
+  last_error_date?: number;
+  last_error_message?: string;
+  last_synchronization_error_date?: number;
+  max_connections?: number;
+  allowed_updates?: string[];
+}
+
+export interface BotInfo {
+  id: number;
+  username?: string;
+  first_name?: string;
+  can_join_groups?: boolean;
+  can_read_all_group_messages?: boolean;
+}
+
+/** Live webhook registration status from Telegram (getWebhookInfo). */
+export async function getWebhookInfo(): Promise<WebhookInfo> {
+  return callMethod<WebhookInfo>("getWebhookInfo", {});
+}
+
+/** The bot's own identity (getMe) — used to surface the @username in admin. */
+export async function getBotInfo(): Promise<BotInfo> {
+  return callMethod<BotInfo>("getMe", {});
+}
