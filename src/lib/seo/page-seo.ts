@@ -43,7 +43,7 @@ interface CategoryFacet {
  * considered (the compiler will not let a variant ship without a title path).
  */
 export type SeoInput =
-  | { kind: "provider-profile"; title: string; description: string; path: string; heroImageUrl?: string | null; jsonLd?: Array<Record<string, unknown>> }
+  | { kind: "provider-profile"; title: string; description: string; path: string; heroImageUrl?: string | null; jsonLd?: Array<Record<string, unknown>>; noindex?: boolean }
   | { kind: "providers-index" }
   | { kind: "providers-category"; category: CategoryFacet; providerCount: number; wordCount: number; currentlyIndexed?: boolean }
   | { kind: "providers-category-city"; category: CategoryFacet; city: string; providerCount: number; wordCount: number; currentlyIndexed?: boolean }
@@ -129,7 +129,11 @@ function assemble(opts: {
 export function buildPageSeo(input: SeoInput): PageSeoResult {
   switch (input.kind) {
     case "provider-profile": {
-      const verdict: IndexVerdict = { index: true };
+      // Seed/demo profiles ("(DEMO)"/"(TEST)") are still publicly visible but
+      // must stay out of the index until they are deleted — caller flags them.
+      const verdict: IndexVerdict = input.noindex
+        ? { index: false, reason: "transient" }
+        : { index: true };
       return {
         verdict,
         jsonLd: input.jsonLd,

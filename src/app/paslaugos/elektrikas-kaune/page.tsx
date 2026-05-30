@@ -18,7 +18,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-statybos-apdaila--elektrikai-elektros-darbai",
   serviceType: "Elektriko paslaugos",
-  seoTitle: "Elektrikas Kaune — gaukite pasiūlymus iš patikimų specialistų",
+  seoTitle: "Elektrikas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia elektriko Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų elektrikų. Instaliacija, rozetės, gedimai, skubus iškvietimas.",
   heroBadge: "Elektros paslaugos Kaune",

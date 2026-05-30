@@ -17,7 +17,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-statybos-apdaila--santechnikai-santechnikos-darbai",
   serviceType: "Santechnikos paslaugos",
-  seoTitle: "Santechnikas Kaune — gaukite pasiūlymus iš patikimų specialistų",
+  seoTitle: "Santechnikas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia santechniko Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų santechnikų. Maišytuvai, vamzdynai, protėkiai, kanalizacija, skubus iškvietimas.",
   heroBadge: "Santechnikos paslaugos Kaune",

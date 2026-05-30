@@ -91,9 +91,24 @@ async function getMetadataRow(slug: string) {
       heroImageUrl: true,
       moderationStatus: true,
       isActive: true,
-      user: { select: { name: true } },
+      user: { select: { name: true, email: true } },
     },
   });
+}
+
+/**
+ * Seed/demo fixtures ("(DEMO)"/"(TEST)" names or @test.lt / example.lt emails)
+ * are publicly live but must not be indexed. Detected here so their metadata
+ * carries noindex until the rows are deleted.
+ */
+function isSeedProfile(row: {
+  displayName?: string | null;
+  user?: { name?: string | null; email?: string | null } | null;
+}): boolean {
+  const name = `${row.displayName ?? ""} ${row.user?.name ?? ""}`;
+  if (/\((?:DEMO|TEST)\)/i.test(name)) return true;
+  const email = row.user?.email ?? "";
+  return /@test\.lt$/i.test(email) || /@example\./i.test(email);
 }
 
 export async function generateMetadata({
@@ -136,6 +151,7 @@ export async function generateMetadata({
     description,
     path: `/meistrai/${slug}`,
     heroImageUrl: row.heroImageUrl,
+    noindex: isSeedProfile(row),
   }).metadata;
 }
 
@@ -226,7 +242,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   const profileUrl = `${baseUrl}/meistrai/${resolvedSlug}`;
   const localBusinessSchema = buildLocalBusinessSchema(provider, profileUrl);
   const breadcrumbSchema = buildBreadcrumbSchema(provider.name, profileUrl, baseUrl);
-  const reviewSchemas = buildReviewSchemas(provider.name, topReviews);
+  const reviewSchemas = buildReviewSchemas(provider.name, provider.location, topReviews);
 
   const providerIsOnline = computeIsOnline(provider.lastSeenAt);
   const lastSeenLabel = formatLastSeen(provider.lastSeenAt);
@@ -1036,6 +1052,7 @@ function buildBreadcrumbSchema(
 
 function buildReviewSchemas(
   providerName: string,
+  providerLocation: string | null,
   reviews: SeoReview[]
 ): Array<Record<string, unknown>> {
   return reviews.map((review) => ({
@@ -1044,6 +1061,13 @@ function buildReviewSchemas(
     itemReviewed: {
       "@type": "LocalBusiness",
       name: providerName,
+      // `address` is a required field for the LocalBusiness being reviewed;
+      // omitting it makes Google/Semrush flag the whole Review schema invalid.
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: providerLocation || "Lietuva",
+        addressCountry: "LT",
+      },
     },
     author: {
       "@type": "Person",
