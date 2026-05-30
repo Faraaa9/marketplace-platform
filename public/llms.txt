@@ -1,0 +1,26 @@
+# PaslaugųRinka
+
+> PaslaugųRinka (paslaugurinka.lt) – paslaugų marketplace Lietuvoje, jungiantis klientus su patikrintais paslaugų tiekėjais. Klientai nemokamai pateikia užklausą ir gauna kelis pasiūlymus; tiekėjai randa naujų užsakymų ir bendrauja su klientais tiesiogiai, be tarpininkų.
+
+Pagrindinė kalba – lietuvių. Paslaugos teikiamos visoje Lietuvoje (Vilnius, Kaunas, Klaipėda, Šiauliai, Panevėžys ir kt.). Kategorijos: statyba ir apdaila, santechnika, elektra, valymas, perkraustymas, dizainas, IT, sodas ir aplinka, grožis, mokymai ir daugiau.
+
+## Pagrindiniai puslapiai
+
+- [Pagrindinis](https://www.paslaugurinka.lt/): Platformos apžvalga – kaip pateikti užklausą ir rasti specialistą.
+- [Meistrai ir paslaugų tiekėjai](https://www.paslaugurinka.lt/meistrai): Tiekėjų katalogas su profiliais, atsiliepimais ir kainomis; filtruojama pagal kategoriją ir miestą.
+- [Užklausų lenta](https://www.paslaugurinka.lt/uzklausos): Aktyvios klientų užklausos, prie kurių tiekėjai gali teikti pasiūlymus.
+- [Tiekėjams](https://www.paslaugurinka.lt/tiekejams): Kaip tapti tiekėju ir pritraukti naujų klientų.
+
+## Paslaugų puslapiai (pavyzdžiai)
+
+- [Santechnikas Kaune](https://www.paslaugurinka.lt/paslaugos/santechnikas-kaune): Santechnikos paslaugos – pasiūlymai iš patikrintų specialistų.
+- [Elektrikas Kaune](https://www.paslaugurinka.lt/paslaugos/elektrikas-kaune): Elektros darbai ir instaliacija.
+- [Apdailos darbai Kaune](https://www.paslaugurinka.lt/paslaugos/apdailos-darbai-kaune): Vidaus apdaila ir remontas.
+- [Stogo dengimas Kaune](https://www.paslaugurinka.lt/paslaugos/stogo-dengimas-kaune): Stogdengių paslaugos.
+- [Kondicionierių montavimas Kaune](https://www.paslaugurinka.lt/paslaugos/kondicionieriu-montavimas-kaune): Oro kondicionierių montavimas.
+
+## Papildomai
+
+- [Kontaktai](https://www.paslaugurinka.lt/kontaktai): Susisiekimo informacija.
+- [Privatumo politika](https://www.paslaugurinka.lt/privatumas): Duomenų tvarkymo principai.
+- [Svetainės žemėlapis](https://www.paslaugurinka.lt/sitemap.xml): Visi indeksuojami puslapiai, įskaitant daugiau paslaugų ir miestų.
