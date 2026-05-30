@@ -38,14 +38,16 @@ const TITLE = "Elektrikas Kaune — gaukite pasiūlymus iš patikimų specialist
 const DESCRIPTION =
   "Reikia elektriko Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų elektrikų. Instaliacija, rozetės, gedimai, skubus iškvietimas.";
 
-// Prefilled request so a user who arrived via "elektrikas Kaune" only needs to
-// sign in: category + city are known from the keyword, description is seeded.
+// A ready-to-post listing: title + natural description + category + city all
+// prefilled, so a user who arrived via "elektrikas Kaune" only needs to sign in.
+const REQUEST_TITLE = "Reikalingas elektrikas Kaune";
+const REQUEST_DESCRIPTION =
+  "Ieškau patikimo elektriko Kaune. Reikia atlikti elektros darbus bute — pavyzdžiui, rozečių ar jungiklių montavimas, instaliacijos pataisymai ar gedimo paieška. Prašau pateikti pasiūlymą su orientacine kaina ir galimu atvykimo laiku.";
 const REQUEST_HREF =
-  `/uzklausos/nauja?category=${encodeURIComponent(ELECTRICIAN_CATEGORY)}` +
+  `/uzklausos/nauja?title=${encodeURIComponent(REQUEST_TITLE)}` +
+  `&category=${encodeURIComponent(ELECTRICIAN_CATEGORY)}` +
   `&location=${encodeURIComponent(CITY)}` +
-  `&description=${encodeURIComponent(
-    "Reikalingas elektrikas Kaune. Trumpai aprašykite darbą (pvz. rozečių ar jungiklių montavimas, elektros instaliacija, gedimo paieška, skydinės keitimas) ir gaukite pasiūlymus.",
-  )}`;
+  `&description=${encodeURIComponent(REQUEST_DESCRIPTION)}`;
 const BROWSE_HREF = `/meistrai?category=${encodeURIComponent(ELECTRICIAN_CATEGORY)}&location=${encodeURIComponent(CITY)}`;
 
 const SERVICES: { icon: typeof Plug; title: string; text: string }[] = [

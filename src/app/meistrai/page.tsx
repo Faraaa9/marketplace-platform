@@ -49,6 +49,10 @@ export async function generateMetadata({
     return buildPageSeo({ kind: "providers-index" }).metadata;
   }
 
+  // Category filter pages carry no on-page SEO prose (that content now lives on
+  // dedicated /paslaugos/* landing pages). They are functional faceted-search
+  // views → noindex + canonical to /meistrai. wordCount 0 enforces that via the
+  // gate; the dynamic title/H1 stay for a clear browser tab and shared links.
   return buildPageSeo(
     view.city
       ? {
@@ -56,13 +60,13 @@ export async function generateMetadata({
           category: view.facet,
           city: view.city,
           providerCount: view.providerCount,
-          wordCount: view.content.wordCount,
+          wordCount: 0,
         }
       : {
           kind: "providers-category",
           category: view.facet,
           providerCount: view.providerCount,
-          wordCount: view.content.wordCount,
+          wordCount: 0,
         },
   ).metadata;
 }
@@ -194,23 +198,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           </Link>
         </div>
 
-        {/* SEO context block — kept in the DOM for indexing but tucked into a
-            collapsible at the bottom so it never dominates the listing UI. */}
-        {categoryView && (
-          <details className="group mt-8 border-t border-surface-100 pt-6 dark:border-surface-800">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-body-sm font-semibold text-surface-700 dark:text-surface-200">
-              <span className="text-surface-400 transition-transform group-open:rotate-45">+</span>
-              Apie „{categoryView.facet.name}“ paslaugas
-            </summary>
-            <div className="mt-4 max-w-3xl space-y-3">
-              {categoryView.content.paragraphs.map((paragraph, i) => (
-                <p key={i} className="text-body-sm leading-relaxed text-surface-500 dark:text-surface-400">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </details>
-        )}
       </div>
     </div>
   );

@@ -78,14 +78,19 @@ function NewRequestV2Form() {
 
   const initialDescription = (searchParams.get("description") || "").slice(0, 2000);
   // Prefill from keyword landing pages (e.g. /paslaugos/elektrikas-kaune):
-  // category slug + city come in the URL so a user who arrived via a specific
-  // intent only needs to sign in, not re-pick what we already know.
+  // title + category slug + city come in the URL so a user who arrived via a
+  // specific intent gets a ready-to-post listing — they only need to sign in.
+  const initialTitle = (searchParams.get("title") || "").trim().slice(0, 120);
   const initialCategorySlug = (searchParams.get("category") || "").trim();
   const initialLocation = (searchParams.get("location") || searchParams.get("city") || "").trim().slice(0, 60);
-  const cameFromHero = initialDescription.trim().length >= 15;
+  // A fully prefilled listing (explicit title + category) should NOT be
+  // overwritten by the hero AI auto-run — keep it stable and immediately
+  // postable. The free-text hero flow (description only) still auto-runs AI.
+  const isPrefilled = initialTitle.length > 0 && initialCategorySlug.length > 0;
+  const cameFromHero = !isPrefilled && initialDescription.trim().length >= 15;
 
   const [form, setForm] = useState<FormState>({
-    title: "",
+    title: initialTitle,
     description: initialDescription,
     categoryIds: [],
     location: initialLocation,
