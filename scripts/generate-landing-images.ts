@@ -192,6 +192,57 @@ const PAGES: Record<string, Shot[]> = {
     { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands connecting a flexible water supply hose to a toilet cistern inlet, chrome fitting, no faces, ${NO_TEXT}` },
     { key: "consult", width: 1024, height: 1024, prompt: `A plumber discussing a bathroom fixture plan with a homeowner in a bright modern bathroom, ${NO_TEXT}` },
   ],
+
+  "perkraustymo-paslaugos-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two Lithuanian movers in matching uniforms carrying a wrapped sofa out of an apartment building into a moving van in Kaunas, daytime, boxes nearby, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands wrapping furniture in protective stretch film and moving blankets, packing tape, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A mover with a clipboard counting boxes and discussing the move with a homeowner in a half-packed living room, ${NO_TEXT}` },
+  ],
+  "parketo-klojimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A flooring craftsman laying natural oak parquet in a bright elegant Kaunas living room, rich wood grain, kneeling with tools, warm light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands fitting solid oak parquet blocks tightly together, fine wood texture, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A parquet specialist showing wood finish and stain samples to a homeowner on a prepared floor, ${NO_TEXT}` },
+  ],
+  "buto-valymas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A professional cleaner in a tidy uniform tidying and vacuuming a bright modern Vilnius apartment, fresh clean atmosphere, cleaning caddy nearby, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a gloved hand wiping a kitchen countertop with a microfiber cloth and spray bottle, sparkling surface, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A friendly cleaning professional with supplies smiling in a spotless bright living room, ${NO_TEXT}` },
+  ],
+  "langu-keitimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two installers fitting a new white PVC window into the opening of an apartment in Kaunas, level and foam gun, bright daylight from outside, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands applying expanding foam and screwing a window frame anchor into a wall opening, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A window specialist measuring a window opening with a tape and discussing options with a homeowner, ${NO_TEXT}` },
+  ],
+  "kondicionieriu-montavimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A male HVAC technician on a ladder mounting a sleek white split air conditioner high on a wall in a bright modern Vilnius apartment, cool clean tones, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands drilling a core hole and routing copper pipes for an air conditioner through an exterior wall, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A climate technician explaining air conditioner placement to a homeowner in a sunny living room, ${NO_TEXT}` },
+  ],
+  "stogo-dengimas-klaipedoje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Roofers installing dark standing-seam metal roofing on a coastal house roof near Klaipeda, breezy bright sky, sea-side light, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands seaming two metal roof panels with a seaming tool, weather-tight joint, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A roofer discussing wind-resistant roofing options with a homeowner in front of a coastal house, ${NO_TEXT}` },
+  ],
+  "apdailos-darbai-klaipedoje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A finishing worker skim-coating a wall smooth in a bright renovated Klaipeda apartment, calm coastal daylight, clean tools, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a trowel applying smooth white filler over a wall, fine finishing texture, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An interior finisher reviewing a renovation checklist with a homeowner in a partly finished room, ${NO_TEXT}` },
+  ],
+  "elektrikas-panevezyje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian electrician replacing an old fuse box with a modern consumer unit in a house in Panevezys, focused, warm light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands wiring circuit breakers onto a DIN rail inside an electrical panel, neat colored wires, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An electrician explaining a new fuse box layout to a homeowner, friendly professional mood, ${NO_TEXT}` },
+  ],
+  "santechnikas-siauliuose": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian plumber installing a glass shower enclosure and mixer in a modern bathroom in Siauliai, bright clean light, tools, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands sealing a shower tray edge with silicone using a caulking gun, neat bead, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A plumber discussing a bathroom renovation plan with a homeowner in a bright bathroom, ${NO_TEXT}` },
+  ],
+  "plyteliu-klijavimas-klaipedoje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A tiler laying glossy white subway wall tiles in a bright modern Klaipeda bathroom, notched trowel and spacers, fresh renovation, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands placing a rectangular wall tile with spacers onto adhesive, even grout lines, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A tiler holding tile and mosaic samples while talking with a homeowner in a bathroom being renovated, ${NO_TEXT}` },
+  ],
 };
 
 async function main() {
