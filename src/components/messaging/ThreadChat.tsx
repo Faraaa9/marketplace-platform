@@ -489,8 +489,8 @@ export default function ThreadChat({
                             className={cn(
                               "max-w-full rounded-3xl px-4 py-2.5 text-[15px] leading-snug whitespace-pre-wrap break-words",
                               group.isOwn
-                                ? "bg-brand-600 text-white dark:bg-brand-500"
-                                : "bg-surface-100 text-surface-900 dark:bg-surface-800 dark:text-surface-100",
+                                ? "bg-[#4f76c4] text-white dark:bg-[#5580c8]"
+                                : "bg-surface-100 text-surface-800 dark:bg-surface-800 dark:text-surface-100",
                               tail,
                               msg.status === "sending" && "opacity-70",
                             )}
