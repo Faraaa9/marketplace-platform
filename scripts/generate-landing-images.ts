@@ -141,6 +141,57 @@ const PAGES: Record<string, Shot[]> = {
     { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands aligning and nailing a ceramic roof tile on roof battens, precise detail, no faces, ${NO_TEXT}` },
     { key: "consult", width: 1024, height: 1024, prompt: `A roofing contractor showing roof tile samples and a sketch to a homeowner in front of a house, daylight, ${NO_TEXT}` },
   ],
+
+  "elektros-instaliacija-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian electrician pulling electrical cables through plastic conduits in the chased walls of an apartment under renovation, exposed wiring, bright work light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands routing colored electrical cables into a wall-mounted junction box on a bare wall, neat work, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An electrician marking socket positions on a bare wall while discussing the wiring plan with a homeowner in a renovation, ${NO_TEXT}` },
+  ],
+  "grindu-betonavimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Workers pouring grey concrete from a thick pump hose onto a reinforced floor inside a building under construction in Vilnius, wet concrete spreading, industrial daylight, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of rubber boots and a screed rake spreading fresh wet concrete over steel reinforcement mesh, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A foreman in a hi-vis vest and hard hat reviewing floor plans with a client on a raw concrete construction site, ${NO_TEXT}` },
+  ],
+  "plyteliu-klijavimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian tiler laying large light-grey floor tiles in a bright modern Vilnius kitchen, kneeling on a tiling mat, notched trowel and level, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands lowering a large floor tile onto adhesive comb lines with tile levelling clips, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A tiler holding a large-format tile and discussing the layout with a homeowner in a bright kitchen, ${NO_TEXT}` },
+  ],
+  "laminato-klojimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A flooring installer laying herringbone-pattern oak laminate in a sunny spacious Vilnius living room, warm wood tones, low camera angle along the floor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of two herringbone laminate planks being clicked together at an angle on the floor, warm wood grain, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A flooring specialist and a homeowner comparing wood-tone laminate samples on a sunlit prepared floor, ${NO_TEXT}` },
+  ],
+  "apdailos-darbai-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A painter in white overalls rolling fresh white paint on a ceiling of a bright newly renovated Vilnius apartment, telescopic roller, clean modern, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a wide spatula skimming smooth white filler over a wall corner, fine finishing, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An interior finisher with a tablet walking a homeowner through a renovation plan in a partly finished bright room, ${NO_TEXT}` },
+  ],
+  "fasado-siltinimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A worker on scaffolding applying textured decorative render onto an insulated facade of a Vilnius house with a steel trowel, bright daylight, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a steel float spreading white decorative facade plaster over insulation mesh, texture detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A facade specialist showing render colour and texture samples to a homeowner outdoors near a house, ${NO_TEXT}` },
+  ],
+  "tvoros-montavimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Two workers installing a modern vertical wooden slat fence with dark posts along a residential property in Vilnius, green lawn, sunny day, outdoor, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands screwing a wooden fence board onto a dark metal post with a drill, neat spacing, outdoor, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A fencing contractor with a tape measure and tablet discussing fence styles with a homeowner in a garden, ${NO_TEXT}` },
+  ],
+  "duru-montavimas-vilniuje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A carpenter installing a modern dark wooden front entrance door of a Vilnius house, fitting the frame, daylight, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands fitting a stainless door lock and handle into an entrance door, precise detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A door installer showing entrance door finishes and handles to a homeowner in a bright hallway, ${NO_TEXT}` },
+  ],
+  "elektrikas-siauliuose": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian electrician testing a residential consumer unit with a multimeter, focused expression, modern apartment in Siauliai, warm light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of an electrician hand holding a multimeter probe against a circuit breaker terminal, technical detail, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An electrician explaining a fuse box to a homeowner in a utility area, friendly professional mood, ${NO_TEXT}` },
+  ],
+  "santechnikas-panevezyje": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A Lithuanian plumber installing a wall-hung white toilet in a modern bathroom in Panevezys, level and tools, bright clean light, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of hands connecting a flexible water supply hose to a toilet cistern inlet, chrome fitting, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A plumber discussing a bathroom fixture plan with a homeowner in a bright modern bathroom, ${NO_TEXT}` },
+  ],
 };
 
 async function main() {

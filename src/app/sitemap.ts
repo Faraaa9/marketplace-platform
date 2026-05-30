@@ -29,6 +29,16 @@ const LANDING_SLUGS = [
   "kaminu-valymas-kaune",
   "baldu-surinkimas-vilniuje",
   "stogo-dengimas-vilniuje",
+  "elektros-instaliacija-kaune",
+  "grindu-betonavimas-vilniuje",
+  "plyteliu-klijavimas-vilniuje",
+  "laminato-klojimas-vilniuje",
+  "apdailos-darbai-vilniuje",
+  "fasado-siltinimas-vilniuje",
+  "tvoros-montavimas-vilniuje",
+  "duru-montavimas-vilniuje",
+  "elektrikas-siauliuose",
+  "santechnikas-panevezyje",
 ] as const;
 
 // Google sitemap limit per file is 50k URLs. If we ever cross that, we should
