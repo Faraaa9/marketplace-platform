@@ -17,6 +17,23 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 05:22 — Claude
+
+**Commit:** `5ce2f2c` — feat(admin): Telegram control actions — kill switch, webhook, sessions
+
+**Pakeitimai:** 6 files changed, 458 insertions(+), 138 deletions(-)
+
+**Failai:**
+- NOTES.md
+- prisma/manual-migrations/add-telegram-bot-enabled.sql
+- src/app/admin/telegram/page.tsx
+- src/app/api/admin/telegram/route.ts
+- src/app/api/telegram/webhook/route.ts
+- src/lib/telegram/api.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 05:13 — Claude
 
 **Commit:** `d93ebf6` — feat(admin): Telegram overview page — config, webhook, sessions, listings

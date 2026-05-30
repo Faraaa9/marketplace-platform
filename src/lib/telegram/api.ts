@@ -159,3 +159,20 @@ export async function getWebhookInfo(): Promise<WebhookInfo> {
 export async function getBotInfo(): Promise<BotInfo> {
   return callMethod<BotInfo>("getMe", {});
 }
+
+/**
+ * Register the webhook + bind the shared secret_token. Mirrors
+ * scripts/telegram-set-webhook.ts so admins can (re)register from the UI.
+ */
+export async function setWebhook(url: string, secret: string): Promise<void> {
+  await callMethod("setWebhook", {
+    url,
+    secret_token: secret,
+    allowed_updates: ["message", "callback_query"],
+  });
+}
+
+/** Remove the registered webhook (Telegram stops delivering updates). */
+export async function deleteWebhook(): Promise<void> {
+  await callMethod("deleteWebhook", {});
+}

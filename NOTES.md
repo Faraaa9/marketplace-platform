@@ -525,6 +525,17 @@ Konvencija:
   būsena). Pridėti `getWebhookInfo`/`getBotInfo` į `telegram/api.ts`; nav punktas
   layout'e. Live Telegram kvietimai try/catch — neparkrenta jei API nepasiekiamas.
 
+- [x] **2026-05-30 — Admin valdymas (write actions) `/admin/telegram`.** Pridėtas
+  `POST /api/admin/telegram` su 4 veiksmais: `set_webhook`/`delete_webhook`
+  (setWebhook/deleteWebhook į `telegram/api.ts`, registruoja į `expectedWebhookUrl`
+  = NEXTAUTH_URL/api/telegram/webhook), `toggle_bot` (kill switch — naujas
+  `PlatformSettings.telegramBotEnabled` Boolean default true; webhook tikrina ir
+  tyliai numeta update'us kai false), `reset_session` (state→idle, draft→DbNull) ir
+  `send_message` (sendMessage konkrečiai sesijai pagal chatId). UI: kill-switch
+  kortelė, webhook regist./šalinimo mygtukai, per-eilutės reset + žinutės mygtukai.
+  **DB:** reikia pritaikyti `prisma/manual-migrations/add-telegram-bot-enabled.sql`
+  (arba `db:push`) PROD DB — kol stulpelio nėra, `toggle_bot`/GET upsert mes klaidą.
+
 - [ ] **Liko (Telegram):** per-chat_id rate-limit webhook lygmenyje (dabar throttle
   tik AI/foto per `from.id` conversation'e; webhook'as pats neturi atskiro limito).
 

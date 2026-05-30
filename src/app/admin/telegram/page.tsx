@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
@@ -13,6 +13,11 @@ import {
   FileText,
   Clock,
   ExternalLink,
+  Power,
+  RotateCcw,
+  MessageSquare,
+  RefreshCw,
+  Trash2,
 } from "lucide-react";
 
 interface BotInfo {
@@ -31,6 +36,7 @@ interface WebhookInfo {
 interface ConfigInfo {
   botTokenSet: boolean;
   webhookSecretSet: boolean;
+  botEnabled: boolean;
   expectedWebhookUrl: string;
   bot: BotInfo | null;
   webhook: WebhookInfo | null;
@@ -140,14 +146,14 @@ export default function AdminTelegramPage() {
   const [data, setData] = useState<TelegramData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    const load = () =>
+  const load = useCallback(
+    () =>
       fetch("/api/admin/telegram")
         .then((r) => r.json())
         .then((res) => {
-          if (!active) return;
           if (res.success) {
             setData(res.data as TelegramData);
             setError(false);
@@ -155,15 +161,38 @@ export default function AdminTelegramPage() {
             setError(true);
           }
         })
-        .catch(() => active && setError(true))
-        .finally(() => active && setLoading(false));
+        .catch(() => setError(true))
+        .finally(() => setLoading(false)),
+    [],
+  );
+
+  useEffect(() => {
     load();
     const id = setInterval(load, 30000);
-    return () => {
-      active = false;
-      clearInterval(id);
-    };
-  }, []);
+    return () => clearInterval(id);
+  }, [load]);
+
+  const runAction = useCallback(
+    async (key: string, body: Record<string, unknown>, confirmText?: string) => {
+      if (confirmText && !window.confirm(confirmText)) return;
+      setBusy(key);
+      setFlash(null);
+      try {
+        const res = await fetch("/api/admin/telegram", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).then((r) => r.json());
+        setFlash({ ok: Boolean(res.success), text: res.message || res.error || "Atlikta" });
+        if (res.success) await load();
+      } catch {
+        setFlash({ ok: false, text: "Tinklo klaida" });
+      } finally {
+        setBusy(null);
+      }
+    },
+    [load],
+  );
 
   if (loading) return <LoadingSpinner />;
   if (error || !data) {
@@ -177,8 +206,7 @@ export default function AdminTelegramPage() {
   }
 
   const { config, sessions, requests } = data;
-  const webhookOk =
-    config.webhook != null && config.webhook.url === config.expectedWebhookUrl;
+  const webhookOk = config.webhook != null && config.webhook.url === config.expectedWebhookUrl;
   const lastError = config.webhook?.last_error_message;
 
   const statCards = [
@@ -197,9 +225,69 @@ export default function AdminTelegramPage() {
         <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">Telegram</h1>
       </div>
       <p className="mb-6 max-w-3xl text-body-sm text-surface-500 dark:text-surface-400">
-        Boto konfigūracija, webhook būsena, pokalbiai ir per Telegram paskelbti skelbimai.
+        Boto valdymas, webhook būsena, pokalbiai ir per Telegram paskelbti skelbimai.
         Skaičiai atsinaujina kas 30 s.
       </p>
+
+      {flash && (
+        <p
+          className={`mb-4 rounded-xl px-4 py-2.5 text-body-sm font-medium ${
+            flash.ok
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+              : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300"
+          }`}
+        >
+          {flash.text}
+        </p>
+      )}
+
+      {/* Kill switch */}
+      <Card className="mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`rounded-xl p-2.5 ${
+                config.botEnabled
+                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                  : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+              }`}
+            >
+              <Power className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">
+                Botas {config.botEnabled ? "įjungtas" : "išjungtas"}
+              </h3>
+              <p className="text-micro text-surface-500">
+                {config.botEnabled
+                  ? "Update'ai apdorojami įprastai."
+                  : "Webhook gauna update'us, bet jie atmetami (nei skelbimų, nei AI sąnaudų)."}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={() =>
+              runAction(
+                "toggle_bot",
+                { action: "toggle_bot", enabled: !config.botEnabled },
+                config.botEnabled
+                  ? "Išjungti Telegram botą? Naujos žinutės bus ignoruojamos."
+                  : undefined,
+              )
+            }
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-body-sm font-semibold text-white transition-colors disabled:opacity-50 ${
+              config.botEnabled
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-emerald-600 hover:bg-emerald-700"
+            }`}
+          >
+            <Power className="h-4 w-4" />
+            {busy === "toggle_bot" ? "..." : config.botEnabled ? "Išjungti" : "Įjungti"}
+          </button>
+        </div>
+      </Card>
 
       {/* Konfigūracija ir webhook */}
       <div className="mb-8 grid gap-4 lg:grid-cols-2">
@@ -231,9 +319,37 @@ export default function AdminTelegramPage() {
         </Card>
 
         <Card>
-          <h3 className="mb-3 text-heading-3 font-semibold text-surface-900 dark:text-white">
-            Webhook
-          </h3>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">Webhook</h3>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={busy !== null || !config.webhookSecretSet}
+                onClick={() => runAction("set_webhook", { action: "set_webhook" })}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-micro font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {busy === "set_webhook" ? "..." : webhookOk ? "Perregistruoti" : "Registruoti"}
+              </button>
+              {config.webhook && (
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() =>
+                    runAction(
+                      "delete_webhook",
+                      { action: "delete_webhook" },
+                      "Pašalinti webhook? Telegram nustos siųsti update'us.",
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-3 py-1.5 text-micro font-medium text-surface-600 transition-colors hover:bg-surface-50 disabled:opacity-50 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Pašalinti
+                </button>
+              )}
+            </div>
+          </div>
           <ConfigRow
             ok={webhookOk}
             label="Būsena"
@@ -273,11 +389,6 @@ export default function AdminTelegramPage() {
               )}
             </>
           )}
-          {!webhookOk && (
-            <p className="mt-3 text-micro text-surface-500">
-              Webhook registruojamas paleidus <code>tsx scripts/telegram-set-webhook.ts</code>.
-            </p>
-          )}
         </Card>
       </div>
 
@@ -314,6 +425,7 @@ export default function AdminTelegramPage() {
                   <th className="pb-2 pr-4 font-medium">Būsena</th>
                   <th className="pb-2 pr-4 font-medium">Juodraštis</th>
                   <th className="pb-2 pr-4 font-medium">Atnaujinta</th>
+                  <th className="pb-2 font-medium">Veiksmai</th>
                 </tr>
               </thead>
               <tbody>
@@ -344,6 +456,43 @@ export default function AdminTelegramPage() {
                     </td>
                     <td className="py-2.5 pr-4 whitespace-nowrap text-surface-500">
                       {formatDate(s.updatedAt)}
+                    </td>
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          title="Siųsti žinutę"
+                          disabled={busy !== null}
+                          onClick={() => {
+                            const text = window.prompt("Žinutė naudotojui:");
+                            if (text && text.trim()) {
+                              runAction("send_message", {
+                                action: "send_message",
+                                telegramUserId: s.telegramUserId,
+                                text: text.trim(),
+                              });
+                            }
+                          }}
+                          className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-brand-600 disabled:opacity-50 dark:hover:bg-surface-800 dark:hover:text-brand-400"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Atstatyti sesiją"
+                          disabled={busy !== null || s.state === "idle"}
+                          onClick={() =>
+                            runAction(
+                              "reset_session",
+                              { action: "reset_session", telegramUserId: s.telegramUserId },
+                              "Atstatyti sesiją? Juodraštis bus ištrintas.",
+                            )
+                          }
+                          className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-amber-600 disabled:opacity-30 dark:hover:bg-surface-800 dark:hover:text-amber-400"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
