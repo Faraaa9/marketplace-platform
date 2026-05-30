@@ -613,9 +613,23 @@ neįtraukiam į sitemap. Įvykdo barjerą → automatiškai įsijungia.
        `/meistrai?category` → `noindex` KOL nėra category-specific server turinio
        (`wordCount=0` šią sesiją); įsijungs su step 5. Nuima dublikatus #6/#15 ir
        thin-content #117 (jų šaltinis buvo `/uzklausos?...` sitemap combos).
-4. [x] **Sitemap** = tik statiniai + profiliai (visi combos pašalinti, nes dabar
-       `noindex`). Kategorijų URL grįš į sitemap kai praeis vartus (step 5).
-       `xmlSafeUrl` pašalintas (nebėra query-string URL sitemap'e).
+4. [x] **Sitemap** = statiniai + profiliai + vartus praėję kategorijų URL
+       (`/meistrai?category=`), filtruojami per tą patį `buildCategoryView` +
+       `buildPageSeo` verdiktą. `/uzklausos` combos visam laikui `noindex` →
+       niekada sitemap'e. City combos kol kas neįtraukiami (category-only =
+       stabiliausias turtas).
+5. [x] **Dinaminis kategorijų turinys** — `src/lib/seo/category-content.ts`
+       (deterministinis prozos builder'is) + `category-view.ts` (bendras
+       deriveris puslapiui IR sitemap'ui). `/meistrai?category` dabar turi
+       unikalų H1 + ~220–270 žodžių category-specific server turinį → praeina
+       vartus su ≥3 tiekėjų ir įsijungia index automatiškai.
+       **`minWords` 300→200**: lietuvių k. kompaktiškesnė + `wordCount`
+       neįskaito tiekėjų kortelių (papildomas turinys); pirminis thinness guard
+       lieka ≥3 tiekėjai.
+
+### Liko (kita sesija)
+6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai arba neįdėti visai.
+7. [ ] CI SEO gate (1 URL/tipą) + periodinis prod crawl.
 5. [ ] Dinaminiai title/description/turinys kategorijų puslapiams
        (tiekėjų sk., top tiekėjai, kategorijos aprašas — unikalumui).
 6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai (address/image)

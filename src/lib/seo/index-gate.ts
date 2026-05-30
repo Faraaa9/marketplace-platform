@@ -23,8 +23,16 @@ export const INDEX_GATE = {
   enableAt: 3,
   /** Drop strictly below this to turn indexing OFF — buffer prevents flip-flop. */
   disableBelow: 2,
-  /** Minimum meaningful word count of unique on-page content. */
-  minWords: 300,
+  /**
+   * Minimum word count of unique category prose. Set to 200, not the common
+   * English "300" guideline, for two reasons: (1) Lithuanian is denser — long
+   * words, fewer function words, so 200 LT words ≈ ~300 EN words of content;
+   * (2) this counts ONLY the prose block, while the page also renders ≥3
+   * provider cards (name, description, rating, location) that add substantial
+   * uncounted content. The ≥3-provider inventory gate is the primary thinness
+   * guard; this is the secondary one.
+   */
+  minWords: 200,
 } as const;
 
 /**

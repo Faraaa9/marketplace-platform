@@ -3,97 +3,66 @@ import Link from "next/link";
 import { Users, ArrowRight } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { getProvidersListingData, buildProviderCards } from "@/lib/providers-listing";
-import type {
-  ServiceCategoryItem,
-  ServiceCategoryGroup,
-} from "@/lib/service-categories";
+import type { ServiceCategoryItem } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import { buildPageSeo } from "@/lib/seo/page-seo";
 import { isUtilityParam } from "@/lib/seo/index-gate";
+import { buildCategoryView, type CategoryView } from "@/lib/seo/category-view";
+
+type ListingData = Awaited<ReturnType<typeof getProvidersListingData>>;
 
 /**
- * Resolves a `?category=` slug to its display name + the set of its own and
- * descendant slugs, walking the in-memory category tree (no extra DB query).
- * Returns null for unknown slugs so the route falls back to the base index.
+ * Resolves the URL params to a single `/meistrai?category=` view (shared by
+ * `generateMetadata` and the page render). Returns null when there is no single
+ * resolvable category facet — i.e. the base index page.
  */
-function resolveCategoryFacet(
-  groups: ServiceCategoryGroup[],
-  slug: string,
-): { name: string; matchSlugs: Set<string> } | null {
-  function find(item: ServiceCategoryItem): ServiceCategoryItem | null {
-    if (item.slug === slug) return item;
-    for (const child of item.children ?? []) {
-      const hit = find(child);
-      if (hit) return hit;
-    }
-    return null;
-  }
+function deriveCategoryView(
+  data: ListingData,
+  params: Awaited<PageProps["searchParams"]>,
+): CategoryView | null {
+  const categoryRaw = params.category?.includes(",") ? "" : params.category;
+  const locationRaw = params.location?.includes(",") ? "" : params.location;
+  const hasOnlyUtility =
+    !categoryRaw &&
+    Object.keys(params).every(
+      (key) => isUtilityParam(key) || !params[key as keyof typeof params],
+    );
+  if (!categoryRaw || hasOnlyUtility) return null;
 
-  for (const group of groups) {
-    const node = find(group.root);
-    if (!node) continue;
-    const matchSlugs = new Set<string>();
-    (function collect(item: ServiceCategoryItem) {
-      matchSlugs.add(item.slug);
-      for (const child of item.children ?? []) collect(child);
-    })(node);
-    return { name: node.name, matchSlugs };
-  }
-  return null;
+  const city =
+    locationRaw && (LITHUANIAN_CITIES as readonly string[]).includes(locationRaw)
+      ? locationRaw
+      : null;
+
+  return buildCategoryView(data, categoryRaw, city);
 }
 
 export async function generateMetadata({
   searchParams,
 }: PageProps): Promise<Metadata> {
   const params = await searchParams;
-
-  // A single content facet (`?category=`) makes this a category page. Anything
-  // else — no params, multi-value, or only utility params — is the base index.
-  const categoryRaw = params.category?.includes(",") ? "" : params.category;
-  const locationRaw = params.location?.includes(",") ? "" : params.location;
-  const hasOnlyUtility =
-    !categoryRaw &&
-    Object.keys(params).every((key) => isUtilityParam(key) || !params[key as keyof typeof params]);
-
-  if (!categoryRaw || hasOnlyUtility) {
-    return buildPageSeo({ kind: "providers-index" }).metadata;
-  }
-
   const data = await getProvidersListingData();
-  const facet = resolveCategoryFacet(data.categoryGroups, categoryRaw);
-  if (!facet) {
+  const view = deriveCategoryView(data, params);
+
+  if (!view) {
     return buildPageSeo({ kind: "providers-index" }).metadata;
   }
-
-  const providerCount = data.providers.filter((p) =>
-    (p.providerProfile?.categories ?? []).some((c) =>
-      facet.matchSlugs.has(c.category.slug),
-    ),
-  ).length;
-
-  // wordCount is 0 until the page renders category-specific server content
-  // (SEO plan step 5). Until then the gate keeps category pages noindex, which
-  // is correct: the server HTML is not yet differentiated per category.
-  const city =
-    locationRaw && (LITHUANIAN_CITIES as readonly string[]).includes(locationRaw)
-      ? locationRaw
-      : null;
 
   return buildPageSeo(
-    city
+    view.city
       ? {
           kind: "providers-category-city",
-          category: { name: facet.name, slug: categoryRaw },
-          city,
-          providerCount,
-          wordCount: 0,
+          category: view.facet,
+          city: view.city,
+          providerCount: view.providerCount,
+          wordCount: view.content.wordCount,
         }
       : {
           kind: "providers-category",
-          category: { name: facet.name, slug: categoryRaw },
-          providerCount,
-          wordCount: 0,
+          category: view.facet,
+          providerCount: view.providerCount,
+          wordCount: view.content.wordCount,
         },
   ).metadata;
 }
@@ -126,6 +95,10 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   // would otherwise burn server CPU + balloon the RSC payload.
   const initialProviders = buildProviderCards(data, providers.slice(0, SSR_INITIAL_COUNT));
   const totalProviderCount = providers.length;
+
+  // Category-specific server content (same builder the index gate measures).
+  // When present it supplies the page's single H1 + indexable prose.
+  const categoryView = deriveCategoryView(data, params);
 
   // Initial filters come from the URL so shared/deep links keep working.
   // `?category=` is validated against the curated depth-1 category slugs —
@@ -187,7 +160,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
               <Users className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             </div>
             <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Meistrai ir paslaugų teikėjai
+              {categoryView ? categoryView.content.heading : "Meistrai ir paslaugų teikėjai"}
             </h1>
           </div>
           <p className="text-body text-surface-500 dark:text-surface-400 ml-[52px]">
@@ -197,6 +170,18 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           </p>
         </div>
       </div>
+
+      {categoryView && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
+          <div className="prose prose-sm max-w-3xl text-surface-600 dark:text-surface-300">
+            {categoryView.content.paragraphs.map((paragraph, i) => (
+              <p key={i} className="text-body-sm leading-relaxed mb-3 last:mb-0">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <ProvidersExperience

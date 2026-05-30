@@ -17,6 +17,23 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 06:15 — Claude
+
+**Commit:** `f71f4dd` — feat(seo): dynamic category content unlocks indexing gate · lokalus
+
+**Pakeitimai:** 6 files changed, 339 insertions(+), 79 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/meistrai/page.tsx
+- src/app/sitemap.ts
+- src/lib/seo/category-content.ts
+- src/lib/seo/category-view.ts
+- src/lib/seo/index-gate.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 06:06 — Claude
 
 **Commit:** `d6ab41b` — feat(seo): central buildPageSeo contract + index gate · lokalus

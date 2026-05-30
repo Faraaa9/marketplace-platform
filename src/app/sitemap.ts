@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { getProvidersListingData } from "@/lib/providers-listing";
+import { buildCategoryView } from "@/lib/seo/category-view";
+import { buildPageSeo } from "@/lib/seo/page-seo";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
@@ -92,15 +95,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  // Faceted combo URLs (category × city) are intentionally NOT emitted here.
-  // They are produced via buildPageSeo and only become indexable once they
-  // pass the index gate (≥3 providers + ≥300 words of category-specific
-  // content — SEO plan step 5). Until then they carry robots:noindex, and the
-  // sitemap must never list a noindex URL. Request combos (/uzklausos?...) are
-  // permanently transient → noindex → never in the sitemap.
+  // Category pages (/meistrai?category=) are emitted ONLY when they pass the
+  // index gate — same buildCategoryView + buildPageSeo the route uses, so the
+  // sitemap can never list a noindex URL. Request combos (/uzklausos?...) stay
+  // permanently transient → noindex → never here. City combos are omitted: the
+  // category-only pages are the high-value, stable asset.
+  const listing = await getProvidersListingData();
+  const categorySlugs = listing.categoryGroups.flatMap((group) =>
+    group.categories.map((category) => category.slug),
+  );
+  const categoryEntries: SitemapEntry[] = [];
+  for (const slug of categorySlugs) {
+    const view = buildCategoryView(listing, slug, null);
+    if (!view) continue;
+    const { verdict } = buildPageSeo({
+      kind: "providers-category",
+      category: view.facet,
+      providerCount: view.providerCount,
+      wordCount: view.content.wordCount,
+    });
+    if (!verdict.index) continue;
+    categoryEntries.push({
+      url: `${BASE_URL}/meistrai?category=${encodeURIComponent(slug)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
+  }
+
   const all: SitemapEntry[] = [
     ...staticEntries,
     ...providerEntries,
+    ...categoryEntries,
   ];
 
   if (all.length > SITEMAP_URL_LIMIT) {
