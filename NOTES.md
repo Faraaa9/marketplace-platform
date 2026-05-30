@@ -497,13 +497,23 @@ Konvencija:
   Botas yra neautentikuotas įėjimo taškas → įsitikinti, kad Upstash sukonfigūruota
   prod'e, kitaip galima AI kaštų abuse.
 
-- [ ] **2026-05-29 — `db:push` dar nepaleistas.** `TelegramSession` modelis
-  pridėtas schema'oje (`telegram_sessions`), bet lentelė dar nesukurta gyvoje DB.
-  Botas neveiks, kol nepaleistas `npm run db:push`.
+- [x] **2026-05-29 — `db:push` (telegram_sessions).** **Atlikta / nereikėjo
+  2026-05-30:** patikrinta gyva DB — `telegram_sessions` lentelė jau egzistuoja
+  ir struktūra tiksliai atitinka `TelegramSession` Prisma modelį (telegramUserId
+  bigint PK, chatId, userId, state default 'idle', draft jsonb, phone, timestamps).
+  Tas pats su kitais šakos schemos pakeitimais (`story_views`, `story_reactions`,
+  `ai_touchpoint_configs`, `provider_profile_categories.expiresAt`,
+  `service_requests.source`, `credit_transactions.categoryId`) — visi jau DB.
+  `db:push` paleisti nereikėjo.
 
-- [ ] **2026-05-29 — Webhook neregistruotas.** Reikia `TELEGRAM_BOT_TOKEN` +
-  `TELEGRAM_WEBHOOK_SECRET` env, tada `pnpm telegram:set-webhook <prod-url>`.
-  Webhook'ui reikia viešo HTTPS — testuoti prieš prod/preview, ne localhost.
+- [x] **2026-05-29 — Webhook neregistruotas.** **Atlikta 2026-05-30:** webhook
+  registruotas į `https://www.paslaugurinka.lt/api/telegram/webhook` (www, ne apex
+  — Telegram neseka 307 redirect'ų). `getWebhookInfo`: pending_update_count 0,
+  jokios last_error, allowed_updates [message, callback_query]. Verifikuota
+  end-to-end prieš prod: blogas secret → 401, teisingas → 200 (prod env
+  `TELEGRAM_WEBHOOK_SECRET` sutampa su registruotu). `TELEGRAM_BOT_TOKEN` +
+  `TELEGRAM_WEBHOOK_SECRET` patvirtinti production env. Registracija: prod merge
+  (`feat/ai-openrouter-client` → main) deploy'intas, tada `pnpm telegram:set-webhook https://www.paslaugurinka.lt`.
 
 - [ ] **2026-05-29 — Vienetiniai testai be runner'io.** `pnpm test:telegram`
   paleidžia `conversation.ts` state machine testus per ts-node (projekte nėra
