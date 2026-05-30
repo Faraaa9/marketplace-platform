@@ -164,7 +164,12 @@ export default function HomePage() {
   // (new Date()) — stream it inside a Suspense so the rest of the layout
   // can prerender.
   return (
-    <Suspense fallback={null}>
+    // Reserve the hero's viewport height while the dynamic content streams in.
+    // With fallback={null} the prerendered shell had an empty <main>, so the
+    // footer painted near the top and then jumped a full viewport down once the
+    // content arrived — a ~0.84 layout shift. Reserving the height keeps the
+    // footer below the fold from first paint, so CLS stays ~0.
+    <Suspense fallback={<div className="min-h-[calc(100svh-72px)]" aria-hidden />}>
       <HomePageContent />
     </Suspense>
   );
