@@ -3,14 +3,100 @@ import Link from "next/link";
 import { Users, ArrowRight } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { getProvidersListingData, buildProviderCards } from "@/lib/providers-listing";
-import type { ServiceCategoryItem } from "@/lib/service-categories";
+import type {
+  ServiceCategoryItem,
+  ServiceCategoryGroup,
+} from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
+import { buildPageSeo } from "@/lib/seo/page-seo";
+import { isUtilityParam } from "@/lib/seo/index-gate";
 
-export const metadata: Metadata = {
-  title: "Meistrai ir paslaugų teikėjai",
-  description: "Raskite patikimus paslaugų tiekėjus Lietuvoje. Peržiūrėkite profilius, specializacijas ir atsiliepimus.",
-};
+/**
+ * Resolves a `?category=` slug to its display name + the set of its own and
+ * descendant slugs, walking the in-memory category tree (no extra DB query).
+ * Returns null for unknown slugs so the route falls back to the base index.
+ */
+function resolveCategoryFacet(
+  groups: ServiceCategoryGroup[],
+  slug: string,
+): { name: string; matchSlugs: Set<string> } | null {
+  function find(item: ServiceCategoryItem): ServiceCategoryItem | null {
+    if (item.slug === slug) return item;
+    for (const child of item.children ?? []) {
+      const hit = find(child);
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  for (const group of groups) {
+    const node = find(group.root);
+    if (!node) continue;
+    const matchSlugs = new Set<string>();
+    (function collect(item: ServiceCategoryItem) {
+      matchSlugs.add(item.slug);
+      for (const child of item.children ?? []) collect(child);
+    })(node);
+    return { name: node.name, matchSlugs };
+  }
+  return null;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+
+  // A single content facet (`?category=`) makes this a category page. Anything
+  // else — no params, multi-value, or only utility params — is the base index.
+  const categoryRaw = params.category?.includes(",") ? "" : params.category;
+  const locationRaw = params.location?.includes(",") ? "" : params.location;
+  const hasOnlyUtility =
+    !categoryRaw &&
+    Object.keys(params).every((key) => isUtilityParam(key) || !params[key as keyof typeof params]);
+
+  if (!categoryRaw || hasOnlyUtility) {
+    return buildPageSeo({ kind: "providers-index" }).metadata;
+  }
+
+  const data = await getProvidersListingData();
+  const facet = resolveCategoryFacet(data.categoryGroups, categoryRaw);
+  if (!facet) {
+    return buildPageSeo({ kind: "providers-index" }).metadata;
+  }
+
+  const providerCount = data.providers.filter((p) =>
+    (p.providerProfile?.categories ?? []).some((c) =>
+      facet.matchSlugs.has(c.category.slug),
+    ),
+  ).length;
+
+  // wordCount is 0 until the page renders category-specific server content
+  // (SEO plan step 5). Until then the gate keeps category pages noindex, which
+  // is correct: the server HTML is not yet differentiated per category.
+  const city =
+    locationRaw && (LITHUANIAN_CITIES as readonly string[]).includes(locationRaw)
+      ? locationRaw
+      : null;
+
+  return buildPageSeo(
+    city
+      ? {
+          kind: "providers-category-city",
+          category: { name: facet.name, slug: categoryRaw },
+          city,
+          providerCount,
+          wordCount: 0,
+        }
+      : {
+          kind: "providers-category",
+          category: { name: facet.name, slug: categoryRaw },
+          providerCount,
+          wordCount: 0,
+        },
+  ).metadata;
+}
 
 // Top slice we render server-side. The rest of the (up to 500) cached
 // providers ship via /api/meistrai/providers after hydration, restoring the

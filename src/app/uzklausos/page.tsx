@@ -7,16 +7,12 @@ import { LITHUANIAN_CITIES, BUDGET_OPTIONS } from "@/lib/constants";
 import { formatRelativeDate, truncate } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { getServiceCategoryGroups, resolveCategoryParam } from "@/lib/service-categories";
+import type { ServiceCategoryItem } from "@/lib/service-categories";
+import { buildPageSeo } from "@/lib/seo/page-seo";
 import { expandToMatchSet } from "@/lib/category-matching";
 import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 import PinnedRequestPhotos from "@/components/requests/PinnedRequestPhotos";
-
-export const metadata: Metadata = {
-  title: "Viešos užklausos — PaslaugųRinka",
-  description:
-    "Peržiūrėkite aktyvias paslaugų užklausas Lietuvoje. Raskite darbus ir pateikite pasiūlymus.",
-};
 
 interface PageProps {
   searchParams: Promise<{
@@ -27,6 +23,46 @@ interface PageProps {
     sort?: string;
     open?: string;
   }>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const categoryRaw = params.category?.includes(",") ? "" : params.category;
+  const locationRaw = params.location?.includes(",") ? "" : params.location;
+
+  // Base board → indexable. Any category/location facet → a request combo,
+  // which is always noindex: request listings are transient inventory, not the
+  // SEO asset (the asset is /meistrai category pages). See NOTES.md Q1.
+  if (!categoryRaw && !locationRaw) {
+    return buildPageSeo({ kind: "requests-index" }).metadata;
+  }
+
+  let categoryName: string | undefined;
+  if (categoryRaw) {
+    const groups = await getServiceCategoryGroups();
+    const slugs: { name: string; slug: string }[] = [];
+    for (const group of groups) {
+      (function walk(item: { name: string; slug: string; children?: typeof slugs }) {
+        slugs.push({ name: item.name, slug: item.slug });
+        for (const child of (item as { children?: ServiceCategoryItem[] }).children ?? [])
+          walk(child);
+      })(group.root);
+    }
+    categoryName = slugs.find((s) => s.slug === categoryRaw)?.name;
+  }
+
+  const city =
+    locationRaw && (LITHUANIAN_CITIES as readonly string[]).includes(locationRaw)
+      ? locationRaw
+      : undefined;
+
+  return buildPageSeo({
+    kind: "requests-combo",
+    category: categoryName ? { name: categoryName, slug: categoryRaw! } : undefined,
+    city,
+  }).metadata;
 }
 
 async function getBoardListing(

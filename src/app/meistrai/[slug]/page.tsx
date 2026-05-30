@@ -15,6 +15,7 @@ import { isCuid } from "@/lib/slug";
 import { isOnline as computeIsOnline, formatLastSeen } from "@/lib/presence";
 import EmptyState from "@/components/ui/EmptyState";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { buildPageSeo } from "@/lib/seo/page-seo";
 import DirectInquiryWidget from "./components/DirectInquiryWidget";
 import MessengerCTA from "./components/MessengerCTA";
 import ReviewsSection from "./components/ReviewsSection";
@@ -127,31 +128,15 @@ export async function generateMetadata({
     : `${name} paslaugos${row.primaryCity ? ` ${row.primaryCity}e` : ""}. Peržiūrėkite profilį ir susisiekite per paslaugurinka.lt.`;
   const description = row.seoDescription || fallbackDesc;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${SITE_NAME}`;
-  const url = `${baseUrl}/meistrai/${slug}`;
-
-  return {
-    // `absolute` opts out of the root layout's `%s | PaslaugųRinka` template —
-    // seoTitle already includes the site suffix, so otherwise it ships twice.
-    title: { absolute: title },
+  // Route all metadata through the central SEO contract so title/description/
+  // canonical/robots are produced identically to every other route type.
+  return buildPageSeo({
+    kind: "provider-profile",
+    title,
     description,
-    alternates: { canonical: url },
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: SITE_NAME,
-      type: "profile",
-      locale: "lt_LT",
-      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
-    },
-    twitter: {
-      card: row.heroImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
-    },
-  };
+    path: `/meistrai/${slug}`,
+    heroImageUrl: row.heroImageUrl,
+  }).metadata;
 }
 
 interface PageProps {

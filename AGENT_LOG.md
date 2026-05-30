@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 06:06 — Claude
+
+**Commit:** `d6ab41b` — feat(seo): central buildPageSeo contract + index gate · lokalus
+
+**Pakeitimai:** 7 files changed, 527 insertions(+), 88 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/meistrai/[slug]/page.tsx
+- src/app/meistrai/page.tsx
+- src/app/sitemap.ts
+- src/app/uzklausos/page.tsx
+- src/lib/seo/index-gate.ts
+- src/lib/seo/page-seo.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 05:23 — Claude
 
 **Commit:** `d2280f5` — fix(admin): guard telegramBotEnabled reads against missing column

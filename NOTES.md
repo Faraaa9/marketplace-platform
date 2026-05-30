@@ -589,14 +589,33 @@ Puslapis indeksuojamas tik jei: **≥300 prasmingų žodžių, ≥3 unikalūs du
 taškai, validi schema, self-canonical, vidinės nuorodos.** Žemiau — `noindex` +
 neįtraukiam į sitemap. Įvykdo barjerą → automatiškai įsijungia.
 
+### Research sprendimai (2026-05-30) — užfiksuota prieš implementaciją
+- **Q1 — kuri taksonomija = SEO turtas?** → **`/meistrai?category` (+miestas).**
+  `/uzklausos` combos → `noindex` (transient). Pagrindas: marketplace SEO
+  playbook'ai — kategorijų puslapiai gaudo head-term paklausą ir yra STABILŪS;
+  skelbimai trumpalaikiai → turinys nyksta → thin/flip-flop. Crawl budget'as
+  neturi būti eikvojamas nykstančiam turiniui. (journeyh.io, origami-marketplace,
+  Search Engine Land.)
+- **Q2 — sub-slenkstis?** → **`noindex` + 200 + histerezė.** NE redirect/410
+  (puslapis turi realią vartotojo vertę, ne permanentinis). Histerezė
+  (`enableAt=3`, `disableBelow=2`) prieš index⇄noindex flip-flop, kurį Google
+  baudžia. (venue.cloud, goinflow.)
+
 ### Build planas (eiliškumas — efektas mažėjančia tvarka)
 1. [ ] Užfiksuoti indeksuojamą taksonomiją (lentelė viršuje) — pamatas.
-2. [ ] Centrinis SEO kontraktas (`buildPageSeo`) kiekvienam route tipui:
-       garantuoja unikalų title / description / 1×H1 / canonical / JSON-LD.
-3. [ ] Indeksavimo vartai: `noindex` + sitemap filtras pagal slenkstį
-       (inventorius + turinys). Vienu ypu nuima dublikatus (#6/#15) ir
-       thin-content (#117/#112).
-4. [ ] Sitemap = tik indeksuojami URL (po vartų), ne aklai 10k.
+2. [x] **Centrinis SEO kontraktas — `src/lib/seo/page-seo.ts`** (`buildPageSeo`,
+       diskriminuojama `SeoInput` unija). Prijungti route'ai: `/meistrai/[slug]`,
+       `/meistrai` (+`?category`/`+location` dinamiškai), `/uzklausos` (+combos).
+       Garantuoja: netuščias+unikalus title, description (clamp 157), canonical,
+       eksplicitiškas `robots`, OG/twitter. Verdiktas IR metadata gimsta kartu.
+3. [x] **Indeksavimo vartai — `src/lib/seo/index-gate.ts`** (`passesIndexGate` su
+       histerezė, `UTILITY_PARAMS`). `/uzklausos` combos → `noindex`.
+       `/meistrai?category` → `noindex` KOL nėra category-specific server turinio
+       (`wordCount=0` šią sesiją); įsijungs su step 5. Nuima dublikatus #6/#15 ir
+       thin-content #117 (jų šaltinis buvo `/uzklausos?...` sitemap combos).
+4. [x] **Sitemap** = tik statiniai + profiliai (visi combos pašalinti, nes dabar
+       `noindex`). Kategorijų URL grįš į sitemap kai praeis vartus (step 5).
+       `xmlSafeUrl` pašalintas (nebėra query-string URL sitemap'e).
 5. [ ] Dinaminiai title/description/turinys kategorijų puslapiams
        (tiekėjų sk., top tiekėjai, kategorijos aprašas — unikalumui).
 6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai (address/image)
@@ -614,3 +633,8 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
 - Search Engine Land — faceted navigation guide
 - journeyh.io — Marketplace SEO Playbook 2026
 - getpassionfruit.com — Programmatic SEO Without Traffic Loss (2025)
+
+## Provider profile gating (2026-05-30)
+- "Tapti meistru" nebekuria tuščio ProviderProfile ir nebeflipina rolės — rolė PROVIDER + starter kreditai dabar suteikiami tik realiai sukūrus profilį (ai-generate / profile-complete create šakoje). Route /api/tiekejas/tapti pašalinta.
+- Dashboard /tiekejas rodo NoProviderProfile, kai nėra profilio ARBA profilis tuščias (be description ir be enrichedAt) — laikina apsauga seniems prod klientams su tuščiomis eilutėmis.
+- TODO (DB cleanup): vienkartinis skriptas išvalyti senas tuščias ProviderProfile eilutes (description IS NULL AND enrichedAt IS NULL AND images = '{}') + grąžinti tuos userius į role=CLIENT, jei jie nieko nesukūrė. Atsargiai — realūs duomenys.
