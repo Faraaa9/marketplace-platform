@@ -31,6 +31,24 @@ const PAGES: Record<string, Shot[]> = {
     { key: "work", width: 1024, height: 1024, prompt: `Close-up of skilled plumber hands installing a chrome faucet / mixer tap on a white sink with a wrench, neat connections, clean modern bathroom, soft natural light, ${NO_TEXT}` },
     { key: "consult", width: 1024, height: 1024, prompt: `Lithuanian plumber showing a tablet and explaining a bathroom plumbing plan to a homeowner in a bright modern apartment, warm trustworthy atmosphere, ${NO_TEXT}` },
   ],
+
+  "stogo-dengimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `Wide elevated drone-style view of two roofers in orange hi-vis vests installing dark metal roofing tiles on a steep pitched roof of a modern Lithuanian single-family house, bright blue sky, late afternoon golden sunlight, expansive outdoor scene, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Macro close-up of gloved hands fastening a standing-seam metal roof panel with a tool, sharp technical detail, water-tight seam, soft overcast daylight, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A roofer in an orange hi-vis vest standing in a green garden pointing up toward a house roof while talking with a middle-aged homeowner, both viewed from behind and side, warm golden-hour backlight, ${NO_TEXT}` },
+  ],
+
+  "kondicionieriu-montavimas-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A female HVAC technician on a small step ladder installing a sleek white wall-mounted split air conditioner in a bright minimalist Scandinavian living room, cool clean blue-and-white palette, soft diffused daylight, modern, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of technician hands connecting copper refrigerant lines to a white outdoor air-conditioning compressor unit mounted on an apartment balcony exterior wall, precise technical detail, cool daylight, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `A young male technician in a light grey branded polo shirt showing air-conditioner options on a tablet to a smiling young couple in a sunny modern apartment, friendly approachable mood, ${NO_TEXT}` },
+  ],
+
+  "apdailos-darbai-kaune": [
+    { key: "hero", width: 1536, height: 1024, prompt: `A plasterer in white overalls smoothing a wall with a wide trowel in a sunlit half-renovated apartment room, bare plaster, a ladder and tools nearby, warm dusty authentic renovation atmosphere, ${NO_TEXT}` },
+    { key: "work", width: 1024, height: 1024, prompt: `Close-up of a paint roller applying warm beige paint to a wall in clean even strokes, paint tray in the foreground, soft side light, no faces, ${NO_TEXT}` },
+    { key: "consult", width: 1024, height: 1024, prompt: `An interior finisher and a woman homeowner reviewing a colour and material sample board together in a room mid-renovation, natural window light, collaborative mood, ${NO_TEXT}` },
+  ],
 };
 
 async function main() {
