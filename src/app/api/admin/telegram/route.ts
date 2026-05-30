@@ -67,7 +67,6 @@ export async function GET() {
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const [
-      settings,
       totalSessions,
       linkedSessions,
       byStateRaw,
@@ -76,10 +75,6 @@ export async function GET() {
       requests30d,
       recentRequests,
     ] = await Promise.all([
-      prisma.platformSettings.findUnique({
-        where: { id: SINGLETON_ID },
-        select: { telegramBotEnabled: true },
-      }),
       prisma.telegramSession.count(),
       prisma.telegramSession.count({ where: { userId: { not: null } } }),
       prisma.telegramSession.groupBy({ by: ["state"], _count: { _all: true } }),
@@ -102,10 +97,23 @@ export async function GET() {
       }),
     ]);
 
+    // Guarded: the telegramBotEnabled column may not exist yet if the manual
+    // migration hasn't been applied. Default to enabled so the page still loads.
+    let botEnabled = true;
+    try {
+      const settings = await prisma.platformSettings.findUnique({
+        where: { id: SINGLETON_ID },
+        select: { telegramBotEnabled: true },
+      });
+      botEnabled = settings?.telegramBotEnabled ?? true;
+    } catch {
+      botEnabled = true;
+    }
+
     const config: ConfigInfo = {
       botTokenSet,
       webhookSecretSet,
-      botEnabled: settings?.telegramBotEnabled ?? true,
+      botEnabled,
       expectedWebhookUrl: expectedWebhookUrl(),
       bot,
       webhook,

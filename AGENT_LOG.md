@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 05:23 — Claude
+
+**Commit:** `d2280f5` — fix(admin): guard telegramBotEnabled reads against missing column
+
+**Pakeitimai:** 2 files changed, 27 insertions(+), 12 deletions(-)
+
+**Failai:**
+- src/app/api/admin/telegram/route.ts
+- src/app/api/telegram/webhook/route.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 05:22 — Claude
 
 **Commit:** `5ce2f2c` — feat(admin): Telegram control actions — kill switch, webhook, sessions
