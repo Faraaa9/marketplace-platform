@@ -49,7 +49,14 @@ export type SeoInput =
   | { kind: "providers-category-city"; category: CategoryFacet; city: string; providerCount: number; wordCount: number; currentlyIndexed?: boolean }
   | { kind: "requests-index" }
   | { kind: "requests-combo"; category?: CategoryFacet; city?: string }
-  | { kind: "static"; title: string; description: string; path: string };
+  | { kind: "static"; title: string; description: string; path: string }
+  | {
+      kind: "landing";
+      title: string;
+      description: string;
+      path: string;
+      heroImageUrl?: string;
+    };
 
 // --- helpers (single source for each formatting rule) -----------------------
 
@@ -243,6 +250,20 @@ export function buildPageSeo(input: SeoInput): PageSeoResult {
           description: input.description,
           canonical: absoluteUrl(input.path),
           verdict,
+        }),
+      };
+    }
+
+    case "landing": {
+      const verdict: IndexVerdict = { index: true };
+      return {
+        verdict,
+        metadata: assemble({
+          title: input.title,
+          description: input.description,
+          canonical: absoluteUrl(input.path),
+          verdict,
+          heroImageUrl: input.heroImageUrl,
         }),
       };
     }
