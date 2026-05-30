@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 03:57 — Claude
+
+**Commit:** `ee02e5a` — style(messaging): tune own-message bubble color and bystander text contrast · lokalus
+
+**Pakeitimai:** 1 file changed, 2 insertions(+), 2 deletions(-)
+
+**Failai:**
+- src/components/messaging/ThreadChat.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-29 23:23 — Claude
 
 **Commit:** `5d2c33f` — feat(ai): per-touchpoint cost + token visibility in /admin/ai
