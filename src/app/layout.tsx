@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import localFont from "next/font/local";
-import { Lora } from "next/font/google";
+import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
@@ -11,29 +10,13 @@ import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
 import RegisterSW from "@/components/pwa/RegisterSW";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 
-const inter = localFont({
-  src: [
-    {
-      path: "../../public/fonts/inter-latin-400-normal.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/inter-latin-500-normal.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/inter-latin-600-normal.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/inter-latin-700-normal.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
+// Inter via next/font/google with the latin-ext subset so Lithuanian glyphs
+// (ą č ę ė į š ų ū ž) render in Inter itself. The previous local build shipped
+// only the `latin` subset, so those characters fell back to the system font —
+// visibly mismatched. next/font self-hosts the files at build time (no runtime
+// request), so this keeps the same performance profile.
+const inter = Inter({
+  subsets: ["latin", "latin-ext"],
   display: "swap",
   fallback: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
 });
