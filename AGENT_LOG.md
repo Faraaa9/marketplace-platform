@@ -17,6 +17,47 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 19:50 — Claude
+
+**Commit:** `9e65608` — fix(seo): noindex utility/seed pages, fix Review schema, shorten titles · lokalus
+
+**Pakeitimai:** 10 files changed, 110 insertions(+), 6 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- src/app/(auth)/layout.tsx
+- src/app/(auth)/prisijungti/layout.tsx
+- src/app/(auth)/registruotis/layout.tsx
+- src/app/meistrai/[slug]/page.tsx
+- src/app/paslaugos/elektrikas-kaune/page.tsx
+- src/app/paslaugos/santechnikas-kaune/page.tsx
+- src/app/sitemap.ts
+- src/app/uzklausos/nauja/layout.tsx
+- src/lib/seo/page-seo.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 19:23 — Claude
+
+**Commit:** `b4fdc20` — fix(seo): noindex utility/seed pages, fix Review schema, shorten titles · lokalus
+
+**Pakeitimai:** 9 files changed, 90 insertions(+), 6 deletions(-)
+
+**Failai:**
+- src/app/(auth)/layout.tsx
+- src/app/(auth)/prisijungti/layout.tsx
+- src/app/(auth)/registruotis/layout.tsx
+- src/app/meistrai/[slug]/page.tsx
+- src/app/paslaugos/elektrikas-kaune/page.tsx
+- src/app/paslaugos/santechnikas-kaune/page.tsx
+- src/app/sitemap.ts
+- src/app/uzklausos/nauja/layout.tsx
+- src/lib/seo/page-seo.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 07:15 — Claude
 
 **Commit:** `5bacfc9` — feat(seo): "Elektrikas Kaune" lead-gen landing page

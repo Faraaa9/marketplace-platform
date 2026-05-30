@@ -133,6 +133,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       isActive: true,
       moderationStatus: "APPROVED",
       user: { role: "PROVIDER", emailVerified: { not: null } },
+      // Seed/demo fixtures are noindex (see meistrai/[slug] isSeedProfile);
+      // a noindex page must never appear in the sitemap.
+      NOT: {
+        OR: [
+          { displayName: { contains: "(DEMO)" } },
+          { displayName: { contains: "(TEST)" } },
+          { user: { name: { contains: "(DEMO)" } } },
+          { user: { name: { contains: "(TEST)" } } },
+          { user: { email: { endsWith: "@test.lt" } } },
+          { user: { email: { contains: "@example." } } },
+        ],
+      },
     },
     select: { slug: true, updatedAt: true },
   });
