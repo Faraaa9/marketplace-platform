@@ -525,3 +525,68 @@ Konvencija:
   (onDelete: Cascade), bet pasibaigusios lieka. Vertėtų cron'ą (pvz. prie
   `cleanup-pending-requests`), kuris prune'ina views/reactions, kai susijusi
   story pasibaigusi senesnė nei N dienų.
+
+---
+
+## SEO architektūros planas — „idealūs nauji puslapiai" (2026-05-30)
+
+**Tikslas:** kiekvienas naujai sugeneruotas puslapis (tiekėjo profilis, kategorijos
+puslapis, skelbimas, SEO turinys) turi būti SEO-teisingas *by construction* — ne
+todėl, kad kažkas patikrino, o todėl, kad šablonas negali sugeneruoti blogo.
+
+### Kontekstas — kodėl dabar
+Sitemap pataisius (`&` → `&amp;`) Semrush pagaliau nuskenavo 100 psl. (vietoj 60)
+ir atsivėrė antras klaidų sluoksnis: faceted katalogo URL'ai (`/meistrai?category=*`)
+su identišku title (#6 dublikatai 23→42), thin content (#117: 37), nevalidi
+LocalBusiness schema (35). Šitie ne regresija — tik dabar matomi, nes crawler'is
+prasiskverbė giliau. Bazinis auditas vis dar `jsRendering: DISABLED` (įjungti
+Semrush projekte prieš kitą rerun, kad turinio signalai būtų teisingi).
+
+### Pamatinis sprendimas — indeksuojama taksonomija
+Google oficialiai: `rel=canonical` faceted URL'ams yra „less effective long term"
+ir gali būti ignoruojamas → **canonical-į-bazinį NĖRA pagrindinė strategija.**
+Teisinga — **slenkstinė (threshold) indeksacija**:
+
+| URL tipas | Sprendimas |
+|---|---|
+| `/meistrai` (bazinis) | index, self-canonical |
+| `/meistrai?category=X` (tik kategorija) | dinaminis + index (reali paklausa, kategorijų dešimtys) |
+| kategorija × miestas | **slenkstis**: ≥3–5 tiekėjų IR ≥300 žodžių → dinaminis+index; kitaip `noindex` + NE į sitemap |
+| `?welcome=`, `?inquiry=`, sort, pagination | visada `noindex` / robots.txt block |
+| tiekėjo profilis | index tik jei praėjo „brandos vartus" (žr. žemiau) |
+
+> Strateginis klausimas spręsti: dabartiniai combo'ai sitemap'e veda į
+> `/uzklausos?...` (skelbimus = trumpalaikiai). SEO prasme patvaresnis turtas yra
+> `/meistrai?category=...` (tiekėjų kategorijos). Greičiausiai indeksuoti reikia
+> pastaruosius, ne skelbimų sąrašus.
+
+### „Brandos vartai" (kad nebūtų thin content)
+Puslapis indeksuojamas tik jei: **≥300 prasmingų žodžių, ≥3 unikalūs duomenų
+taškai, validi schema, self-canonical, vidinės nuorodos.** Žemiau — `noindex` +
+neįtraukiam į sitemap. Įvykdo barjerą → automatiškai įsijungia.
+
+### Build planas (eiliškumas — efektas mažėjančia tvarka)
+1. [ ] Užfiksuoti indeksuojamą taksonomiją (lentelė viršuje) — pamatas.
+2. [ ] Centrinis SEO kontraktas (`buildPageSeo`) kiekvienam route tipui:
+       garantuoja unikalų title / description / 1×H1 / canonical / JSON-LD.
+3. [ ] Indeksavimo vartai: `noindex` + sitemap filtras pagal slenkstį
+       (inventorius + turinys). Vienu ypu nuima dublikatus (#6/#15) ir
+       thin-content (#117/#112).
+4. [ ] Sitemap = tik indeksuojami URL (po vartų), ne aklai 10k.
+5. [ ] Dinaminiai title/description/turinys kategorijų puslapiams
+       (tiekėjų sk., top tiekėjai, kategorijos aprašas — unikalumui).
+6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai (address/image)
+       arba neįdedam schemos visai (nevalidi blogiau nei jokia).
+7. [ ] CI SEO gate (po 1 URL/tipą: title yra+unikalus, 1×H1, description,
+       canonical, JSON-LD validi) + periodinis prod crawl naujiems URL.
+
+### Šios sesijos pataisos (jau prod, baseline kitam palyginimui)
+sitemap INVALID→HAVE_HEALTHY; missing H1 24→1; duplicate content 23→11;
+profilių schema 0→ (LocalBusiness 22 / Review 49 / Breadcrumb 22 validūs);
+slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
+
+### Šaltiniai
+- Google: developers.google.com/crawling/docs/faceted-navigation
+- Search Engine Land — faceted navigation guide
+- journeyh.io — Marketplace SEO Playbook 2026
+- getpassionfruit.com — Programmatic SEO Without Traffic Loss (2025)

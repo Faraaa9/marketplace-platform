@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 05:00 — Claude
+
+**Commit:** `c5936f0` — docs(seo): add SEO architecture plan for generated pages
+
+**Pakeitimai:** 1 file changed, 65 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 03:57 — Claude
 
 **Commit:** `ee02e5a` — style(messaging): tune own-message bubble color and bystander text contrast · lokalus
