@@ -6,11 +6,66 @@ import { getProvidersListingData, buildProviderCards } from "@/lib/providers-lis
 import type { ServiceCategoryItem } from "@/lib/service-categories";
 import type { ProviderFilters } from "@/lib/provider-filters";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
+import { buildPageSeo } from "@/lib/seo/page-seo";
+import { isUtilityParam } from "@/lib/seo/index-gate";
+import { buildCategoryView, type CategoryView } from "@/lib/seo/category-view";
 
-export const metadata: Metadata = {
-  title: "Meistrai ir paslaugų teikėjai",
-  description: "Raskite patikimus paslaugų tiekėjus Lietuvoje. Peržiūrėkite profilius, specializacijas ir atsiliepimus.",
-};
+type ListingData = Awaited<ReturnType<typeof getProvidersListingData>>;
+
+/**
+ * Resolves the URL params to a single `/meistrai?category=` view (shared by
+ * `generateMetadata` and the page render). Returns null when there is no single
+ * resolvable category facet — i.e. the base index page.
+ */
+function deriveCategoryView(
+  data: ListingData,
+  params: Awaited<PageProps["searchParams"]>,
+): CategoryView | null {
+  const categoryRaw = params.category?.includes(",") ? "" : params.category;
+  const locationRaw = params.location?.includes(",") ? "" : params.location;
+  const hasOnlyUtility =
+    !categoryRaw &&
+    Object.keys(params).every(
+      (key) => isUtilityParam(key) || !params[key as keyof typeof params],
+    );
+  if (!categoryRaw || hasOnlyUtility) return null;
+
+  const city =
+    locationRaw && (LITHUANIAN_CITIES as readonly string[]).includes(locationRaw)
+      ? locationRaw
+      : null;
+
+  return buildCategoryView(data, categoryRaw, city);
+}
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const data = await getProvidersListingData();
+  const view = deriveCategoryView(data, params);
+
+  if (!view) {
+    return buildPageSeo({ kind: "providers-index" }).metadata;
+  }
+
+  return buildPageSeo(
+    view.city
+      ? {
+          kind: "providers-category-city",
+          category: view.facet,
+          city: view.city,
+          providerCount: view.providerCount,
+          wordCount: view.content.wordCount,
+        }
+      : {
+          kind: "providers-category",
+          category: view.facet,
+          providerCount: view.providerCount,
+          wordCount: view.content.wordCount,
+        },
+  ).metadata;
+}
 
 // Top slice we render server-side. The rest of the (up to 500) cached
 // providers ship via /api/meistrai/providers after hydration, restoring the
@@ -40,6 +95,10 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
   // would otherwise burn server CPU + balloon the RSC payload.
   const initialProviders = buildProviderCards(data, providers.slice(0, SSR_INITIAL_COUNT));
   const totalProviderCount = providers.length;
+
+  // Category-specific server content (same builder the index gate measures).
+  // When present it supplies the page's single H1 + indexable prose.
+  const categoryView = deriveCategoryView(data, params);
 
   // Initial filters come from the URL so shared/deep links keep working.
   // `?category=` is validated against the curated depth-1 category slugs —
@@ -101,7 +160,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
               <Users className="h-5 w-5 text-brand-600 dark:text-brand-400" />
             </div>
             <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Meistrai ir paslaugų teikėjai
+              {categoryView ? categoryView.content.heading : "Meistrai ir paslaugų teikėjai"}
             </h1>
           </div>
           <p className="text-body text-surface-500 dark:text-surface-400 ml-[52px]">
@@ -111,6 +170,18 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           </p>
         </div>
       </div>
+
+      {categoryView && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
+          <div className="prose prose-sm max-w-3xl text-surface-600 dark:text-surface-300">
+            {categoryView.content.paragraphs.map((paragraph, i) => (
+              <p key={i} className="text-body-sm leading-relaxed mb-3 last:mb-0">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <ProvidersExperience

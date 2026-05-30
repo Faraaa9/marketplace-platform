@@ -338,15 +338,23 @@ export function CategoryPickerBody({
     return null;
   }, [groups, activeValue, mode, multiple, selectedValues]);
 
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(activeGroupId ? [activeGroupId] : []),
-  );
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(() => new Set());
 
   function toggleGroup(rootId: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(rootId)) next.delete(rootId);
       else next.add(rootId);
+      return next;
+    });
+  }
+
+  function toggleCat(catId: string) {
+    setExpandedCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
       return next;
     });
   }
@@ -460,6 +468,8 @@ export function CategoryPickerBody({
                     <div className="space-y-0.5 pb-1 pl-4">
                       {group.categories.map((cat) => {
                         const v = mode === "id" ? cat.id : cat.slug;
+                        const hasChildren = (cat.children?.length ?? 0) > 0;
+                        const catExpanded = expandedCats.has(cat.id);
                         return (
                           <div key={cat.id}>
                             <CategoryRow
@@ -467,8 +477,11 @@ export function CategoryPickerBody({
                               childCount={cat.childCount}
                               isSelected={isSel(v)}
                               onClick={() => onSelect(v)}
+                              expandable={hasChildren}
+                              isExpanded={catExpanded}
+                              onToggle={() => toggleCat(cat.id)}
                             />
-                            {(cat.children?.length ?? 0) > 0 && (
+                            {hasChildren && catExpanded && (
                               <div className="ml-4 border-l border-surface-100 pl-2 dark:border-surface-800">
                                 {cat.children?.map((child) => {
                                   const childValue = mode === "id" ? child.id : child.slug;
@@ -506,6 +519,9 @@ function CategoryRow({
   isSelected,
   onClick,
   compact = false,
+  expandable = false,
+  isExpanded = false,
+  onToggle,
 }: {
   name: string;
   hint?: string;
@@ -513,26 +529,44 @@ function CategoryRow({
   isSelected: boolean;
   onClick: () => void;
   compact?: boolean;
+  expandable?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={isSelected}
-      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors ${
-        isSelected
-          ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
-          : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-      } ${compact ? "py-1.5" : "py-2.5"}`}
-    >
-      <span className="min-w-0 flex-1 truncate text-caption font-medium">{name}</span>
-      {typeof childCount === "number" && childCount > 0 && (
-        <span className="shrink-0 rounded-full bg-surface-100 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-surface-500 dark:bg-surface-800 dark:text-surface-400">
-          {childCount}
-        </span>
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={isSelected}
+        className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors ${
+          isSelected
+            ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
+            : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
+        } ${compact ? "py-1.5" : "py-2.5"}`}
+      >
+        <span className="min-w-0 flex-1 truncate text-caption font-medium">{name}</span>
+        {typeof childCount === "number" && childCount > 0 && (
+          <span className="shrink-0 rounded-full bg-surface-100 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+            {childCount}
+          </span>
+        )}
+        {hint && <span className="min-w-0 max-w-[11rem] truncate text-[0.7rem] text-surface-400">{hint}</span>}
+        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
+      </button>
+      {expandable && onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? "Suskleisti" : "Išskleisti"}
+          className="shrink-0 rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-50 dark:hover:bg-surface-800"
+        >
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-150 ${isExpanded ? "" : "-rotate-90"}`}
+          />
+        </button>
       )}
-      {hint && <span className="min-w-0 max-w-[11rem] truncate text-[0.7rem] text-surface-400">{hint}</span>}
-      {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
-    </button>
+    </div>
   );
 }

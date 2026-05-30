@@ -480,6 +480,7 @@ model PlatformSettings {
   emailTestMode      Boolean  @default(false)
   emailAllowlist     String[] @default([])
   freeStarterCredits Int      @default(3)
+  telegramBotEnabled Boolean  @default(true)
   updatedAt          DateTime @updatedAt
 
   @@map("platform_settings")

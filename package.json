@@ -16,7 +16,8 @@
     "import:suppliers": "node scripts/import-suppliers.js",
     "enrich:suppliers": "node scripts/enrich-suppliers.js",
     "telegram:set-webhook": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/telegram-set-webhook.ts",
-    "test:telegram": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/telegram/__tests__/conversation.test.ts"
+    "test:telegram": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/telegram/__tests__/conversation.test.ts",
+    "seo:check": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seo-check.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

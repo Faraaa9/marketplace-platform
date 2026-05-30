@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
-import { LITHUANIAN_CITIES } from "@/lib/constants";
-import { getServiceCategoryGroups } from "@/lib/service-categories";
+import { getProvidersListingData } from "@/lib/providers-listing";
+import { buildCategoryView } from "@/lib/seo/category-view";
+import { buildPageSeo } from "@/lib/seo/page-seo";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 
@@ -14,18 +15,6 @@ const SITEMAP_URL_LIMIT = 50_000;
 export const revalidate = 3600;
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
-
-// Next's sitemap serializer emits `<loc>${url}</loc>` verbatim with no XML
-// escaping, so any `&` in a query-string URL produces invalid XML and crawlers
-// reject the whole file. Escape the XML-significant characters ourselves.
-function xmlSafeUrl(url: string): string {
-  return url
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -88,18 +77,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Pull the minimum surface area from DB: slug + updatedAt only.
-  // Parallelize to keep total sitemap response under ~3s.
-  const [activeProviderProfiles, categoryGroups] = await Promise.all([
-    prisma.providerProfile.findMany({
-      where: {
-        isActive: true,
-        moderationStatus: "APPROVED",
-        user: { role: "PROVIDER", emailVerified: { not: null } },
-      },
-      select: { slug: true, updatedAt: true },
-    }),
-    getServiceCategoryGroups(),
-  ]);
+  const activeProviderProfiles = await prisma.providerProfile.findMany({
+    where: {
+      isActive: true,
+      moderationStatus: "APPROVED",
+      user: { role: "PROVIDER", emailVerified: { not: null } },
+    },
+    select: { slug: true, updatedAt: true },
+  });
 
   const providerEntries: SitemapEntry[] = activeProviderProfiles
     .filter((p): p is typeof p & { slug: string } => Boolean(p.slug))
@@ -110,30 +95,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  // Category × city combo URLs targeting the public requests listing
-  // (where category + location are real, indexable query params).
-  // Uses the curated depth-1 category slugs — the granular services users
-  // actually filter by. depth-1 categories × LITHUANIAN_CITIES combos.
-  const categorySlugs = categoryGroups.flatMap((group) =>
+  // Category pages (/meistrai?category=) are emitted ONLY when they pass the
+  // index gate — same buildCategoryView + buildPageSeo the route uses, so the
+  // sitemap can never list a noindex URL. Request combos (/uzklausos?...) stay
+  // permanently transient → noindex → never here. City combos are omitted: the
+  // category-only pages are the high-value, stable asset.
+  const listing = await getProvidersListingData();
+  const categorySlugs = listing.categoryGroups.flatMap((group) =>
     group.categories.map((category) => category.slug),
   );
-  const comboEntries: SitemapEntry[] = [];
-  for (const categorySlug of categorySlugs) {
-    for (const city of LITHUANIAN_CITIES) {
-      const qs = new URLSearchParams({ category: categorySlug, location: city }).toString();
-      comboEntries.push({
-        url: xmlSafeUrl(`${BASE_URL}/uzklausos?${qs}`),
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.5,
-      });
-    }
+  const categoryEntries: SitemapEntry[] = [];
+  for (const slug of categorySlugs) {
+    const view = buildCategoryView(listing, slug, null);
+    if (!view) continue;
+    const { verdict } = buildPageSeo({
+      kind: "providers-category",
+      category: view.facet,
+      providerCount: view.providerCount,
+      wordCount: view.content.wordCount,
+    });
+    if (!verdict.index) continue;
+    categoryEntries.push({
+      url: `${BASE_URL}/meistrai?category=${encodeURIComponent(slug)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
   }
 
   const all: SitemapEntry[] = [
     ...staticEntries,
     ...providerEntries,
-    ...comboEntries,
+    ...categoryEntries,
   ];
 
   if (all.length > SITEMAP_URL_LIMIT) {

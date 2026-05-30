@@ -107,7 +107,7 @@ export function AIProfileSetup() {
 
   // URL mode state
   const [url, setUrl] = useState("");
-  const [source, setSource] = useState<"services_lt" | "linkedin">(
+  const [source, setSource] = useState<"services_lt" | "linkedin" | "website">(
     "services_lt"
   );
 
@@ -520,17 +520,20 @@ export function AIProfileSetup() {
                 <select
                   value={source}
                   onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                    setSource(e.target.value as "services_lt" | "linkedin")
+                    setSource(
+                      e.target.value as "services_lt" | "linkedin" | "website"
+                    )
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="services_lt">paslaugos.lt profilis</option>
                   <option value="linkedin">LinkedIn profilis</option>
+                  <option value="website">Tinklalapio nuoroda</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Profilio URL
+                  {source === "website" ? "Tinklalapio URL" : "Profilio URL"}
                 </label>
                 <input
                   type="url"
@@ -542,7 +545,9 @@ export function AIProfileSetup() {
                   placeholder={
                     source === "services_lt"
                       ? "https://paslaugos.lt/..."
-                      : "https://linkedin.com/in/..."
+                      : source === "linkedin"
+                        ? "https://linkedin.com/in/..."
+                        : "https://tavo-tinklalapis.lt"
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />

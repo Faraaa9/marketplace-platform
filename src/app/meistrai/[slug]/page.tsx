@@ -15,6 +15,7 @@ import { isCuid } from "@/lib/slug";
 import { isOnline as computeIsOnline, formatLastSeen } from "@/lib/presence";
 import EmptyState from "@/components/ui/EmptyState";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { buildPageSeo } from "@/lib/seo/page-seo";
 import DirectInquiryWidget from "./components/DirectInquiryWidget";
 import MessengerCTA from "./components/MessengerCTA";
 import ReviewsSection from "./components/ReviewsSection";
@@ -127,31 +128,15 @@ export async function generateMetadata({
     : `${name} paslaugos${row.primaryCity ? ` ${row.primaryCity}e` : ""}. Peržiūrėkite profilį ir susisiekite per paslaugurinka.lt.`;
   const description = row.seoDescription || fallbackDesc;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${SITE_NAME}`;
-  const url = `${baseUrl}/meistrai/${slug}`;
-
-  return {
-    // `absolute` opts out of the root layout's `%s | PaslaugųRinka` template —
-    // seoTitle already includes the site suffix, so otherwise it ships twice.
-    title: { absolute: title },
+  // Route all metadata through the central SEO contract so title/description/
+  // canonical/robots are produced identically to every other route type.
+  return buildPageSeo({
+    kind: "provider-profile",
+    title,
     description,
-    alternates: { canonical: url },
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: SITE_NAME,
-      type: "profile",
-      locale: "lt_LT",
-      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
-    },
-    twitter: {
-      card: row.heroImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(row.heroImageUrl ? { images: [row.heroImageUrl] } : {}),
-    },
-  };
+    path: `/meistrai/${slug}`,
+    heroImageUrl: row.heroImageUrl,
+  }).metadata;
 }
 
 interface PageProps {
@@ -266,7 +251,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen">
-      <JsonLd schema={localBusinessSchema} />
+      {localBusinessSchema && <JsonLd schema={localBusinessSchema} />}
       <JsonLd schema={breadcrumbSchema} />
       {reviewSchemas.length > 0 && <JsonLd schema={reviewSchemas} />}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -940,20 +925,27 @@ async function getTopReviewsForSeoUncached(providerId: string): Promise<SeoRevie
     }));
 }
 
+// LocalBusiness rich results require `image`. A profile without one produces a
+// schema Google/Semrush flag as invalid — and an invalid schema is worse than
+// none. So we emit LocalBusiness ONLY when the required fields are present and
+// return null otherwise (the caller then skips the block). See NOTES.md
+// "LocalBusiness — užpildyti trūkstamus laukus" for the backfill follow-up.
 function buildLocalBusinessSchema(
   provider: ProviderProfileWithCategories,
   profileUrl: string
-): Record<string, unknown> {
+): Record<string, unknown> | null {
+  // `image` is the one required field many profiles lack — gate on it.
+  if (!provider.image) {
+    return null;
+  }
+
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: provider.name,
     url: profileUrl,
+    image: provider.image,
   };
-
-  if (provider.image) {
-    schema.image = provider.image;
-  }
 
   const description = provider.description
     ? provider.description.length > 500

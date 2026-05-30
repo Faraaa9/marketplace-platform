@@ -515,6 +515,30 @@ Konvencija:
   `TELEGRAM_WEBHOOK_SECRET` patvirtinti production env. Registracija: prod merge
   (`feat/ai-openrouter-client` → main) deploy'intas, tada `pnpm telegram:set-webhook https://www.paslaugurinka.lt`.
 
+- [x] **2026-05-30 — Admin matomumas: `/admin/telegram`.** Naujas puslapis +
+  `GET /api/admin/telegram` (admin-gated kaip kiti `/api/admin/*`): konfig. sveikata
+  (bot token, webhook secret, @username per `getBotInfo`), webhook būsena per
+  `getWebhookInfo` (registruotas URL vs tikėtasi, laukiantys update'ai, paskutinė
+  klaida), pokalbių statistika iš `telegram_sessions` (viso / susieta / aktyvūs
+  juodraščiai, būsenų skirstinys, 25 naujausi) ir per Telegram paskelbti skelbimai
+  (`service_requests.source="telegram"`: viso / 30 d. / 15 naujausių su moderacijos
+  būsena). Pridėti `getWebhookInfo`/`getBotInfo` į `telegram/api.ts`; nav punktas
+  layout'e. Live Telegram kvietimai try/catch — neparkrenta jei API nepasiekiamas.
+
+- [x] **2026-05-30 — Admin valdymas (write actions) `/admin/telegram`.** Pridėtas
+  `POST /api/admin/telegram` su 4 veiksmais: `set_webhook`/`delete_webhook`
+  (setWebhook/deleteWebhook į `telegram/api.ts`, registruoja į `expectedWebhookUrl`
+  = NEXTAUTH_URL/api/telegram/webhook), `toggle_bot` (kill switch — naujas
+  `PlatformSettings.telegramBotEnabled` Boolean default true; webhook tikrina ir
+  tyliai numeta update'us kai false), `reset_session` (state→idle, draft→DbNull) ir
+  `send_message` (sendMessage konkrečiai sesijai pagal chatId). UI: kill-switch
+  kortelė, webhook regist./šalinimo mygtukai, per-eilutės reset + žinutės mygtukai.
+  **DB:** reikia pritaikyti `prisma/manual-migrations/add-telegram-bot-enabled.sql`
+  (arba `db:push`) PROD DB — kol stulpelio nėra, `toggle_bot`/GET upsert mes klaidą.
+
+- [ ] **Liko (Telegram):** per-chat_id rate-limit webhook lygmenyje (dabar throttle
+  tik AI/foto per `from.id` conversation'e; webhook'as pats neturi atskiro limito).
+
 - [ ] **2026-05-29 — Vienetiniai testai be runner'io.** `pnpm test:telegram`
   paleidžia `conversation.ts` state machine testus per ts-node (projekte nėra
   jest/vitest). Jei ateity dėsim test runner'į — perkelti čia.
@@ -525,3 +549,124 @@ Konvencija:
   (onDelete: Cascade), bet pasibaigusios lieka. Vertėtų cron'ą (pvz. prie
   `cleanup-pending-requests`), kuris prune'ina views/reactions, kai susijusi
   story pasibaigusi senesnė nei N dienų.
+
+---
+
+## SEO architektūros planas — „idealūs nauji puslapiai" (2026-05-30)
+
+**Tikslas:** kiekvienas naujai sugeneruotas puslapis (tiekėjo profilis, kategorijos
+puslapis, skelbimas, SEO turinys) turi būti SEO-teisingas *by construction* — ne
+todėl, kad kažkas patikrino, o todėl, kad šablonas negali sugeneruoti blogo.
+
+### Kontekstas — kodėl dabar
+Sitemap pataisius (`&` → `&amp;`) Semrush pagaliau nuskenavo 100 psl. (vietoj 60)
+ir atsivėrė antras klaidų sluoksnis: faceted katalogo URL'ai (`/meistrai?category=*`)
+su identišku title (#6 dublikatai 23→42), thin content (#117: 37), nevalidi
+LocalBusiness schema (35). Šitie ne regresija — tik dabar matomi, nes crawler'is
+prasiskverbė giliau. Bazinis auditas vis dar `jsRendering: DISABLED` (įjungti
+Semrush projekte prieš kitą rerun, kad turinio signalai būtų teisingi).
+
+### Pamatinis sprendimas — indeksuojama taksonomija
+Google oficialiai: `rel=canonical` faceted URL'ams yra „less effective long term"
+ir gali būti ignoruojamas → **canonical-į-bazinį NĖRA pagrindinė strategija.**
+Teisinga — **slenkstinė (threshold) indeksacija**:
+
+| URL tipas | Sprendimas |
+|---|---|
+| `/meistrai` (bazinis) | index, self-canonical |
+| `/meistrai?category=X` (tik kategorija) | dinaminis + index (reali paklausa, kategorijų dešimtys) |
+| kategorija × miestas | **slenkstis**: ≥3–5 tiekėjų IR ≥300 žodžių → dinaminis+index; kitaip `noindex` + NE į sitemap |
+| `?welcome=`, `?inquiry=`, sort, pagination | visada `noindex` / robots.txt block |
+| tiekėjo profilis | index tik jei praėjo „brandos vartus" (žr. žemiau) |
+
+> Strateginis klausimas spręsti: dabartiniai combo'ai sitemap'e veda į
+> `/uzklausos?...` (skelbimus = trumpalaikiai). SEO prasme patvaresnis turtas yra
+> `/meistrai?category=...` (tiekėjų kategorijos). Greičiausiai indeksuoti reikia
+> pastaruosius, ne skelbimų sąrašus.
+
+### „Brandos vartai" (kad nebūtų thin content)
+Puslapis indeksuojamas tik jei: **≥300 prasmingų žodžių, ≥3 unikalūs duomenų
+taškai, validi schema, self-canonical, vidinės nuorodos.** Žemiau — `noindex` +
+neįtraukiam į sitemap. Įvykdo barjerą → automatiškai įsijungia.
+
+### Research sprendimai (2026-05-30) — užfiksuota prieš implementaciją
+- **Q1 — kuri taksonomija = SEO turtas?** → **`/meistrai?category` (+miestas).**
+  `/uzklausos` combos → `noindex` (transient). Pagrindas: marketplace SEO
+  playbook'ai — kategorijų puslapiai gaudo head-term paklausą ir yra STABILŪS;
+  skelbimai trumpalaikiai → turinys nyksta → thin/flip-flop. Crawl budget'as
+  neturi būti eikvojamas nykstančiam turiniui. (journeyh.io, origami-marketplace,
+  Search Engine Land.)
+- **Q2 — sub-slenkstis?** → **`noindex` + 200 + histerezė.** NE redirect/410
+  (puslapis turi realią vartotojo vertę, ne permanentinis). Histerezė
+  (`enableAt=3`, `disableBelow=2`) prieš index⇄noindex flip-flop, kurį Google
+  baudžia. (venue.cloud, goinflow.)
+
+### Build planas (eiliškumas — efektas mažėjančia tvarka)
+1. [ ] Užfiksuoti indeksuojamą taksonomiją (lentelė viršuje) — pamatas.
+2. [x] **Centrinis SEO kontraktas — `src/lib/seo/page-seo.ts`** (`buildPageSeo`,
+       diskriminuojama `SeoInput` unija). Prijungti route'ai: `/meistrai/[slug]`,
+       `/meistrai` (+`?category`/`+location` dinamiškai), `/uzklausos` (+combos).
+       Garantuoja: netuščias+unikalus title, description (clamp 157), canonical,
+       eksplicitiškas `robots`, OG/twitter. Verdiktas IR metadata gimsta kartu.
+3. [x] **Indeksavimo vartai — `src/lib/seo/index-gate.ts`** (`passesIndexGate` su
+       histerezė, `UTILITY_PARAMS`). `/uzklausos` combos → `noindex`.
+       `/meistrai?category` → `noindex` KOL nėra category-specific server turinio
+       (`wordCount=0` šią sesiją); įsijungs su step 5. Nuima dublikatus #6/#15 ir
+       thin-content #117 (jų šaltinis buvo `/uzklausos?...` sitemap combos).
+4. [x] **Sitemap** = statiniai + profiliai + vartus praėję kategorijų URL
+       (`/meistrai?category=`), filtruojami per tą patį `buildCategoryView` +
+       `buildPageSeo` verdiktą. `/uzklausos` combos visam laikui `noindex` →
+       niekada sitemap'e. City combos kol kas neįtraukiami (category-only =
+       stabiliausias turtas).
+5. [x] **Dinaminis kategorijų turinys** — `src/lib/seo/category-content.ts`
+       (deterministinis prozos builder'is) + `category-view.ts` (bendras
+       deriveris puslapiui IR sitemap'ui). `/meistrai?category` dabar turi
+       unikalų H1 + ~220–270 žodžių category-specific server turinį → praeina
+       vartus su ≥3 tiekėjų ir įsijungia index automatiškai.
+       **`minWords` 300→200**: lietuvių k. kompaktiškesnė + `wordCount`
+       neįskaito tiekėjų kortelių (papildomas turinys); pirminis thinness guard
+       lieka ≥3 tiekėjai.
+
+6. [x] **LocalBusiness schema** — nevalidi (be `image`) nebeemituojama visai
+       (invalid blogiau nei jokia). `buildLocalBusinessSchema` grąžina `null`,
+       kai nėra `image`; render guard praleidžia bloką. Breadcrumb/Review lieka.
+       - [ ] **Backfill (kažkada):** profiliai be `image` neturi LocalBusiness
+         schemos → praranda rich-result šansą. Vertėtų paskatinti/užpildyti hero
+         nuotraukas (arba generuoti placeholder OG vaizdą) ir tada schema
+         įsijungs automatiškai. Galimai pridėti `telephone`/`streetAddress`
+         pilnesnei schemai, jei turėsim tuos duomenis.
+
+7. [x] **CI SEO gate** — `scripts/seo-check.ts` (`pnpm seo:check [baseUrl]`).
+       Crawl'ina po 1 URL/route tipą (iš sitemap'o atranda profilio + kategorijos
+       pavyzdžius) ir tikrina: 1×`<title>` netuščias+unikalus, `description`,
+       `canonical`, 1×`<h1>`, JSON-LD parse+`@context`; ir kad sitemap URL nėra
+       `noindex`. Exit 1 → tinka CI / post-deploy. Default base = prod www.
+       - Paleidus prieš prod (dar be šio deploy) lieka 3 canonical „failai"
+         (`/`, `/meistrai`, `/uzklausos`) — būtent tai, ką šis deploy ištaiso;
+         po deploy gate turi būti žalias. Home gavo self-canonical.
+
+### SEO epopėja — BAIGTA (2–7). Liko tik backfill follow-up'ai
+- LocalBusiness `image` backfill (žr. step 6 pažymą).
+- Periodinis prod `pnpm seo:check` (pvz. cron po deploy).
+5. [ ] Dinaminiai title/description/turinys kategorijų puslapiams
+       (tiekėjų sk., top tiekėjai, kategorijos aprašas — unikalumui).
+6. [ ] LocalBusiness schema: 35 nevalidūs — privalomi laukai (address/image)
+       arba neįdedam schemos visai (nevalidi blogiau nei jokia).
+7. [ ] CI SEO gate (po 1 URL/tipą: title yra+unikalus, 1×H1, description,
+       canonical, JSON-LD validi) + periodinis prod crawl naujiems URL.
+
+### Šios sesijos pataisos (jau prod, baseline kitam palyginimui)
+sitemap INVALID→HAVE_HEALTHY; missing H1 24→1; duplicate content 23→11;
+profilių schema 0→ (LocalBusiness 22 / Review 49 / Breadcrumb 22 validūs);
+slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
+
+### Šaltiniai
+- Google: developers.google.com/crawling/docs/faceted-navigation
+- Search Engine Land — faceted navigation guide
+- journeyh.io — Marketplace SEO Playbook 2026
+- getpassionfruit.com — Programmatic SEO Without Traffic Loss (2025)
+
+## Provider profile gating (2026-05-30)
+- "Tapti meistru" nebekuria tuščio ProviderProfile ir nebeflipina rolės — rolė PROVIDER + starter kreditai dabar suteikiami tik realiai sukūrus profilį (ai-generate / profile-complete create šakoje). Route /api/tiekejas/tapti pašalinta.
+- Dashboard /tiekejas rodo NoProviderProfile, kai nėra profilio ARBA profilis tuščias (be description ir be enrichedAt) — laikina apsauga seniems prod klientams su tuščiomis eilutėmis.
+- TODO (DB cleanup): vienkartinis skriptas išvalyti senas tuščias ProviderProfile eilutes (description IS NULL AND enrichedAt IS NULL AND images = '{}') + grąžinti tuos userius į role=CLIENT, jei jie nieko nesukūrė. Atsargiai — realūs duomenys.

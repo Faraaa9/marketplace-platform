@@ -62,7 +62,7 @@ async function launchBrowser() {
 interface AIGenerateRequest {
   // URL mode (existing)
   url?: string;
-  source: "services_lt" | "linkedin" | "scratch";
+  source: "services_lt" | "linkedin" | "website" | "scratch";
   // Scratch mode (new)
   businessName?: string;
   servicesText?: string;

@@ -17,6 +17,115 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-30 06:22 — Claude
+
+**Commit:** `efba5c7` — feat(seo): drop invalid LocalBusiness schema + add SEO gate script · lokalus
+
+**Pakeitimai:** 5 files changed, 210 insertions(+), 10 deletions(-)
+
+**Failai:**
+- NOTES.md
+- package.json
+- scripts/seo-check.ts
+- src/app/meistrai/[slug]/page.tsx
+- src/app/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 06:15 — Claude
+
+**Commit:** `f71f4dd` — feat(seo): dynamic category content unlocks indexing gate · lokalus
+
+**Pakeitimai:** 6 files changed, 339 insertions(+), 79 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/meistrai/page.tsx
+- src/app/sitemap.ts
+- src/lib/seo/category-content.ts
+- src/lib/seo/category-view.ts
+- src/lib/seo/index-gate.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 06:06 — Claude
+
+**Commit:** `d6ab41b` — feat(seo): central buildPageSeo contract + index gate · lokalus
+
+**Pakeitimai:** 7 files changed, 527 insertions(+), 88 deletions(-)
+
+**Failai:**
+- NOTES.md
+- src/app/meistrai/[slug]/page.tsx
+- src/app/meistrai/page.tsx
+- src/app/sitemap.ts
+- src/app/uzklausos/page.tsx
+- src/lib/seo/index-gate.ts
+- src/lib/seo/page-seo.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 05:23 — Claude
+
+**Commit:** `d2280f5` — fix(admin): guard telegramBotEnabled reads against missing column
+
+**Pakeitimai:** 2 files changed, 27 insertions(+), 12 deletions(-)
+
+**Failai:**
+- src/app/api/admin/telegram/route.ts
+- src/app/api/telegram/webhook/route.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 05:22 — Claude
+
+**Commit:** `5ce2f2c` — feat(admin): Telegram control actions — kill switch, webhook, sessions
+
+**Pakeitimai:** 6 files changed, 458 insertions(+), 138 deletions(-)
+
+**Failai:**
+- NOTES.md
+- prisma/manual-migrations/add-telegram-bot-enabled.sql
+- src/app/admin/telegram/page.tsx
+- src/app/api/admin/telegram/route.ts
+- src/app/api/telegram/webhook/route.ts
+- src/lib/telegram/api.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 05:13 — Claude
+
+**Commit:** `d93ebf6` — feat(admin): Telegram overview page — config, webhook, sessions, listings
+
+**Pakeitimai:** 5 files changed, 597 insertions(+), 1 deletion(-)
+
+**Failai:**
+- NOTES.md
+- src/app/admin/layout.tsx
+- src/app/admin/telegram/page.tsx
+- src/app/api/admin/telegram/route.ts
+- src/lib/telegram/api.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-05-30 05:00 — Claude
+
+**Commit:** `c5936f0` — docs(seo): add SEO architecture plan for generated pages
+
+**Pakeitimai:** 1 file changed, 65 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 03:57 — Claude
 
 **Commit:** `ee02e5a` — style(messaging): tune own-message bubble color and bystander text contrast · lokalus

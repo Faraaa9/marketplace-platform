@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { handleUpdate } from "@/lib/telegram/bot";
 import type { TgUpdate } from "@/lib/telegram/types";
 
@@ -44,6 +45,22 @@ export async function POST(req: NextRequest) {
   // re-delivering the same update (which would post duplicate drafts).
   after(async () => {
     try {
+      // Admin kill switch: when the bot is disabled, drop updates silently.
+      // Guarded separately so a missing column (pre-migration) or a transient
+      // DB error defaults to enabled rather than dropping every update.
+      let enabled = true;
+      try {
+        const settings = await prisma.platformSettings.findUnique({
+          where: { id: "singleton" },
+          select: { telegramBotEnabled: true },
+        });
+        enabled = settings?.telegramBotEnabled ?? true;
+      } catch {
+        enabled = true;
+      }
+      if (!enabled) {
+        return;
+      }
       await handleUpdate(update);
     } catch (error) {
       console.error("[telegram] handleUpdate threw:", error);
