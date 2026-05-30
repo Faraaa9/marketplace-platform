@@ -27,7 +27,7 @@ import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
 
 export default function NewRequestV2Page() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<NewRequestShell />}>
       <NewRequestV2Form />
     </Suspense>
   );
@@ -562,7 +562,11 @@ function NewRequestV2Form() {
   }
 
   if (sessionStatus === "loading") {
-    return <NewRequestShell />;
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   const selectedCategories = form.categoryIds.map((id) => ({
