@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
@@ -13,7 +13,6 @@ import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { isCuid } from "@/lib/slug";
 import { isOnline as computeIsOnline, formatLastSeen } from "@/lib/presence";
-import EmptyState from "@/components/ui/EmptyState";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildPageSeo } from "@/lib/seo/page-seo";
 import DirectInquiryWidget from "./components/DirectInquiryWidget";
@@ -203,14 +202,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   }
 
   if (!lookup) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState
-          title="Tiekėjas nerastas"
-          description="Šis profilis neegzistuoja arba yra neaktyvus."
-        />
-      </div>
-    );
+    notFound();
   }
 
   const { userId: providerUserId, slug: resolvedSlug } = lookup;
@@ -223,14 +215,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   ]);
 
   if (!provider) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState
-          title="Tiekėjas nerastas"
-          description="Šis profilis neegzistuoja arba yra neaktyvus."
-        />
-      </div>
-    );
+    notFound();
   }
 
   // Owners can preview their own PENDING/REJECTED profile (so the welcome-flow
@@ -238,14 +223,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   // blocked it). Everyone else only sees APPROVED.
   const viewerIsOwner = session?.user?.id === provider.id;
   if (provider.moderationStatus !== "APPROVED" && !viewerIsOwner) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState
-          title="Tiekėjas nerastas"
-          description="Šis profilis neegzistuoja arba yra neaktyvus."
-        />
-      </div>
-    );
+    notFound();
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
