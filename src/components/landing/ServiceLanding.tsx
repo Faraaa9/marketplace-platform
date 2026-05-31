@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildPageSeo, BASE_URL } from "@/lib/seo/page-seo";
+import { getRelatedLandingLinks } from "./related-pages";
 
 /**
  * Config-driven template for keyword-targeted service landing pages
@@ -84,6 +85,9 @@ const WHY_US: { icon: LucideIcon; title: string; text: string }[] = [
 export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
   const { city } = config;
   const url = `${BASE_URL}${config.path}`;
+
+  const related = getRelatedLandingLinks(config.path.replace(/^\/paslaugos\//, ""));
+  const relatedGroups = [related.sameService, related.sameCity].filter((g) => g.links.length > 0);
 
   const requestHref =
     `/uzklausos/nauja?title=${encodeURIComponent(config.request.title)}` +
@@ -326,6 +330,36 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
           </div>
         </div>
       </section>
+
+      {/* Related landing pages — internal links so sibling pages aren't orphaned */}
+      {relatedGroups.length > 0 && (
+        <section className="border-t border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
+            <h2 className="text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">
+              Susijusios paslaugos
+            </h2>
+            <div className="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
+              {relatedGroups.map((group) => (
+                <div key={group.heading}>
+                  <h3 className="text-body font-semibold text-surface-900 dark:text-white">{group.heading}</h3>
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {group.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="inline-flex items-center rounded-full border border-surface-200 bg-white px-3.5 py-1.5 text-body-sm text-surface-700 transition-shadow hover:shadow-sm dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-31 22:07 — Claude
+
+**Commit:** `9b992f1` — feat(seo): cross-link service landing pages to fix orphan pages · lokalus
+
+**Pakeitimai:** 2 files changed, 150 insertions(+)
+
+**Failai:**
+- src/components/landing/ServiceLanding.tsx
+- src/components/landing/related-pages.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-31 03:27 — Claude
 
 **Commit:** `42d3a3e` — feat(seo): connect Google Search Console + GA4 · lokalus
