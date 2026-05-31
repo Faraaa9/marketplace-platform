@@ -9,6 +9,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
 import RegisterSW from "@/components/pwa/RegisterSW";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 // Inter via next/font/google with the latin-ext subset so Lithuanian glyphs
 // (ą č ę ė į š ų ū ž) render in Inter itself. The previous local build shipped
@@ -51,6 +52,12 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // Google Search Console ownership — renders
+  // <meta name="google-site-verification" content="…"> when the env is set.
+  // Omitted entirely when unset, so no empty tag ships.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport: Viewport = {
@@ -85,6 +92,10 @@ export default function RootLayout({
           </Suspense>
           <RegisterSW />
           <InstallPrompt />
+          {/* useSearchParams inside requires a Suspense boundary */}
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+          </Suspense>
         </Providers>
       </body>
     </html>

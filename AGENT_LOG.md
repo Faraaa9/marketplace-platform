@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-05-31 03:27 — Claude
+
+**Commit:** `42d3a3e` — feat(seo): connect Google Search Console + GA4 · lokalus
+
+**Pakeitimai:** 5 files changed, 76 insertions(+), 1 deletion(-)
+
+**Failai:**
+- .env.example
+- next.config.mjs
+- public/google99200452eec2882c.html
+- src/app/layout.tsx
+- src/components/analytics/GoogleAnalytics.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-05-30 23:58 — Claude
 
 **Commit:** `54b6951` — perf(seo): slim category tree in RSC payload (fix Large HTML on /uzklausos) · lokalus
