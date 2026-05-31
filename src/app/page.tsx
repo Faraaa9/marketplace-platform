@@ -160,165 +160,22 @@ async function getHomePageData() {
 }
 
 export default function HomePage() {
-  // The hero is fully static, so its heading (the LCP element) paints from the
-  // prerendered shell instead of waiting ~1.8s for the DB-backed page body to
-  // stream in. Only the data-dependent sections below the fold are streamed,
-  // behind a height-reserving fallback so the footer never jumps (CLS ~0).
+  // Cache Components: the page body fetches data + formats relative dates
+  // (new Date()) — stream it inside a Suspense so the rest of the layout
+  // can prerender.
   return (
-    <div>
-      <HeroSection />
-      {/* The hero fills the viewport, so everything streamed here is below the
-          fold — no placeholder height is needed and an empty fallback avoids a
-          mismatched-height shift. */}
-      <Suspense fallback={null}>
-        <HomeBelowFold />
-      </Suspense>
-    </div>
+    // Reserve the hero's viewport height while the dynamic content streams in.
+    // With fallback={null} the prerendered shell had an empty <main>, so the
+    // footer painted near the top and then jumped a full viewport down once the
+    // content arrived — a ~0.84 layout shift. Reserving the height keeps the
+    // footer below the fold from first paint, so CLS stays ~0.
+    <Suspense fallback={<div className="min-h-[calc(100svh-72px)]" aria-hidden />}>
+      <HomePageContent />
+    </Suspense>
   );
 }
 
-function HeroSection() {
-  return (
-    <section className="relative flex min-h-[calc(100svh-72px)] flex-col overflow-hidden">
-      {/* Warm glow behind the headline */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F6F1E6]/75 blur-3xl dark:bg-[#3a3128]/30"
-      />
-
-      {/* Floating decorations (wide screens only) */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5] hidden xl:block">
-        {/* Left — dashed journey path with nodes */}
-        <div className="absolute left-[1.5%] top-[15%] h-[70%] w-[360px]">
-          <svg viewBox="0 0 360 600" className="h-full w-full" fill="none">
-            <path
-              d="M250,28 C200,140 108,180 106,308 C104,438 168,500 212,576"
-              stroke="#C6BFB0"
-              className="dark:stroke-[#3f3a32]"
-              strokeWidth="2"
-              strokeDasharray="5 7"
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute" style={{ left: "69%", top: "5%", transform: "translate(-50%,-50%)" }}>
-            <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#E1DAEC] ring-1 ring-[#CABFE0] dark:bg-[#2e2740] dark:ring-[#43395f]">
-              <Package className="h-6 w-6 text-[#7C6AA6] dark:text-[#b3a3d6]" />
-            </div>
-          </div>
-          <div className="absolute" style={{ left: "30%", top: "52%", transform: "translate(-50%,-50%)" }}>
-            <div className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D4E5CD] ring-1 ring-[#BBD3B0] dark:bg-[#26331f] dark:ring-[#3a4d30]">
-              <Search className="h-6 w-6 text-[#5E8C50] dark:text-[#9cc088]" />
-              <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 translate-y-full rounded-md bg-[#4A463F] px-2 py-[3px] text-[11px] font-medium text-white">
-                Tu
-              </span>
-            </div>
-          </div>
-          <div className="absolute" style={{ left: "58%", top: "96%", transform: "translate(-50%,-50%)" }}>
-            <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D5E0EC] ring-1 ring-[#BCCCDF] dark:bg-[#222d3b] dark:ring-[#374559]">
-              <Check className="h-6 w-6 text-[#5A79A4] dark:text-[#9db5d6]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Right — sample request card */}
-        <div className="absolute right-[2.5%] top-[16%] w-[256px] rotate-[2.5deg]">
-          <div className="rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-4 shadow-[0_20px_44px_-20px_rgba(40,35,30,0.32)] dark:border-surface-800 dark:bg-surface-900">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-[#8C877D] dark:text-surface-400">
-                <FileText className="h-3.5 w-3.5" />
-                <span className="text-[11px] font-medium">Nauja užklausa</span>
-              </div>
-              <Maximize2 className="h-3 w-3 text-[#B5AFA2] dark:text-surface-500" />
-            </div>
-            <p className="mt-2.5 text-[13px] font-semibold leading-snug text-[#26231F] dark:text-surface-100">
-              Vonios kambario remontas — Vilnius
-            </p>
-            <div className="mt-3 space-y-1.5">
-              <div className="h-1.5 w-full rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
-              <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
-            </div>
-            <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5 dark:border-surface-800">
-              <span className="text-[11px] text-[#8C877D] dark:text-surface-400">6 specialistai atsakė</span>
-              <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C25E3A] text-[9px] font-bold text-white">
-                P
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right — sticky note tip + hand-drawn arrow pointing at the AI button */}
-        <div className="absolute right-[4%] top-[45%] w-[242px] -rotate-[5deg]">
-          <div className="rounded-xl bg-[#F4E6A8] p-4 shadow-[0_18px_36px_-18px_rgba(40,35,30,0.4)]">
-            <p className="text-[12.5px] leading-relaxed text-[#7C6B2E]">
-              <span className="font-bold">Patarimas:</span> nežinai, kaip
-              aprašyti? Spausk{" "}
-              {/* eslint-disable-next-line react/no-unescaped-entities */}
-              <span className="font-semibold">"Sutvarkyti aprašymą"</span> —
-              dirbtinis intelektas sutvarkys tekstą ir patars, ką dar pridėti.
-            </p>
-          </div>
-        </div>
-
-        {/* Hand-drawn arrow from the tip down to the AI button */}
-        <div className="absolute left-[62%] top-[58%] h-[185px] w-[300px]">
-          <svg
-            viewBox="0 0 300 185"
-            className="h-full w-full"
-            fill="none"
-            stroke="#C25E3A"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M256,28 C240,82 214,110 122,128" />
-            <path d="M137,132 L122,128 L135,118" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Centered content */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-12 pb-10">
-        <span className="mb-7 inline-flex items-center rounded-full bg-[#2A2723] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#ECE9E2] dark:bg-surface-800 dark:text-surface-200">
-          Paslaugų rinka
-        </span>
-        <h1 className="text-center text-[2.75rem] font-bold leading-[1.05] tracking-tight text-[#26231F] dark:text-surface-50 sm:text-[3.5rem] lg:text-[4.25rem]">
-          Rask specialistą,
-          <br />
-          kurio tikrai reikia
-        </h1>
-        <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760] dark:text-surface-300">
-          Aprašyk paprastais žodžiais, ko reikia, ir gauk pasiūlymų iš
-          specialistų visoje Lietuvoje.
-        </p>
-        <div className="mt-9 flex w-full justify-center">
-          <HeroSearch />
-        </div>
-      </div>
-
-      {/* Social proof */}
-      <div className="relative z-10 flex justify-center px-6 pb-12">
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {AVATARS.map((a) => (
-              <span
-                key={a.initials}
-                className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2] dark:ring-surface-900"
-                style={{ backgroundColor: a.color }}
-              >
-                {a.initials}
-              </span>
-            ))}
-          </div>
-          <span className="text-sm text-[#6B6760] dark:text-surface-300">
-            Patikrinti specialistai iš visos Lietuvos
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-async function HomeBelowFold() {
+async function HomePageContent() {
   await connection();
   const [
     { recentRequests, providerCount, requestCount, responseCount },
@@ -335,6 +192,12 @@ async function HomeBelowFold() {
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
+  const trustCount = Math.max(providerCount, requestCount);
+  const trustText =
+    trustCount >= 25
+      ? `Mumis pasitiki ${Math.floor(trustCount / 10) * 10}+ žmonių visoje Lietuvoje`
+      : "Patikrinti specialistai iš visos Lietuvos";
+
   const stats = [
     { value: providerCount || 1, label: "Specialistų" },
     { value: requestCount || 1, label: "Pateiktų užklausų" },
@@ -343,7 +206,143 @@ async function HomeBelowFold() {
   ];
 
   return (
-    <>
+    <div>
+      {/* ───────────────────────── Hero ───────────────────────── */}
+      <section className="relative flex min-h-[calc(100svh-72px)] flex-col overflow-hidden">
+        {/* Warm glow behind the headline */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-[38%] h-[440px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F6F1E6]/75 blur-3xl dark:bg-[#3a3128]/30"
+        />
+
+        {/* Floating decorations (wide screens only) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-[5] hidden xl:block">
+          {/* Left — dashed journey path with nodes */}
+          <div className="absolute left-[1.5%] top-[15%] h-[70%] w-[360px]">
+            <svg viewBox="0 0 360 600" className="h-full w-full" fill="none">
+              <path
+                d="M250,28 C200,140 108,180 106,308 C104,438 168,500 212,576"
+                stroke="#C6BFB0"
+                className="dark:stroke-[#3f3a32]"
+                strokeWidth="2"
+                strokeDasharray="5 7"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute" style={{ left: "69%", top: "5%", transform: "translate(-50%,-50%)" }}>
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#E1DAEC] ring-1 ring-[#CABFE0] dark:bg-[#2e2740] dark:ring-[#43395f]">
+                <Package className="h-6 w-6 text-[#7C6AA6] dark:text-[#b3a3d6]" />
+              </div>
+            </div>
+            <div className="absolute" style={{ left: "30%", top: "52%", transform: "translate(-50%,-50%)" }}>
+              <div className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D4E5CD] ring-1 ring-[#BBD3B0] dark:bg-[#26331f] dark:ring-[#3a4d30]">
+                <Search className="h-6 w-6 text-[#5E8C50] dark:text-[#9cc088]" />
+                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 translate-y-full rounded-md bg-[#4A463F] px-2 py-[3px] text-[11px] font-medium text-white">
+                  Tu
+                </span>
+              </div>
+            </div>
+            <div className="absolute" style={{ left: "58%", top: "96%", transform: "translate(-50%,-50%)" }}>
+              <div className="grid h-[58px] w-[58px] place-items-center rounded-full bg-[#D5E0EC] ring-1 ring-[#BCCCDF] dark:bg-[#222d3b] dark:ring-[#374559]">
+                <Check className="h-6 w-6 text-[#5A79A4] dark:text-[#9db5d6]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right — sample request card */}
+          <div className="absolute right-[2.5%] top-[16%] w-[256px] rotate-[2.5deg]">
+            <div className="rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-4 shadow-[0_20px_44px_-20px_rgba(40,35,30,0.32)] dark:border-surface-800 dark:bg-surface-900">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[#8C877D] dark:text-surface-400">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span className="text-[11px] font-medium">Nauja užklausa</span>
+                </div>
+                <Maximize2 className="h-3 w-3 text-[#B5AFA2] dark:text-surface-500" />
+              </div>
+              <p className="mt-2.5 text-[13px] font-semibold leading-snug text-[#26231F] dark:text-surface-100">
+                Vonios kambario remontas — Vilnius
+              </p>
+              <div className="mt-3 space-y-1.5">
+                <div className="h-1.5 w-full rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
+                <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
+              </div>
+              <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5 dark:border-surface-800">
+                <span className="text-[11px] text-[#8C877D] dark:text-surface-400">6 specialistai atsakė</span>
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C25E3A] text-[9px] font-bold text-white">
+                  P
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — sticky note tip + hand-drawn arrow pointing at the AI button */}
+          <div className="absolute right-[4%] top-[45%] w-[242px] -rotate-[5deg]">
+            <div className="rounded-xl bg-[#F4E6A8] p-4 shadow-[0_18px_36px_-18px_rgba(40,35,30,0.4)]">
+              <p className="text-[12.5px] leading-relaxed text-[#7C6B2E]">
+                <span className="font-bold">Patarimas:</span> nežinai, kaip
+                aprašyti? Spausk{" "}
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
+                <span className="font-semibold">"Sutvarkyti aprašymą"</span> —
+                dirbtinis intelektas sutvarkys tekstą ir patars, ką dar pridėti.
+              </p>
+            </div>
+          </div>
+
+          {/* Hand-drawn arrow from the tip down to the AI button */}
+          <div className="absolute left-[62%] top-[58%] h-[185px] w-[300px]">
+            <svg
+              viewBox="0 0 300 185"
+              className="h-full w-full"
+              fill="none"
+              stroke="#C25E3A"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M256,28 C240,82 214,110 122,128" />
+              <path d="M137,132 L122,128 L135,118" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Centered content */}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-12 pb-10">
+          <span className="mb-7 inline-flex items-center rounded-full bg-[#2A2723] px-3.5 py-1.5 text-xs font-medium tracking-wide text-[#ECE9E2] dark:bg-surface-800 dark:text-surface-200">
+            Paslaugų rinka
+          </span>
+          <h1 className="text-center text-[2.75rem] font-bold leading-[1.05] tracking-tight text-[#26231F] dark:text-surface-50 sm:text-[3.5rem] lg:text-[4.25rem]">
+            Rask specialistą,
+            <br />
+            kurio tikrai reikia
+          </h1>
+          <p className="mt-5 max-w-xl text-center text-lg leading-relaxed text-[#6B6760] dark:text-surface-300">
+            Aprašyk paprastais žodžiais, ko reikia, ir gauk pasiūlymų iš
+            specialistų visoje Lietuvoje.
+          </p>
+          <div className="mt-9 flex w-full justify-center">
+            <HeroSearch />
+          </div>
+        </div>
+
+        {/* Social proof */}
+        <div className="relative z-10 flex justify-center px-6 pb-12">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {AVATARS.map((a) => (
+                <span
+                  key={a.initials}
+                  className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2] dark:ring-surface-900"
+                  style={{ backgroundColor: a.color }}
+                >
+                  {a.initials}
+                </span>
+              ))}
+            </div>
+            <span className="text-sm text-[#6B6760] dark:text-surface-300">{trustText}</span>
+          </div>
+        </div>
+      </section>
+
       {/* Guest request recovery */}
       <div className="mx-auto max-w-2xl px-6 [&:not(:empty)]:py-8">
         <RecentRequestBanner />
@@ -569,6 +568,6 @@ async function HomeBelowFold() {
           </ProviderCtaLink>
         </div>
       </section>
-    </>
+    </div>
   );
 }
