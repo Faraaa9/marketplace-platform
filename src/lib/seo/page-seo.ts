@@ -56,7 +56,8 @@ export type SeoInput =
       description: string;
       path: string;
       heroImageUrl?: string;
-    };
+    }
+  | { kind: "article"; title: string; description: string; path: string; heroImageUrl?: string };
 
 // --- helpers (single source for each formatting rule) -----------------------
 
@@ -268,6 +269,21 @@ export function buildPageSeo(input: SeoInput): PageSeoResult {
           canonical: absoluteUrl(input.path),
           verdict,
           heroImageUrl: input.heroImageUrl,
+        }),
+      };
+    }
+
+    case "article": {
+      const verdict: IndexVerdict = { index: true };
+      return {
+        verdict,
+        metadata: assemble({
+          title: input.title,
+          description: input.description,
+          canonical: absoluteUrl(input.path),
+          verdict,
+          heroImageUrl: input.heroImageUrl,
+          ogType: "website",
         }),
       };
     }
