@@ -154,7 +154,7 @@ function ConversationAvatar({
   const badgeSize = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
   return (
     <div className="relative shrink-0" title={presenceLabel || undefined}>
-      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2] ${dimensions}`}>
+      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D38331] text-caption font-semibold text-white ring-1 ring-[#D7C7B6] ${dimensions}`}>
         {image ? (
           <Image
             src={image}
@@ -672,11 +672,11 @@ export default function ProviderInboxClient() {
   );
 
   return (
-    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#ece9e2] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#ece9e2] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-800 dark:bg-surface-900/90">
+    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#EFECE5] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#DDD3C5] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(93,70,54,0.10)] dark:border-surface-800 dark:bg-surface-900/90">
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#ece9e2] bg-white dark:border-surface-700/60 dark:bg-surface-950/40`}>
-            <div className="flex min-h-[64px] items-center justify-between border-b border-[#ece9e2] bg-white px-5 py-2.5 dark:border-surface-700/60">
+          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
+            <div className="flex min-h-[64px] items-center justify-between border-b border-[#DDD3C5] bg-[#FFFDF8] px-5 py-2.5 dark:border-surface-700/60">
               {searchOpen ? (
                 <label className="min-w-0 flex-1">
                   <span className="sr-only">Ieškoti pokalbių</span>
@@ -685,7 +685,7 @@ export default function ProviderInboxClient() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Ieškoti pokalbių..."
-                    className="h-11 w-full rounded-full border border-[#EAEAEA] bg-[#F8F7F4] px-4 text-body-sm text-[#1E1B18] outline-none transition focus:border-[#C29B74] focus:bg-white"
+                    className="h-11 w-full rounded-full border border-[#D7C7B6] bg-[#F7F1E8] px-4 text-body-sm text-[#1E1B18] outline-none transition focus:border-[#A7826D] focus:bg-white"
                   />
                 </label>
               ) : (
@@ -705,7 +705,7 @@ export default function ProviderInboxClient() {
                   setSearchOpen((open) => !open);
                   if (searchOpen) setSearchQuery("");
                 }}
-                className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18] dark:bg-surface-900 dark:ring-surface-700"
+                className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18] dark:bg-surface-900 dark:ring-surface-700"
               >
                 {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
               </button>
@@ -739,12 +739,12 @@ export default function ProviderInboxClient() {
                     const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
                     return (
                       <button key={`${c.type}-${c.id}`} onClick={() => selectConversation(c)} className="group block w-full text-left">
-                        <article className={`relative border-b border-[#EAEAEA] p-3 transition-colors hover:bg-[#faeee7] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
+                        <article className={`relative border-b border-[#DDD3C5] p-3 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
                           active
-                            ? "bg-[#faeee7] dark:bg-surface-800/70"
+                            ? "rounded-xl border border-[#A7826D] bg-[#F1E7DA] shadow-[0_6px_18px_rgba(93,70,54,0.10)] dark:bg-surface-800/70"
                             : c.unread
-                              ? "bg-[#F8F7F4] dark:bg-surface-800/40"
-                              : "bg-white dark:bg-surface-950/40"
+                              ? "bg-[#F7F1E8] dark:bg-surface-800/40"
+                              : "bg-[#FFFDF8] dark:bg-surface-950/40"
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
                           <div className="flex items-start gap-3.5">
@@ -759,7 +759,7 @@ export default function ProviderInboxClient() {
                                 <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
                                   {decodeHtmlEntities(c.title)}
                                 </h3>
-                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt}>
+                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6F6258]" dateTime={c.lastMessageAt}>
                                   {formatRelativeDate(new Date(c.lastMessageAt))}
                                 </time>
                               </div>
@@ -770,7 +770,7 @@ export default function ProviderInboxClient() {
                                     {decodeHtmlEntities(c.subtitle)}
                                   </p>
                                 )}
-                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#F5F3EF] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6B6760]">
+                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258]">
                                   {status && <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />}
                                   {status ? status.label : "Tiesioginė"}
                                 </span>
@@ -804,7 +804,7 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-white dark:bg-surface-900`}>
+          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
             {threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
@@ -823,7 +823,7 @@ export default function ProviderInboxClient() {
               <div className="grid min-h-0 flex-1 place-items-center text-body-sm text-[#6B6760]">Kraunama...</div>
             ) : (
               <>
-                <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-4 py-1.5 dark:border-surface-700/60 md:px-5">
+                <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-[#DDD3C5] bg-[#FFFDF8] px-4 py-1.5 dark:border-surface-700/60 md:px-5">
                   <div className="flex min-w-0 items-center gap-3">
                   <button className="grid min-h-11 min-w-11 place-items-center rounded-xl text-[#6B6760] hover:bg-[#faeee7] hover:text-[#1E1B18] lg:hidden" onClick={() => setSelectedId(null)}>
                     <ArrowLeft className="h-5 w-5" />
@@ -855,7 +855,7 @@ export default function ProviderInboxClient() {
                         setSettingsOpen((open) => !open);
                         setMoreOpen(false);
                       }}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]"
+                    className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18]"
                     >
                       <Settings className="h-4 w-4" />
                     </button>
@@ -867,7 +867,7 @@ export default function ProviderInboxClient() {
                         setMoreOpen((open) => !open);
                         setSettingsOpen(false);
                       }}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]"
+                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18]"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
@@ -903,9 +903,9 @@ export default function ProviderInboxClient() {
                   </div>
                 </div>
                 <div
-                  className="flex min-h-0 flex-1 flex-col bg-white px-4 py-4 md:px-5"
+                  className="flex min-h-0 flex-1 flex-col bg-[#FFFDF8] px-4 py-4 md:px-5"
                 >
-                  <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#EAEAEA] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(37,34,30,0.06)] dark:border-surface-700 dark:bg-surface-900">
+                  <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#DED2C1] bg-[#FFFDF8] px-4 py-3 shadow-[0_8px_24px_rgba(93,70,54,0.08)] dark:border-surface-700 dark:bg-surface-900">
                     <div className="min-w-0">
                       <p className="truncate text-body-sm font-semibold text-[#111827] dark:text-white">
                         Užsakymas: {decodeHtmlEntities(orderSummaryTitle(thread))}
@@ -917,7 +917,7 @@ export default function ProviderInboxClient() {
                     {thread.requestBrief && (
                       <RequestBriefDrawer
                         brief={thread.requestBrief}
-                        triggerClassName="ml-auto"
+                        triggerClassName="ml-auto border border-[#D7C7B6] bg-[#EFE4D5] text-[#3B2D24] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] hover:bg-[#E4D2BE] focus:ring-[#A7826D]/25"
                       />
                     )}
                   </div>
