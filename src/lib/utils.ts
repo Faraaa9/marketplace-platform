@@ -34,6 +34,29 @@ export function truncate(str: string, length: number): string {
   return str.slice(0, length) + "...";
 }
 
+const HTML_ENTITIES: Record<string, string> = {
+  amp: "&",
+  apos: "'",
+  gt: ">",
+  lt: "<",
+  nbsp: " ",
+  quot: '"',
+};
+
+export function decodeHtmlEntities(value: string): string {
+  return value.replace(/&(#(\d+)|#x([\da-fA-F]+)|[a-zA-Z]+);/g, (entity, body, dec, hex) => {
+    if (dec || hex) {
+      const codePoint = dec ? Number(dec) : Number.parseInt(hex, 16);
+      try {
+        return String.fromCodePoint(codePoint);
+      } catch {
+        return entity;
+      }
+    }
+    return HTML_ENTITIES[body] ?? entity;
+  });
+}
+
 /**
  * Lithuanian plural form of "kreditas" (credit) for a given count.
  * 1 → kreditas · 2-9 → kreditai · 0 and 10-20 → kreditų

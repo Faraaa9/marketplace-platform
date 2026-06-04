@@ -19,6 +19,7 @@ const PROVIDER_ITEMS: NavItem[] = [
   { href: "/tiekejas", label: "Panelė", icon: LayoutDashboard, matchPrefix: "/tiekejas" },
   { href: "/tiekejas/uzklausos", label: "Užklausos", icon: ClipboardList, matchPrefix: "/tiekejas/uzklausos" },
   { href: "/tiekejas/zinutes", label: "Žinutės", icon: MessageCircle, matchPrefix: "/tiekejas/zinutes", badgeKey: "messages" },
+  { href: "/tiekejas/profilis", label: "Profilis", icon: User, matchPrefix: "/tiekejas/profilis" },
 ];
 
 const CUSTOMER_ITEMS: NavItem[] = [

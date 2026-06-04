@@ -21,7 +21,10 @@ export function getUserMenuLinks(role?: string): UserMenuLink[] {
       { href: "/tiekejas", label: "Valdymo panelė" },
       { href: "/tiekejas/uzklausos", label: "Užklausos" },
       { href: "/tiekejas/zinutes", label: "Žinutės" },
-      { href: "/paskyra/profilis", label: "Profilis" },
+      { href: "/tiekejas/atsakymai", label: "Mano atsakymai" },
+      { href: "/tiekejas/profilis", label: "Teikėjo profilis" },
+      { href: "/tiekejas/planai", label: "Kreditai" },
+      { href: "/paskyra/profilis", label: "Paskyros nustatymai" },
     ];
   }
   return [

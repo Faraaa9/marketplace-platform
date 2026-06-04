@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Fragment, useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from "react";
 import Image from "next/image";
 import { Send, AlertTriangle, RefreshCw, Loader2, Paperclip, Smile } from "lucide-react";
-import { cn, formatRelativeDate } from "@/lib/utils";
+import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
-import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/RequestBriefDrawer";
+import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 
 /** Shape of a row from the `messages` table delivered by Supabase Realtime. */
 interface MessageRow {
@@ -17,12 +17,6 @@ interface MessageRow {
   senderName: string | null;
   content: string;
   createdAt: string;
-}
-
-interface ReadStateRow {
-  id: string;
-  providerLastReadAt?: string | null;
-  clientLastReadAt?: string | null;
 }
 
 const EMPTY_MESSAGES: ThreadMessage[] = [];
@@ -79,6 +73,21 @@ interface MessageGroup {
 }
 
 const GROUP_BREAK_MS = 5 * 60 * 1000;
+const OWN_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#334155",
+  borderColor: "#334155",
+  color: "#FFFFFF",
+};
+const OTHER_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#F8F7F4",
+  borderColor: "#E7E3DA",
+  color: "#111827",
+};
+const FAILED_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#FEF2F2",
+  borderColor: "#FECACA",
+  color: "#991B1B",
+};
 
 /**
  * A message is the provider's iff its senderId equals the thread's providerId.
@@ -96,12 +105,6 @@ function isOwnMessage(msg: ThreadMessage, viewerRole: ViewerRole, providerId: st
 function toTime(value: string): number {
   const time = Date.parse(value);
   return Number.isNaN(time) ? 0 : time;
-}
-
-function latestReadAt(a: string | null, b: string | null) {
-  if (!a) return b;
-  if (!b) return a;
-  return toTime(b) > toTime(a) ? b : a;
 }
 
 function shouldBreakGroup(prev: ThreadMessage | undefined, next: ThreadMessage) {
@@ -201,7 +204,6 @@ export default function ThreadChat({
   providerId,
   otherParticipantName,
   otherParticipantImage,
-  otherParticipantReadAt,
   realtimeTrackingToken,
   showInitialTimeDivider = true,
   showTopBorder = true,
@@ -213,10 +215,6 @@ export default function ThreadChat({
   quickReplies = [],
 }: ThreadChatProps) {
   const [inputValue, setInputValue] = useState("");
-  const [realtimeOtherReadAt, setRealtimeOtherReadAt] = useState<{
-    threadId: string;
-    readAt: string | null;
-  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMarkedReadMessageIdRef = useRef<string | null>(null);
 
@@ -227,10 +225,6 @@ export default function ThreadChat({
   const removeFailed = useConversationStore((s) => s.removeFailed);
   const appendMessageIfNew = useConversationStore((s) => s.appendMessageIfNew);
   const messages = useConversationStore((s) => s.threads[threadId]) ?? EMPTY_MESSAGES;
-  const liveOtherReadAt = latestReadAt(
-    otherParticipantReadAt ?? null,
-    realtimeOtherReadAt?.threadId === threadId ? realtimeOtherReadAt.readAt : null,
-  );
 
   // Hydrate on mount / when server data changes
   useEffect(() => {
@@ -263,9 +257,6 @@ export default function ThreadChat({
       });
       if (cancelled) return;
 
-      const threadTable = threadKind === "response" ? "responses" : "direct_inquiries";
-      const otherReadField = viewerRole === "provider" ? "clientLastReadAt" : "providerLastReadAt";
-
       channel = supabase
         .channel(`messages-${threadId}`)
         .on(
@@ -294,22 +285,6 @@ export default function ThreadChat({
                 : null,
               status: "sent",
             });
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: threadTable,
-            filter: `id=eq.${threadId}`,
-          },
-          (payload) => {
-            const row = payload.new as ReadStateRow;
-            const readAt = row[otherReadField];
-            if (typeof readAt === "string") {
-              setRealtimeOtherReadAt({ threadId, readAt });
-            }
           },
         )
         .subscribe();
@@ -377,8 +352,6 @@ export default function ThreadChat({
 
   const otherFallbackName = viewerRole === "provider" ? "Klientas" : "Tiekėjas";
   const otherDisplayName = otherParticipantName?.trim() || otherFallbackName;
-  const readAtTime = liveOtherReadAt ? toTime(liveOtherReadAt) : null;
-
   // Collapse consecutive messages from the same side into groups — Messenger-style.
   const groups = useMemo<MessageGroup[]>(() => {
     const result: MessageGroup[] = [];
@@ -400,30 +373,15 @@ export default function ThreadChat({
     return result;
   }, [messages, viewerRole, providerId, otherFallbackName, otherParticipantImage]);
 
-  const lastOwnSeenMessageId = (() => {
-    if (!readAtTime) return null;
-
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i];
-      if (msg.status !== "sent") continue;
-      if (!isOwnMessage(msg, viewerRole, providerId)) continue;
-      return toTime(msg.createdAt) <= readAtTime ? msg.id : null;
-    }
-
-    return null;
-  })();
-
   return (
     <div className={fillHeight ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <div
         className={cn(
-          "flex flex-col gap-3",
-          fillHeight && "min-h-0 flex-1 overflow-y-auto px-1 pb-2",
+          "flex flex-col gap-4",
+          fillHeight && "chat-message-stream min-h-0 flex-1 overflow-y-auto pb-2",
           !fillHeight && groups.length > 0 && showTopBorder && "mt-4 border-t border-surface-200/60 pt-4 dark:border-surface-700",
         )}
       >
-        {requestBrief && <RequestBriefDrawer brief={requestBrief} />}
-
         {groups.length > 0 && showTopBorder && fillHeight && (
           <div className="border-t border-surface-200/60 dark:border-surface-700" />
         )}
@@ -431,15 +389,14 @@ export default function ThreadChat({
         {groups.map((group, groupIndex) => {
           const previousGroup = groupIndex > 0 ? groups[groupIndex - 1] : undefined;
           const lastMsg = group.messages[group.messages.length - 1];
-          const showSeen = group.isOwn && lastMsg.id === lastOwnSeenMessageId;
           return (
-            <div key={group.messages[0].id} className="space-y-1.5">
+            <div key={group.messages[0].id} className="space-y-2">
               {(groupIndex > 0 || showInitialTimeDivider) &&
                 shouldShowTimeDivider(previousGroup, group) && (
-                <div className="flex justify-center">
+                <div className="mx-auto flex w-full justify-center text-center">
                   <time
                     dateTime={group.messages[0].createdAt}
-                    className="bg-transparent px-3 py-1 text-xs font-medium text-[#7E7768] dark:text-surface-400"
+                    className="timeline-date mx-auto text-center dark:bg-surface-800 dark:text-surface-300"
                   >
                     {formatDividerDate(group.messages[0].createdAt)}
                   </time>
@@ -457,7 +414,7 @@ export default function ThreadChat({
 
                 <div
                   className={cn(
-                    "flex max-w-[min(82%,34rem)] flex-col gap-1 sm:max-w-[min(72%,34rem)]",
+                    "flex max-w-[min(82%,34rem)] flex-col gap-2 sm:max-w-[min(70%,34rem)]",
                     group.isOwn ? "items-end" : "items-start",
                   )}
                 >
@@ -476,12 +433,13 @@ export default function ThreadChat({
                         <div key={msg.id} className="flex max-w-full flex-col items-end gap-1">
                           <div
                             className={cn(
-                              "max-w-full rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-body-sm text-red-700 whitespace-pre-wrap break-words dark:border-red-800 dark:bg-red-500/10 dark:text-red-300",
+                              "max-w-full rounded-2xl border px-3.5 py-2.5 text-body-sm whitespace-pre-wrap break-words dark:border-red-800 dark:bg-red-500/10 dark:text-red-300",
                               tail,
                             )}
+                            style={FAILED_BUBBLE_STYLE}
                             title={formatChatTimestamp(msg.createdAt)}
                           >
-                            {msg.content}
+                            <span style={{ color: FAILED_BUBBLE_STYLE.color }}>{decodeHtmlEntities(msg.content)}</span>
                           </div>
                           <div className="flex flex-wrap items-center justify-end gap-2 px-1">
                             <span className="flex items-center gap-1 text-micro text-red-600 dark:text-red-400">
@@ -508,23 +466,31 @@ export default function ThreadChat({
 
                     return (
                       <Fragment key={msg.id}>
-                        <div
-                          className={cn(
-                              "inline-flex max-w-full flex-wrap items-end gap-x-2 gap-y-1 whitespace-pre-wrap break-words antialiased",
-                              group.isOwn
-                                ? "rounded-2xl rounded-tr-sm bg-[#25221e] px-5 py-3.5 text-[15px] leading-relaxed text-white dark:bg-[#25221e] dark:text-white"
-                                : "rounded-2xl rounded-tl-sm bg-[#ece9e2]/50 px-5 py-4 text-[15px] leading-relaxed text-[#25221e] dark:bg-surface-800 dark:text-surface-100",
-                            tail,
-                            msg.status === "sending" && "opacity-70",
-                          )}
-                          title={formatChatTimestamp(msg.createdAt)}
-                        >
-                          <span className="min-w-0 flex-1">{msg.content}</span>
+                        <div className={cn("flex max-w-full flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
+                          <div
+                            className={cn(
+                                "block max-w-full whitespace-pre-wrap break-words border px-3.5 py-2.5 text-[15px] leading-relaxed antialiased sm:px-4 sm:py-3",
+                                group.isOwn
+                                  ? "rounded-2xl rounded-tr-sm shadow-[0_1px_2px_rgba(15,23,42,0.12)]"
+                                  : "rounded-2xl rounded-tl-sm shadow-[0_1px_2px_rgba(37,34,30,0.04)]",
+                              tail,
+                              msg.status === "sending" && "ring-1 ring-inset ring-white/30",
+                            )}
+                            style={group.isOwn ? OWN_BUBBLE_STYLE : OTHER_BUBBLE_STYLE}
+                            title={formatChatTimestamp(msg.createdAt)}
+                          >
+                            <span
+                              className="block min-w-0"
+                              style={{ color: group.isOwn ? OWN_BUBBLE_STYLE.color : OTHER_BUBBLE_STYLE.color }}
+                            >
+                              {decodeHtmlEntities(msg.content)}
+                            </span>
+                          </div>
                           <time
                             dateTime={msg.createdAt}
                             className={cn(
-                              "ml-auto mt-1 inline-block whitespace-nowrap text-xs leading-none",
-                              group.isOwn ? "text-white/60" : "text-[#25221e]/50 dark:text-surface-500",
+                              "px-1 text-[11px] font-medium leading-none text-[#9CA3AF] dark:text-surface-500",
+                              group.isOwn ? "text-right" : "text-left",
                             )}
                           >
                             {formatMessageTime(msg.createdAt)}
@@ -546,15 +512,6 @@ export default function ThreadChat({
                     </span>
                   )}
 
-                  {showSeen && (
-                    <span className="flex min-h-5 items-center justify-end px-1" title={`Matyta ${formatRelativeDate(liveOtherReadAt!)}`}>
-                      <ParticipantAvatar
-                        name={otherDisplayName}
-                        image={otherParticipantImage}
-                        size="sm"
-                      />
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -566,10 +523,10 @@ export default function ThreadChat({
       {/* Composer */}
       {!disabled && (
         <div
-          className="mt-3 shrink-0 border-t border-[#ece9e2] bg-white pt-3 dark:border-surface-700 dark:bg-surface-900"
+          className="mt-4 shrink-0 rounded-2xl border border-[#EAEAEA] bg-white p-3 shadow-[0_10px_30px_rgba(37,34,30,0.08)] dark:border-surface-700 dark:bg-surface-900"
         >
           {quickReplies.length > 0 && (
-            <div className="mb-2 flex w-full max-w-full gap-2 overflow-x-auto pb-1 pl-[5.5rem] pr-14">
+            <div className="mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-1 sm:pl-[5.5rem] sm:pr-14">
               {quickReplies.map((reply) => (
                 <button
                   key={reply}
@@ -577,7 +534,7 @@ export default function ThreadChat({
                   onClick={() => setInputValue(reply)}
                   className="min-h-9 shrink-0 rounded-xl border border-[#ece9e2] bg-white px-4 py-2 text-sm font-medium text-[#25221e] transition-all hover:border-[#c25e3a]/40 hover:bg-[#faeee7] dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
                 >
-                  {reply}
+                  {decodeHtmlEntities(reply)}
                 </button>
               ))}
             </div>

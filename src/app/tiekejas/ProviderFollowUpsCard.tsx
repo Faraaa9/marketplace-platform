@@ -42,7 +42,7 @@ export default function ProviderFollowUpsCard({
   const top = threads.slice(0, 3);
 
   return (
-    <Card className="mb-6 p-5">
+    <Card className="h-full p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">

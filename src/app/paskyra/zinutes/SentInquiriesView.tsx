@@ -4,7 +4,7 @@ import { ArrowLeft, MessageCircle, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { getProviderAvatarImage } from "@/lib/provider-image";
-import { formatRelativeDate } from "@/lib/utils";
+import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -216,7 +216,7 @@ export default async function SentInquiriesView({
                               : "font-medium text-surface-700 dark:text-surface-300"
                           }`}
                         >
-                          {c.providerName}
+                          {decodeHtmlEntities(c.providerName)}
                         </h3>
                         <Badge variant="brand">Tiesioginė</Badge>
                       </div>
@@ -228,7 +228,7 @@ export default async function SentInquiriesView({
                         }`}
                       >
                         {c.fromMe && <span className="text-surface-400">Jūs: </span>}
-                        {c.preview}
+                        {decodeHtmlEntities(c.preview)}
                       </p>
                       <p className="mt-1 text-micro text-surface-400">
                         {c.presenceLabel ? `${c.presenceLabel} · ` : ""}

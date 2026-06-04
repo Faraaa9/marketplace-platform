@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatRelativeDate } from "@/lib/utils";
+import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import EmptyState from "@/components/ui/EmptyState";
 import { MessageCircle, Mail, ChevronRight } from "lucide-react";
@@ -29,6 +29,11 @@ const REQUEST_STATUS: Record<
   IN_PROGRESS: { label: "Vykdoma", variant: "warning" },
   CLOSED: { label: "Uždaryta", variant: "default" },
 };
+
+function shouldShowSubtitle(title: string, subtitle: string) {
+  if (!subtitle) return false;
+  return !(title && subtitle.includes("@"));
+}
 
 /**
  * Unified provider inbox — request conversations (Response threads) and direct
@@ -104,10 +109,11 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
     const href = viewerIsProvider
       ? `/tiekejas/zinutes/${q.id}`
       : `/zinutes/${q.trackingToken}`;
+    const senderName = q.senderName?.trim() || "";
     const title = viewerIsProvider
-      ? q.senderName?.trim() || q.senderEmail
+      ? senderName || q.senderEmail
       : q.provider.name || "Tiekėjas";
-    const subtitle = viewerIsProvider ? q.senderEmail : "Mano išsiųsta žinutė";
+    const subtitle = viewerIsProvider ? (senderName ? "" : q.senderEmail) : "Mano išsiųsta žinutė";
     const lastReadAt = viewerIsProvider ? q.providerLastReadAt : q.clientLastReadAt;
     return {
       type: "direct",
@@ -185,7 +191,7 @@ export async function ConversationList({
         return (
           <Link key={`${c.type}-${c.id}`} href={c.href} className="group block">
             <article
-              className={`relative border-b border-[#ece9e2]/60 bg-white transition-all hover:bg-[#faeee7] dark:bg-surface-900/50 ${
+              className={`relative border-b border-[#EAEAEA] bg-white transition-colors hover:bg-[#faeee7] dark:border-surface-700/60 dark:bg-surface-900/50 dark:hover:bg-surface-800/70 ${
                 compact ? "p-3" : "p-4 sm:p-5"
               } ${
                 activeHref === c.href
@@ -215,26 +221,23 @@ export async function ConversationList({
                           : "font-semibold text-[#1E1B18] dark:text-surface-200"
                       }`}
                     >
-                      {c.title}
+                      {decodeHtmlEntities(c.title)}
                     </h3>
-                    <time className="shrink-0 text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt.toISOString()}>
+                    <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt.toISOString()}>
                       {formatRelativeDate(c.lastMessageAt)}
                     </time>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      {c.subtitle && (
+                      {shouldShowSubtitle(c.title, c.subtitle) && (
                         <p className="truncate text-micro font-normal text-[#6B6760]">
-                          {c.subtitle}
+                          {decodeHtmlEntities(c.subtitle)}
                         </p>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {reqStatus ? (
-                        <>
-                          <Badge variant="brand">Užklausa</Badge>
-                          <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
-                        </>
+                        <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
                       ) : (
                         <Badge variant="brand">Tiesioginė</Badge>
                       )}
@@ -248,7 +251,7 @@ export async function ConversationList({
                     }`}
                   >
                     {c.fromProvider && <span>Jūs: </span>}
-                    {c.preview}
+                    {decodeHtmlEntities(c.preview)}
                   </p>
                 </div>
                 <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-surface-300 transition-colors group-hover:text-surface-400 dark:text-surface-600" />

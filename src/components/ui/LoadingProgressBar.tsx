@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Thin top-of-page loading bar that activates on App Router navigations.
@@ -20,14 +20,22 @@ const TRICKLE_TO = 80;
 const COMPLETE_DURATION_MS = 200;
 
 export default function LoadingProgressBar() {
+  return (
+    <Suspense fallback={null}>
+      <LoadingProgressBarInner />
+    </Suspense>
+  );
+}
+
+function LoadingProgressBarInner() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
+  const [currentUrl, setCurrentUrl] = useState(pathname ?? "/");
   const trickleRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevUrl = useRef(`${pathname}?${searchParams.toString()}`);
+  const prevUrl = useRef(pathname ?? "/");
 
   const clearTimers = useCallback(() => {
     if (trickleRef.current) {
@@ -40,6 +48,17 @@ export default function LoadingProgressBar() {
     }
   }, []);
 
+  const completeProgress = useCallback(() => {
+    clearTimers();
+    setProgress(100);
+    setPhase("completing");
+
+    completeTimerRef.current = setTimeout(() => {
+      setPhase("idle");
+      setProgress(0);
+    }, COMPLETE_DURATION_MS);
+  }, [clearTimers]);
+
   // Detect click on internal links to start the bar immediately
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -47,12 +66,15 @@ export default function LoadingProgressBar() {
       if (!anchor) return;
 
       const href = anchor.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
+      if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
       if (anchor.target === "_blank") return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       // Only start if navigating to a different URL
-      if (href === pathname && !anchor.search) return;
+      const target = new URL(href, window.location.origin);
+      if (target.origin !== window.location.origin) return;
+      const targetUrl = `${target.pathname}${target.search}`;
+      if (targetUrl === currentUrl) return;
 
       // Avoid re-triggering if already loading
       if (phase === "loading") return;
@@ -69,30 +91,32 @@ export default function LoadingProgressBar() {
         p = Math.min(TRICKLE_TO, p + increment);
         setProgress(p);
       }, 100);
+
+      // Search-param-only navigations do not change usePathname(); finish the
+      // bar on a short fallback timer so filter interactions never leave it up.
+      completeTimerRef.current = setTimeout(completeProgress, 1200);
     }
 
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
-  }, [pathname, searchParams, phase, clearTimers]);
+  }, [currentUrl, phase, clearTimers, completeProgress]);
+
+  useEffect(() => {
+    const nextUrl = `${pathname ?? "/"}${window.location.search}`;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentUrl(nextUrl);
+  }, [pathname]);
 
   // When path/search actually changes → complete the bar
   useEffect(() => {
-    const currentUrl = `${pathname}?${searchParams.toString()}`;
     if (currentUrl === prevUrl.current) return;
     prevUrl.current = currentUrl;
 
     if (phase !== "loading") return;
 
-    clearTimers();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProgress(100);
-    setPhase("completing");
-
-    completeTimerRef.current = setTimeout(() => {
-      setPhase("idle");
-      setProgress(0);
-    }, COMPLETE_DURATION_MS);
-  }, [pathname, searchParams, phase, clearTimers]);
+    completeProgress();
+  }, [currentUrl, phase, completeProgress]);
 
   // Cleanup on unmount
   useEffect(() => {

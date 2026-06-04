@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, MapPin, Clock, Wallet, Paperclip } from "lucide-react";
-import { cn, formatRelativeDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { BUDGET_OPTIONS } from "@/lib/constants";
 
 export interface RequestBrief {
@@ -22,29 +22,27 @@ function budgetLabel(value?: string | null) {
   return BUDGET_OPTIONS.find((b) => b.value === value)?.label || value;
 }
 
-export function RequestBriefDrawer({ brief }: { brief: RequestBrief }) {
+export function RequestBriefDrawer({
+  brief,
+  triggerClassName,
+}: {
+  brief: RequestBrief;
+  triggerClassName?: string;
+}) {
   const [open, setOpen] = useState(false);
   const budget = budgetLabel(brief.budget);
-  const createdAt = brief.createdAt ? new Date(brief.createdAt) : null;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group mb-2 ml-auto inline-flex max-w-full rounded-full border border-[#EFECE6] bg-white px-2.5 py-1.5 text-left shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition hover:border-[#C29B74] hover:bg-white dark:border-surface-700/60 dark:bg-surface-900/80"
+        className={cn(
+          "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-[#1E1B18] px-3.5 py-2 text-body-sm font-semibold text-white transition hover:bg-[#C29B74] focus:outline-none focus:ring-2 focus:ring-[#C29B74]/30",
+          triggerClassName,
+        )}
       >
-        <div className="flex min-w-0 items-center gap-2 text-[11px] leading-4">
-          <span className="shrink-0 rounded-full bg-[#F4EFE6] px-2 py-0.5 font-semibold text-[#3D3A35] dark:bg-brand-500/10 dark:text-brand-400">{brief.categoryLabel}</span>
-          <span className="hidden min-w-0 max-w-[16rem] truncate font-medium text-[#1E1B18] dark:text-surface-300 sm:block">{brief.title}</span>
-          {createdAt && (
-            <span className="hidden shrink-0 items-center gap-1 text-[#6B6760] sm:inline-flex">
-              <Clock className="h-3 w-3" />
-              {formatRelativeDate(createdAt)}
-            </span>
-          )}
-          <span className="shrink-0 rounded-lg bg-[#1E1B18] px-2 py-0.5 font-semibold text-white transition group-hover:bg-[#C29B74]">Peržiūrėti</span>
-        </div>
+        Peržiūrėti
       </button>
 
       <div

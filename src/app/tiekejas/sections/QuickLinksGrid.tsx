@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, MessageCircle, User, Eye, Database } from "lucide-react";
+import { ArrowRight, CheckCircle2, Coins, Eye, MessageCircle, User } from "lucide-react";
 import Card, { CardTitle } from "@/components/ui/Card";
 import { InboxUnreadBadge } from "./InboxUnreadBadge";
 
@@ -11,21 +11,30 @@ import { InboxUnreadBadge } from "./InboxUnreadBadge";
  */
 export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string | null }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Link href="/tiekejas/uzklausos" className="group">
-        <Card hover>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Užklausos</CardTitle>
-              <p className="mt-1 text-body-sm text-surface-500">Naršyti ir atsakyti</p>
+    <section className="mt-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-body font-semibold text-surface-900 dark:text-white">
+          Greiti veiksmai
+        </h2>
+        <p className="hidden text-micro text-surface-500 dark:text-surface-400 sm:block">
+          Dažniausiai naudojamos tiekėjo zonos
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Link href="/tiekejas/uzklausos" className="group">
+          <Card hover className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Užklausos</CardTitle>
+                <p className="mt-1 text-body-sm text-surface-500">Naršyti ir atsakyti</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
             </div>
-            <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
-          </div>
-        </Card>
-      </Link>
+          </Card>
+        </Link>
 
       <Link href="/tiekejas/zinutes" className="group">
-        <Card hover>
+        <Card hover className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -41,8 +50,20 @@ export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string
         </Card>
       </Link>
 
+      <Link href="/tiekejas/atsakymai" className="group">
+        <Card hover className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Mano atsakymai</CardTitle>
+              <p className="mt-1 text-body-sm text-surface-500">Pasiūlymų būsenos</p>
+            </div>
+            <CheckCircle2 className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+          </div>
+        </Card>
+      </Link>
+
       <Link href="/tiekejas/profilis" className="group">
-        <Card hover>
+        <Card hover className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Redaguoti profilį</CardTitle>
@@ -54,7 +75,7 @@ export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string
       </Link>
 
       <Link href={`/meistrai/${slug ?? userId}`} className="group">
-        <Card hover>
+        <Card hover className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Viešas profilis</CardTitle>
@@ -65,17 +86,18 @@ export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string
         </Card>
       </Link>
 
-      <Link href="/tiekejas/katalogas" className="group">
-        <Card hover>
+      <Link href="/tiekejas/planai" className="group">
+        <Card hover className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Katalogo profiliai</CardTitle>
-              <p className="mt-1 text-body-sm text-surface-500">Perimti profiliai</p>
+              <CardTitle>Kreditai</CardTitle>
+              <p className="mt-1 text-body-sm text-surface-500">Balansas ir pirkimai</p>
             </div>
-            <Database className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
+            <Coins className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
           </div>
         </Card>
       </Link>
-    </div>
+      </div>
+    </section>
   );
 }

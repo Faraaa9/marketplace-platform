@@ -17,12 +17,21 @@ import { QuickLinksGrid } from "./sections/QuickLinksGrid";
 
 export default function ProviderDashboardPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       {/* Static header — paints with the prerendered shell (C1). */}
-      <header className="mb-6">
-        <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-          Valdymo panelė
-        </h1>
+      <header className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-body-sm font-medium text-surface-500 dark:text-surface-400">
+            Tiekėjo darbo centras
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+            Valdymo panelė
+          </h1>
+        </div>
+        <p className="max-w-xl text-body-sm leading-relaxed text-surface-500 dark:text-surface-400">
+          Čia sudėti svarbiausi dienos veiksmai: profilis, naujos užklausos,
+          pokalbiai ir kreditai.
+        </p>
       </header>
 
       <Suspense fallback={null}>
@@ -55,13 +64,15 @@ async function DashboardBody({ userId }: { userId: string }) {
         <StatsGrid userId={userId} />
       </Suspense>
 
-      <Suspense fallback={<ProfileCompletenessSkeleton />}>
-        <ProfileCompletenessCard userId={userId} />
-      </Suspense>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <Suspense fallback={<ProfileCompletenessSkeleton />}>
+          <ProfileCompletenessCard userId={userId} />
+        </Suspense>
 
-      <Suspense fallback={<FollowUpsSkeleton />}>
-        <FollowUpsCard userId={userId} />
-      </Suspense>
+        <Suspense fallback={<FollowUpsSkeleton />}>
+          <FollowUpsCard userId={userId} />
+        </Suspense>
+      </div>
 
       <QuickLinksGrid userId={userId} slug={profile.slug} />
     </>

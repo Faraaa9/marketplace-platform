@@ -6,9 +6,9 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
-import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
+import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 import type { ThreadMessage } from "@/store/useConversationStore";
-import { formatRelativeDate } from "@/lib/utils";
+import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 
 type Conversation = {
   type: "request" | "direct";
@@ -99,7 +99,7 @@ function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
     providerId: data.providerId,
     viewerRole: "provider",
     title: senderDisplay,
-    subtitle: data.senderEmail,
+    subtitle: data.senderName?.trim() || data.senderAccountName?.trim() ? null : data.senderEmail,
     status: data.status,
     otherParticipantName: senderDisplay,
     otherParticipantImage: data.senderImage ?? null,
@@ -160,6 +160,15 @@ const REQUEST_STATUS: Record<string, { label: string; color: string }> = {
   IN_PROGRESS: { label: "Vykdoma", color: "bg-amber-500" },
   CLOSED: { label: "Uždaryta", color: "bg-surface-400" },
 };
+
+function conversationStatusLabel(thread: ThreadData, conversation: Conversation | null) {
+  if (conversation?.type === "direct" || thread.type === "direct") return "Tiesioginė užklausa";
+  return REQUEST_STATUS[thread.status ?? ""]?.label ?? "Užklausa";
+}
+
+function orderSummaryTitle(thread: ThreadData) {
+  return thread.requestBrief?.title || thread.title;
+}
 
 export default function ProviderInboxClient() {
   const { data: session } = useSession();
@@ -296,15 +305,14 @@ export default function ProviderInboxClient() {
                     const id = toThreadId(c);
                     const active = id === selectedId;
                     const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
-                    const online = c.status === "OPEN" || c.status === "IN_PROGRESS";
                     return (
                       <button key={`${c.type}-${c.id}`} onClick={() => selectConversation(c)} className="group block w-full text-left">
-                        <article className={`relative border-b border-[#ece9e2]/60 p-3 transition-all hover:bg-[#faeee7] ${
+                        <article className={`relative border-b border-[#EAEAEA] p-3 transition-colors hover:bg-[#faeee7] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
                           active
-                            ? "bg-[#faeee7]"
+                            ? "bg-[#faeee7] dark:bg-surface-800/70"
                             : c.unread
-                              ? "bg-[#ece9e2]/40"
-                              : "bg-white"
+                              ? "bg-[#F8F7F4] dark:bg-surface-800/40"
+                              : "bg-white dark:bg-surface-950/40"
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
                           <div className="flex items-start gap-3.5">
@@ -312,29 +320,33 @@ export default function ProviderInboxClient() {
                               <div className="grid h-11 w-11 place-items-center rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2]">
                                 {initials(c.title)}
                               </div>
-                              {online && <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C29B74]" />}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start gap-2">
-                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">{c.title}</h3>
-                                {status ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-medium leading-4 text-[#6B6760]">
-                                    <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />
-                                    {status.label}
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-medium leading-4 text-[#6B6760]">Tiesioginė</span>
-                                )}
+                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
+                                  {decodeHtmlEntities(c.title)}
+                                </h3>
+                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt}>
+                                  {formatRelativeDate(new Date(c.lastMessageAt))}
+                                </time>
                               </div>
                               <div className="mt-0.5 flex items-center gap-2">
                                 {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" />}
-                                <p className="min-w-0 flex-1 truncate text-micro text-[#6B6760]">{c.subtitle}</p>
+                                {c.subtitle && !(c.title && c.subtitle.includes("@")) && (
+                                  <p className="min-w-0 flex-1 truncate text-micro text-[#6B6760]">
+                                    {decodeHtmlEntities(c.subtitle)}
+                                  </p>
+                                )}
+                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#F5F3EF] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6B6760]">
+                                  {status && <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />}
+                                  {status ? status.label : "Tiesioginė"}
+                                </span>
                               </div>
                               <div className="mt-1.5 flex items-start gap-2">
-                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6B6760]">{c.fromProvider && <span>Jūs: </span>}{c.preview}</p>
-                                <time className="shrink-0 text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt}>
-                                  {formatRelativeDate(new Date(c.lastMessageAt))}
-                                </time>
+                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6B6760]">
+                                  {c.fromProvider && <span>Jūs: </span>}
+                                  {decodeHtmlEntities(c.preview)}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -377,12 +389,12 @@ export default function ProviderInboxClient() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 leading-tight">
                       <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" aria-hidden="true" />
-                      <p className="truncate text-body font-semibold text-[#1E1B18]">{thread.title}</p>
+                      <p className="truncate text-body font-semibold text-[#1E1B18]">{decodeHtmlEntities(thread.title)}</p>
                       <span className="rounded-full bg-[#F5F3EF] px-2 py-0.5 text-micro font-medium text-[#6B6760]">
                         {selectedConversation?.type === "direct" ? "Tiesioginė" : "Užklausa"}
                       </span>
                     </div>
-                    {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{thread.subtitle}</p>}
+                    {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{decodeHtmlEntities(thread.subtitle)}</p>}
                   </div>
                   </div>
                   <div className="hidden items-center gap-1 sm:flex">
@@ -397,6 +409,22 @@ export default function ProviderInboxClient() {
                 <div
                   className="flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-4 py-4 md:px-5"
                 >
+                  <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#EAEAEA] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(37,34,30,0.06)] dark:border-surface-700 dark:bg-surface-900">
+                    <div className="min-w-0">
+                      <p className="truncate text-body-sm font-semibold text-[#111827] dark:text-white">
+                        Užsakymas: {decodeHtmlEntities(orderSummaryTitle(thread))}
+                      </p>
+                      <p className="mt-1 text-caption font-medium text-[#6B6760] dark:text-surface-400">
+                        Statusas: {conversationStatusLabel(thread, selectedConversation)}
+                      </p>
+                    </div>
+                    {thread.requestBrief && (
+                      <RequestBriefDrawer
+                        brief={thread.requestBrief}
+                        triggerClassName="ml-auto"
+                      />
+                    )}
+                  </div>
                   <ThreadChat
                     threadId={thread.id}
                     threadKind={thread.type === "response" ? "response" : "directInquiry"}
