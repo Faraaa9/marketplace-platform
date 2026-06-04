@@ -393,11 +393,8 @@ export default function ThreadChat({
             <div key={group.messages[0].id} className="space-y-2">
               {(groupIndex > 0 || showInitialTimeDivider) &&
                 shouldShowTimeDivider(previousGroup, group) && (
-                <div className="mx-auto flex w-full justify-center text-center">
-                  <time
-                    dateTime={group.messages[0].createdAt}
-                    className="timeline-date mx-auto text-center dark:bg-surface-800 dark:text-surface-300"
-                  >
+                <div className="w-full">
+                  <time dateTime={group.messages[0].createdAt} className="timeline-separator">
                     {formatDividerDate(group.messages[0].createdAt)}
                   </time>
                 </div>

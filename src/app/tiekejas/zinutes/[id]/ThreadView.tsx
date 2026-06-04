@@ -16,18 +16,38 @@ function avatarInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
 }
 
-function ChatParticipantAvatar({ name, image }: { name: string; image?: string | null }) {
+function ChatParticipantAvatar({
+  name,
+  image,
+  presenceLevel,
+  presenceLabel,
+}: {
+  name: string;
+  image?: string | null;
+  presenceLevel?: "online" | "recent" | null;
+  presenceLabel?: string | null;
+}) {
   return (
     <span
-      className="relative inline-flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#ece9e2]/40 text-[#3D3A35] ring-1 ring-[#ece9e2] dark:bg-brand-500/10 dark:text-brand-300"
-      aria-hidden="true"
+      className="relative inline-flex h-11 w-11 shrink-0 rounded-full text-[#3D3A35] dark:text-brand-300"
+      title={presenceLabel || undefined}
     >
-      {image ? (
-        <Image src={image} alt="" fill sizes="44px" className="object-cover" />
-      ) : (
-        <span className="grid h-full w-full place-items-center text-body-sm font-semibold">
-          {avatarInitial(name)}
-        </span>
+      <span className="relative h-full w-full overflow-hidden rounded-full bg-[#ece9e2]/40 ring-1 ring-[#ece9e2] dark:bg-brand-500/10">
+        {image ? (
+          <Image src={image} alt="" fill sizes="44px" className="object-cover" />
+        ) : (
+          <span className="grid h-full w-full place-items-center text-body-sm font-semibold">
+            {avatarInitial(name)}
+          </span>
+        )}
+      </span>
+      {presenceLevel && (
+        <span
+          className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
+            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
+          }`}
+          aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
+        />
       )}
     </span>
   );
@@ -83,7 +103,7 @@ export async function ThreadView({
             createdAt: true,
             attachmentUrls: true,
             clientName: true,
-            client: { select: { image: true } },
+            client: { select: { image: true, lastSeenAt: true } },
             categoryRef: { select: { name: true } },
             categories: { select: { category: { select: { name: true } } } },
             _count: { select: { responses: true } },
@@ -145,19 +165,29 @@ export async function ThreadView({
     return (
       <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
         <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
-          <div>
-            <div className="mb-1 flex items-center gap-2">
-              <Badge variant="brand">Užklausa</Badge>
-              <Badge variant={response.request.status === "OPEN" ? "success" : response.request.status === "IN_PROGRESS" ? "warning" : "default"}>
-                {response.request.status === "OPEN" ? "Atidaryta" : response.request.status === "IN_PROGRESS" ? "Vykdoma" : "Uždaryta"}
-              </Badge>
+          <div className="flex min-w-0 items-center gap-3">
+            {inboxLayout && (
+              <ChatParticipantAvatar
+                name={response.request.clientName}
+                image={response.request.client?.image}
+                presenceLevel={getPresenceLevel(response.request.client?.lastSeenAt)}
+                presenceLabel={formatLastSeen(response.request.client?.lastSeenAt)}
+              />
+            )}
+            <div className="min-w-0">
+              <div className="mb-1 flex items-center gap-2">
+                <Badge variant="brand">Užklausa</Badge>
+                <Badge variant={response.request.status === "OPEN" ? "success" : response.request.status === "IN_PROGRESS" ? "warning" : "default"}>
+                  {response.request.status === "OPEN" ? "Atidaryta" : response.request.status === "IN_PROGRESS" ? "Vykdoma" : "Uždaryta"}
+                </Badge>
+              </div>
+              <h1 className={inboxLayout ? "truncate text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
+                {response.request.title}
+              </h1>
+              <p className="mt-1 truncate text-body-sm text-[#6B6760]">
+                {response.request.clientName}
+              </p>
             </div>
-            <h1 className={inboxLayout ? "text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
-              {response.request.title}
-            </h1>
-            <p className="mt-1 text-body-sm text-[#6B6760]">
-              {response.request.clientName}
-            </p>
           </div>
         </div>
 
@@ -257,17 +287,27 @@ export async function ThreadView({
   return (
       <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
       <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <Badge variant="brand">Tiesioginė žinutė</Badge>
-            {isArchived && <Badge variant="default">Archyvuota</Badge>}
+        <div className="flex min-w-0 items-center gap-3">
+          {inboxLayout && (
+            <ChatParticipantAvatar
+              name={senderDisplay}
+              image={senderImage}
+              presenceLevel={presenceLevel}
+              presenceLabel={presenceLabel}
+            />
+          )}
+          <div className="min-w-0">
+            <div className="mb-1 flex items-center gap-2">
+              <Badge variant="brand">Tiesioginė žinutė</Badge>
+              {isArchived && <Badge variant="default">Archyvuota</Badge>}
+            </div>
+            <h1 className={inboxLayout ? "truncate text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
+              {senderDisplay}
+            </h1>
+            <p className="mt-1 truncate text-body-sm text-[#6B6760]">
+              {formatRelativeDate(inquiry.createdAt)}
+            </p>
           </div>
-          <h1 className={inboxLayout ? "text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
-            {senderDisplay}
-          </h1>
-          <p className="mt-1 text-body-sm text-[#6B6760]">
-            {formatRelativeDate(inquiry.createdAt)}
-          </p>
         </div>
         <ArchiveButton inquiryId={inquiry.id} status={inquiry.status} />
       </div>
@@ -310,23 +350,12 @@ export async function ThreadView({
         className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#ece9e2] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
       >
         {!inboxLayout && <div className="mb-4 flex items-center gap-3 border-b border-[#ece9e2] pb-4 dark:border-surface-700">
-          <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
-            <ChatParticipantAvatar name={senderDisplay} image={senderImage} />
-            {presenceLevel && (
-              <span
-                className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
-                aria-label={presenceLabel ?? "Aktyvus neseniai"}
-                title={presenceLabel ?? "Aktyvus neseniai"}
-              >
-                <span
-                  className={`h-[7px] w-[7px] rounded-full ${
-                    presenceLevel === "online" ? "bg-brand-500" : "bg-surface-400"
-                  }`}
-                  aria-hidden
-                />
-              </span>
-            )}
-          </div>
+          <ChatParticipantAvatar
+            name={senderDisplay}
+            image={senderImage}
+            presenceLevel={presenceLevel}
+            presenceLabel={presenceLabel}
+          />
           <div className="min-w-0">
             <p className="truncate text-body font-semibold text-[#1E1B18] dark:text-white">
               {senderDisplay}

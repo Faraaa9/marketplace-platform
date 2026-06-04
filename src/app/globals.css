@@ -115,15 +115,40 @@
     padding-right: 24px;
   }
 
-  .timeline-date {
-    display: inline-block;
-    border-radius: 12px;
-    background: #eaeaea;
-    color: #555555;
-    padding: 2px 10px;
+  .timeline-separator {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    color: #9ca3af;
     font-size: 11px;
-    line-height: 1.35;
     font-weight: 500;
+    line-height: 1;
+    margin: 24px 0;
+    text-align: center;
+  }
+
+  .timeline-separator::before,
+  .timeline-separator::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .timeline-separator:not(:empty)::before {
+    margin-right: 0.5em;
+  }
+
+  .timeline-separator:not(:empty)::after {
+    margin-left: 0.5em;
+  }
+
+  .dark .timeline-separator {
+    color: #6b7280;
+  }
+
+  .dark .timeline-separator::before,
+  .dark .timeline-separator::after {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
   }
 
   /* Text shadow for readability on images */

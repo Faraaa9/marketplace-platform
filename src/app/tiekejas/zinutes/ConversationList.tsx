@@ -1,9 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
+import { getProviderAvatarImage } from "@/lib/provider-image";
+import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
 import Badge from "@/components/ui/Badge";
 import EmptyState from "@/components/ui/EmptyState";
-import { MessageCircle, Mail, ChevronRight } from "lucide-react";
+import { MessageCircle, ChevronRight } from "lucide-react";
 
 type InboxTab = "all" | "unread" | "archived";
 
@@ -19,6 +22,9 @@ type ConversationItem = {
   fromProvider: boolean;
   status: string;
   archived: boolean;
+  avatarImage: string | null;
+  presenceLevel: PresenceLevel;
+  presenceLabel: string | null;
 };
 
 const REQUEST_STATUS: Record<
@@ -35,6 +41,49 @@ function shouldShowSubtitle(title: string, subtitle: string) {
   return !(title && subtitle.includes("@"));
 }
 
+function initials(name: string) {
+  return name.trim().slice(0, 1).toUpperCase() || "?";
+}
+
+function ConversationAvatar({
+  name,
+  image,
+  presenceLevel,
+  presenceLabel,
+}: {
+  name: string;
+  image?: string | null;
+  presenceLevel?: PresenceLevel;
+  presenceLabel?: string | null;
+}) {
+  return (
+    <div className="relative shrink-0" title={presenceLabel || undefined}>
+      <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2]">
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            width={40}
+            height={40}
+            sizes="40px"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          initials(name)
+        )}
+      </div>
+      {presenceLevel && (
+        <span
+          className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
+            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
+          }`}
+          aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
+        />
+      )}
+    </div>
+  );
+}
+
 /**
  * Unified provider inbox — request conversations (Response threads) and direct
  * inquiries merged into one list, newest activity first. A thread is unread when
@@ -49,7 +98,7 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
         message: true,
         lastMessageAt: true,
         providerLastReadAt: true,
-        request: { select: { id: true, title: true, status: true, clientName: true } },
+        request: { select: { id: true, title: true, status: true, clientName: true, client: { select: { image: true, lastSeenAt: true } } } },
         messages: {
           select: { content: true, createdAt: true, senderId: true },
           orderBy: { createdAt: "desc" },
@@ -73,7 +122,15 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
         lastMessageAt: true,
         providerLastReadAt: true,
         clientLastReadAt: true,
-        provider: { select: { name: true } },
+        provider: {
+          select: {
+            name: true,
+            image: true,
+            lastSeenAt: true,
+            providerProfile: { select: { images: true, heroImageUrl: true } },
+          },
+        },
+        sender: { select: { image: true, lastSeenAt: true } },
         messages: {
           select: { content: true, createdAt: true, senderId: true },
           orderBy: { createdAt: "desc" },
@@ -98,6 +155,9 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
       fromProvider: last ? last.senderId === providerId : true,
       status: r.request.status,
       archived: false,
+      avatarImage: r.request.client?.image ?? null,
+      presenceLevel: getPresenceLevel(r.request.client?.lastSeenAt),
+      presenceLabel: formatLastSeen(r.request.client?.lastSeenAt),
     };
   });
 
@@ -128,6 +188,9 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
       fromProvider: last ? last.senderId === providerId : viewerIsProvider,
       status: q.status,
       archived: q.status === "ARCHIVED",
+      avatarImage: viewerIsProvider ? q.sender?.image ?? null : getProviderAvatarImage(q.provider),
+      presenceLevel: viewerIsProvider ? getPresenceLevel(q.sender?.lastSeenAt) : getPresenceLevel(q.provider.lastSeenAt),
+      presenceLabel: viewerIsProvider ? formatLastSeen(q.sender?.lastSeenAt) : formatLastSeen(q.provider.lastSeenAt),
     };
   });
 
@@ -203,13 +266,15 @@ export async function ConversationList({
             >
               {activeHref === c.href && <span className="hidden" aria-hidden="true" />}
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">
-                  {highlight ? (
-                    <span className="block h-2.5 w-2.5 rounded-full bg-[#C29B74]" />
-                  ) : c.type === "direct" ? (
-                    <Mail className="h-4 w-4 text-[#6B6760] dark:text-surface-600" />
-                  ) : (
-                    <MessageCircle className="h-4 w-4 text-[#6B6760] dark:text-surface-600" />
+                <div className="relative shrink-0">
+                  <ConversationAvatar
+                    name={c.title}
+                    image={c.avatarImage}
+                    presenceLevel={c.presenceLevel}
+                    presenceLabel={c.presenceLabel}
+                  />
+                  {highlight && (
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C29B74]" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

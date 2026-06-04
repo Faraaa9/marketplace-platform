@@ -1,8 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MessageCircle, MoreHorizontal, Search, Settings } from "lucide-react";
+import {
+  Archive,
+  ArrowLeft,
+  CheckCheck,
+  Copy,
+  ExternalLink,
+  MessageCircle,
+  MoreHorizontal,
+  Search,
+  Settings,
+  X,
+} from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import EmptyState from "@/components/ui/EmptyState";
 import ThreadChat from "@/components/messaging/ThreadChat";
@@ -22,6 +34,9 @@ type Conversation = {
   fromProvider: boolean;
   status: string;
   archived: boolean;
+  avatarImage?: string | null;
+  presenceLevel?: "online" | "recent" | null;
+  presenceLabel?: string | null;
 };
 
 type ThreadData = {
@@ -35,6 +50,8 @@ type ThreadData = {
   status?: string;
   otherParticipantName?: string | null;
   otherParticipantImage?: string | null;
+  otherParticipantPresenceLevel?: "online" | "recent" | null;
+  otherParticipantPresenceLabel?: string | null;
   otherParticipantReadAt?: string | null;
   requestBrief?: RequestBrief | null;
   initialMessages: ThreadMessage[];
@@ -56,6 +73,8 @@ type DirectThreadResponse = {
   senderAccountName?: string | null;
   senderEmail: string;
   senderImage?: string | null;
+  senderPresenceLevel?: "online" | "recent" | null;
+  senderPresenceLabel?: string | null;
   status?: string;
   description: string;
   budget?: string | null;
@@ -91,6 +110,50 @@ function initials(name: string) {
   return name.trim().slice(0, 1).toUpperCase() || "?";
 }
 
+function ConversationAvatar({
+  name,
+  image,
+  presenceLevel,
+  presenceLabel,
+  size = "md",
+}: {
+  name: string;
+  image?: string | null;
+  presenceLevel?: "online" | "recent" | null;
+  presenceLabel?: string | null;
+  size?: "sm" | "md";
+}) {
+  const dimensions = size === "sm" ? "h-9 w-9" : "h-11 w-11";
+  const imageSize = size === "sm" ? 36 : 44;
+  const badgeSize = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
+  return (
+    <div className="relative shrink-0" title={presenceLabel || undefined}>
+      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2] ${dimensions}`}>
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            width={imageSize}
+            height={imageSize}
+            sizes={`${imageSize}px`}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          initials(name)
+        )}
+      </div>
+      {presenceLevel && (
+        <span
+          className={`absolute bottom-0 right-0 rounded-full border-2 border-white ${
+            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
+          } ${badgeSize}`}
+          aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
+        />
+      )}
+    </div>
+  );
+}
+
 function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
   const senderDisplay = data.senderName?.trim() || data.senderAccountName?.trim() || data.senderEmail;
   return {
@@ -103,6 +166,8 @@ function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
     status: data.status,
     otherParticipantName: senderDisplay,
     otherParticipantImage: data.senderImage ?? null,
+    otherParticipantPresenceLevel: data.senderPresenceLevel ?? null,
+    otherParticipantPresenceLabel: data.senderPresenceLabel ?? null,
     otherParticipantReadAt: data.clientLastReadAt ?? null,
     requestBrief: {
       title: "Tiesioginė užklausa",
@@ -135,6 +200,8 @@ function normalizeSenderDirectThread(data: SenderDirectThreadResponse, trackingT
     subtitle: "Mano išsiųsta žinutė",
     otherParticipantName: providerDisplay,
     otherParticipantImage: data.providerImage ?? null,
+    otherParticipantPresenceLevel: data.presenceLevel === "online" || data.presenceLevel === "recent" ? data.presenceLevel : null,
+    otherParticipantPresenceLabel: data.presenceLabel ?? null,
     otherParticipantReadAt: data.providerLastReadAt ?? null,
     requestBrief: {
       title: "Tiesioginė užklausa",
@@ -179,6 +246,10 @@ export default function ProviderInboxClient() {
   const [loadingThread, setLoadingThread] = useState(false);
   const [listError, setListError] = useState("");
   const [threadError, setThreadError] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const selectConversation = useCallback(async (conversation: Conversation) => {
     const id = toThreadId(conversation);
@@ -237,6 +308,34 @@ export default function ProviderInboxClient() {
     [conversations, selectedId],
   );
 
+  const filteredConversations = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase("lt-LT");
+    if (!query) return conversations;
+    return conversations.filter((c) =>
+      [c.title, c.subtitle, c.preview, c.status]
+        .filter(Boolean)
+        .some((value) => decodeHtmlEntities(value ?? "").toLocaleLowerCase("lt-LT").includes(query)),
+    );
+  }, [conversations, searchQuery]);
+
+  const copyConversationLink = useCallback(async () => {
+    if (!selectedConversation || typeof window === "undefined") return;
+    await navigator.clipboard.writeText(`${window.location.origin}${selectedConversation.href}`);
+    setMoreOpen(false);
+  }, [selectedConversation]);
+
+  const markSelectedConversationRead = useCallback(() => {
+    if (!selectedConversation) return;
+    setConversations((items) =>
+      items.map((item) =>
+        item.type === selectedConversation.type && item.id === selectedConversation.id
+          ? { ...item, unread: false }
+          : item,
+      ),
+    );
+    setSettingsOpen(false);
+  }, [selectedConversation]);
+
   const sendMessage = useCallback(async (threadId: string, content: string): Promise<ThreadMessage> => {
     if (!thread) throw new Error("Nėra pokalbio");
     const url =
@@ -269,15 +368,37 @@ export default function ProviderInboxClient() {
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#ece9e2] bg-white dark:border-surface-700/60 dark:bg-surface-950/40`}>
             <div className="flex min-h-[64px] items-center justify-between border-b border-[#ece9e2] bg-white px-5 py-2.5 dark:border-surface-700/60">
-              <div>
-                <p className="text-body font-semibold text-[#1E1B18] dark:text-white">Visos žinutės</p>
-                <Link href="/tiekejas" className="inline-flex items-center gap-1 text-micro text-[#6B6760] hover:text-[#1E1B18]">
-                  <ArrowLeft className="h-3 w-3" />
-                  Valdymo panelė
-                </Link>
-              </div>
-              <button className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18] dark:bg-surface-900 dark:ring-surface-700">
-                <Search className="h-5 w-5" />
+              {searchOpen ? (
+                <label className="min-w-0 flex-1">
+                  <span className="sr-only">Ieškoti pokalbių</span>
+                  <input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Ieškoti pokalbių..."
+                    className="h-11 w-full rounded-full border border-[#EAEAEA] bg-[#F8F7F4] px-4 text-body-sm text-[#1E1B18] outline-none transition focus:border-[#C29B74] focus:bg-white"
+                  />
+                </label>
+              ) : (
+                <div>
+                  <p className="text-body font-semibold text-[#1E1B18] dark:text-white">Visos žinutės</p>
+                  <Link href="/tiekejas" className="inline-flex items-center gap-1 text-micro text-[#6B6760] hover:text-[#1E1B18]">
+                    <ArrowLeft className="h-3 w-3" />
+                    Valdymo panelė
+                  </Link>
+                </div>
+              )}
+              <button
+                type="button"
+                aria-label={searchOpen ? "Uždaryti paiešką" : "Ieškoti pokalbių"}
+                aria-pressed={searchOpen}
+                onClick={() => {
+                  setSearchOpen((open) => !open);
+                  if (searchOpen) setSearchQuery("");
+                }}
+                className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18] dark:bg-surface-900 dark:ring-surface-700"
+              >
+                {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
               </button>
             </div>
 
@@ -299,9 +420,11 @@ export default function ProviderInboxClient() {
                 </div>
               ) : conversations.length === 0 ? (
                 <EmptyState title={listError || "Žinučių dar nėra"} icon={<MessageCircle className="h-12 w-12" />} />
+              ) : filteredConversations.length === 0 ? (
+                <EmptyState title="Pokalbių nerasta" description="Pabandykite kitą vardą arba žinutės tekstą." icon={<Search className="h-12 w-12" />} />
               ) : (
                 <div>
-                  {conversations.map((c) => {
+                  {filteredConversations.map((c) => {
                     const id = toThreadId(c);
                     const active = id === selectedId;
                     const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
@@ -316,11 +439,12 @@ export default function ProviderInboxClient() {
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
                           <div className="flex items-start gap-3.5">
-                            <div className="relative shrink-0">
-                              <div className="grid h-11 w-11 place-items-center rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2]">
-                                {initials(c.title)}
-                              </div>
-                            </div>
+                            <ConversationAvatar
+                              name={c.title}
+                              image={c.avatarImage}
+                              presenceLevel={c.presenceLevel}
+                              presenceLabel={c.presenceLabel}
+                            />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start gap-2">
                                 <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
@@ -383,9 +507,13 @@ export default function ProviderInboxClient() {
                   <button className="grid min-h-11 min-w-11 place-items-center rounded-xl text-[#6B6760] hover:bg-[#faeee7] hover:text-[#1E1B18] lg:hidden" onClick={() => setSelectedId(null)}>
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2]">
-                      {initials(thread.title)}
-                    </div>
+                    <ConversationAvatar
+                      name={thread.title}
+                      image={thread.otherParticipantImage}
+                      presenceLevel={thread.otherParticipantPresenceLevel}
+                      presenceLabel={thread.otherParticipantPresenceLabel}
+                      size="sm"
+                    />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 leading-tight">
                       <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" aria-hidden="true" />
@@ -397,13 +525,66 @@ export default function ProviderInboxClient() {
                     {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{decodeHtmlEntities(thread.subtitle)}</p>}
                   </div>
                   </div>
-                  <div className="hidden items-center gap-1 sm:flex">
-                    <button className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]">
+                  <div className="relative hidden items-center gap-1 sm:flex">
+                    <button
+                      type="button"
+                      aria-label="Pokalbio nustatymai"
+                      aria-expanded={settingsOpen}
+                      onClick={() => {
+                        setSettingsOpen((open) => !open);
+                        setMoreOpen(false);
+                      }}
+                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]"
+                    >
                       <Settings className="h-4 w-4" />
                     </button>
-                    <button className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]">
+                    <button
+                      type="button"
+                      aria-label="Daugiau veiksmų"
+                      aria-expanded={moreOpen}
+                      onClick={() => {
+                        setMoreOpen((open) => !open);
+                        setSettingsOpen(false);
+                      }}
+                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#ece9e2] bg-white text-[#6B6760] transition hover:bg-[#faeee7] hover:text-[#1E1B18]"
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
+                    {settingsOpen && (
+                      <div className="absolute right-10 top-11 z-30 w-64 rounded-xl border border-[#EAEAEA] bg-white p-2 text-body-sm text-[#1E1B18] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
+                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6B6760]">Nustatymai</p>
+                        <button type="button" onClick={markSelectedConversationRead} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]">
+                          <CheckCheck className="h-4 w-4 text-[#6B6760]" />
+                          Pažymėti kaip perskaitytą
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSettingsOpen(false);
+                            setMoreOpen(true);
+                          }}
+                          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]"
+                        >
+                          <Archive className="h-4 w-4 text-[#6B6760]" />
+                          Tvarkyti pokalbį
+                        </button>
+                      </div>
+                    )}
+                    {moreOpen && (
+                      <div className="absolute right-0 top-11 z-30 w-64 rounded-xl border border-[#EAEAEA] bg-white p-2 text-body-sm text-[#1E1B18] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
+                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6B6760]">Veiksmai</p>
+                        {selectedConversation && (
+                          <Link href={selectedConversation.href} className="flex min-h-11 items-center gap-2 rounded-lg px-3 transition hover:bg-[#F8F7F4]">
+                            <ExternalLink className="h-4 w-4 text-[#6B6760]" />
+                            Atidaryti atskirai
+                          </Link>
+                        )}
+                        <button type="button" onClick={copyConversationLink} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]">
+                          <Copy className="h-4 w-4 text-[#6B6760]" />
+                          Kopijuoti nuorodą
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div

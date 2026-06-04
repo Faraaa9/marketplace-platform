@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               createdAt: true,
               attachmentUrls: true,
               clientName: true,
-              client: { select: { image: true } },
+              client: { select: { image: true, lastSeenAt: true } },
               categoryRef: { select: { name: true } },
               categories: { select: { category: { select: { name: true } } } },
               _count: { select: { responses: true } },
@@ -75,6 +75,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           status: response.request.status,
           otherParticipantName: response.request.clientName,
           otherParticipantImage: response.request.client?.image ?? null,
+          otherParticipantPresenceLevel: getPresenceLevel(response.request.client?.lastSeenAt),
+          otherParticipantPresenceLabel: formatLastSeen(response.request.client?.lastSeenAt),
           otherParticipantReadAt: response.clientLastReadAt?.toISOString() ?? null,
           initialMessages: [
             {

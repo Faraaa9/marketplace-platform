@@ -1,6 +1,8 @@
 import { NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
+import { getProviderAvatarImage } from "@/lib/provider-image";
+import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
 
 /**
  * Unified provider inbox — request conversations (Response threads) and direct
@@ -19,6 +21,9 @@ type ConversationItem = {
   fromProvider: boolean;
   status: string;
   archived: boolean;
+  avatarImage: string | null;
+  presenceLevel: PresenceLevel;
+  presenceLabel: string | null;
 };
 
 export async function GET() {
@@ -37,7 +42,15 @@ export async function GET() {
           message: true,
           lastMessageAt: true,
           providerLastReadAt: true,
-          request: { select: { id: true, title: true, status: true, clientName: true } },
+          request: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              clientName: true,
+              client: { select: { image: true, lastSeenAt: true } },
+            },
+          },
           messages: {
             select: { content: true, createdAt: true, senderId: true },
             orderBy: { createdAt: "desc" },
@@ -61,7 +74,15 @@ export async function GET() {
           lastMessageAt: true,
           providerLastReadAt: true,
           clientLastReadAt: true,
-          provider: { select: { name: true } },
+          provider: {
+            select: {
+              name: true,
+              image: true,
+              lastSeenAt: true,
+              providerProfile: { select: { images: true, heroImageUrl: true } },
+            },
+          },
+          sender: { select: { image: true, lastSeenAt: true } },
           messages: {
             select: { content: true, createdAt: true, senderId: true },
             orderBy: { createdAt: "desc" },
@@ -86,6 +107,9 @@ export async function GET() {
         fromProvider: last ? last.senderId === providerId : true,
         status: r.request.status,
         archived: false,
+        avatarImage: r.request.client?.image ?? null,
+        presenceLevel: getPresenceLevel(r.request.client?.lastSeenAt),
+        presenceLabel: formatLastSeen(r.request.client?.lastSeenAt),
       };
     });
 
@@ -115,6 +139,9 @@ export async function GET() {
         fromProvider: last ? last.senderId === providerId : viewerIsProvider,
         status: q.status,
         archived: q.status === "ARCHIVED",
+        avatarImage: viewerIsProvider ? q.sender?.image ?? null : getProviderAvatarImage(q.provider),
+        presenceLevel: viewerIsProvider ? getPresenceLevel(q.sender?.lastSeenAt) : getPresenceLevel(q.provider.lastSeenAt),
+        presenceLabel: viewerIsProvider ? formatLastSeen(q.sender?.lastSeenAt) : formatLastSeen(q.provider.lastSeenAt),
       };
     });
 
