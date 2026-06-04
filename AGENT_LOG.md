@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 01:23 — Codex
+
+**Commit:** `822d326` — style(chat): apply warm premium messaging theme · lokalus
+
+**Pakeitimai:** 4 files changed, 911 insertions(+), 38 deletions(-)
+
+**Failai:**
+- src/app/chat-preview/page.tsx
+- src/app/globals.css
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/components/messaging/ThreadChat.tsx
+
+**Toliau:** Po refresh patikrinti `/tiekejas/zinutes` realų chat kontrastą, o `/chat-preview` naudoti tik kaip laikinas dizaino eksperimentų puslapis; jei nebereikės, pašalinti prieš production release.
+
+
 ## 2026-06-04 18:43 — Codex
 
 **Commit:** `33fbcca` — feat(chat): add read receipts and history loading · lokalus
