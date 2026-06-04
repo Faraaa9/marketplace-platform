@@ -116,12 +116,11 @@ export async function GET() {
       .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity)
       .slice(0, 25)
       .map((thread) => {
-        // Response threads → request detail page (provider-facing).
-        // Direct inquiries → the existing `/tiekejas/zinutes/{id}` inbox.
+        // Response and direct inquiry follow-ups open in the unified inbox.
         const href =
           thread.type === "response" && thread.requestId
-            ? `/tiekejas/uzklausos/${thread.requestId}`
-            : `/tiekejas/zinutes/${thread.id}`;
+            ? `/tiekejas/zinutes?thread=response-${thread.id}`
+            : `/tiekejas/zinutes?thread=${thread.id}`;
         return {
           type: thread.type,
           id: thread.id,

@@ -1,4 +1,4 @@
-import { NextResponse, connection } from "next/server";
+import { NextResponse, connection, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { getProviderAvatarImage } from "@/lib/provider-image";
@@ -26,17 +26,26 @@ type ConversationItem = {
   presenceLabel: string | null;
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   await connection();
   try {
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
     const providerId = guard.userId;
+    const threadParam = req.nextUrl.searchParams.get("thread")?.trim() || null;
+    const responseThreadId = threadParam?.startsWith("response-")
+      ? threadParam.replace(/^response-/, "")
+      : null;
+    const directThreadId = threadParam && !responseThreadId ? threadParam : null;
 
     const [responses, inquiries] = await Promise.all([
       prisma.response.findMany({
-        where: { providerId },
+        where: {
+          providerId,
+          ...(responseThreadId ? { id: responseThreadId } : {}),
+          ...(directThreadId ? { id: "__never__" } : {}),
+        },
         select: {
           id: true,
           message: true,
@@ -60,8 +69,12 @@ export async function GET() {
       }),
       prisma.directInquiry.findMany({
         where: {
-          OR: [{ providerId }, { senderUserId: providerId }],
-          moderationStatus: "APPROVED",
+          AND: [
+            { OR: [{ providerId }, { senderUserId: providerId }] },
+            { moderationStatus: "APPROVED" },
+            ...(responseThreadId ? [{ id: "__never__" }] : []),
+            ...(directThreadId ? [{ OR: [{ id: directThreadId }, { trackingToken: directThreadId }] }] : []),
+          ],
         },
         select: {
           id: true,

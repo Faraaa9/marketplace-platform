@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   CheckCheck,
   Copy,
-  ExternalLink,
   MessageCircle,
   MoreHorizontal,
   Search,
@@ -21,6 +20,7 @@ import ThreadChat from "@/components/messaging/ThreadChat";
 import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
+import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
 
 type Conversation = {
   type: "request" | "direct";
@@ -96,6 +96,10 @@ type SenderDirectThreadResponse = {
   createdAt?: string | null;
   providerLastReadAt?: string | null;
   messages: ApiThreadMessage[];
+};
+
+type RealtimeThreadPayload = {
+  id?: string;
 };
 
 function toThreadId(conversation: Conversation) {
@@ -251,6 +255,49 @@ export default function ProviderInboxClient() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  const sortConversations = useCallback((items: Conversation[]) => {
+    return [...items].sort(
+      (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime(),
+    );
+  }, []);
+
+  const loadConversations = useCallback(async () => {
+    const res = await fetch("/api/tiekejas/zinutes", { cache: "no-store" });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Klaida");
+    const loadedConversations = sortConversations(data.data.conversations as Conversation[]);
+    setConversations(loadedConversations);
+    return loadedConversations;
+  }, [sortConversations]);
+
+  const upsertConversation = useCallback((conversation: Conversation) => {
+    setConversations((items) => {
+      const threadId = toThreadId(conversation);
+      const next = items.some((item) => toThreadId(item) === threadId)
+        ? items.map((item) => (toThreadId(item) === threadId ? conversation : item))
+        : [conversation, ...items];
+      return sortConversations(next);
+    });
+  }, [sortConversations]);
+
+  const removeConversation = useCallback((threadId: string) => {
+    setConversations((items) => items.filter((item) => toThreadId(item) !== threadId));
+  }, []);
+
+  const loadConversation = useCallback(async (threadId: string) => {
+    const res = await fetch(`/api/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`, {
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "Klaida");
+    const [conversation] = data.data.conversations as Conversation[];
+    if (conversation) {
+      upsertConversation(conversation);
+    } else {
+      removeConversation(threadId);
+    }
+  }, [removeConversation, upsertConversation]);
+
   const selectConversation = useCallback(async (conversation: Conversation) => {
     const id = toThreadId(conversation);
     setSelectedId(id);
@@ -280,11 +327,9 @@ export default function ProviderInboxClient() {
   useEffect(() => {
     let cancelled = false;
     setListError("");
-    fetch("/api/tiekejas/zinutes")
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled || !data.success) return;
-        const loadedConversations = data.data.conversations as Conversation[];
+    loadConversations()
+      .then((loadedConversations) => {
+        if (cancelled) return;
         setConversations(loadedConversations);
         const initialThread = new URLSearchParams(window.location.search).get("thread");
         const initialConversation = loadedConversations.find((c) => toThreadId(c) === initialThread);
@@ -298,10 +343,73 @@ export default function ProviderInboxClient() {
       .finally(() => {
         if (!cancelled) setLoadingList(false);
       });
+
+    const interval = window.setInterval(() => {
+      void loadConversations().catch(() => {
+        // Keep the current list visible; the next poll can recover.
+      });
+    }, 15000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
     };
-  }, [selectConversation]);
+  }, [loadConversations, selectConversation]);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase || !session?.user?.id) return;
+
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const refreshConversation = (threadId: string) => {
+      window.setTimeout(() => {
+        void loadConversation(threadId).catch(() => {
+          // Polling remains as a fallback if a realtime row refresh fails.
+        });
+      }, 150);
+    };
+
+    (async () => {
+      const authenticated = await authenticateRealtime();
+      if (cancelled || !authenticated) return;
+
+      channel = supabase
+        .channel(`provider-inbox-${session.user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "responses",
+            filter: `providerId=eq.${session.user.id}`,
+          },
+          (payload) => {
+            const row = payload.new as RealtimeThreadPayload;
+            if (row.id) refreshConversation(`response-${row.id}`);
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "direct_inquiries",
+          },
+          (payload) => {
+            const row = payload.new as RealtimeThreadPayload;
+            if (row.id) refreshConversation(row.id);
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [loadConversation, session?.user?.id]);
 
   const selectedConversation = useMemo(
     () => conversations.find((c) => toThreadId(c) === selectedId) ?? null,
@@ -320,7 +428,10 @@ export default function ProviderInboxClient() {
 
   const copyConversationLink = useCallback(async () => {
     if (!selectedConversation || typeof window === "undefined") return;
-    await navigator.clipboard.writeText(`${window.location.origin}${selectedConversation.href}`);
+    const threadId = toThreadId(selectedConversation);
+    await navigator.clipboard.writeText(
+      `${window.location.origin}/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`,
+    );
     setMoreOpen(false);
   }, [selectedConversation]);
 
@@ -335,6 +446,25 @@ export default function ProviderInboxClient() {
     );
     setSettingsOpen(false);
   }, [selectedConversation]);
+
+  const bumpSelectedConversation = useCallback((message: ThreadMessage) => {
+    if (!selectedConversation) return;
+    setConversations((items) =>
+      sortConversations(
+        items.map((item) =>
+          item.type === selectedConversation.type && item.id === selectedConversation.id
+            ? {
+                ...item,
+                preview: message.content,
+                lastMessageAt: message.createdAt,
+                fromProvider: true,
+                unread: false,
+              }
+            : item,
+        ),
+      ),
+    );
+  }, [selectedConversation, sortConversations]);
 
   const sendMessage = useCallback(async (threadId: string, content: string): Promise<ThreadMessage> => {
     if (!thread) throw new Error("Nėra pokalbio");
@@ -351,7 +481,7 @@ export default function ProviderInboxClient() {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || "Klaida");
-    return {
+    const sentMessage: ThreadMessage = {
       id: data.data.id,
       content: data.data.content,
       createdAt: data.data.createdAt,
@@ -360,7 +490,9 @@ export default function ProviderInboxClient() {
       sender: data.data.sender,
       status: "sent",
     };
-  }, [thread]);
+    bumpSelectedConversation(sentMessage);
+    return sentMessage;
+  }, [bumpSelectedConversation, thread]);
 
   return (
     <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#ece9e2] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
@@ -573,12 +705,6 @@ export default function ProviderInboxClient() {
                     {moreOpen && (
                       <div className="absolute right-0 top-11 z-30 w-64 rounded-xl border border-[#EAEAEA] bg-white p-2 text-body-sm text-[#1E1B18] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
                         <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6B6760]">Veiksmai</p>
-                        {selectedConversation && (
-                          <Link href={selectedConversation.href} className="flex min-h-11 items-center gap-2 rounded-lg px-3 transition hover:bg-[#F8F7F4]">
-                            <ExternalLink className="h-4 w-4 text-[#6B6760]" />
-                            Atidaryti atskirai
-                          </Link>
-                        )}
                         <button type="button" onClick={copyConversationLink} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]">
                           <Copy className="h-4 w-4 text-[#6B6760]" />
                           Kopijuoti nuorodą

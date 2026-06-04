@@ -314,7 +314,7 @@ function DirectInquiryWidgetInner({
         </p>
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
           {conversationToken && (
-            <Link href={`/zinutes/${conversationToken}`}>
+            <Link href={`/paskyra/zinutes?thread=${conversationToken}`}>
               <Button size="sm">
                 <MessageCircle className="h-4 w-4" />
                 Peržiūrėti pokalbį

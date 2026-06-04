@@ -104,7 +104,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     // Notify the provider — best-effort.
     await createMessageNotification({
       userId: inquiry.providerId,
-      link: `/tiekejas/zinutes/${inquiry.id}`,
+      link: `/tiekejas/zinutes?thread=${inquiry.id}`,
       contextLabel: senderName,
     });
 

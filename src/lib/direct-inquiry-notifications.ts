@@ -18,6 +18,6 @@ export function getDirectInquiryNotificationData({
     type: "DIRECT_INQUIRY",
     title: "Nauja tiesioginė žinutė",
     body: `${senderLabel} parašė jums tiesioginę žinutę`,
-    link: `/tiekejas/zinutes/${inquiryId}`,
+    link: `/tiekejas/zinutes?thread=${inquiryId}`,
   };
 }

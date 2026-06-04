@@ -59,9 +59,10 @@ export default function MobileBottomNav() {
     let cancelled = false;
     const endpoint = role === "PROVIDER" ? "/api/tiekejas/zinutes" : "/api/paskyra/zinutes";
 
-    fetch(endpoint)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
+    const loadUnreadMessages = () => {
+      fetch(endpoint, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
         if (cancelled || !data?.success) return;
         const totalUnread =
           typeof data.data?.totalUnread === "number"
@@ -70,13 +71,18 @@ export default function MobileBottomNav() {
               ? data.data.conversations.filter((c: { unread?: boolean }) => c.unread).length
               : 0;
         setUnreadMessages(totalUnread);
-      })
-      .catch(() => {
-        if (!cancelled) setUnreadMessages(0);
-      });
+        })
+        .catch(() => {
+          if (!cancelled) setUnreadMessages(0);
+        });
+    };
+
+    loadUnreadMessages();
+    const interval = window.setInterval(loadUnreadMessages, 30000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
     };
   }, [role, status, userId]);
 

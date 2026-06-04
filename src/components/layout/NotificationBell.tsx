@@ -31,13 +31,26 @@ interface NotificationRow {
 
 const REFETCH_DEBOUNCE_MS = 10_000; // safety-net refetch on focus is debounced this hard
 
+function normalizeNotificationLink(link?: string | null) {
+  if (!link) return undefined;
+  const providerThread = link.match(/^\/tiekejas\/zinutes\/([^/?#]+)$/);
+  if (providerThread) {
+    return `/tiekejas/zinutes?thread=${encodeURIComponent(providerThread[1])}`;
+  }
+  const customerThread = link.match(/^\/zinutes\/([^/?#]+)$/);
+  if (customerThread) {
+    return `/paskyra/zinutes?thread=${encodeURIComponent(customerThread[1])}`;
+  }
+  return link;
+}
+
 function normalizeRow(row: NotificationRow): Notification {
   return {
     id: row.id,
     title: row.title,
     body: row.body,
     isRead: row.isRead,
-    link: row.link ?? undefined,
+    link: normalizeNotificationLink(row.link),
     createdAt:
       typeof row.createdAt === "string"
         ? row.createdAt
@@ -65,7 +78,10 @@ export default function NotificationBell() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          const all = data.data as Notification[];
+          const all = (data.data as Notification[]).map((notification) => ({
+            ...notification,
+            link: normalizeNotificationLink(notification.link),
+          }));
           setNotifications(all.slice(0, 10));
           const newUnread = all.filter((n) => !n.isRead).length;
           if (newUnread > prevUnreadRef.current) {

@@ -215,8 +215,16 @@ export default function ThreadChat({
   quickReplies = [],
 }: ThreadChatProps) {
   const [inputValue, setInputValue] = useState("");
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [isOtherOnline, setIsOtherOnline] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMarkedReadMessageIdRef = useRef<string | null>(null);
+  const typingStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remoteTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentAtRef = useRef(0);
+  const realtimeChannelRef = useRef<{
+    send: (args: { type: "broadcast"; event: string; payload: Record<string, unknown> }) => Promise<unknown>;
+  } | null>(null);
 
   const hydrateThread = useConversationStore((s) => s.hydrateThread);
   const optimisticSend = useConversationStore((s) => s.optimisticSend);
@@ -246,6 +254,10 @@ export default function ThreadChat({
     if (!supabase) return;
 
     const filterColumn = threadKind === "response" ? "responseId" : "directInquiryId";
+    const viewerKey =
+      viewerRole === "provider"
+        ? `provider:${providerId}`
+        : `client:${realtimeTrackingToken || threadId}`;
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -258,7 +270,7 @@ export default function ThreadChat({
       if (cancelled) return;
 
       channel = supabase
-        .channel(`messages-${threadId}`)
+        .channel(`messages-${threadId}`, { config: { presence: { key: viewerKey } } })
         .on(
           "postgres_changes",
           {
@@ -287,14 +299,69 @@ export default function ThreadChat({
             });
           },
         )
-        .subscribe();
+        .on("broadcast", { event: "typing" }, ({ payload }) => {
+          if (payload?.viewerKey === viewerKey) return;
+          if (payload?.state === "start") {
+            setIsOtherTyping(true);
+            if (remoteTypingTimeoutRef.current) clearTimeout(remoteTypingTimeoutRef.current);
+            remoteTypingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 2500);
+          } else {
+            setIsOtherTyping(false);
+          }
+        })
+        .on("presence", { event: "sync" }, () => {
+          if (!channel) return;
+          const state = channel.presenceState();
+          const hasOtherParticipant = Object.keys(state).some((key) => key !== viewerKey);
+          setIsOtherOnline(hasOtherParticipant);
+        })
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            void channel?.track({
+              viewerKey,
+              viewerRole,
+              onlineAt: new Date().toISOString(),
+            });
+          }
+        });
+      realtimeChannelRef.current = channel;
     })();
 
     return () => {
       cancelled = true;
+      realtimeChannelRef.current = null;
+      setIsOtherTyping(false);
+      setIsOtherOnline(false);
+      if (remoteTypingTimeoutRef.current) clearTimeout(remoteTypingTimeoutRef.current);
       if (channel) supabase.removeChannel(channel);
     };
   }, [threadId, threadKind, providerId, viewerRole, realtimeTrackingToken, otherParticipantImage, appendMessageIfNew]);
+
+  const sendTypingState = useCallback((state: "start" | "stop") => {
+    const channel = realtimeChannelRef.current;
+    if (!channel) return;
+    const now = Date.now();
+    if (state === "start" && now - lastTypingSentAtRef.current < 1200) return;
+    lastTypingSentAtRef.current = now;
+    void channel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: {
+        state,
+        viewerKey:
+          viewerRole === "provider"
+            ? `provider:${providerId}`
+            : `client:${realtimeTrackingToken || threadId}`,
+      },
+    });
+  }, [providerId, realtimeTrackingToken, threadId, viewerRole]);
+
+  useEffect(() => {
+    return () => {
+      if (typingStopTimeoutRef.current) clearTimeout(typingStopTimeoutRef.current);
+      sendTypingState("stop");
+    };
+  }, [sendTypingState]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -514,6 +581,12 @@ export default function ThreadChat({
             </div>
           );
         })}
+        {isOtherTyping && (
+          <div className="flex items-center gap-2 px-1 text-caption font-medium text-[#6B6760]">
+            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            {otherDisplayName} rašo...
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -549,7 +622,16 @@ export default function ThreadChat({
               rows={1}
               placeholder={placeholder}
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                if (e.target.value.trim()) {
+                  sendTypingState("start");
+                  if (typingStopTimeoutRef.current) clearTimeout(typingStopTimeoutRef.current);
+                  typingStopTimeoutRef.current = setTimeout(() => sendTypingState("stop"), 1600);
+                } else {
+                  sendTypingState("stop");
+                }
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -558,6 +640,12 @@ export default function ThreadChat({
               }}
               className="min-h-[52px] w-full resize-none rounded-2xl border border-[#ece9e2] bg-white py-3 pl-[5.5rem] pr-14 text-body-sm text-[#25221e] shadow-[inset_0_1px_2px_rgba(37,34,30,0.06)] ring-1 ring-transparent transition-all placeholder:text-[#7E7768] focus:border-[#C29B74] focus:bg-white focus:outline-none focus:ring-[#C29B74]/20 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:focus:bg-surface-900"
             />
+            {isOtherOnline && (
+              <span className="mt-2 inline-flex items-center gap-1.5 pl-1 text-micro font-medium text-emerald-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Prisijungęs dabar
+              </span>
+            )}
             <button
               type="button"
               onClick={handleSend}

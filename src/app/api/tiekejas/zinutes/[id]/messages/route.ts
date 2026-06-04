@@ -83,7 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (inquiry.senderUserId) {
       await createMessageNotification({
         userId: inquiry.senderUserId,
-        link: `/zinutes/${inquiry.trackingToken}`,
+        link: `/paskyra/zinutes?thread=${inquiry.trackingToken}`,
         contextLabel: providerName || "Tiekėjas",
       });
     }

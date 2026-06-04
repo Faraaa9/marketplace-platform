@@ -193,7 +193,7 @@ async function deliverResponseReply(
   if (fromClient) {
     await createMessageNotification({
       userId: response.providerId,
-      link: `/tiekejas/uzklausos/${response.request.id}`,
+      link: `/tiekejas/zinutes?thread=response-${response.id}`,
       contextLabel: response.request.title,
     });
   } else if (response.request.clientId) {
@@ -255,13 +255,13 @@ async function deliverInquiryReply(
   if (fromClient) {
     await createMessageNotification({
       userId: inquiry.providerId,
-      link: `/tiekejas/zinutes/${inquiry.id}`,
+      link: `/tiekejas/zinutes?thread=${inquiry.id}`,
       contextLabel: senderName ?? "Klientas",
     });
   } else if (inquiry.senderUserId) {
     await createMessageNotification({
       userId: inquiry.senderUserId,
-      link: `/zinutes/${inquiry.trackingToken}`,
+      link: `/paskyra/zinutes?thread=${inquiry.trackingToken}`,
       contextLabel: inquiry.provider.name ?? "Tiekėjas",
     });
   }

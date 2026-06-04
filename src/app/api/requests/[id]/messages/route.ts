@@ -116,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } else {
       await createMessageNotification({
         userId: response.providerId,
-        link: `/tiekejas/uzklausos/${response.request.id}`,
+        link: `/tiekejas/zinutes?thread=response-${response.id}`,
         contextLabel: response.request.title,
       });
     }

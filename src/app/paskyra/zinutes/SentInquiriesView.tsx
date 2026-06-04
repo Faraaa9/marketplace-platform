@@ -57,7 +57,10 @@ export default async function SentInquiriesView({
         userId,
         type: "NEW_MESSAGE",
         isRead: false,
-        link: { startsWith: "/zinutes/" },
+        OR: [
+          { link: { startsWith: "/zinutes/" } },
+          { link: { startsWith: "/paskyra/zinutes" } },
+        ],
       },
       select: { link: true },
     }),
@@ -65,7 +68,11 @@ export default async function SentInquiriesView({
 
   const unreadTokens = new Set(
     unreadNotifications
-      .map((n) => n.link?.replace(/^\/zinutes\//, "").split("?")[0] ?? "")
+      .map((n) => {
+        const link = n.link ?? "";
+        if (link.startsWith("/zinutes/")) return link.replace(/^\/zinutes\//, "").split("?")[0];
+        return new URLSearchParams(link.split("?")[1] ?? "").get("thread") ?? "";
+      })
       .filter(Boolean)
   );
 
@@ -74,7 +81,7 @@ export default async function SentInquiriesView({
     return {
       id: q.id,
       trackingToken: q.trackingToken,
-      href: `/zinutes/${q.trackingToken}`,
+      href: `/paskyra/zinutes?thread=${q.trackingToken}`,
       providerName: q.provider.name || "Tiekėjas",
       providerImage: getProviderAvatarImage(q.provider),
       presenceLevel: getPresenceLevel(q.provider.lastSeenAt),

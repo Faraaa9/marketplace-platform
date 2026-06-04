@@ -117,11 +117,11 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
     .map((thread) => ({
       type: thread.type,
       id: thread.id,
-      // Response threads → request detail page; direct inquiries → inbox detail.
+      // Response and direct inquiry follow-ups open in the unified inbox.
       href:
         thread.type === "response" && thread.requestId
-          ? `/tiekejas/uzklausos/${thread.requestId}`
-          : `/tiekejas/zinutes/${thread.id}`,
+          ? `/tiekejas/zinutes?thread=response-${thread.id}`
+          : `/tiekejas/zinutes?thread=${thread.id}`,
       title: thread.title,
       ageDays: thread.ageDays,
       daysSinceActivity: thread.daysSinceActivity,
