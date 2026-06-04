@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 05:26 — Codex
+
+**Commit:** `28ce14a` — polish(ui): refine provider chat dashboard · lokalus
+
+**Pakeitimai:** 17 files changed, 626 insertions(+), 294 deletions(-)
+
+**Failai:**
+- src/app/globals.css
+- src/app/paskyra/zinutes/SentInquiriesView.tsx
+- src/app/tiekejas/ProviderFollowUpsCard.tsx
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/sections/ProfileCompletenessCard.tsx
+- src/app/tiekejas/sections/QuickLinksGrid.tsx
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/app/tiekejas/zinutes/ConversationList.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/components/layout/MobileBottomNav.tsx
+- src/components/messaging/RequestBriefDrawer.tsx
+- src/components/messaging/ThreadChat.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-04 03:33 — Codex
 
 **Commit:** `8d66bc0` — polish(ui): refine marketplace chat and profile surfaces · lokalus
