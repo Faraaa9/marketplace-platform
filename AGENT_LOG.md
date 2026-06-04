@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 18:43 — Codex
+
+**Commit:** `33fbcca` — feat(chat): add read receipts and history loading · lokalus
+
+**Pakeitimai:** 7 files changed, 374 insertions(+), 55 deletions(-)
+
+**Failai:**
+- src/app/api/tiekejas/zinutes/[id]/route.ts
+- src/app/api/zinutes/[token]/route.ts
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/app/zinutes/[token]/TokenClient.tsx
+- src/components/messaging/ThreadChat.tsx
+- src/lib/thread-window.ts
+- src/store/useConversationStore.ts
+
+**Toliau:** Po deploy/dev restart patikrinti du langus: ar `Išsiųsta` virsta `Matyta` be refresh, ir ar `Įkelti ankstesnes` prideda istoriją viršuje išlaikydamas scroll poziciją.
+
+
 ## 2026-06-04 18:22 — Codex
 
 **Commit:** `d94ab4b` — perf(chat): speed up provider messaging · lokalus
