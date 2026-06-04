@@ -162,7 +162,7 @@ export async function ThreadView({
         </div>
 
         <div
-          className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#fcfbf8] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#fcfbf8] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
+          className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#ece9e2] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
         >
           <ResponseThread
             responseId={response.id}
@@ -307,7 +307,7 @@ export async function ThreadView({
 
       {/* Conversation */}
       <div
-        className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#fcfbf8] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#fcfbf8] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
+        className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#ece9e2] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
       >
         {!inboxLayout && <div className="mb-4 flex items-center gap-3 border-b border-[#ece9e2] pb-4 dark:border-surface-700">
           <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">

@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    --background: #fcfbf8;
+    --background: #ece9e2;
     --foreground: #1e1b18;
     --brand: #c29b74;
     --brand-light: #f4efe6;
     --surface-muted: #ece9e2;
     --border: #ece9e2;
-    --chat-bg: #fcfbf8;
+    --chat-bg: #ece9e2;
     --chat-panel: #ffffff;
     --chat-border: #ece9e2;
     --chat-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);

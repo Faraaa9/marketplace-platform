@@ -14,7 +14,7 @@ interface PageProps {
 // layout-matching skeleton (single fetch -> one boundary).
 export default function ProviderInquiryDetailPage({ params }: PageProps) {
   return (
-    <div className="mx-auto -mb-[calc(3.5rem+env(safe-area-inset-bottom))] max-w-7xl bg-[#fcfbf8] px-4 py-4 md:mb-0 md:py-6">
+    <div className="mx-auto -mb-[calc(3.5rem+env(safe-area-inset-bottom))] max-w-7xl bg-[#ece9e2] px-4 py-4 md:mb-0 md:py-6">
       <div className="overflow-hidden rounded-2xl border border-[#ece9e2] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/60 dark:bg-surface-900/70">
         <div className="grid h-[calc(100dvh-6.5rem)] min-h-[560px] lg:grid-cols-[340px_minmax(0,1fr)]">
           <aside className="hidden min-h-0 border-r border-[#ece9e2] bg-white dark:border-surface-700/60 dark:bg-surface-900 lg:flex lg:flex-col">
@@ -44,7 +44,7 @@ export default function ProviderInquiryDetailPage({ params }: PageProps) {
             </div>
           </aside>
 
-          <main className="min-h-0 min-w-0 bg-[#fcfbf8] dark:bg-surface-900">
+          <main className="min-h-0 min-w-0 bg-[#ece9e2] dark:bg-surface-900">
             <Link
               href="/tiekejas/zinutes"
               className="flex min-h-12 items-center gap-1.5 border-b border-[#ece9e2] bg-white px-4 text-body-sm text-[#6B6760] transition-colors hover:text-[#1E1B18] dark:border-surface-700/60 dark:text-surface-400 dark:hover:text-surface-200 lg:hidden"

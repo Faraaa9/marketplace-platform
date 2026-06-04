@@ -17,7 +17,7 @@ const TABS: { value: InboxTab; label: string; href: string }[] = [
  */
 export function InboxTabsBar({ active }: { active: InboxTab }) {
   return (
-    <div className="mb-6 flex gap-1 rounded-xl border border-[#ece9e2] bg-[#fcfbf8] p-1 dark:bg-surface-800">
+    <div className="mb-6 flex gap-1 rounded-xl border border-[#ece9e2] bg-[#ece9e2] p-1 dark:bg-surface-800">
       {TABS.map((tab) => {
         const isActive = active === tab.value;
         return (

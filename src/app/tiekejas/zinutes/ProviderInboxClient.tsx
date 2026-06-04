@@ -255,7 +255,7 @@ export default function ProviderInboxClient() {
   }, [thread]);
 
   return (
-    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#fcfbf8] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
+    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#ece9e2] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#ece9e2] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-800 dark:bg-surface-900/90">
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#ece9e2] bg-white dark:border-surface-700/60 dark:bg-surface-950/40`}>
@@ -347,7 +347,7 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#fcfbf8] dark:bg-surface-900`}>
+          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#ece9e2] dark:bg-surface-900`}>
             {threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
@@ -395,7 +395,7 @@ export default function ProviderInboxClient() {
                   </div>
                 </div>
                 <div
-                  className="flex min-h-0 flex-1 flex-col bg-[#fcfbf8] px-4 py-4 md:px-5"
+                  className="flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-4 py-4 md:px-5"
                 >
                   <ThreadChat
                     threadId={thread.id}
