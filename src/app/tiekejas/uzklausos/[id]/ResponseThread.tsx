@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
+import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 
 interface ResponseThreadProps {
   responseId: string;
@@ -13,6 +14,8 @@ interface ResponseThreadProps {
   otherParticipantImage?: string | null;
   otherParticipantReadAt?: string | null;
   disabled?: boolean;
+  requestBrief?: RequestBrief | null;
+  fillHeight?: boolean;
 }
 
 /**
@@ -29,6 +32,8 @@ export default function ResponseThread({
   otherParticipantImage,
   otherParticipantReadAt,
   disabled,
+  requestBrief,
+  fillHeight = false,
 }: ResponseThreadProps) {
   const sendMessage = useCallback(
     async (threadId: string, content: string): Promise<ThreadMessage> => {
@@ -63,6 +68,8 @@ export default function ResponseThread({
       otherParticipantName={otherParticipantName}
       otherParticipantImage={otherParticipantImage}
       otherParticipantReadAt={otherParticipantReadAt}
+      requestBrief={requestBrief}
+      fillHeight={fillHeight}
       sendMessage={sendMessage}
       placeholder="Rašyti žinutę..."
       disabled={disabled}

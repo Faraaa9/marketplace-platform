@@ -17,7 +17,7 @@ const TABS: { value: InboxTab; label: string; href: string }[] = [
  */
 export function InboxTabsBar({ active }: { active: InboxTab }) {
   return (
-    <div className="mb-6 flex gap-1 rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
+    <div className="mb-6 flex gap-1 rounded-xl border border-[#ece9e2] bg-[#fcfbf8] p-1 dark:bg-surface-800">
       {TABS.map((tab) => {
         const isActive = active === tab.value;
         return (
@@ -27,8 +27,8 @@ export function InboxTabsBar({ active }: { active: InboxTab }) {
             aria-current={isActive ? "page" : undefined}
             className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 py-2 text-body-sm font-medium transition-colors ${
               isActive
-                ? "bg-white text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white"
-                : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+                ? "bg-white text-[#1E1B18] shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:bg-surface-700 dark:text-white"
+                : "text-[#6B6760] hover:text-[#1E1B18] dark:text-surface-400 dark:hover:text-surface-200"
             }`}
           >
             {tab.label}

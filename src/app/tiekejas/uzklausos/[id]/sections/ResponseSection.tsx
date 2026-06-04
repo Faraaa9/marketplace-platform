@@ -26,12 +26,21 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
     select: {
       status: true,
       acceptedResponseId: true,
+      title: true,
+      description: true,
+      location: true,
+      budget: true,
+      deadline: true,
+      createdAt: true,
+      attachmentUrls: true,
       clientId: true,
       clientName: true,
       client: { select: { image: true } },
       clientEmail: true,
       clientPhone: true,
-      categoryRef: { select: { id: true, rootId: true } },
+      category: true,
+      categoryRef: { select: { id: true, rootId: true, name: true } },
+      categories: { select: { category: { select: { name: true } } } },
       responses: {
         where: { providerId: guard.userId },
         select: {
@@ -97,6 +106,18 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
   const canRespond = eligibility.allowed;
   const clientEmail = unlocked ? request.clientEmail : null;
   const clientPhone = unlocked ? request.clientPhone : null;
+  const categoryNames = request.categories.map((c) => c.category.name);
+  const requestBrief = {
+    title: request.title,
+    description: request.description,
+    categoryLabel: categoryNames[0] || request.categoryRef?.name || request.category,
+    location: request.location,
+    budget: request.budget,
+    deadline: request.deadline,
+    createdAt: request.createdAt.toISOString(),
+    responseCount: totalResponses,
+    attachmentCount: request.attachmentUrls.length,
+  };
 
   return (
     <>
@@ -213,45 +234,62 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
       <div className="space-y-4">
         {request.responses.map((resp) => {
           const isAccepted = request.acceptedResponseId === resp.id;
-          const initialMessages: ThreadMessage[] = resp.messages.map((m) => ({
-            id: m.id,
-            content: m.content,
-            createdAt: m.createdAt.toISOString(),
-            senderId: m.senderId,
-            senderName: m.senderName ?? m.sender?.name ?? null,
-            sender: m.sender ? { id: m.sender.id, name: m.sender.name ?? "", image: m.sender.image } : null,
-            status: "sent" as const,
-          }));
+          const initialMessages: ThreadMessage[] = [
+            {
+              id: `response-${resp.id}`,
+              content: resp.message,
+              createdAt: resp.createdAt.toISOString(),
+              senderId: resp.provider.id,
+              senderName: resp.provider.name,
+              sender: { id: resp.provider.id, name: resp.provider.name ?? "", image: null },
+              metaLabel: formatRelativeDate(resp.createdAt),
+              status: "sent" as const,
+            },
+            ...resp.messages.map((m) => ({
+              id: m.id,
+              content: m.content,
+              createdAt: m.createdAt.toISOString(),
+              senderId: m.senderId,
+              senderName: m.senderName ?? m.sender?.name ?? null,
+              sender: m.sender ? { id: m.sender.id, name: m.sender.name ?? "", image: m.sender.image } : null,
+              status: "sent" as const,
+            })),
+          ];
           return (
             <Card
               key={resp.id}
-              className={isAccepted ? "border-emerald-500 ring-2 ring-emerald-500" : undefined}
+              className={`overflow-hidden p-0 ${isAccepted ? "border-emerald-500 ring-2 ring-emerald-500" : ""}`}
             >
-              <div className="mb-2 flex items-start justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-body font-medium text-surface-900 dark:text-white">{resp.provider.name}</p>
+              <div className="flex items-start justify-between gap-3 border-b border-surface-200/60 px-5 py-4 dark:border-surface-700">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-body font-semibold text-surface-900 dark:text-white">{resp.provider.name}</p>
+                    <Badge variant="brand">Pokalbis</Badge>
+                  </div>
+                  <p className="mt-1 text-body-sm text-surface-500">
+                    Atsakymas į užklausą ir tolimesnis susirašinėjimas
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
                   {isAccepted && <Badge variant="success">Priimtas</Badge>}
+                  {resp.price != null && <span className="text-body font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>}
                 </div>
-                {resp.price != null && <span className="text-heading-3 font-bold text-emerald-600 dark:text-emerald-400">&euro;{resp.price}</span>}
-              </div>
-              <div className="flex flex-col items-end gap-0.5">
-                <div className="max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-3.5 py-2 text-body-sm text-white whitespace-pre-wrap break-words">
-                  {resp.message}
-                </div>
-                <span className="px-1 text-micro text-surface-400">{formatRelativeDate(resp.createdAt)}</span>
               </div>
 
               {/* Thread with optimistic messaging — client island, hydrates with server messages */}
-              <ResponseThread
-                responseId={resp.id}
-                initialMessages={initialMessages}
-                currentSenderName={resp.provider.name || "Tiekėjas"}
-                providerId={resp.provider.id}
-                otherParticipantName={request.clientName}
-                otherParticipantImage={request.client?.image}
-                otherParticipantReadAt={resp.clientLastReadAt ? resp.clientLastReadAt.toISOString() : null}
-                disabled={request.status === "CLOSED"}
-              />
+              <div className="px-5 py-4">
+                <ResponseThread
+                  responseId={resp.id}
+                  initialMessages={initialMessages}
+                  currentSenderName={resp.provider.name || "Tiekėjas"}
+                  providerId={resp.provider.id}
+                  otherParticipantName={request.clientName}
+                  otherParticipantImage={request.client?.image}
+                  otherParticipantReadAt={resp.clientLastReadAt ? resp.clientLastReadAt.toISOString() : null}
+                  disabled={request.status === "CLOSED"}
+                  requestBrief={requestBrief}
+                />
+              </div>
             </Card>
           );
         })}

@@ -10,6 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { ArchiveButton } from "./ArchiveButton";
 import { InquiryThreadChat } from "./InquiryThreadChat";
+import ResponseThread from "../../uzklausos/[id]/ResponseThread";
 
 function avatarInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
@@ -18,7 +19,7 @@ function avatarInitial(name: string) {
 function ChatParticipantAvatar({ name, image }: { name: string; image?: string | null }) {
   return (
     <span
-      className="relative inline-flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 dark:from-brand-950 dark:to-surface-800 dark:text-brand-300"
+      className="relative inline-flex h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#ece9e2]/40 text-[#3D3A35] ring-1 ring-[#ece9e2] dark:bg-brand-500/10 dark:text-brand-300"
       aria-hidden="true"
     >
       {image ? (
@@ -41,11 +42,144 @@ function ChatParticipantAvatar({ name, image }: { name: string; image?: string |
 export async function ThreadView({
   params,
   userId,
+  inboxLayout = false,
 }: {
   params: Promise<{ id: string }>;
   userId: string;
+  inboxLayout?: boolean;
 }) {
   const { id } = await params;
+
+  if (id.startsWith("response-")) {
+    const responseId = id.replace(/^response-/, "");
+    const response = await prisma.response.findFirst({
+      where: { id: responseId, providerId: userId },
+      select: {
+        id: true,
+        message: true,
+        price: true,
+        createdAt: true,
+        clientLastReadAt: true,
+        provider: { select: { id: true, name: true } },
+        messages: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            senderId: true,
+            senderName: true,
+            sender: { select: { id: true, name: true, image: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        request: {
+          select: {
+            title: true,
+            description: true,
+            category: true,
+            location: true,
+            budget: true,
+            deadline: true,
+            createdAt: true,
+            attachmentUrls: true,
+            clientName: true,
+            client: { select: { image: true } },
+            categoryRef: { select: { name: true } },
+            categories: { select: { category: { select: { name: true } } } },
+            _count: { select: { responses: true } },
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!response) {
+      return <EmptyState title="Pokalbis nerastas" />;
+    }
+
+    after(async () => {
+      try {
+        await prisma.response.update({
+          where: { id: response.id },
+          data: { providerLastReadAt: new Date() },
+        });
+      } catch {
+        // read tracking is best-effort
+      }
+    });
+
+    const categoryNames = response.request.categories.map((c) => c.category.name);
+    const requestBrief = {
+      title: response.request.title,
+      description: response.request.description,
+      categoryLabel: categoryNames[0] || response.request.categoryRef?.name || response.request.category,
+      location: response.request.location,
+      budget: response.request.budget,
+      deadline: response.request.deadline,
+      createdAt: response.request.createdAt.toISOString(),
+      responseCount: response.request._count.responses,
+      attachmentCount: response.request.attachmentUrls.length,
+    };
+    const initialMessages: ThreadMessage[] = [
+      {
+        id: `response-${response.id}`,
+        content: response.message,
+        createdAt: response.createdAt.toISOString(),
+        senderId: response.provider.id,
+        senderName: response.provider.name,
+        sender: { id: response.provider.id, name: response.provider.name ?? "", image: null },
+        metaLabel: formatRelativeDate(response.createdAt),
+        status: "sent",
+      },
+      ...response.messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        createdAt: m.createdAt.toISOString(),
+        senderId: m.senderId,
+        senderName: m.senderName ?? m.sender?.name ?? null,
+        sender: m.sender ? { id: m.sender.id, name: m.sender.name ?? "", image: m.sender.image } : null,
+        status: "sent" as const,
+      })),
+    ];
+
+    return (
+      <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
+        <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
+          <div>
+            <div className="mb-1 flex items-center gap-2">
+              <Badge variant="brand">Užklausa</Badge>
+              <Badge variant={response.request.status === "OPEN" ? "success" : response.request.status === "IN_PROGRESS" ? "warning" : "default"}>
+                {response.request.status === "OPEN" ? "Atidaryta" : response.request.status === "IN_PROGRESS" ? "Vykdoma" : "Uždaryta"}
+              </Badge>
+            </div>
+            <h1 className={inboxLayout ? "text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
+              {response.request.title}
+            </h1>
+            <p className="mt-1 text-body-sm text-[#6B6760]">
+              {response.request.clientName}
+            </p>
+          </div>
+        </div>
+
+        <div
+          className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#fcfbf8] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#fcfbf8] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
+        >
+          <ResponseThread
+            responseId={response.id}
+            initialMessages={initialMessages}
+            currentSenderName={response.provider.name || "Tiekėjas"}
+            providerId={response.provider.id}
+            otherParticipantName={response.request.clientName}
+            otherParticipantImage={response.request.client?.image}
+            otherParticipantReadAt={response.clientLastReadAt ? response.clientLastReadAt.toISOString() : null}
+            disabled={response.request.status === "CLOSED"}
+            requestBrief={requestBrief}
+            fillHeight={inboxLayout}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const inquiry = await prisma.directInquiry.findFirst({
     where: { id, providerId: userId },
@@ -98,18 +232,15 @@ export async function ThreadView({
   const senderDisplay =
     inquiry.senderName?.trim() || senderAccountName?.trim() || inquiry.senderEmail;
   const isArchived = inquiry.status === "ARCHIVED";
+  const requestBrief = {
+    title: "Tiesioginė užklausa",
+    description: inquiry.description,
+    categoryLabel: "Tiesioginė žinutė",
+    budget: inquiry.budget,
+    createdAt: inquiry.createdAt.toISOString(),
+  };
 
   const chatMessages: ThreadMessage[] = [
-    {
-      id: `opening-${inquiry.id}`,
-      content: inquiry.description,
-      createdAt: inquiry.createdAt.toISOString(),
-      senderId: null,
-      senderName: senderDisplay,
-      sender: { name: senderDisplay, image: senderImage },
-      metaLabel: inquiry.budget ? `Biudžetas: ${inquiry.budget}` : null,
-      status: "sent",
-    },
     ...inquiry.messages.map((m) => ({
       id: m.id,
       content: m.content,
@@ -124,17 +255,17 @@ export async function ThreadView({
   ];
 
   return (
-    <div>
-      <div className="mb-6 flex items-start justify-between gap-3">
+      <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
+      <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
         <div>
           <div className="mb-1 flex items-center gap-2">
             <Badge variant="brand">Tiesioginė žinutė</Badge>
             {isArchived && <Badge variant="default">Archyvuota</Badge>}
           </div>
-          <h1 className="mt-2 text-heading-1 font-bold text-surface-900 dark:text-white">
+          <h1 className={inboxLayout ? "text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
             {senderDisplay}
           </h1>
-          <p className="mt-1 text-body-sm text-surface-500">
+          <p className="mt-1 text-body-sm text-[#6B6760]">
             {formatRelativeDate(inquiry.createdAt)}
           </p>
         </div>
@@ -142,7 +273,7 @@ export async function ThreadView({
       </div>
 
       {/* Contact info */}
-      <Card className="mb-6">
+      {!inboxLayout && <Card className="mb-6">
         <p className="mb-2 text-micro font-medium text-surface-500">Kontaktai</p>
         <div className="flex flex-wrap gap-4 text-body-sm text-surface-700 dark:text-surface-300">
           <span className="flex items-center gap-1.5">
@@ -151,7 +282,7 @@ export async function ThreadView({
           </span>
           <a
             href={`mailto:${inquiry.senderEmail}`}
-            className="flex items-center gap-1.5 text-brand-600 hover:text-brand-700 dark:text-brand-400"
+            className="flex items-center gap-1.5 text-[#C29B74] hover:text-[#1E1B18] dark:text-brand-400"
           >
             <Mail className="h-4 w-4" />
             {inquiry.senderEmail}
@@ -159,7 +290,7 @@ export async function ThreadView({
           {inquiry.senderPhone && (
             <a
               href={`tel:${inquiry.senderPhone}`}
-              className="flex items-center gap-1.5 text-brand-600 hover:text-brand-700 dark:text-brand-400"
+              className="flex items-center gap-1.5 text-[#C29B74] hover:text-[#1E1B18] dark:text-brand-400"
             >
               <Phone className="h-4 w-4" />
               {inquiry.senderPhone}
@@ -172,11 +303,13 @@ export async function ThreadView({
             </span>
           )}
         </div>
-      </Card>
+      </Card>}
 
       {/* Conversation */}
-      <Card>
-        <div className="mb-4 flex items-center gap-3 border-b border-surface-200/60 pb-4 dark:border-surface-700">
+      <div
+        className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#fcfbf8] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#fcfbf8] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
+      >
+        {!inboxLayout && <div className="mb-4 flex items-center gap-3 border-b border-[#ece9e2] pb-4 dark:border-surface-700">
           <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
             <ChatParticipantAvatar name={senderDisplay} image={senderImage} />
             {presenceLevel && (
@@ -187,7 +320,7 @@ export async function ThreadView({
               >
                 <span
                   className={`h-[7px] w-[7px] rounded-full ${
-                    presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
+                    presenceLevel === "online" ? "bg-brand-500" : "bg-surface-400"
                   }`}
                   aria-hidden
                 />
@@ -195,20 +328,20 @@ export async function ThreadView({
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
+            <p className="truncate text-body font-semibold text-[#1E1B18] dark:text-white">
               {senderDisplay}
             </p>
             <p
               className={`text-micro ${
                 presenceLevel === "online"
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-surface-500 dark:text-surface-400"
+                  ? "text-[#C29B74] dark:text-brand-400"
+                  : "text-[#6B6760] dark:text-surface-400"
               }`}
             >
               {presenceLabel ?? "Klientas"}
             </p>
           </div>
-        </div>
+        </div>}
 
         <InquiryThreadChat
           inquiryId={inquiry.id}
@@ -219,8 +352,10 @@ export async function ThreadView({
           otherParticipantReadAt={
             inquiry.clientLastReadAt ? inquiry.clientLastReadAt.toISOString() : null
           }
+          requestBrief={requestBrief}
+          fillHeight={inboxLayout}
         />
-      </Card>
+      </div>
     </div>
   );
 }

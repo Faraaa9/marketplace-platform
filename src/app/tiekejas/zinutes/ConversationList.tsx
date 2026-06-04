@@ -83,7 +83,7 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
     return {
       type: "request",
       id: r.id,
-      href: `/tiekejas/uzklausos/${r.request.id}`,
+      href: `/tiekejas/zinutes/response-${r.id}`,
       title: r.request.title,
       subtitle: r.request.clientName,
       // No chat messages yet -> preview the offer (always the provider's).
@@ -133,9 +133,13 @@ async function getConversations(providerId: string): Promise<ConversationItem[]>
 export async function ConversationList({
   userId,
   searchParams,
+  activeHref,
+  compact = false,
 }: {
   userId: string;
   searchParams: Promise<{ tab?: string }>;
+  activeHref?: string;
+  compact?: boolean;
 }) {
   const { tab } = await searchParams;
   const filter: InboxTab = tab === "unread" || tab === "archived" ? tab : "all";
@@ -171,7 +175,7 @@ export async function ConversationList({
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {filtered.map((c) => {
         const reqStatus =
           c.type === "request"
@@ -181,33 +185,50 @@ export async function ConversationList({
         return (
           <Link key={`${c.type}-${c.id}`} href={c.href} className="group block">
             <article
-              className={`rounded-2xl border bg-white p-4 transition-shadow hover:shadow-md dark:bg-surface-900/50 sm:p-5 ${
-                highlight
-                  ? "border-brand-200/60 dark:border-brand-800/40"
-                  : "border-surface-200/60 dark:border-surface-700/50"
+              className={`relative border-b border-[#ece9e2]/60 bg-white transition-all hover:bg-[#faeee7] dark:bg-surface-900/50 ${
+                compact ? "p-3" : "p-4 sm:p-5"
+              } ${
+                activeHref === c.href
+                  ? "bg-[#faeee7] dark:border-surface-700 dark:bg-surface-800/70"
+                  : highlight
+                  ? "bg-[#ece9e2]/40 dark:border-brand-800/40"
+                  : "bg-white dark:border-surface-700/50"
               }`}
             >
+              {activeHref === c.href && <span className="hidden" aria-hidden="true" />}
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0">
                   {highlight ? (
-                    <span className="block h-2.5 w-2.5 rounded-full bg-brand-500" />
+                    <span className="block h-2.5 w-2.5 rounded-full bg-[#C29B74]" />
                   ) : c.type === "direct" ? (
-                    <Mail className="h-4 w-4 text-surface-300 dark:text-surface-600" />
+                    <Mail className="h-4 w-4 text-[#6B6760] dark:text-surface-600" />
                   ) : (
-                    <MessageCircle className="h-4 w-4 text-surface-300 dark:text-surface-600" />
+                    <MessageCircle className="h-4 w-4 text-[#6B6760] dark:text-surface-600" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <h3
                       className={`min-w-0 flex-1 truncate text-body-sm ${
                         highlight
-                          ? "font-semibold text-surface-900 dark:text-white"
-                          : "font-medium text-surface-700 dark:text-surface-300"
+                          ? "font-semibold text-[#1E1B18] dark:text-white"
+                          : "font-semibold text-[#1E1B18] dark:text-surface-200"
                       }`}
                     >
                       {c.title}
                     </h3>
+                    <time className="shrink-0 text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt.toISOString()}>
+                      {formatRelativeDate(c.lastMessageAt)}
+                    </time>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      {c.subtitle && (
+                        <p className="truncate text-micro font-normal text-[#6B6760]">
+                          {c.subtitle}
+                        </p>
+                      )}
+                    </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {reqStatus ? (
                         <>
@@ -219,23 +240,15 @@ export async function ConversationList({
                       )}
                     </div>
                   </div>
-                  {c.subtitle && (
-                    <p className="mt-0.5 truncate text-micro text-surface-400">
-                      {c.subtitle}
-                    </p>
-                  )}
                   <p
-                    className={`mt-1 line-clamp-1 text-body-sm ${
+                    className={`mt-1 line-clamp-1 text-body-sm font-normal ${
                       highlight
-                        ? "text-surface-600 dark:text-surface-300"
-                        : "text-surface-500 dark:text-surface-400"
+                        ? "text-[#6B6760] dark:text-surface-300"
+                        : "text-[#6B6760] dark:text-surface-400"
                     }`}
                   >
-                    {c.fromProvider && <span className="text-surface-400">Jūs: </span>}
+                    {c.fromProvider && <span>Jūs: </span>}
                     {c.preview}
-                  </p>
-                  <p className="mt-1 text-micro text-surface-400">
-                    {formatRelativeDate(c.lastMessageAt)}
                   </p>
                 </div>
                 <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-surface-300 transition-colors group-hover:text-surface-400 dark:text-surface-600" />

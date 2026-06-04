@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import ThreadChat from "@/components/messaging/ThreadChat";
 import type { ThreadMessage } from "@/store/useConversationStore";
+import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 
 /**
  * Client leaf around ThreadChat for a provider direct-inquiry thread. Owns the
@@ -17,6 +18,8 @@ export function InquiryThreadChat({
   otherParticipantName,
   otherParticipantImage,
   otherParticipantReadAt,
+  requestBrief,
+  fillHeight = false,
 }: {
   inquiryId: string;
   providerId: string;
@@ -24,6 +27,8 @@ export function InquiryThreadChat({
   otherParticipantName: string;
   otherParticipantImage: string | null;
   otherParticipantReadAt: string | null;
+  requestBrief?: RequestBrief | null;
+  fillHeight?: boolean;
 }) {
   const { data: session } = useSession();
 
@@ -60,6 +65,8 @@ export function InquiryThreadChat({
       otherParticipantName={otherParticipantName}
       otherParticipantImage={otherParticipantImage}
       otherParticipantReadAt={otherParticipantReadAt}
+      requestBrief={requestBrief}
+      fillHeight={fillHeight}
       showInitialTimeDivider={false}
       forceDividerAfterFirstGroup
       showTopBorder={false}

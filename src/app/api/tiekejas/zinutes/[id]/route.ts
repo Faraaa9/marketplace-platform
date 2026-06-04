@@ -13,6 +13,104 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
 
+    if (id.startsWith("response-")) {
+      const responseId = id.replace(/^response-/, "");
+      const response = await prisma.response.findFirst({
+        where: { id: responseId, providerId: guard.userId },
+        select: {
+          id: true,
+          message: true,
+          createdAt: true,
+          clientLastReadAt: true,
+          provider: { select: { id: true, name: true } },
+          messages: {
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              senderId: true,
+              senderName: true,
+              sender: { select: { id: true, name: true, image: true } },
+            },
+            orderBy: { createdAt: "asc" },
+          },
+          request: {
+            select: {
+              title: true,
+              description: true,
+              category: true,
+              location: true,
+              budget: true,
+              deadline: true,
+              createdAt: true,
+              attachmentUrls: true,
+              clientName: true,
+              client: { select: { image: true } },
+              categoryRef: { select: { name: true } },
+              categories: { select: { category: { select: { name: true } } } },
+              _count: { select: { responses: true } },
+              status: true,
+            },
+          },
+        },
+      });
+
+      if (!response) {
+        return NextResponse.json({ success: false, error: "Pokalbis nerastas" }, { status: 404 });
+      }
+
+      await prisma.response
+        .update({ where: { id: response.id }, data: { providerLastReadAt: new Date() } })
+        .catch(() => null);
+
+      const categoryNames = response.request.categories.map((c) => c.category.name);
+      return NextResponse.json({
+        success: true,
+        data: {
+          type: "response",
+          id: response.id,
+          providerId: response.provider.id,
+          title: response.request.title,
+          subtitle: response.request.clientName,
+          status: response.request.status,
+          otherParticipantName: response.request.clientName,
+          otherParticipantImage: response.request.client?.image ?? null,
+          otherParticipantReadAt: response.clientLastReadAt?.toISOString() ?? null,
+          initialMessages: [
+            {
+              id: `response-${response.id}`,
+              content: response.message,
+              createdAt: response.createdAt.toISOString(),
+              senderId: response.provider.id,
+              senderName: response.provider.name,
+              sender: { id: response.provider.id, name: response.provider.name ?? "", image: null },
+              status: "sent",
+            },
+            ...response.messages.map((m) => ({
+              id: m.id,
+              content: m.content,
+              createdAt: m.createdAt.toISOString(),
+              senderId: m.senderId,
+              senderName: m.senderName ?? m.sender?.name ?? null,
+              sender: m.sender,
+              status: "sent",
+            })),
+          ],
+          requestBrief: {
+            title: response.request.title,
+            description: response.request.description,
+            categoryLabel: categoryNames[0] || response.request.categoryRef?.name || response.request.category,
+            location: response.request.location,
+            budget: response.request.budget,
+            deadline: response.request.deadline,
+            createdAt: response.request.createdAt.toISOString(),
+            responseCount: response.request._count.responses,
+            attachmentCount: response.request.attachmentUrls.length,
+          },
+        },
+      });
+    }
+
     const inquiry = await prisma.directInquiry.findFirst({
       where: { id, providerId: guard.userId },
       select: {
@@ -61,6 +159,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       success: true,
       data: {
         ...data,
+        type: "direct",
+        title: inquiry.senderName?.trim() || inquiry.senderEmail,
+        subtitle: inquiry.senderEmail,
         senderImage: sender?.image ?? null,
         senderAccountName: sender?.name ?? null,
         senderPresenceLevel: getPresenceLevel(sender?.lastSeenAt),

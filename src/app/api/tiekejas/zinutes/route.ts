@@ -76,7 +76,7 @@ export async function GET() {
       return {
         type: "request",
         id: r.id,
-        href: `/tiekejas/uzklausos/${r.request.id}`,
+        href: `/tiekejas/zinutes/response-${r.id}`,
         title: r.request.title,
         subtitle: r.request.clientName,
         // No chat messages yet → preview the offer (always the provider's).
