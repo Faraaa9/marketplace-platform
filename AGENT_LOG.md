@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 05:54 — Codex
+
+**Commit:** `374bd2b` — polish(ui): enhance provider inbox controls · lokalus
+
+**Pakeitimai:** 7 files changed, 422 insertions(+), 96 deletions(-)
+
+**Failai:**
+- src/app/api/tiekejas/zinutes/[id]/route.ts
+- src/app/api/tiekejas/zinutes/route.ts
+- src/app/globals.css
+- src/app/tiekejas/zinutes/ConversationList.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/app/tiekejas/zinutes/[id]/ThreadView.tsx
+- src/components/messaging/ThreadChat.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-04 05:26 — Codex
 
 **Commit:** `28ce14a` — polish(ui): refine provider chat dashboard · lokalus
