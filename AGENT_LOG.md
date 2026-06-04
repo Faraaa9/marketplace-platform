@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 18:22 — Codex
+
+**Commit:** `d94ab4b` — perf(chat): speed up provider messaging · lokalus
+
+**Pakeitimai:** 18 files changed, 283 insertions(+), 209 deletions(-)
+
+**Failai:**
+- src/app/api/requests/[id]/messages/route.ts
+- src/app/api/tiekejas/zinutes/[id]/messages/route.ts
+- src/app/api/tiekejas/zinutes/[id]/route.ts
+- src/app/api/tiekejas/zinutes/route.ts
+- src/app/api/tracking/[token]/messages/route.ts
+- src/app/api/zinutes/[token]/messages/route.ts
+- src/app/api/zinutes/[token]/route.ts
+- src/app/tiekejas/sections/AccountCard.tsx
+- src/app/tiekejas/sections/FollowUpsCard.tsx
+- src/app/tiekejas/sections/InboxUnreadBadge.tsx
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+
+**Toliau:** Jei tęsiamas chat darbas, pirmiausia tikrinti naujus naršyklės instrumentation logus: ar Supabase broadcast/postgres_changes ateina be refresh, ar thread recent-window pakanka UX, ir ar dashboard `/tiekejas` cold DB spike'ai dar matomi.
+
+
 ## 2026-06-04 12:06 — Codex
 
 **Commit:** `617c654` — perf(chat): optimize realtime inbox messaging · lokalus
