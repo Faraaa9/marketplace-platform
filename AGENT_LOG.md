@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 10:48 — Codex
+
+**Commit:** `9f3e9e2` — feat(chat): unify realtime inbox experience · lokalus
+
+**Pakeitimai:** 18 files changed, 418 insertions(+), 118 deletions(-)
+
+**Failai:**
+- docs/realtime-chat-plan.md
+- src/app/api/paskyra/zinutes/route.ts
+- src/app/api/requests/[id]/messages/route.ts
+- src/app/api/tiekejas/follow-ups/route.ts
+- src/app/api/tiekejas/zinutes/[id]/messages/route.ts
+- src/app/api/tiekejas/zinutes/route.ts
+- src/app/api/zinutes/[token]/messages/route.ts
+- src/app/meistrai/[slug]/components/DirectInquiryWidget.tsx
+- src/app/paskyra/zinutes/SentInquiriesView.tsx
+- src/app/tiekejas/sections/FollowUpsCard.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/app/tiekejas/zinutes/[id]/page.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-04 05:54 — Codex
 
 **Commit:** `374bd2b` — polish(ui): enhance provider inbox controls · lokalus
