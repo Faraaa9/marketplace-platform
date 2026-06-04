@@ -7,10 +7,20 @@ export type ProviderGuardResult =
   | {
       authorized: true;
       userId: string;
+      userName: string | null;
       providerProfileId: string;
       creditBalance: number;
     }
   | { authorized: false; response: NextResponse };
+
+type CachedProvider = {
+  providerProfileId: string;
+  creditBalance: number;
+  expiresAt: number;
+};
+
+const ACTIVE_PROVIDER_CACHE_TTL_MS = 30_000;
+const activeProviderCache = new Map<string, CachedProvider>();
 
 /**
  * Checks that the caller has a providerProfile with verified email and active status.
@@ -29,16 +39,27 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
-  const [user, profile] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { emailVerified: true, role: true },
-    }),
-    prisma.providerProfile.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true, isActive: true, creditBalance: true },
-    }),
-  ]);
+  const cached = activeProviderCache.get(session.user.id);
+  if (cached && cached.expiresAt > Date.now()) {
+    return {
+      authorized: true,
+      userId: session.user.id,
+      userName: session.user.name ?? null,
+      providerProfileId: cached.providerProfileId,
+      creditBalance: cached.creditBalance,
+    };
+  }
+
+  const profile = await prisma.providerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: {
+      id: true,
+      isActive: true,
+      creditBalance: true,
+      user: { select: { emailVerified: true, role: true } },
+    },
+  });
+  const user = profile?.user;
 
   if (user?.role !== "PROVIDER") {
     return {
@@ -88,9 +109,16 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
+  activeProviderCache.set(session.user.id, {
+    providerProfileId: profile.id,
+    creditBalance: profile.creditBalance,
+    expiresAt: Date.now() + ACTIVE_PROVIDER_CACHE_TTL_MS,
+  });
+
   return {
     authorized: true,
     userId: session.user.id,
+    userName: session.user.name ?? null,
     providerProfileId: profile.id,
     creditBalance: profile.creditBalance,
   };

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { getProviderAvatarImage } from "@/lib/provider-image";
 import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * Unified provider inbox — request conversations (Response threads) and direct
@@ -26,26 +27,101 @@ type ConversationItem = {
   presenceLabel: string | null;
 };
 
+const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 50;
+
+function parseLimit(value: string | null) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_LIMIT;
+  return Math.min(Math.floor(parsed), MAX_LIMIT);
+}
+
 export async function GET(req: NextRequest) {
   await connection();
+  const timer = createServerTimer("provider-inbox");
   try {
     const guard = await requireActiveProvider();
+    timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
     const providerId = guard.userId;
+    const summaryOnly = req.nextUrl.searchParams.get("summary") === "1";
     const threadParam = req.nextUrl.searchParams.get("thread")?.trim() || null;
     const responseThreadId = threadParam?.startsWith("response-")
       ? threadParam.replace(/^response-/, "")
       : null;
     const directThreadId = threadParam && !responseThreadId ? threadParam : null;
+    const limit = threadParam ? 1 : parseLimit(req.nextUrl.searchParams.get("limit"));
+    const cursorParam = req.nextUrl.searchParams.get("cursor");
+    const cursorDate = cursorParam ? new Date(cursorParam) : null;
+    const cursor =
+      cursorDate && !Number.isNaN(cursorDate.getTime()) && !threadParam
+        ? cursorDate
+        : null;
+    const pageTake = threadParam ? 1 : limit + 1;
+
+    if (summaryOnly) {
+      const unreadCap = 100;
+      const [responseUnread, incomingInquiryUnread, sentInquiryUnread] = await Promise.all([
+        prisma.response.findMany({
+          where: {
+            providerId,
+            lastMessageAt: { gt: prisma.response.fields.providerLastReadAt },
+          },
+          select: { id: true },
+          take: unreadCap,
+        }),
+        prisma.directInquiry.findMany({
+          where: {
+            providerId,
+            moderationStatus: "APPROVED",
+            status: { not: "ARCHIVED" },
+            lastMessageAt: { gt: prisma.directInquiry.fields.providerLastReadAt },
+          },
+          select: { id: true },
+          take: unreadCap,
+        }),
+        prisma.directInquiry.findMany({
+          where: {
+            senderUserId: providerId,
+            moderationStatus: "APPROVED",
+            status: { not: "ARCHIVED" },
+            clientLastReadAt: { not: null },
+            lastMessageAt: { gt: prisma.directInquiry.fields.clientLastReadAt },
+          },
+          select: { id: true },
+          take: unreadCap,
+        }),
+      ]);
+      timer.mark("summaryQuery");
+      const cappedTotal =
+        responseUnread.length + incomingInquiryUnread.length + sentInquiryUnread.length;
+      const totalUnread = Math.min(cappedTotal, unreadCap);
+      timer.end({
+        mode: "summary",
+        responseUnread: responseUnread.length,
+        incomingUnread: incomingInquiryUnread.length,
+        sentUnread: sentInquiryUnread.length,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: { conversations: [], totalUnread },
+      });
+    }
+
+    const shouldFetchResponses = !directThreadId;
+    const shouldFetchInquiries = !responseThreadId;
 
     const [responses, inquiries] = await Promise.all([
-      prisma.response.findMany({
+      shouldFetchResponses ? prisma.response.findMany({
         where: {
           providerId,
           ...(responseThreadId ? { id: responseThreadId } : {}),
-          ...(directThreadId ? { id: "__never__" } : {}),
+          ...(cursor ? { lastMessageAt: { lt: cursor } } : {}),
         },
+        orderBy: { lastMessageAt: "desc" },
+        take: pageTake,
         select: {
           id: true,
           message: true,
@@ -66,16 +142,18 @@ export async function GET(req: NextRequest) {
             take: 1,
           },
         },
-      }),
-      prisma.directInquiry.findMany({
+      }) : Promise.resolve([]),
+      shouldFetchInquiries ? prisma.directInquiry.findMany({
         where: {
           AND: [
             { OR: [{ providerId }, { senderUserId: providerId }] },
             { moderationStatus: "APPROVED" },
-            ...(responseThreadId ? [{ id: "__never__" }] : []),
             ...(directThreadId ? [{ OR: [{ id: directThreadId }, { trackingToken: directThreadId }] }] : []),
+            ...(cursor ? [{ lastMessageAt: { lt: cursor } }] : []),
           ],
         },
+        orderBy: { lastMessageAt: "desc" },
+        take: pageTake,
         select: {
           id: true,
           trackingToken: true,
@@ -102,8 +180,9 @@ export async function GET(req: NextRequest) {
             take: 1,
           },
         },
-      }),
+      }) : Promise.resolve([]),
     ]);
+    timer.mark("listQueries");
 
     const requestItems: ConversationItem[] = responses.map((r) => {
       const last = r.messages[0] ?? null;
@@ -158,15 +237,29 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    const conversations = [...requestItems, ...directItems].sort(
+    const sortedConversations = [...requestItems, ...directItems].sort(
       (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
     );
+    const conversations = threadParam ? sortedConversations : sortedConversations.slice(0, limit);
+    const hasMore = !threadParam && sortedConversations.length > limit;
+    const nextCursor = hasMore
+      ? conversations[conversations.length - 1]?.lastMessageAt.toISOString() ?? null
+      : null;
 
     const totalUnread = conversations.filter((c) => c.unread && !c.archived).length;
+    timer.mark("mapSort");
+    timer.end({
+      mode: threadParam ? "thread" : "list",
+      thread: threadParam ? "yes" : "no",
+      responses: responses.length,
+      inquiries: inquiries.length,
+      conversations: conversations.length,
+      hasMore,
+    });
 
     return NextResponse.json({
       success: true,
-      data: { conversations, totalUnread },
+      data: { conversations, totalUnread, nextCursor, hasMore },
     });
   } catch (error) {
     console.error("Provider inbox error:", error);

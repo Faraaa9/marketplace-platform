@@ -4,9 +4,12 @@ import { getServerSession } from "next-auth";
 import { SignJWT } from "jose";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createServerTimer } from "@/lib/server-timing";
 
 const TOKEN_TTL_SECONDS = 60 * 60;
 const THREAD_KINDS = new Set(["response", "directInquiry"]);
+const TOKEN_CACHE_SKEW_MS = 60_000;
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 // Mints a short-lived JWT for Supabase Realtime. The browser passes it to
 // `supabase.realtime.setAuth()` so that the `messages` / `notifications`
@@ -18,8 +21,7 @@ const THREAD_KINDS = new Set(["response", "directInquiry"]);
 // every Realtime / PostgREST request, so claims are trusted server-side.
 export async function GET(req: NextRequest) {
   await connection();
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id?: string } | undefined)?.id;
+  const timer = createServerTimer("realtime-token");
   const threadKind = req.nextUrl.searchParams.get("threadKind");
   const threadId = req.nextUrl.searchParams.get("threadId");
   const trackingToken = req.nextUrl.searchParams.get("trackingToken");
@@ -37,13 +39,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid thread kind" }, { status: 400 });
   }
 
-  if (!userId && !trackingToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  let userId: string | undefined;
   if (trackingToken) {
     if (!threadKind) {
       return NextResponse.json({ error: "Thread kind is required" }, { status: 400 });
+    }
+
+    const cacheKey = `tracking:${threadKind}:${threadId ?? ""}:${trackingToken}`;
+    const cached = tokenCache.get(cacheKey);
+    if (cached && cached.expiresAt - TOKEN_CACHE_SKEW_MS > Date.now()) {
+      timer.end({ mode: "tracking-cache", kind: threadKind });
+      return NextResponse.json(
+        { token: cached.token, expiresAt: cached.expiresAt },
+        { headers: { "Cache-Control": "private, max-age=300" } },
+      );
     }
 
     if (threadKind === "directInquiry") {
@@ -51,6 +60,7 @@ export async function GET(req: NextRequest) {
         where: { trackingToken },
         select: { id: true },
       });
+      timer.mark("trackingLookup");
       if (!inquiry || (threadId && inquiry.id !== threadId)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -60,6 +70,7 @@ export async function GET(req: NextRequest) {
           where: { id: threadId, request: { trackingToken } },
           select: { id: true },
         });
+        timer.mark("trackingLookup");
         if (!response) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -68,10 +79,29 @@ export async function GET(req: NextRequest) {
           where: { trackingToken },
           select: { id: true },
         });
+        timer.mark("trackingLookup");
         if (!request) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
       }
+    }
+  } else {
+    const session = await getServerSession(authOptions);
+    timer.mark("session");
+    userId = (session?.user as { id?: string } | undefined)?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cacheKey = `user:${userId}:${threadKind ?? ""}:${threadId ?? ""}`;
+    const cached = tokenCache.get(cacheKey);
+    if (cached && cached.expiresAt - TOKEN_CACHE_SKEW_MS > Date.now()) {
+      timer.end({ mode: "user-cache", kind: threadKind });
+      return NextResponse.json(
+        { token: cached.token, expiresAt: cached.expiresAt },
+        { headers: { "Cache-Control": "private, max-age=300" } },
+      );
     }
   }
 
@@ -92,11 +122,17 @@ export async function GET(req: NextRequest) {
     .setAudience("authenticated")
     .sign(new TextEncoder().encode(secret));
 
+  const cacheKey = trackingToken
+    ? `tracking:${threadKind}:${threadId ?? ""}:${trackingToken}`
+    : `user:${userId}:${threadKind ?? ""}:${threadId ?? ""}`;
+  tokenCache.set(cacheKey, { token, expiresAt: expiresAtSeconds * 1000 });
+  timer.end({ mode: trackingToken ? "tracking" : "user", kind: threadKind });
+
   return NextResponse.json(
     { token, expiresAt: expiresAtSeconds * 1000 },
     {
       headers: {
-        "Cache-Control": "private, no-store",
+        "Cache-Control": "private, max-age=300",
       },
     },
   );

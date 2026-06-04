@@ -284,7 +284,10 @@ model Message {
   directInquiry DirectInquiry? @relation(fields: [directInquiryId], references: [id], onDelete: Cascade)
   sender        User?          @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
-  @@index([directInquiryId])
+  @@index([responseId, createdAt])
+  @@index([directInquiryId, createdAt])
+  @@index([directInquiryId, senderId, createdAt])
+  @@index([responseId, senderId, createdAt])
   @@map("messages")
 }
 
@@ -317,6 +320,9 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([userId, isRead, createdAt])
+  @@index([userId, type, link, isRead])
   @@map("notifications")
 }
 
@@ -414,6 +420,9 @@ model DirectInquiry {
 
   @@index([providerId, status])
   @@index([providerId, lastMessageAt])
+  @@index([providerId, moderationStatus, status, lastMessageAt])
+  @@index([senderUserId, lastMessageAt])
+  @@index([senderUserId, moderationStatus, status, lastMessageAt])
   @@index([senderUserId])
   @@index([senderEmail])
   @@index([moderationStatus])

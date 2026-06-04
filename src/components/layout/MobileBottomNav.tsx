@@ -50,16 +50,21 @@ export default function MobileBottomNav() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const role = session?.user?.role;
   const userId = session?.user?.id;
+  const isHiddenRoute = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
-    if (status !== "authenticated" || !userId) {
+    if (status !== "authenticated" || !userId || isHiddenRoute) {
       return;
     }
 
     let cancelled = false;
-    const endpoint = role === "PROVIDER" ? "/api/tiekejas/zinutes" : "/api/paskyra/zinutes";
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile) return;
+
+    const endpoint = role === "PROVIDER" ? "/api/tiekejas/zinutes?summary=1" : "/api/paskyra/zinutes";
 
     const loadUnreadMessages = () => {
+      if (document.visibilityState !== "visible") return;
       fetch(endpoint, { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
@@ -78,16 +83,16 @@ export default function MobileBottomNav() {
     };
 
     loadUnreadMessages();
-    const interval = window.setInterval(loadUnreadMessages, 30000);
+    const interval = window.setInterval(loadUnreadMessages, 60000);
 
     return () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [role, status, userId]);
+  }, [isHiddenRoute, role, status, userId]);
 
   if (status !== "authenticated" || !session?.user) return null;
-  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+  if (isHiddenRoute) return null;
 
   const items = role === "PROVIDER" ? PROVIDER_ITEMS : CUSTOMER_ITEMS;
 

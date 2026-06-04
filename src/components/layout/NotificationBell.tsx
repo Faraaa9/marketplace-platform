@@ -30,6 +30,8 @@ interface NotificationRow {
 }
 
 const REFETCH_DEBOUNCE_MS = 10_000; // safety-net refetch on focus is debounced this hard
+const NOTIFICATION_CACHE_TTL_MS = 30_000;
+const NOTIFICATION_CACHE_KEY = "notifications:v1";
 
 function normalizeNotificationLink(link?: string | null) {
   if (!link) return undefined;
@@ -69,11 +71,39 @@ export default function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
   const prevUnreadRef = useRef(0);
   const lastFetchAtRef = useRef(0);
+  const fetchPromiseRef = useRef<Promise<void> | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (status !== "authenticated") return;
+    if (fetchPromiseRef.current) return fetchPromiseRef.current;
+    if (typeof window !== "undefined") {
+      const cached = window.sessionStorage.getItem(NOTIFICATION_CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as {
+            fetchedAt?: number;
+            notifications?: Notification[];
+            unreadCount?: number;
+          };
+          if (
+            parsed.fetchedAt &&
+            Date.now() - parsed.fetchedAt < NOTIFICATION_CACHE_TTL_MS &&
+            Array.isArray(parsed.notifications)
+          ) {
+            setNotifications(parsed.notifications);
+            if (typeof parsed.unreadCount === "number") {
+              prevUnreadRef.current = parsed.unreadCount;
+              setUnreadCount(parsed.unreadCount);
+            }
+            return;
+          }
+        } catch {
+          window.sessionStorage.removeItem(NOTIFICATION_CACHE_KEY);
+        }
+      }
+    }
     lastFetchAtRef.current = Date.now();
-    try {
+    fetchPromiseRef.current = (async () => {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
@@ -83,15 +113,28 @@ export default function NotificationBell() {
             link: normalizeNotificationLink(notification.link),
           }));
           setNotifications(all.slice(0, 10));
-          const newUnread = all.filter((n) => !n.isRead).length;
+          const newUnread = typeof data.unreadCount === "number"
+            ? data.unreadCount
+            : all.filter((n) => !n.isRead).length;
           if (newUnread > prevUnreadRef.current) {
             setHasNewSinceLastOpen(true);
           }
           prevUnreadRef.current = newUnread;
           setUnreadCount(newUnread);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(
+              NOTIFICATION_CACHE_KEY,
+              JSON.stringify({ fetchedAt: Date.now(), notifications: all.slice(0, 10), unreadCount: newUnread })
+            );
+          }
         }
       }
-    } catch {}
+    })()
+      .catch(() => {})
+      .finally(() => {
+        fetchPromiseRef.current = null;
+      });
+    return fetchPromiseRef.current;
   }, [status, setUnreadCount]);
 
   // Subscribe to Supabase Realtime for instant notification delivery (no polling).

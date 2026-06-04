@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse, connection } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { after, NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { createMessageNotification } from "@/lib/message-notifications";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * Post a message to a direct-inquiry thread — provider side.
@@ -13,12 +12,15 @@ import { createMessageNotification } from "@/lib/message-notifications";
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await connection();
+  const timer = createServerTimer("provider-message-send");
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();
+    timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
     const body = await req.json();
+    timer.mark("parseBody");
     const parsed = messageSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -31,28 +33,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       where: { id, providerId: guard.userId },
       select: { id: true, senderUserId: true, trackingToken: true },
     });
+    timer.mark("inquiryLookup");
     if (!inquiry) {
       return NextResponse.json({ success: false, error: "Žinutė nerasta" }, { status: 404 });
     }
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);
 
-    // Duplicate detection: block identical message within last 30 seconds
-    const recentDuplicate = await prisma.message.findFirst({
+    const recentMessages = await prisma.message.findMany({
       where: {
         directInquiryId: id,
         senderId: guard.userId,
-        content: sanitizedContent,
         createdAt: { gte: new Date(Date.now() - 30 * 1000) },
       },
-      select: { id: true },
+      select: { content: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
     });
-    if (recentDuplicate) {
+    timer.mark("duplicateCheck");
+    if (recentMessages.some((message) => message.content === sanitizedContent)) {
       return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
     }
 
-    const session = await getServerSession(authOptions);
-    const providerName = session?.user?.name || null;
+    const providerName = guard.userName;
 
     // Persist the message and bump the thread's activity timestamp atomically.
     // The provider's own send also counts as "read".
@@ -78,15 +81,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         data: { lastMessageAt: now, providerLastReadAt: now },
       }),
     ]);
+    timer.mark("transaction");
 
     // Notify the sender — best-effort, in-app only when the sender has an account.
     if (inquiry.senderUserId) {
-      await createMessageNotification({
-        userId: inquiry.senderUserId,
-        link: `/paskyra/zinutes?thread=${inquiry.trackingToken}`,
-        contextLabel: providerName || "Tiekėjas",
-      });
+      const senderUserId = inquiry.senderUserId;
+      after(() =>
+        createMessageNotification({
+          userId: senderUserId,
+          link: `/paskyra/zinutes?thread=${inquiry.trackingToken}`,
+          contextLabel: providerName || "Tiekėjas",
+        })
+      );
     }
+    timer.end({ inquiryId: id, notified: Boolean(inquiry.senderUserId) });
 
     return NextResponse.json({ success: true, data: message });
   } catch (error) {

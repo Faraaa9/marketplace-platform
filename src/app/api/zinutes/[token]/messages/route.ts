@@ -1,23 +1,24 @@
-import { NextRequest, NextResponse, connection } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { after, NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { createMessageNotification } from "@/lib/message-notifications";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * Post a message to a direct-inquiry thread — sender side, authenticated by
  * the inquiry's tracking token.
  *
- * Supports both a logged-in sender (must match the inquiry's sender account)
- * and an anonymous sender (the tracking token alone proves ownership).
+ * Supports both a known sender account and anonymous senders. The tracking
+ * token proves ownership of this conversation.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   await connection();
+  const timer = createServerTimer("client-message-send");
   try {
     const { token } = await params;
     const body = await req.json();
+    timer.mark("parseBody");
     const parsed = messageSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -30,50 +31,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       where: { trackingToken: token },
       select: { id: true, providerId: true, senderUserId: true, senderName: true },
     });
+    timer.mark("inquiryLookup");
     if (!inquiry) {
       return NextResponse.json({ success: false, error: "Pokalbis nerastas" }, { status: 404 });
     }
 
-    // Determine sender identity.
-    const session = await getServerSession(authOptions);
-    let senderId: string | null = null;
-    let senderName: string;
-
-    if (session?.user?.id) {
-      // Logged-in user — must be the inquiry's sender when it has a known one.
-      if (inquiry.senderUserId && inquiry.senderUserId !== session.user.id) {
-        return NextResponse.json({ success: false, error: "Neturite teisės rašyti šiame pokalbyje" }, { status: 403 });
-      }
-      // Block self-thread: the provider must not write here as the sender.
-      if (inquiry.providerId === session.user.id) {
-        return NextResponse.json({ success: false, error: "Negalite rašyti savo paties pokalbyje" }, { status: 403 });
-      }
-      senderId = session.user.id;
-      senderName = session.user.name || inquiry.senderName || "Klientas";
-    } else {
-      // Anonymous — the tracking token is the proof of ownership.
-      senderName = inquiry.senderName || "Klientas";
-    }
+    const senderId = inquiry.senderUserId;
+    const senderName = inquiry.senderName || "Klientas";
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);
 
-    // Duplicate detection: block identical message within last 30 seconds.
-    const duplicateWhere: Record<string, unknown> = {
-      directInquiryId: inquiry.id,
-      content: sanitizedContent,
-      createdAt: { gte: new Date(Date.now() - 30 * 1000) },
-    };
-    if (senderId) {
-      duplicateWhere.senderId = senderId;
-    } else {
-      duplicateWhere.senderName = senderName;
-      duplicateWhere.senderId = null;
-    }
-    const recentDuplicate = await prisma.message.findFirst({
-      where: duplicateWhere,
-      select: { id: true },
+    const recentMessages = await prisma.message.findMany({
+      where: {
+        directInquiryId: inquiry.id,
+        senderId,
+        createdAt: { gte: new Date(Date.now() - 30 * 1000) },
+      },
+      select: { content: true, senderName: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
     });
-    if (recentDuplicate) {
+    timer.mark("duplicateCheck");
+    const isDuplicate = recentMessages.some((message) =>
+      message.content === sanitizedContent && (senderId || message.senderName === senderName)
+    );
+    if (isDuplicate) {
       return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
     }
 
@@ -100,13 +82,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
         data: { lastMessageAt: now, clientLastReadAt: now },
       }),
     ]);
+    timer.mark("transaction");
 
     // Notify the provider — best-effort.
-    await createMessageNotification({
-      userId: inquiry.providerId,
-      link: `/tiekejas/zinutes?thread=${inquiry.id}`,
-      contextLabel: senderName,
-    });
+    after(() =>
+      createMessageNotification({
+        userId: inquiry.providerId,
+        link: `/tiekejas/zinutes?thread=${inquiry.id}`,
+        contextLabel: senderName,
+      })
+    );
+    timer.end({ inquiryId: inquiry.id, knownSender: Boolean(senderId) });
 
     return NextResponse.json({ success: true, data: message });
   } catch (error) {

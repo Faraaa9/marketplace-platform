@@ -1,16 +1,19 @@
-import { NextRequest, NextResponse, connection } from "next/server";
+import { after, NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * GET — fetch one direct-inquiry conversation (provider view) and mark it read.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await connection();
+  const timer = createServerTimer("provider-thread-get");
   try {
     const { id } = await params;
     const guard = await requireActiveProvider();
+    timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
     if (id.startsWith("response-")) {
@@ -54,16 +57,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
         },
       });
+      timer.mark("responseQuery");
 
       if (!response) {
         return NextResponse.json({ success: false, error: "Pokalbis nerastas" }, { status: 404 });
       }
 
-      await prisma.response
-        .update({ where: { id: response.id }, data: { providerLastReadAt: new Date() } })
-        .catch(() => null);
+      after(() =>
+        prisma.response
+          .update({
+            where: { id: response.id },
+            data: { providerLastReadAt: new Date() },
+            select: { id: true },
+          })
+          .catch(() => null)
+      );
 
       const categoryNames = response.request.categories.map((c) => c.category.name);
+      timer.mark("map");
+      timer.end({ mode: "response", messages: response.messages.length });
       return NextResponse.json({
         success: true,
         data: {
@@ -140,22 +152,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
       },
     });
+    timer.mark("directQuery");
 
     if (!inquiry) {
       return NextResponse.json({ success: false, error: "Žinutė nerasta" }, { status: 404 });
     }
 
-    // Mark this conversation read — best-effort.
-    try {
-      await prisma.directInquiry.update({
-        where: { id },
-        data: { providerLastReadAt: new Date() },
-      });
-    } catch {
-      // read tracking must never break the page
-    }
+    after(() =>
+      prisma.directInquiry
+        .update({
+          where: { id },
+          data: { providerLastReadAt: new Date() },
+          select: { id: true },
+        })
+        .catch(() => null)
+    );
 
     const { sender, ...data } = inquiry;
+    timer.mark("map");
+    timer.end({ mode: "direct", messages: inquiry.messages.length });
 
     return NextResponse.json({
       success: true,

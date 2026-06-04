@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArrowLeft,
@@ -100,7 +100,21 @@ type SenderDirectThreadResponse = {
 
 type RealtimeThreadPayload = {
   id?: string;
+  lastMessageAt?: string | Date | null;
+  providerLastReadAt?: string | Date | null;
+  clientLastReadAt?: string | Date | null;
 };
+
+type ConversationListPayload = {
+  conversations: Conversation[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
+};
+
+const INBOX_CACHE_KEY = "provider-inbox:v1";
+const INBOX_PAGE_SIZE = 30;
+const THREAD_REFRESH_COOLDOWN_MS = 2500;
+const THREAD_REFRESH_DELAY_MS = 250;
 
 function toThreadId(conversation: Conversation) {
   return conversation.href.split("/").pop() || conversation.id;
@@ -244,9 +258,12 @@ function orderSummaryTitle(thread: ThreadData) {
 export default function ProviderInboxClient() {
   const { data: session } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreConversations, setHasMoreConversations] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [thread, setThread] = useState<ThreadData | null>(null);
   const [loadingList, setLoadingList] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const [listError, setListError] = useState("");
   const [threadError, setThreadError] = useState("");
@@ -254,6 +271,16 @@ export default function ProviderInboxClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const listFetchRef = useRef<Promise<Conversation[]> | null>(null);
+  const conversationsRef = useRef<Conversation[]>([]);
+  const threadFetchesRef = useRef(new Map<string, Promise<Conversation | null>>());
+  const threadRefreshTimersRef = useRef(new Map<string, number>());
+  const lastThreadRefreshAtRef = useRef(new Map<string, number>());
+  const lastRealtimeActivityRef = useRef(new Map<string, number>());
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   const sortConversations = useCallback((items: Conversation[]) => {
     return [...items].sort(
@@ -261,14 +288,45 @@ export default function ProviderInboxClient() {
     );
   }, []);
 
-  const loadConversations = useCallback(async () => {
-    const res = await fetch("/api/tiekejas/zinutes", { cache: "no-store" });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || "Klaida");
-    const loadedConversations = sortConversations(data.data.conversations as Conversation[]);
-    setConversations(loadedConversations);
-    return loadedConversations;
+  const persistConversationCache = useCallback((payload: ConversationListPayload) => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(INBOX_CACHE_KEY, JSON.stringify(payload));
+  }, []);
+
+  const mergeConversations = useCallback((current: Conversation[], incoming: Conversation[]) => {
+    const byThread = new Map<string, Conversation>();
+    for (const item of current) byThread.set(toThreadId(item), item);
+    for (const item of incoming) byThread.set(toThreadId(item), item);
+    return sortConversations(Array.from(byThread.values()));
   }, [sortConversations]);
+
+  const loadConversations = useCallback(async ({ cursor, append = false }: { cursor?: string | null; append?: boolean } = {}) => {
+    if (!cursor && !append && listFetchRef.current) return listFetchRef.current;
+    const params = new URLSearchParams({ limit: String(INBOX_PAGE_SIZE) });
+    if (cursor) params.set("cursor", cursor);
+    const promise = (async () => {
+      const res = await fetch(`/api/tiekejas/zinutes?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Klaida");
+      const loadedConversations = sortConversations(data.data.conversations as Conversation[]);
+      const next = data.data.nextCursor ?? null;
+      const more = Boolean(data.data.hasMore);
+      setNextCursor(next);
+      setHasMoreConversations(more);
+      let mergedForReturn = loadedConversations;
+      setConversations((current) => {
+        const updated = append ? mergeConversations(current, loadedConversations) : loadedConversations;
+        mergedForReturn = updated;
+        persistConversationCache({ conversations: updated, nextCursor: next, hasMore: more });
+        return updated;
+      });
+      return mergedForReturn;
+    })().finally(() => {
+      if (!cursor && !append) listFetchRef.current = null;
+    });
+    if (!cursor && !append) listFetchRef.current = promise;
+    return promise;
+  }, [mergeConversations, persistConversationCache, sortConversations]);
 
   const upsertConversation = useCallback((conversation: Conversation) => {
     setConversations((items) => {
@@ -276,27 +334,56 @@ export default function ProviderInboxClient() {
       const next = items.some((item) => toThreadId(item) === threadId)
         ? items.map((item) => (toThreadId(item) === threadId ? conversation : item))
         : [conversation, ...items];
-      return sortConversations(next);
+      const sorted = sortConversations(next);
+      persistConversationCache({ conversations: sorted, nextCursor, hasMore: hasMoreConversations });
+      return sorted;
     });
-  }, [sortConversations]);
+  }, [hasMoreConversations, nextCursor, persistConversationCache, sortConversations]);
 
   const removeConversation = useCallback((threadId: string) => {
-    setConversations((items) => items.filter((item) => toThreadId(item) !== threadId));
-  }, []);
+    setConversations((items) => {
+      const next = items.filter((item) => toThreadId(item) !== threadId);
+      persistConversationCache({ conversations: next, nextCursor, hasMore: hasMoreConversations });
+      return next;
+    });
+  }, [hasMoreConversations, nextCursor, persistConversationCache]);
 
   const loadConversation = useCallback(async (threadId: string) => {
-    const res = await fetch(`/api/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`, {
-      cache: "no-store",
+    const existing = threadFetchesRef.current.get(threadId);
+    if (existing) return existing;
+
+    const promise = (async () => {
+      const res = await fetch(`/api/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Klaida");
+      const [conversation] = data.data.conversations as Conversation[];
+      if (conversation) {
+        upsertConversation(conversation);
+        return conversation;
+      } else {
+        removeConversation(threadId);
+        return null;
+      }
+    })().finally(() => {
+      threadFetchesRef.current.delete(threadId);
+      lastThreadRefreshAtRef.current.set(threadId, Date.now());
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || "Klaida");
-    const [conversation] = data.data.conversations as Conversation[];
-    if (conversation) {
-      upsertConversation(conversation);
-    } else {
-      removeConversation(threadId);
-    }
+
+    threadFetchesRef.current.set(threadId, promise);
+    return promise;
   }, [removeConversation, upsertConversation]);
+
+  const loadMoreConversations = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      await loadConversations({ cursor: nextCursor, append: true });
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadConversations, loadingMore, nextCursor]);
 
   const selectConversation = useCallback(async (conversation: Conversation) => {
     const id = toThreadId(conversation);
@@ -327,14 +414,33 @@ export default function ProviderInboxClient() {
   useEffect(() => {
     let cancelled = false;
     setListError("");
+    if (typeof window !== "undefined") {
+      const cached = window.sessionStorage.getItem(INBOX_CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as ConversationListPayload;
+          if (Array.isArray(parsed.conversations) && parsed.conversations.length > 0) {
+            setConversations(sortConversations(parsed.conversations));
+            setNextCursor(parsed.nextCursor ?? null);
+            setHasMoreConversations(Boolean(parsed.hasMore));
+            setLoadingList(false);
+          }
+        } catch {
+          window.sessionStorage.removeItem(INBOX_CACHE_KEY);
+        }
+      }
+    }
     loadConversations()
       .then((loadedConversations) => {
         if (cancelled) return;
-        setConversations(loadedConversations);
         const initialThread = new URLSearchParams(window.location.search).get("thread");
         const initialConversation = loadedConversations.find((c) => toThreadId(c) === initialThread);
         if (initialConversation) {
           void selectConversation(initialConversation);
+        } else if (initialThread) {
+          void loadConversation(initialThread).then((conversation) => {
+            if (conversation && !cancelled) void selectConversation(conversation);
+          });
         }
       })
       .catch(() => {
@@ -345,16 +451,17 @@ export default function ProviderInboxClient() {
       });
 
     const interval = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
       void loadConversations().catch(() => {
         // Keep the current list visible; the next poll can recover.
       });
-    }, 15000);
+    }, 60000);
 
     return () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [loadConversations, selectConversation]);
+  }, [loadConversation, loadConversations, selectConversation, sortConversations]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -364,11 +471,30 @@ export default function ProviderInboxClient() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const refreshConversation = (threadId: string) => {
-      window.setTimeout(() => {
+      const existing = conversationsRef.current.find((item) => toThreadId(item) === threadId);
+      if (existing) {
+        const existingActivity = new Date(existing.lastMessageAt).getTime();
+        const rowActivity = lastRealtimeActivityRef.current.get(threadId);
+        if (rowActivity && rowActivity <= existingActivity) return;
+      }
+
+      const now = Date.now();
+      const lastRefreshAt = lastThreadRefreshAtRef.current.get(threadId) ?? 0;
+      if (
+        threadFetchesRef.current.has(threadId) ||
+        threadRefreshTimersRef.current.has(threadId) ||
+        now - lastRefreshAt < THREAD_REFRESH_COOLDOWN_MS
+      ) {
+        return;
+      }
+
+      const timer = window.setTimeout(() => {
+        threadRefreshTimersRef.current.delete(threadId);
         void loadConversation(threadId).catch(() => {
           // Polling remains as a fallback if a realtime row refresh fails.
         });
-      }, 150);
+      }, THREAD_REFRESH_DELAY_MS);
+      threadRefreshTimersRef.current.set(threadId, timer);
     };
 
     (async () => {
@@ -387,7 +513,11 @@ export default function ProviderInboxClient() {
           },
           (payload) => {
             const row = payload.new as RealtimeThreadPayload;
-            if (row.id) refreshConversation(`response-${row.id}`);
+            if (!row.id) return;
+            if (row.lastMessageAt) {
+              lastRealtimeActivityRef.current.set(`response-${row.id}`, new Date(row.lastMessageAt).getTime());
+            }
+            refreshConversation(`response-${row.id}`);
           },
         )
         .on(
@@ -399,7 +529,11 @@ export default function ProviderInboxClient() {
           },
           (payload) => {
             const row = payload.new as RealtimeThreadPayload;
-            if (row.id) refreshConversation(row.id);
+            if (!row.id) return;
+            if (row.lastMessageAt) {
+              lastRealtimeActivityRef.current.set(row.id, new Date(row.lastMessageAt).getTime());
+            }
+            refreshConversation(row.id);
           },
         )
         .subscribe();
@@ -407,6 +541,10 @@ export default function ProviderInboxClient() {
 
     return () => {
       cancelled = true;
+      for (const timer of threadRefreshTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+      threadRefreshTimersRef.current.clear();
       if (channel) supabase.removeChannel(channel);
     };
   }, [loadConversation, session?.user?.id]);
@@ -449,6 +587,8 @@ export default function ProviderInboxClient() {
 
   const bumpSelectedConversation = useCallback((message: ThreadMessage) => {
     if (!selectedConversation) return;
+    const selectedThreadId = toThreadId(selectedConversation);
+    lastThreadRefreshAtRef.current.set(selectedThreadId, Date.now());
     setConversations((items) =>
       sortConversations(
         items.map((item) =>
@@ -610,6 +750,18 @@ export default function ProviderInboxClient() {
                       </button>
                     );
                   })}
+                  {!searchQuery.trim() && hasMoreConversations && (
+                    <div className="px-3 py-3">
+                      <button
+                        type="button"
+                        onClick={loadMoreConversations}
+                        disabled={loadingMore}
+                        className="min-h-11 w-full rounded-xl border border-[#EAEAEA] bg-white px-4 text-body-sm font-semibold text-[#6B6760] transition hover:bg-[#F8F7F4] hover:text-[#1E1B18] disabled:cursor-wait disabled:opacity-60"
+                      >
+                        {loadingMore ? "Kraunama..." : "Įkelti senesnius pokalbius"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

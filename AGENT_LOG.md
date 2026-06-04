@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-04 12:06 — Codex
+
+**Commit:** `617c654` — perf(chat): optimize realtime inbox messaging · lokalus
+
+**Pakeitimai:** 15 files changed, 728 insertions(+), 179 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260604_optimize_chat_inbox_indexes.sql
+- prisma/schema.prisma
+- src/app/api/notifications/route.ts
+- src/app/api/realtime/read/route.ts
+- src/app/api/realtime/token/route.ts
+- src/app/api/tiekejas/zinutes/[id]/messages/route.ts
+- src/app/api/tiekejas/zinutes/[id]/route.ts
+- src/app/api/tiekejas/zinutes/route.ts
+- src/app/api/zinutes/[token]/messages/route.ts
+- src/app/api/zinutes/[token]/route.ts
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/components/layout/MobileBottomNav.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-04 10:48 — Codex
 
 **Commit:** `9f3e9e2` — feat(chat): unify realtime inbox experience · lokalus

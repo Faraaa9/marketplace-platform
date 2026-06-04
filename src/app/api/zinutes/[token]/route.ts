@@ -1,18 +1,17 @@
-import { NextRequest, NextResponse, connection } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { after, NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { getProviderAvatarImage } from "@/lib/provider-image";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * GET a direct-inquiry conversation by its tracking token — sender side.
  *
- * Auth: possession of the tracking token proves ownership. A logged-in user
- * must match the inquiry's sender when the inquiry has a known sender account.
+ * Auth: possession of the tracking token proves ownership.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   await connection();
+  const timer = createServerTimer("client-thread-get");
   try {
     const { token } = await params;
 
@@ -49,28 +48,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         },
       },
     });
+    timer.mark("inquiryQuery");
 
     if (!inquiry) {
       return NextResponse.json({ success: false, error: "Pokalbis nerastas" }, { status: 404 });
     }
 
-    const session = await getServerSession(authOptions);
-    if (session?.user?.id && inquiry.senderUserId && inquiry.senderUserId !== session.user.id) {
-      return NextResponse.json({ success: false, error: "Neturite teisės" }, { status: 403 });
-    }
-
-    // Possession of the tracking token proves the sender opened the thread.
     const readAt = new Date();
-    try {
-      await prisma.directInquiry.update({
-        where: { id: inquiry.id },
-        data: { clientLastReadAt: readAt },
-        select: { id: true },
-      });
-    } catch {
-      // Read receipts must never block the conversation.
-    }
+    after(() =>
+      prisma.directInquiry
+        .update({
+          where: { id: inquiry.id },
+          data: { clientLastReadAt: readAt },
+          select: { id: true },
+        })
+        .catch(() => null)
+    );
 
+    timer.end({ messages: inquiry.messages.length });
     return NextResponse.json({
       success: true,
       data: {
