@@ -40,7 +40,11 @@ export function getSupabaseBrowser(): SupabaseClient | null {
 }
 
 let realtimeAuthPromise: Promise<boolean> | null = null;
+const AUTH_REFRESH_SKEW_MS = 5 * 60_000;
+const FAILED_AUTH_RETRY_MS = 60_000;
 const scopedRealtimeAuthPromises = new Map<string, Promise<boolean>>();
+const scopedRealtimeAuthUntil = new Map<string, number>();
+const scopedRealtimeAuthFailedUntil = new Map<string, number>();
 
 export interface RealtimeAuthScope {
   threadKind?: "response" | "directInquiry";
@@ -79,10 +83,21 @@ function authTokenUrl(scope?: RealtimeAuthScope): string {
  * session and any reload mints a fresh token.
  */
 export function authenticateRealtime(scope?: RealtimeAuthScope): Promise<boolean> {
+  const key = authScopeKey(scope);
+  const authUntil = scopedRealtimeAuthUntil.get(key) ?? 0;
+  const failedUntil = scopedRealtimeAuthFailedUntil.get(key) ?? 0;
+
+  if (authUntil > Date.now() + AUTH_REFRESH_SKEW_MS) {
+    return Promise.resolve(true);
+  }
+
+  if (failedUntil > Date.now()) {
+    return Promise.resolve(false);
+  }
+
   if (!scope) {
     if (realtimeAuthPromise) return realtimeAuthPromise;
   } else {
-    const key = authScopeKey(scope);
     const cached = scopedRealtimeAuthPromises.get(key);
     if (cached) return cached;
   }
@@ -93,13 +108,28 @@ export function authenticateRealtime(scope?: RealtimeAuthScope): Promise<boolean
   const promise = (async () => {
     try {
       const res = await fetch(authTokenUrl(scope), { credentials: "include" });
-      if (!res.ok) return false;
-      const data = (await res.json()) as { token?: string };
-      if (!data.token) return false;
+      if (!res.ok) {
+        scopedRealtimeAuthFailedUntil.set(key, Date.now() + FAILED_AUTH_RETRY_MS);
+        return false;
+      }
+      const data = (await res.json()) as { token?: string; expiresAt?: number };
+      if (!data.token) {
+        scopedRealtimeAuthFailedUntil.set(key, Date.now() + FAILED_AUTH_RETRY_MS);
+        return false;
+      }
       supabase.realtime.setAuth(data.token);
+      scopedRealtimeAuthUntil.set(key, data.expiresAt ?? Date.now() + 55 * 60_000);
+      scopedRealtimeAuthFailedUntil.delete(key);
       return true;
     } catch {
+      scopedRealtimeAuthFailedUntil.set(key, Date.now() + FAILED_AUTH_RETRY_MS);
       return false;
+    } finally {
+      if (!scope) {
+        realtimeAuthPromise = null;
+      } else {
+        scopedRealtimeAuthPromises.delete(key);
+      }
     }
   })();
 

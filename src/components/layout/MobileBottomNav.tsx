@@ -28,7 +28,7 @@ const CUSTOMER_ITEMS: NavItem[] = [
   { href: "/paskyra/profilis", label: "Profilis", icon: User, matchPrefix: "/paskyra/profilis" },
 ];
 
-const HIDDEN_PREFIXES = ["/admin", "/prisijungti", "/registruotis", "/zinutes/", "/tiekejas/zinutes/"];
+const HIDDEN_PREFIXES = ["/admin", "/prisijungti", "/registruotis", "/zinutes/", "/tiekejas/zinutes"];
 
 function isActive(pathname: string, item: NavItem, allItems: NavItem[]) {
   // For nested routes like /tiekejas/uzklausos, prefer the more specific match
@@ -77,7 +77,7 @@ export default function MobileBottomNav() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, role, status, userId]);
+  }, [role, status, userId]);
 
   if (status !== "authenticated" || !session?.user) return null;
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;

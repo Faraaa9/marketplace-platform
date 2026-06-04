@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { cacheLife, cacheTag } from "next/cache";
 
 export interface ServiceCategoryItem {
   id: string;
@@ -86,6 +87,13 @@ export function invalidateServiceCategoryGroups(): void {
  */
 export async function getServiceCategoryGroups(): Promise<ServiceCategoryGroup[]> {
   "use cache";
+  cacheLife({ revalidate: 300 });
+  cacheTag("categories");
+
+  if (cachedGroups && cachedGroups.expiresAt > Date.now()) {
+    return cachedGroups.value;
+  }
+
   // Categories rarely change — 5-minute cache window is plenty.
   // No tag yet; consumers can tag at their own level.
   const rows = await loadServiceCategoryRows();

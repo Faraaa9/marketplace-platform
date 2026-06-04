@@ -1,7 +1,40 @@
 import { NextResponse, connection } from "next/server";
+import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { resolveViewerIdentity } from "@/lib/stories/identity";
 
+async function getActiveStoriesForFeed() {
+  "use cache";
+  cacheLife({ revalidate: 60 });
+  cacheTag("stories");
+
+  return prisma.providerStory.findMany({
+    where: {
+      moderationStatus: "APPROVED",
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      imageUrl: true,
+      text: true,
+      expiresAt: true,
+      createdAt: true,
+      providerId: true,
+      provider: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          providerProfile: {
+            select: { slug: true, isActive: true },
+          },
+        },
+      },
+    },
+    take: 200,
+  });
+}
 
 /**
  * GET /api/stories/feed
@@ -12,34 +45,7 @@ import { resolveViewerIdentity } from "@/lib/stories/identity";
 export async function GET() {
   await connection();
   try {
-    const now = new Date();
-
-    const stories = await prisma.providerStory.findMany({
-      where: {
-        moderationStatus: "APPROVED",
-        expiresAt: { gt: now },
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        imageUrl: true,
-        text: true,
-        expiresAt: true,
-        createdAt: true,
-        providerId: true,
-        provider: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            providerProfile: {
-              select: { slug: true, isActive: true },
-            },
-          },
-        },
-      },
-      take: 200,
-    });
+    const stories = await getActiveStoriesForFeed();
 
     // Which of these stories has the current viewer already seen? Read-only:
     // a brand-new visitor (no cookie yet) has simply seen nothing.
