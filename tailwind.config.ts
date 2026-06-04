@@ -24,10 +24,10 @@ const config: Config = {
           900: "#5a2a1c",
           950: "#32150b",
         },
-        // Warm cream / taupe neutrals
+        // Warm cream / taupe neutrals - ATSTATYTA GAMYKLINĖ PALETĖ
         surface: {
-          0: "#fcfbf8",
-          50: "#ece9e2",
+          0: "#fcfbf8",   // Tavo tikrasis švarus kreminis fonas chato srautui
+          50: "#ece9e2",  // Švelni kreminė pilka (skeletonams ir šviesiems burbulams)
           100: "#e3dfd4",
           200: "#d6d0c3",
           300: "#c0b9a8",
@@ -36,7 +36,7 @@ const config: Config = {
           600: "#5f584c",
           700: "#463f35",
           800: "#312d25",
-          900: "#25221e",
+          900: "#25221e",  // Prabangi tamsi (naudok tekstui arba tamsiems burbulams)
           950: "#1a1813",
         },
       },

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { cacheLife, cacheTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -211,6 +212,17 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const perPage = 20;
 
   const now = new Date();
+  const resolvedCategoryId = category ? await resolveCategoryParam(category) : null;
+
+  if (category && !resolvedCategoryId) {
+    const normalized = new URLSearchParams();
+    if (location) normalized.set("location", location);
+    if (search) normalized.set("search", search);
+    if (sort && sort !== "newest") normalized.set("sort", sort);
+    if (page > 1) normalized.set("page", String(page));
+    const qs = normalized.toString();
+    redirect(`/uzklausos${qs ? `?${qs}` : ""}`);
+  }
 
   const [{ requests, total }, { totalActive, newToday, totalProviderResponses }] =
     await Promise.all([
@@ -384,9 +396,9 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       <div className="flex items-start justify-between gap-3">
                         {r.categoryNames.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5">
-                            {r.categoryNames.map((name) => (
+                            {r.categoryNames.map((name, categoryIndex) => (
                               <span
-                                key={name}
+                                key={`${name}-${categoryIndex}`}
                                 className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
                               >
                                 {name}

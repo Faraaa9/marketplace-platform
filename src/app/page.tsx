@@ -470,7 +470,7 @@ async function HomePageContent() {
             {categoryGroups.map((group) => (
               <Link
                 key={group.root.id}
-                href={`/uzklausos?category=${group.root.slug}`}
+                href={`/meistrai?category=${group.root.slug}`}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E2DDD2] bg-[#FBFAF6] p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#D3CCBD] hover:shadow-[0_16px_36px_-18px_rgba(40,35,30,0.3)] dark:border-surface-800 dark:bg-surface-900 dark:hover:border-surface-700"
               >
                 <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#EFE0D6] text-[#C25E3A] dark:bg-brand-950/60 dark:text-brand-300">

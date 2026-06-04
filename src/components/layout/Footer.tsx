@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { APP_NAME } from "@/lib/constants";
 
 // Captured at module load (= build time). Cache Components forbids
@@ -8,6 +11,11 @@ import { APP_NAME } from "@/lib/constants";
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer() {
+  const pathname = usePathname() ?? "/";
+  if (pathname === "/tiekejas/zinutes" || pathname.startsWith("/tiekejas/zinutes/")) {
+    return null;
+  }
+
   // Transparent everywhere so the site-wide grid background flows through.
   return (
     <footer className="border-t border-[#DBD6CB] dark:border-surface-800">

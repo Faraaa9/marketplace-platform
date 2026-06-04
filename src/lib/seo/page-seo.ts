@@ -81,6 +81,11 @@ function absoluteUrl(path: string): string {
   return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function absoluteImageUrl(url: string): string {
+  if (url.startsWith("http")) return url;
+  return absoluteUrl(url);
+}
+
 function robotsFor(verdict: IndexVerdict): Metadata["robots"] {
   // Always explicit — never rely on Next's index-by-default. noindex pages stay
   // crawlable (follow) so internal links still pass equity.
@@ -100,7 +105,7 @@ function assemble(opts: {
 }): Metadata {
   const title = withSuffix(opts.title);
   const description = clampDescription(opts.description);
-  const images = opts.heroImageUrl ? [opts.heroImageUrl] : undefined;
+  const images = opts.heroImageUrl ? [absoluteImageUrl(opts.heroImageUrl)] : undefined;
 
   return {
     title: { absolute: title },

@@ -51,8 +51,8 @@ export async function RequestHeader({ params }: { params: Promise<{ id: string }
   return (
     <div className="mb-6">
       <div className="flex flex-wrap items-center gap-2 mb-1">
-        {categoryNames.map((name) => (
-          <Badge key={name} variant="brand">{name}</Badge>
+        {categoryNames.map((name, categoryIndex) => (
+          <Badge key={`${name}-${categoryIndex}`} variant="brand">{name}</Badge>
         ))}
         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
         {request.source === "telegram" && <TelegramSourceBadge />}

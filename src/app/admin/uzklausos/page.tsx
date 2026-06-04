@@ -165,8 +165,8 @@ export default function AdminRequestsPage() {
                     <td className="py-3 px-4">
                       {categoryNames.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {categoryNames.map((name) => (
-                            <Badge key={name}>{name}</Badge>
+                          {categoryNames.map((name, categoryIndex) => (
+                            <Badge key={`${name}-${categoryIndex}`}>{name}</Badge>
                           ))}
                         </div>
                       ) : (

@@ -86,7 +86,9 @@ export default function RootLayout({
             <Header />
           </Suspense>
           <main className="flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
-          <Footer />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
           <Suspense fallback={null}>
             <MobileBottomNav />
           </Suspense>

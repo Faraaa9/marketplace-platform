@@ -4,12 +4,29 @@
 
 @layer base {
   :root {
-    --background: #ece9e2;
-    --foreground: #25221e;
-    --brand: #c25e3a;
-    --brand-light: #faeee7;
-    --surface-muted: #e3dfd4;
-    --border: rgba(42, 39, 35, 0.08);
+    --background: #fcfbf8;
+    --foreground: #1e1b18;
+    --brand: #c29b74;
+    --brand-light: #f4efe6;
+    --surface-muted: #ece9e2;
+    --border: #ece9e2;
+    --chat-bg: #fcfbf8;
+    --chat-panel: #ffffff;
+    --chat-border: #ece9e2;
+    --chat-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --chat-own-bubble: #25221e;
+    --chat-own-text: #ffffff;
+    --chat-other-bubble: #ece9e2;
+    --chat-other-text: #111827;
+    --chat-accent: #1e1b18;
+    --chat-accent-alt: #c29b74;
+    --chat-accent-hover: #3d3a35;
+    --chat-text: #1e1b18;
+    --chat-muted: #6b6760;
+    --chat-skeleton: #ece9e2;
+    --chat-radius-frame: 16px;
+    --chat-radius-element: 12px;
+    --chat-radius-small: 8px;
   }
 
   .dark {
@@ -82,8 +99,8 @@
   .layout-grid {
     background-color: var(--background);
     background-image:
-      linear-gradient(to right, rgba(42, 39, 35, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(42, 39, 35, 0.035) 1px, transparent 1px);
+      linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
     background-size: 56px 56px;
   }
 

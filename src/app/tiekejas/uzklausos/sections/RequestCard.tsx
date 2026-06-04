@@ -59,9 +59,9 @@ export function RequestCard({ req }: { req: ProviderLead }) {
         {/* Top: category + status badges (left), budget (right) */}
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {categoryNames.map((name) => (
+            {categoryNames.map((name, categoryIndex) => (
               <span
-                key={name}
+                key={`${name}-${categoryIndex}`}
                 className="rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400"
               >
                 {name}

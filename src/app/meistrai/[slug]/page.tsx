@@ -24,6 +24,7 @@ import StoryAvatarButton from "./components/StoryAvatarButton";
 import StickyBottomBar from "./components/StickyBottomBar";
 import ContactButton from "./components/ContactButton";
 import HeroInfoCard from "./components/HeroInfoCard";
+import ProfileShareButton from "./components/ProfileShareButton";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import WorkImageGallery from "./components/WorkImageGallery";
@@ -87,7 +88,11 @@ async function getMetadataRow(slug: string) {
       primaryCity: true,
       description: true,
       headline: true,
+      location: true,
+      images: true,
       heroImageUrl: true,
+      rating: true,
+      reviewCount: true,
       moderationStatus: true,
       isActive: true,
       user: { select: { name: true, email: true } },
@@ -108,6 +113,29 @@ function isSeedProfile(row: {
   if (/\((?:DEMO|TEST)\)/i.test(name)) return true;
   const email = row.user?.email ?? "";
   return /@test\.lt$/i.test(email) || /@example\./i.test(email);
+}
+
+function buildProviderShareDescription(row: {
+  displayName?: string | null;
+  headline?: string | null;
+  primaryService?: string | null;
+  primaryCity?: string | null;
+  location?: string | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+  description?: string | null;
+  user?: { name?: string | null } | null;
+}): string {
+  const name = row.displayName || row.user?.name || "Paslaugų tiekėjas";
+  const lead = row.headline || row.primaryService || row.description || `${name} profilis`;
+  const parts = [lead.replace(/\s+/g, " ").trim()];
+  const city = row.primaryCity || row.location;
+  if (city) parts.push(city);
+  if (row.rating && row.reviewCount && row.reviewCount > 0) {
+    parts.push(`${row.rating.toFixed(1)} (${row.reviewCount} atsiliepimai)`);
+  }
+
+  return parts.join(" · ");
 }
 
 export async function generateMetadata({
@@ -146,11 +174,12 @@ export async function generateMetadata({
         })();
   const title = row.seoTitle || `${lead}${SUFFIX}`;
 
-  const fallbackDesc = row.description
-    ? row.description.replace(/\s+/g, " ").slice(0, 157).trim() +
-      (row.description.length > 157 ? "…" : "")
-    : `${name} paslaugos${row.primaryCity ? ` ${row.primaryCity}e` : ""}. Peržiūrėkite profilį ir susisiekite per paslaugurinka.lt.`;
-  const description = row.seoDescription || fallbackDesc;
+  const description = buildProviderShareDescription(row);
+  const heroImageUrl = getSafeProviderImageUrl(row.heroImageUrl || row.images[0], {
+    width: 1200,
+    height: 630,
+    crop: "fill",
+  });
 
   // Route all metadata through the central SEO contract so title/description/
   // canonical/robots are produced identically to every other route type.
@@ -159,7 +188,7 @@ export async function generateMetadata({
     title,
     description,
     path: `/meistrai/${slug}`,
-    heroImageUrl: row.heroImageUrl,
+    heroImageUrl,
     noindex: isSeedProfile(row),
   }).metadata;
 }
@@ -391,21 +420,30 @@ async function ProfileContent({ params, searchParams }: PageProps) {
                 </div>
 
                 <HeroInfoCard>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="min-w-0 text-2xl font-bold leading-tight tracking-[-0.03em] text-surface-900 sm:text-[34px] dark:text-white">
-                      {provider.name}
-                    </h1>
-                    {provider.isVerified && <VerifiedBadge tier="verified" size="md" />}
-                    {provider.isYoungTalent && <VerifiedBadge tier="young-talent" size="md" />}
-                    {provider.isPremium && <VerifiedBadge tier="premium" size="md" />}
-                    {provider.isGoat && <VerifiedBadge tier="goat" size="md" />}
-                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="min-w-0 text-2xl font-bold leading-tight tracking-[-0.03em] text-surface-900 sm:text-[34px] dark:text-white">
+                          {provider.name}
+                        </h1>
+                        {provider.isVerified && <VerifiedBadge tier="verified" size="md" />}
+                        {provider.isYoungTalent && <VerifiedBadge tier="young-talent" size="md" />}
+                        {provider.isPremium && <VerifiedBadge tier="premium" size="md" />}
+                        {provider.isGoat && <VerifiedBadge tier="goat" size="md" />}
+                      </div>
 
-                  {provider.headline && (
-                    <p className="mt-2 truncate text-[15px] leading-snug text-surface-500 dark:text-surface-400">
-                      {provider.headline}
-                    </p>
-                  )}
+                      {provider.headline && (
+                        <p className="mt-2 truncate text-[15px] leading-snug text-surface-500 dark:text-surface-400">
+                          {provider.headline}
+                        </p>
+                      )}
+                    </div>
+
+                    <ProfileShareButton
+                      providerName={provider.name}
+                      profileUrl={profileUrl}
+                    />
+                  </div>
 
                   {provider.avgRating !== null && (
                     <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
