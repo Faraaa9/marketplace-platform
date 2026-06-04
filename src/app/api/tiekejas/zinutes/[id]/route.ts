@@ -3,7 +3,42 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { createServerTimer } from "@/lib/server-timing";
-import { INITIAL_THREAD_MESSAGE_LIMIT, newestWindowChronological } from "@/lib/thread-window";
+import { INITIAL_THREAD_MESSAGE_LIMIT, THREAD_HISTORY_PAGE_SIZE, newestWindowChronological } from "@/lib/thread-window";
+
+const MESSAGE_SELECT = {
+  id: true,
+  content: true,
+  createdAt: true,
+  senderId: true,
+  senderName: true,
+  sender: { select: { id: true, name: true, image: true } },
+} as const;
+
+function parseBeforeCursor(req: NextRequest) {
+  const before = req.nextUrl.searchParams.get("before");
+  if (!before) return null;
+  const date = new Date(before);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function mapMessage(m: {
+  id: string;
+  content: string;
+  createdAt: Date;
+  senderId: string | null;
+  senderName: string | null;
+  sender: { id: string; name: string | null; image: string | null } | null;
+}) {
+  return {
+    id: m.id,
+    content: m.content,
+    createdAt: m.createdAt.toISOString(),
+    senderId: m.senderId,
+    senderName: m.senderName ?? m.sender?.name ?? null,
+    sender: m.sender,
+    status: "sent",
+  };
+}
 
 /**
  * GET — fetch one direct-inquiry conversation (provider view) and mark it read.
@@ -16,9 +51,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const guard = await requireActiveProvider(req);
     timer.mark("guard");
     if (!guard.authorized) return guard.response;
+    const before = parseBeforeCursor(req);
 
     if (id.startsWith("response-")) {
       const responseId = id.replace(/^response-/, "");
+      if (before) {
+        const response = await prisma.response.findFirst({
+          where: { id: responseId, providerId: guard.userId },
+          select: { id: true },
+        });
+        timer.mark("responseGuardQuery");
+        if (!response) {
+          return NextResponse.json({ success: false, error: "Pokalbis nerastas" }, { status: 404 });
+        }
+
+        const older = await prisma.message.findMany({
+          where: { responseId, createdAt: { lt: before } },
+          select: MESSAGE_SELECT,
+          orderBy: { createdAt: "desc" },
+          take: THREAD_HISTORY_PAGE_SIZE + 1,
+        });
+        timer.mark("olderMessagesQuery");
+        const hasMoreMessages = older.length > THREAD_HISTORY_PAGE_SIZE;
+        const messages = newestWindowChronological(older.slice(0, THREAD_HISTORY_PAGE_SIZE)).map(mapMessage);
+        timer.end({ mode: "response-history", messages: messages.length, hasMoreMessages });
+        return NextResponse.json({ success: true, data: { messages, hasMoreMessages } });
+      }
+
       const response = await prisma.response.findFirst({
         where: { id: responseId, providerId: guard.userId },
         select: {
@@ -28,16 +87,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           clientLastReadAt: true,
           provider: { select: { id: true, name: true } },
           messages: {
-            select: {
-              id: true,
-              content: true,
-              createdAt: true,
-              senderId: true,
-              senderName: true,
-              sender: { select: { id: true, name: true, image: true } },
-            },
+            select: MESSAGE_SELECT,
             orderBy: { createdAt: "desc" },
-            take: INITIAL_THREAD_MESSAGE_LIMIT,
+            take: INITIAL_THREAD_MESSAGE_LIMIT + 1,
           },
           request: {
             select: {
@@ -76,7 +128,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       );
 
       const categoryNames = response.request.categories.map((c) => c.category.name);
-      const messages = newestWindowChronological(response.messages);
+      const hasMoreMessages = response.messages.length > INITIAL_THREAD_MESSAGE_LIMIT;
+      const messages = newestWindowChronological(response.messages.slice(0, INITIAL_THREAD_MESSAGE_LIMIT));
       timer.mark("map");
       timer.end({ mode: "response", messages: messages.length });
       return NextResponse.json({
@@ -93,6 +146,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           otherParticipantPresenceLevel: getPresenceLevel(response.request.client?.lastSeenAt),
           otherParticipantPresenceLabel: formatLastSeen(response.request.client?.lastSeenAt),
           otherParticipantReadAt: response.clientLastReadAt?.toISOString() ?? null,
+          hasMoreMessages,
           initialMessages: [
             {
               id: `response-${response.id}`,
@@ -103,15 +157,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               sender: { id: response.provider.id, name: response.provider.name ?? "", image: null },
               status: "sent",
             },
-            ...messages.map((m) => ({
-              id: m.id,
-              content: m.content,
-              createdAt: m.createdAt.toISOString(),
-              senderId: m.senderId,
-              senderName: m.senderName ?? m.sender?.name ?? null,
-              sender: m.sender,
-              status: "sent",
-            })),
+            ...messages.map(mapMessage),
           ],
           requestBrief: {
             title: response.request.title,
@@ -126,6 +172,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
         },
       });
+    }
+
+    if (before) {
+      const inquiry = await prisma.directInquiry.findFirst({
+        where: { id, providerId: guard.userId },
+        select: { id: true },
+      });
+      timer.mark("directGuardQuery");
+      if (!inquiry) {
+        return NextResponse.json({ success: false, error: "Žinutė nerasta" }, { status: 404 });
+      }
+
+      const older = await prisma.message.findMany({
+        where: { directInquiryId: id, createdAt: { lt: before } },
+        select: MESSAGE_SELECT,
+        orderBy: { createdAt: "desc" },
+        take: THREAD_HISTORY_PAGE_SIZE + 1,
+      });
+      timer.mark("olderMessagesQuery");
+      const hasMoreMessages = older.length > THREAD_HISTORY_PAGE_SIZE;
+      const messages = newestWindowChronological(older.slice(0, THREAD_HISTORY_PAGE_SIZE)).map(mapMessage);
+      timer.end({ mode: "direct-history", messages: messages.length, hasMoreMessages });
+      return NextResponse.json({ success: true, data: { messages, hasMoreMessages } });
     }
 
     const inquiry = await prisma.directInquiry.findFirst({
@@ -143,16 +212,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         createdAt: true,
         clientLastReadAt: true,
         messages: {
-          select: {
-            id: true,
-            content: true,
-            createdAt: true,
-            senderId: true,
-            senderName: true,
-            sender: { select: { id: true, name: true, image: true } },
-          },
+          select: MESSAGE_SELECT,
           orderBy: { createdAt: "desc" },
-          take: INITIAL_THREAD_MESSAGE_LIMIT,
+          take: INITIAL_THREAD_MESSAGE_LIMIT + 1,
         },
       },
     });
@@ -172,7 +234,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         .catch(() => null)
     );
 
-    const messages = newestWindowChronological(inquiry.messages);
+    const hasMoreMessages = inquiry.messages.length > INITIAL_THREAD_MESSAGE_LIMIT;
+    const messages = newestWindowChronological(inquiry.messages.slice(0, INITIAL_THREAD_MESSAGE_LIMIT));
     const { sender, messages: _messages, ...data } = inquiry;
     timer.mark("map");
     timer.end({ mode: "direct", messages: messages.length });
@@ -188,7 +251,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         senderAccountName: sender?.name ?? null,
         senderPresenceLevel: getPresenceLevel(sender?.lastSeenAt),
         senderPresenceLabel: formatLastSeen(sender?.lastSeenAt),
-        messages,
+        hasMoreMessages,
+        messages: messages.map(mapMessage),
       },
     });
   } catch (error) {

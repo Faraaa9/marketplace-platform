@@ -36,6 +36,9 @@ interface ConversationState {
   /** Append a message from a Realtime payload if not already in the thread. */
   appendMessageIfNew: (responseId: string, message: ThreadMessage) => void;
 
+  /** Prepend older history messages, preserving existing realtime/optimistic messages. */
+  prependMessages: (responseId: string, messages: ThreadMessage[]) => void;
+
   /** Get messages for a thread */
   getThread: (responseId: string) => ThreadMessage[];
 }
@@ -167,6 +170,18 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         threads: {
           ...state.threads,
           [responseId]: next,
+        },
+      };
+    }),
+
+  prependMessages: (responseId, messages) =>
+    set((state) => {
+      if (messages.length === 0) return state;
+      const thread = state.threads[responseId] || [];
+      return {
+        threads: {
+          ...state.threads,
+          [responseId]: dedupeMessages([...messages, ...thread]),
         },
       };
     }),

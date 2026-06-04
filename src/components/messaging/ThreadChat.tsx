@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from "react";
 import Image from "next/image";
-import { Send, AlertTriangle, RefreshCw, Loader2, Paperclip, Smile } from "lucide-react";
+import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile } from "lucide-react";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -63,6 +63,13 @@ interface ThreadChatProps {
   fillHeight?: boolean;
   /** Optional quick reply chips above the composer. */
   quickReplies?: string[];
+  /** Whether older messages exist before the initially loaded recent window. */
+  hasMoreMessages?: boolean;
+  /** Load older history before the currently oldest real message. */
+  loadOlderMessages?: (beforeCreatedAt: string) => Promise<{
+    messages: ThreadMessage[];
+    hasMoreMessages: boolean;
+  }>;
 }
 
 interface MessageGroup {
@@ -151,6 +158,10 @@ function avatarInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
 }
 
+function isHistoryCursorMessage(msg: ThreadMessage) {
+  return msg.status === "sent" && !msg.id.startsWith("temp-") && !msg.id.startsWith("response-") && !msg.id.startsWith("opening-");
+}
+
 function ParticipantAvatar({
   name,
   image,
@@ -204,6 +215,7 @@ export default function ThreadChat({
   providerId,
   otherParticipantName,
   otherParticipantImage,
+  otherParticipantReadAt,
   realtimeTrackingToken,
   showInitialTimeDivider = true,
   showTopBorder = true,
@@ -213,10 +225,17 @@ export default function ThreadChat({
   requestBrief = null,
   fillHeight = false,
   quickReplies = [],
+  hasMoreMessages: initialHasMoreMessages = false,
+  loadOlderMessages,
 }: ThreadChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [isOtherOnline, setIsOtherOnline] = useState(false);
+  const [currentOtherReadAt, setCurrentOtherReadAt] = useState(otherParticipantReadAt ?? null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(initialHasMoreMessages);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [olderLoadError, setOlderLoadError] = useState<string | null>(null);
+  const messageStreamRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMarkedReadMessageIdRef = useRef<string | null>(null);
   const typingStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -232,7 +251,17 @@ export default function ThreadChat({
   const failSend = useConversationStore((s) => s.failSend);
   const removeFailed = useConversationStore((s) => s.removeFailed);
   const appendMessageIfNew = useConversationStore((s) => s.appendMessageIfNew);
+  const prependMessages = useConversationStore((s) => s.prependMessages);
   const messages = useConversationStore((s) => s.threads[threadId]) ?? EMPTY_MESSAGES;
+
+  useEffect(() => {
+    setCurrentOtherReadAt(otherParticipantReadAt ?? null);
+  }, [otherParticipantReadAt]);
+
+  useEffect(() => {
+    setHasMoreMessages(initialHasMoreMessages);
+    setOlderLoadError(null);
+  }, [threadId, initialHasMoreMessages]);
 
   // Hydrate on mount / when server data changes
   useEffect(() => {
@@ -318,6 +347,14 @@ export default function ThreadChat({
             status: "sent",
           });
         })
+        .on("broadcast", { event: "read" }, ({ payload }) => {
+          if (payload?.viewerKey === viewerKey) return;
+          const readAt = typeof payload?.readAt === "string" ? payload.readAt : null;
+          if (!readAt) return;
+          setCurrentOtherReadAt((previous) =>
+            !previous || Date.parse(readAt) > Date.parse(previous) ? readAt : previous,
+          );
+        })
         .on("presence", { event: "sync" }, () => {
           if (!channel) return;
           const state = channel.presenceState();
@@ -374,8 +411,9 @@ export default function ThreadChat({
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
+    if (isLoadingOlder) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+  }, [isLoadingOlder, messages.length]);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -393,7 +431,27 @@ export default function ThreadChat({
         threadId,
         trackingToken: realtimeTrackingToken ?? null,
       }),
-    }).catch(() => {
+    })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const result = (await response.json().catch(() => null)) as {
+          data?: { readAt?: string };
+        } | null;
+        const readAt = result?.data?.readAt;
+        if (!readAt) return;
+        void realtimeChannelRef.current?.send({
+          type: "broadcast",
+          event: "read",
+          payload: {
+            viewerKey:
+              viewerRole === "provider"
+                ? `provider:${providerId}`
+                : `client:${realtimeTrackingToken || threadId}`,
+            readAt,
+          },
+        });
+      })
+      .catch(() => {
       // Best-effort read receipts: failed writes should not interrupt chat.
     });
   }, [messages, providerId, realtimeTrackingToken, threadId, threadKind, viewerRole]);
@@ -448,8 +506,35 @@ export default function ThreadChat({
     }
   }, [threadId, currentSenderName, removeFailed, optimisticSend, confirmSend, failSend, sendMessage, providerId, realtimeTrackingToken, viewerRole]);
 
+  const handleLoadOlder = useCallback(async () => {
+    if (!loadOlderMessages || isLoadingOlder || !hasMoreMessages) return;
+    const oldestMessage = messages.find(isHistoryCursorMessage);
+    if (!oldestMessage) return;
+
+    const stream = messageStreamRef.current;
+    const previousScrollHeight = stream?.scrollHeight ?? 0;
+    const previousScrollTop = stream?.scrollTop ?? 0;
+    setIsLoadingOlder(true);
+    setOlderLoadError(null);
+
+    try {
+      const result = await loadOlderMessages(oldestMessage.createdAt);
+      prependMessages(threadId, result.messages);
+      setHasMoreMessages(result.hasMoreMessages);
+      requestAnimationFrame(() => {
+        if (!stream) return;
+        stream.scrollTop = stream.scrollHeight - previousScrollHeight + previousScrollTop;
+      });
+    } catch {
+      setOlderLoadError("Nepavyko įkelti ankstesnių žinučių");
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }, [hasMoreMessages, isLoadingOlder, loadOlderMessages, messages, prependMessages, threadId]);
+
   const otherFallbackName = viewerRole === "provider" ? "Klientas" : "Tiekėjas";
   const otherDisplayName = otherParticipantName?.trim() || otherFallbackName;
+  const otherReadTime = currentOtherReadAt ? Date.parse(currentOtherReadAt) : 0;
   // Collapse consecutive messages from the same side into groups — Messenger-style.
   const groups = useMemo<MessageGroup[]>(() => {
     const result: MessageGroup[] = [];
@@ -471,9 +556,20 @@ export default function ThreadChat({
     return result;
   }, [messages, viewerRole, providerId, otherFallbackName, otherParticipantImage]);
 
+  const latestOwnMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const msg = messages[i];
+      if (msg.status !== "failed" && isOwnMessage(msg, viewerRole, providerId)) {
+        return msg.id;
+      }
+    }
+    return null;
+  }, [messages, viewerRole, providerId]);
+
   return (
     <div className={fillHeight ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <div
+        ref={messageStreamRef}
         className={cn(
           "flex flex-col gap-4",
           fillHeight && "chat-message-stream min-h-0 flex-1 overflow-y-auto pb-2",
@@ -484,9 +580,27 @@ export default function ThreadChat({
           <div className="border-t border-surface-200/60 dark:border-surface-700" />
         )}
 
+        {(hasMoreMessages || olderLoadError) && loadOlderMessages && (
+          <div className="flex flex-col items-center gap-2 py-1">
+            {hasMoreMessages && (
+              <button
+                type="button"
+                onClick={handleLoadOlder}
+                disabled={isLoadingOlder}
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#E8E2D8] bg-white px-4 text-caption font-semibold text-[#3D3A35] shadow-[0_4px_14px_rgba(37,34,30,0.06)] transition hover:border-[#2F3F56]/30 hover:text-[#2F3F56] disabled:cursor-wait disabled:opacity-60"
+              >
+                <ChevronUp className={cn("h-3.5 w-3.5", isLoadingOlder && "animate-pulse")} />
+                {isLoadingOlder ? "Įkeliama..." : "Įkelti ankstesnes"}
+              </button>
+            )}
+            {olderLoadError && (
+              <p className="text-micro font-medium text-red-600">{olderLoadError}</p>
+            )}
+          </div>
+        )}
+
         {groups.map((group, groupIndex) => {
           const previousGroup = groupIndex > 0 ? groups[groupIndex - 1] : undefined;
-          const lastMsg = group.messages[group.messages.length - 1];
           return (
             <div key={group.messages[0].id} className="space-y-2">
               {(groupIndex > 0 || showInitialTimeDivider) &&
@@ -559,6 +673,15 @@ export default function ThreadChat({
                       );
                     }
 
+                    const showDeliveryReceipt = group.isOwn && msg.id === latestOwnMessageId;
+                    const isSeen =
+                      showDeliveryReceipt &&
+                      msg.status === "sent" &&
+                      otherReadTime > 0 &&
+                      Date.parse(msg.createdAt) <= otherReadTime;
+                    const deliveryLabel =
+                      msg.status === "sending" ? "Siunčiama..." : isSeen ? "Matyta" : "Išsiųsta";
+
                     return (
                       <Fragment key={msg.id}>
                         <div className={cn("flex max-w-full flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
@@ -584,11 +707,17 @@ export default function ThreadChat({
                           <time
                             dateTime={msg.createdAt}
                             className={cn(
-                              "px-1 text-[11px] font-medium leading-none text-[#A6AFBA] dark:text-surface-500",
+                              "flex items-center gap-1.5 px-1 text-[11px] font-medium leading-none text-[#A6AFBA] dark:text-surface-500",
                               group.isOwn ? "text-right" : "text-left",
                             )}
                           >
                             {formatMessageTime(msg.createdAt)}
+                            {showDeliveryReceipt && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span>{deliveryLabel}</span>
+                              </>
+                            )}
                           </time>
                         </div>
                         {msg.metaLabel && (
@@ -599,13 +728,6 @@ export default function ThreadChat({
                       </Fragment>
                     );
                   })}
-
-                  {lastMsg.status === "sending" && (
-                    <span className="flex items-center gap-1 px-1 text-micro text-surface-400">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Siunčiama...
-                    </span>
-                  )}
 
                 </div>
               </div>

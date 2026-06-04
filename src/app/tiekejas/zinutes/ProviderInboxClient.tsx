@@ -54,6 +54,7 @@ type ThreadData = {
   otherParticipantPresenceLabel?: string | null;
   otherParticipantReadAt?: string | null;
   requestBrief?: RequestBrief | null;
+  hasMoreMessages?: boolean;
   initialMessages: ThreadMessage[];
 };
 
@@ -80,6 +81,7 @@ type DirectThreadResponse = {
   budget?: string | null;
   createdAt?: string | null;
   clientLastReadAt?: string | null;
+  hasMoreMessages?: boolean;
   messages: ApiThreadMessage[];
 };
 
@@ -95,7 +97,13 @@ type SenderDirectThreadResponse = {
   senderName?: string | null;
   createdAt?: string | null;
   providerLastReadAt?: string | null;
+  hasMoreMessages?: boolean;
   messages: ApiThreadMessage[];
+};
+
+type OlderMessagesResponse = {
+  messages: ApiThreadMessage[];
+  hasMoreMessages?: boolean;
 };
 
 type RealtimeThreadPayload = {
@@ -187,6 +195,7 @@ function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
     otherParticipantPresenceLevel: data.senderPresenceLevel ?? null,
     otherParticipantPresenceLabel: data.senderPresenceLabel ?? null,
     otherParticipantReadAt: data.clientLastReadAt ?? null,
+    hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
       title: "Tiesioginė užklausa",
       description: data.description,
@@ -221,6 +230,7 @@ function normalizeSenderDirectThread(data: SenderDirectThreadResponse, trackingT
     otherParticipantPresenceLevel: data.presenceLevel === "online" || data.presenceLevel === "recent" ? data.presenceLevel : null,
     otherParticipantPresenceLabel: data.presenceLabel ?? null,
     otherParticipantReadAt: data.providerLastReadAt ?? null,
+    hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
       title: "Tiesioginė užklausa",
       description: data.description,
@@ -634,6 +644,33 @@ export default function ProviderInboxClient() {
     return sentMessage;
   }, [bumpSelectedConversation, thread]);
 
+  const loadOlderMessages = useCallback(
+    async (beforeCreatedAt: string): Promise<{ messages: ThreadMessage[]; hasMoreMessages: boolean }> => {
+      if (!thread) return { messages: [], hasMoreMessages: false };
+      const endpoint = thread.realtimeTrackingToken
+        ? `/api/zinutes/${thread.realtimeTrackingToken}`
+        : `/api/tiekejas/zinutes/${thread.type === "response" ? `response-${thread.id}` : thread.id}`;
+      const res = await fetch(`${endpoint}?before=${encodeURIComponent(beforeCreatedAt)}`, {
+        credentials: "include",
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string; data?: OlderMessagesResponse };
+      if (!data.success || !data.data) throw new Error(data.error || "Klaida");
+      return {
+        hasMoreMessages: data.data.hasMoreMessages ?? false,
+        messages: data.data.messages.map((m) => ({
+          id: m.id,
+          content: m.content,
+          createdAt: m.createdAt,
+          senderId: m.senderId,
+          senderName: m.senderName ?? m.sender?.name ?? null,
+          sender: m.sender,
+          status: "sent" as const,
+        })),
+      };
+    },
+    [thread],
+  );
+
   return (
     <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#ece9e2] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#ece9e2] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-800 dark:bg-surface-900/90">
@@ -896,6 +933,8 @@ export default function ProviderInboxClient() {
                     otherParticipantReadAt={thread.otherParticipantReadAt}
                     realtimeTrackingToken={thread.realtimeTrackingToken}
                     requestBrief={thread.requestBrief}
+                    hasMoreMessages={thread.hasMoreMessages}
+                    loadOlderMessages={loadOlderMessages}
                     fillHeight
                     showTopBorder={false}
                     quickReplies={["Kada atvyksite?", "Kokia kaina?", "Ačiū!", "Galite paskambinti?"]}

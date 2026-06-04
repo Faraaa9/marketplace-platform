@@ -33,6 +33,7 @@ interface ConversationData {
   createdAt: string;
   providerLastReadAt: string | null;
   clientLastReadAt: string | null;
+  hasMoreMessages?: boolean;
   messages: MessageData[];
 }
 
@@ -78,6 +79,27 @@ export default function InquiryConversationClient() {
       };
     },
     [params.token]
+  );
+
+  const loadOlderMessages = useCallback(
+    async (beforeCreatedAt: string): Promise<{ messages: ThreadMessage[]; hasMoreMessages: boolean }> => {
+      const res = await fetch(`/api/zinutes/${params.token}?before=${encodeURIComponent(beforeCreatedAt)}`);
+      const data = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        data?: { messages: MessageData[]; hasMoreMessages?: boolean };
+      };
+      if (!data.success || !data.data) throw new Error(data.error || "Klaida");
+      return {
+        hasMoreMessages: data.data.hasMoreMessages ?? false,
+        messages: data.data.messages.map((m) => ({
+          ...m,
+          senderName: m.senderName || m.sender?.name || null,
+          status: "sent" as const,
+        })),
+      };
+    },
+    [params.token],
   );
 
   if (loading) return <LoadingSpinner />;
@@ -188,6 +210,8 @@ export default function InquiryConversationClient() {
           showInitialTimeDivider={false}
           forceDividerAfterFirstGroup
           showTopBorder={false}
+          hasMoreMessages={conversation.hasMoreMessages}
+          loadOlderMessages={loadOlderMessages}
           sendMessage={sendMessage}
           placeholder="Rašyti žinutę tiekėjui..."
         />
