@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { createServerTimer } from "@/lib/server-timing";
+import { INITIAL_THREAD_MESSAGE_LIMIT, newestWindowChronological } from "@/lib/thread-window";
 
 /**
  * GET — fetch one direct-inquiry conversation (provider view) and mark it read.
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const timer = createServerTimer("provider-thread-get");
   try {
     const { id } = await params;
-    const guard = await requireActiveProvider();
+    const guard = await requireActiveProvider(req);
     timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
@@ -35,7 +36,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               senderName: true,
               sender: { select: { id: true, name: true, image: true } },
             },
-            orderBy: { createdAt: "asc" },
+            orderBy: { createdAt: "desc" },
+            take: INITIAL_THREAD_MESSAGE_LIMIT,
           },
           request: {
             select: {
@@ -74,8 +76,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       );
 
       const categoryNames = response.request.categories.map((c) => c.category.name);
+      const messages = newestWindowChronological(response.messages);
       timer.mark("map");
-      timer.end({ mode: "response", messages: response.messages.length });
+      timer.end({ mode: "response", messages: messages.length });
       return NextResponse.json({
         success: true,
         data: {
@@ -100,7 +103,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               sender: { id: response.provider.id, name: response.provider.name ?? "", image: null },
               status: "sent",
             },
-            ...response.messages.map((m) => ({
+            ...messages.map((m) => ({
               id: m.id,
               content: m.content,
               createdAt: m.createdAt.toISOString(),
@@ -148,7 +151,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             senderName: true,
             sender: { select: { id: true, name: true, image: true } },
           },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: "desc" },
+          take: INITIAL_THREAD_MESSAGE_LIMIT,
         },
       },
     });
@@ -168,9 +172,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         .catch(() => null)
     );
 
-    const { sender, ...data } = inquiry;
+    const messages = newestWindowChronological(inquiry.messages);
+    const { sender, messages: _messages, ...data } = inquiry;
     timer.mark("map");
-    timer.end({ mode: "direct", messages: inquiry.messages.length });
+    timer.end({ mode: "direct", messages: messages.length });
 
     return NextResponse.json({
       success: true,
@@ -183,6 +188,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         senderAccountName: sender?.name ?? null,
         senderPresenceLevel: getPresenceLevel(sender?.lastSeenAt),
         senderPresenceLabel: formatLastSeen(sender?.lastSeenAt),
+        messages,
       },
     });
   } catch (error) {
@@ -198,7 +204,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   await connection();
   try {
     const { id } = await params;
-    const guard = await requireActiveProvider();
+    const guard = await requireActiveProvider(req);
     if (!guard.authorized) return guard.response;
 
     const body = await req.json();

@@ -206,13 +206,16 @@ export default function NotificationBell() {
           },
           (payload) => {
             const updated = normalizeRow(payload.new as NotificationRow);
+            let nextUnread: number | null = null;
             setNotifications((prev) => {
               const next = prev.map((n) => (n.id === updated.id ? updated : n));
-              const unread = next.filter((n) => !n.isRead).length;
-              prevUnreadRef.current = unread;
-              setUnreadCount(unread);
+              nextUnread = next.filter((n) => !n.isRead).length;
               return next;
             });
+            if (nextUnread !== null) {
+              prevUnreadRef.current = nextUnread;
+              setUnreadCount(nextUnread);
+            }
           },
         )
         .subscribe();

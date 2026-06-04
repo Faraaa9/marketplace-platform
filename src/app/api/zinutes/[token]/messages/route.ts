@@ -41,24 +41,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);
 
-    const recentMessages = await prisma.message.findMany({
-      where: {
-        directInquiryId: inquiry.id,
-        senderId,
-        createdAt: { gte: new Date(Date.now() - 30 * 1000) },
-      },
-      select: { content: true, senderName: true },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    });
-    timer.mark("duplicateCheck");
-    const isDuplicate = recentMessages.some((message) =>
-      message.content === sanitizedContent && (senderId || message.senderName === senderName)
-    );
-    if (isDuplicate) {
-      return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
-    }
-
     // Persist the message and bump the thread's activity timestamp atomically.
     const now = new Date();
     const [message] = await prisma.$transaction([

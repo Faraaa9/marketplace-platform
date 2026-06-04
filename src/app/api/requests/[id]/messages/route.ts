@@ -62,20 +62,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);
 
-    // Duplicate detection: block identical message within last 30 seconds
-    const recentDuplicate = await prisma.message.findFirst({
-      where: {
-        responseId: id,
-        senderId: session.user.id,
-        content: sanitizedContent,
-        createdAt: { gte: new Date(Date.now() - 30 * 1000) },
-      },
-      select: { id: true },
-    });
-    if (recentDuplicate) {
-      return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
-    }
-
     // Persist the message and bump the thread's activity timestamp atomically.
     // The provider's own send also counts as "read" so it never shows unread.
     const now = new Date();

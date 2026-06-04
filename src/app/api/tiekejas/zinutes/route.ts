@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { getProviderAvatarImage } from "@/lib/provider-image";
 import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
+import { getProviderInboxCache, setProviderInboxCache } from "@/lib/provider-inbox-cache";
 import { createServerTimer } from "@/lib/server-timing";
 
 /**
@@ -29,6 +30,14 @@ type ConversationItem = {
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 50;
+const LIST_CACHE_TTL_MS = 15_000;
+
+type InboxResponseData = {
+  conversations: ConversationItem[];
+  totalUnread: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+};
 
 function parseLimit(value: string | null) {
   const parsed = Number(value);
@@ -40,7 +49,7 @@ export async function GET(req: NextRequest) {
   await connection();
   const timer = createServerTimer("provider-inbox");
   try {
-    const guard = await requireActiveProvider();
+    const guard = await requireActiveProvider(req);
     timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
@@ -59,49 +68,63 @@ export async function GET(req: NextRequest) {
         ? cursorDate
         : null;
     const pageTake = threadParam ? 1 : limit + 1;
+    const listCacheKey =
+      !summaryOnly && !threadParam
+        ? `${providerId}:${limit}:${cursor?.toISOString() ?? "first"}`
+        : null;
+
+    if (listCacheKey) {
+      const cached = getProviderInboxCache<InboxResponseData>(listCacheKey);
+      if (cached) {
+        timer.end({
+          mode: "list",
+          thread: "no",
+          cache: "hit",
+          conversations: cached.conversations.length,
+          hasMore: cached.hasMore,
+        });
+        return NextResponse.json({ success: true, data: cached });
+      }
+    }
 
     if (summaryOnly) {
       const unreadCap = 100;
-      const [responseUnread, incomingInquiryUnread, sentInquiryUnread] = await Promise.all([
-        prisma.response.findMany({
-          where: {
-            providerId,
-            lastMessageAt: { gt: prisma.response.fields.providerLastReadAt },
-          },
-          select: { id: true },
-          take: unreadCap,
-        }),
-        prisma.directInquiry.findMany({
-          where: {
-            providerId,
-            moderationStatus: "APPROVED",
-            status: { not: "ARCHIVED" },
-            lastMessageAt: { gt: prisma.directInquiry.fields.providerLastReadAt },
-          },
-          select: { id: true },
-          take: unreadCap,
-        }),
-        prisma.directInquiry.findMany({
-          where: {
-            senderUserId: providerId,
-            moderationStatus: "APPROVED",
-            status: { not: "ARCHIVED" },
-            clientLastReadAt: { not: null },
-            lastMessageAt: { gt: prisma.directInquiry.fields.clientLastReadAt },
-          },
-          select: { id: true },
-          take: unreadCap,
-        }),
+      const [responseRows, incomingInquiryRows, sentInquiryRows] = await Promise.all([
+        prisma.$queryRaw<{ count: number }[]>`
+          SELECT COUNT(*)::int AS count
+          FROM responses
+          WHERE "providerId" = ${providerId}
+            AND "lastMessageAt" > "providerLastReadAt"
+        `,
+        prisma.$queryRaw<{ count: number }[]>`
+          SELECT COUNT(*)::int AS count
+          FROM direct_inquiries
+          WHERE "providerId" = ${providerId}
+            AND "moderationStatus" = 'APPROVED'
+            AND status <> 'ARCHIVED'
+            AND "lastMessageAt" > "providerLastReadAt"
+        `,
+        prisma.$queryRaw<{ count: number }[]>`
+          SELECT COUNT(*)::int AS count
+          FROM direct_inquiries
+          WHERE "senderUserId" = ${providerId}
+            AND "providerId" <> ${providerId}
+            AND "moderationStatus" = 'APPROVED'
+            AND status <> 'ARCHIVED'
+            AND ("clientLastReadAt" IS NULL OR "lastMessageAt" > "clientLastReadAt")
+        `,
       ]);
       timer.mark("summaryQuery");
       const cappedTotal =
-        responseUnread.length + incomingInquiryUnread.length + sentInquiryUnread.length;
+        (responseRows[0]?.count ?? 0) +
+        (incomingInquiryRows[0]?.count ?? 0) +
+        (sentInquiryRows[0]?.count ?? 0);
       const totalUnread = Math.min(cappedTotal, unreadCap);
       timer.end({
         mode: "summary",
-        responseUnread: responseUnread.length,
-        incomingUnread: incomingInquiryUnread.length,
-        sentUnread: sentInquiryUnread.length,
+        responseUnread: responseRows[0]?.count ?? 0,
+        incomingUnread: incomingInquiryRows[0]?.count ?? 0,
+        sentUnread: sentInquiryRows[0]?.count ?? 0,
       });
 
       return NextResponse.json({
@@ -257,10 +280,12 @@ export async function GET(req: NextRequest) {
       hasMore,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: { conversations, totalUnread, nextCursor, hasMore },
-    });
+    const data: InboxResponseData = { conversations, totalUnread, nextCursor, hasMore };
+    if (listCacheKey) {
+      setProviderInboxCache(listCacheKey, data, LIST_CACHE_TTL_MS);
+    }
+
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("Provider inbox error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });

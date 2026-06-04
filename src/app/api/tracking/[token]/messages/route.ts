@@ -82,26 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       senderName = request.clientName;
     }
 
-    // Duplicate detection: block identical message within last 30 seconds
     const sanitizedContent = sanitizeHtml(parsed.data.content);
-    const duplicateWhere: Record<string, unknown> = {
-      responseId,
-      content: sanitizedContent,
-      createdAt: { gte: new Date(Date.now() - 30 * 1000) },
-    };
-    if (senderId) {
-      duplicateWhere.senderId = senderId;
-    } else {
-      duplicateWhere.senderName = senderName;
-      duplicateWhere.senderId = null;
-    }
-    const recentDuplicate = await prisma.message.findFirst({
-      where: duplicateWhere,
-      select: { id: true },
-    });
-    if (recentDuplicate) {
-      return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
-    }
 
     // Persist the message and bump the thread's activity timestamp atomically.
     const now = new Date();

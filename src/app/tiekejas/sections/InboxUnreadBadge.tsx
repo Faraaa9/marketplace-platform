@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { createServerTimer } from "@/lib/server-timing";
 
 /**
  * Unread-conversation count for the Messages quick-link. Its own small Suspense
@@ -8,37 +9,38 @@ import { prisma } from "@/lib/prisma";
  * are excluded.
  */
 export async function InboxUnreadBadge({ userId }: { userId: string }) {
-  const [responses, inquiries] = await Promise.all([
-    prisma.response.findMany({
-      where: { providerId: userId },
-      select: { lastMessageAt: true, providerLastReadAt: true },
-    }),
-    prisma.directInquiry.findMany({
-      where: {
-        OR: [{ providerId: userId }, { senderUserId: userId }],
-        moderationStatus: "APPROVED",
-      },
-      select: {
-        providerId: true,
-        status: true,
-        lastMessageAt: true,
-        providerLastReadAt: true,
-        clientLastReadAt: true,
-      },
-    }),
+  const timer = createServerTimer("provider-dashboard-unread-badge");
+  const [responseRows, providerInquiryRows, senderInquiryRows] = await Promise.all([
+    prisma.$queryRaw<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count
+      FROM responses
+      WHERE "providerId" = ${userId}
+        AND "lastMessageAt" > "providerLastReadAt"
+    `,
+    prisma.$queryRaw<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count
+      FROM direct_inquiries
+      WHERE "providerId" = ${userId}
+        AND "moderationStatus" = 'APPROVED'
+        AND status <> 'ARCHIVED'
+        AND "lastMessageAt" > "providerLastReadAt"
+    `,
+    prisma.$queryRaw<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count
+      FROM direct_inquiries
+      WHERE "senderUserId" = ${userId}
+        AND "providerId" <> ${userId}
+        AND "moderationStatus" = 'APPROVED'
+        AND status <> 'ARCHIVED'
+        AND ("clientLastReadAt" IS NULL OR "lastMessageAt" > "clientLastReadAt")
+    `,
   ]);
 
-  let totalUnread = 0;
-  for (const r of responses) {
-    if (r.lastMessageAt > r.providerLastReadAt) totalUnread++;
-  }
-  for (const q of inquiries) {
-    if (q.status === "ARCHIVED") continue;
-    const viewerIsProvider = q.providerId === userId;
-    const lastReadAt = viewerIsProvider ? q.providerLastReadAt : q.clientLastReadAt;
-    const unread = lastReadAt ? q.lastMessageAt > lastReadAt : !viewerIsProvider;
-    if (unread) totalUnread++;
-  }
+  const totalUnread =
+    (responseRows[0]?.count ?? 0) +
+    (providerInquiryRows[0]?.count ?? 0) +
+    (senderInquiryRows[0]?.count ?? 0);
+  timer.end({ unread: totalUnread });
 
   if (totalUnread === 0) return null;
 

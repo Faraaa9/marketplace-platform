@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createServerTimer } from "@/lib/server-timing";
 import {
   classifyDirectInquiries,
   classifyResponseThreads,
@@ -9,6 +11,8 @@ import {
 } from "@/lib/ai/follow-up";
 import ProviderFollowUpsCard, { type FollowUpItem } from "../ProviderFollowUpsCard";
 
+const DASHBOARD_FOLLOW_UP_THREAD_LIMIT = 50;
+
 /**
  * Server wrapper for the Follow-Up Agent card. Gated to active, verified
  * providers (mirrors the legacy `canAccessRequests` gate). Fetches stalled
@@ -17,6 +21,7 @@ import ProviderFollowUpsCard, { type FollowUpItem } from "../ProviderFollowUpsCa
  * sends messages or spends credits.
  */
 export async function FollowUpsCard({ userId }: { userId: string }) {
+  const timer = createServerTimer("provider-dashboard-follow-ups");
   const [user, profile] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -27,9 +32,13 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
       select: { isActive: true },
     }),
   ]);
+  timer.mark("guard");
 
   const canAccess = !!user?.emailVerified && (profile?.isActive ?? false);
-  if (!canAccess) return null;
+  if (!canAccess) {
+    timer.end({ access: false });
+    return null;
+  }
 
   const startedAt = Date.now();
   const lookback = new Date();
@@ -51,7 +60,7 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
         },
       },
       orderBy: { lastMessageAt: "desc" },
-      take: 200,
+      take: DASHBOARD_FOLLOW_UP_THREAD_LIMIT,
     }),
     prisma.directInquiry.findMany({
       where: {
@@ -73,9 +82,10 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
         },
       },
       orderBy: { lastMessageAt: "desc" },
-      take: 200,
+      take: DASHBOARD_FOLLOW_UP_THREAD_LIMIT,
     }),
   ]);
+  timer.mark("threadQueries");
 
   const responseInputs: ResponseFollowUpInput[] = responses.map((r) => ({
     id: r.id,
@@ -103,13 +113,16 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
     ...classifyDirectInquiries(inquiryInputs),
   ];
   const result = summarizeFollowUps(threadFollowUps, []);
+  timer.mark("classify");
 
-  await recordFollowUpScan({
-    scope: "provider",
-    actorUserId: userId,
-    result,
-    startedAt,
-  });
+  after(() =>
+    recordFollowUpScan({
+      scope: "provider",
+      actorUserId: userId,
+      result,
+      startedAt,
+    }).catch(() => null)
+  );
 
   const threads: FollowUpItem[] = result.threads
     .sort((a, b) => b.daysSinceActivity - a.daysSinceActivity)
@@ -130,6 +143,12 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
       reason: thread.suggestion.reason,
       bucket: thread.suggestion.bucket,
     }));
+  timer.end({
+    access: true,
+    responses: responses.length,
+    inquiries: inquiries.length,
+    total: result.totalThreads,
+  });
 
   return <ProviderFollowUpsCard threads={threads} total={result.totalThreads} />;
 }

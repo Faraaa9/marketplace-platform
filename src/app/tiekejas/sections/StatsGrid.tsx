@@ -14,7 +14,10 @@ import { prisma } from "@/lib/prisma";
 import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 import { computeProfileCompleteness } from "@/lib/provider-completeness";
 import { getUnlockedRequestIds } from "@/lib/credits";
+import { createServerTimer } from "@/lib/server-timing";
 import { formatRelativeDate } from "@/lib/utils";
+
+const DASHBOARD_OPPORTUNITY_LIMIT = 12;
 
 interface NextAction {
   label: string;
@@ -71,6 +74,7 @@ function getNextAction(stats: {
  * expensive matching count (expandToMatchSet) — computed once here.
  */
 export async function StatsGrid({ userId }: { userId: string }) {
+  const timer = createServerTimer("provider-dashboard-stats");
   const [profile, user, responseRows] = await Promise.all([
     prisma.providerProfile.findUnique({
       where: { userId },
@@ -96,20 +100,11 @@ export async function StatsGrid({ userId }: { userId: string }) {
       select: { id: true, request: { select: { acceptedResponseId: true } } },
     }),
   ]);
+  timer.mark("profileUserResponses");
 
   const categoryIds = profile?.categories.map((c) => c.categoryId) ?? [];
   const matchSet = await expandToMatchSet(categoryIds);
-  const matchingRequests =
-    categoryIds.length > 0
-      ? await prisma.serviceRequest.count({
-          where: {
-            status: "OPEN",
-            moderationStatus: "APPROVED",
-            categoryId: { in: matchSet },
-            clientId: { not: userId },
-          },
-        })
-      : 0;
+  timer.mark("expandCategories");
   const topRequestRows =
     categoryIds.length > 0
       ? await prisma.serviceRequest.findMany({
@@ -139,9 +134,11 @@ export async function StatsGrid({ userId }: { userId: string }) {
             _count: { select: { responses: true } },
           },
           orderBy: { createdAt: "desc" },
-          take: 60,
+          take: DASHBOARD_OPPORTUNITY_LIMIT,
         })
       : [];
+  timer.mark("topRequests");
+  const matchingRequests = topRequestRows.length;
 
   const myResponses = responseRows.length;
   const acceptedCount = responseRows.filter(
@@ -175,6 +172,7 @@ export async function StatsGrid({ userId }: { userId: string }) {
         topRequestRows.map((request) => request.id),
       )
     : new Set<string>();
+  timer.mark("unlockedLookup");
   const topRequests = topRequestRows
     .map((request) => {
       const requestCategoryIds =
@@ -215,6 +213,11 @@ export async function StatsGrid({ userId }: { userId: string }) {
     })
     .slice(0, 3);
   const canWork = !!user?.emailVerified && (profile?.isActive ?? false);
+  timer.end({
+    categories: categoryIds.length,
+    requests: topRequestRows.length,
+    responses: responseRows.length,
+  });
 
   return (
     <section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
@@ -246,6 +249,7 @@ export async function StatsGrid({ userId }: { userId: string }) {
             href="/tiekejas/uzklausos"
             icon={FileText}
             value={matchingRequests}
+            suffix={matchingRequests >= DASHBOARD_OPPORTUNITY_LIMIT ? "+" : undefined}
             label="Tinkamos"
             tone="brand"
           />
@@ -358,12 +362,14 @@ function MetricTile({
   href,
   icon: Icon,
   value,
+  suffix,
   label,
   tone,
 }: {
   href: string;
   icon: typeof FileText;
   value: number;
+  suffix?: string;
   label: string;
   tone: "brand" | "emerald" | "amber";
 }) {
@@ -385,7 +391,7 @@ function MetricTile({
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-heading-3 font-bold tabular-nums text-surface-900 dark:text-white">
-        {value}
+        {value}{suffix}
       </p>
       <p className="text-micro font-medium text-surface-500 dark:text-surface-400">
         {label}

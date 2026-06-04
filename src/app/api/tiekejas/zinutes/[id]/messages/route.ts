@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { messageSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
+import { invalidateProviderInboxListCache } from "@/lib/provider-inbox-cache";
 import { createMessageNotification } from "@/lib/message-notifications";
 import { createServerTimer } from "@/lib/server-timing";
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const timer = createServerTimer("provider-message-send");
   try {
     const { id } = await params;
-    const guard = await requireActiveProvider();
+    const guard = await requireActiveProvider(req);
     timer.mark("guard");
     if (!guard.authorized) return guard.response;
 
@@ -39,21 +40,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const sanitizedContent = sanitizeHtml(parsed.data.content);
-
-    const recentMessages = await prisma.message.findMany({
-      where: {
-        directInquiryId: id,
-        senderId: guard.userId,
-        createdAt: { gte: new Date(Date.now() - 30 * 1000) },
-      },
-      select: { content: true },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    });
-    timer.mark("duplicateCheck");
-    if (recentMessages.some((message) => message.content === sanitizedContent)) {
-      return NextResponse.json({ success: false, error: "Tokia žinutė jau išsiųsta" }, { status: 409 });
-    }
 
     const providerName = guard.userName;
 
@@ -82,6 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }),
     ]);
     timer.mark("transaction");
+    invalidateProviderInboxListCache(guard.userId);
 
     // Notify the sender — best-effort, in-app only when the sender has an account.
     if (inquiry.senderUserId) {

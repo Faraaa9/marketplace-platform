@@ -1,6 +1,7 @@
 import { ShieldCheck, CheckCircle2, Mail, Building2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
+import { createServerTimer } from "@/lib/server-timing";
 import AccountStoryAvatar from "../AccountStoryAvatar";
 import ResendVerificationBanner from "../ResendVerificationBanner";
 
@@ -11,6 +12,7 @@ import ResendVerificationBanner from "../ResendVerificationBanner";
  * single user + profile read.
  */
 export async function AccountCard({ userId }: { userId: string }) {
+  const timer = createServerTimer("provider-dashboard-account");
   const [user, profile, storyEnabled, pendingClaim] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -35,6 +37,7 @@ export async function AccountCard({ userId }: { userId: string }) {
       orderBy: { createdAt: "desc" },
     }),
   ]);
+  timer.mark("accountQueries");
 
   const emailVerified = !!user?.emailVerified;
   const isActive = profile?.isActive ?? false;
@@ -44,6 +47,10 @@ export async function AccountCard({ userId }: { userId: string }) {
         where: { providerId: userId, expiresAt: { gt: new Date() } },
       })
     : 0;
+  timer.end({
+    storyEnabled,
+    hasPendingClaim: !!pendingClaim,
+  });
 
   return (
     <>

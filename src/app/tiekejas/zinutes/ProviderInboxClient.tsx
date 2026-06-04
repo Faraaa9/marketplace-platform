@@ -767,7 +767,7 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#ece9e2] dark:bg-surface-900`}>
+          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-white dark:bg-surface-900`}>
             {threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
@@ -866,7 +866,7 @@ export default function ProviderInboxClient() {
                   </div>
                 </div>
                 <div
-                  className="flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-4 py-4 md:px-5"
+                  className="flex min-h-0 flex-1 flex-col bg-white px-4 py-4 md:px-5"
                 >
                   <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#EAEAEA] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(37,34,30,0.06)] dark:border-surface-700 dark:bg-surface-900">
                     <div className="min-w-0">

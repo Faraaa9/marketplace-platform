@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatLastSeen, getPresenceLevel } from "@/lib/presence";
 import { getProviderAvatarImage } from "@/lib/provider-image";
 import { createServerTimer } from "@/lib/server-timing";
+import { INITIAL_THREAD_MESSAGE_LIMIT, newestWindowChronological } from "@/lib/thread-window";
 
 /**
  * GET a direct-inquiry conversation by its tracking token — sender side.
@@ -44,7 +45,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
             senderName: true,
             sender: { select: { id: true, name: true, image: true } },
           },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: "desc" },
+          take: INITIAL_THREAD_MESSAGE_LIMIT,
         },
       },
     });
@@ -65,7 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         .catch(() => null)
     );
 
-    timer.end({ messages: inquiry.messages.length });
+    const messages = newestWindowChronological(inquiry.messages);
+    timer.end({ messages: messages.length });
     return NextResponse.json({
       success: true,
       data: {
@@ -81,7 +84,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         createdAt: inquiry.createdAt,
         providerLastReadAt: inquiry.providerLastReadAt,
         clientLastReadAt: readAt,
-        messages: inquiry.messages,
+        messages,
       },
     });
   } catch (error) {

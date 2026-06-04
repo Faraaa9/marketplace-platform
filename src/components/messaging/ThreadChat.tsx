@@ -74,13 +74,13 @@ interface MessageGroup {
 
 const GROUP_BREAK_MS = 5 * 60 * 1000;
 const OWN_BUBBLE_STYLE: CSSProperties = {
-  backgroundColor: "#334155",
-  borderColor: "#334155",
+  backgroundColor: "#2F3F56",
+  borderColor: "#243348",
   color: "#FFFFFF",
 };
 const OTHER_BUBBLE_STYLE: CSSProperties = {
-  backgroundColor: "#F8F7F4",
-  borderColor: "#E7E3DA",
+  backgroundColor: "#FFFDF9",
+  borderColor: "#E8E2D8",
   color: "#111827",
 };
 const FAILED_BUBBLE_STYLE: CSSProperties = {
@@ -309,6 +309,15 @@ export default function ThreadChat({
             setIsOtherTyping(false);
           }
         })
+        .on("broadcast", { event: "message" }, ({ payload }) => {
+          if (payload?.viewerKey === viewerKey) return;
+          const message = payload?.message as ThreadMessage | undefined;
+          if (!message?.id || !message.content || !message.createdAt) return;
+          appendMessageIfNew(threadId, {
+            ...message,
+            status: "sent",
+          });
+        })
         .on("presence", { event: "sync" }, () => {
           if (!channel) return;
           const state = channel.presenceState();
@@ -399,10 +408,21 @@ export default function ThreadChat({
     try {
       const serverMsg = await sendMessage(threadId, content);
       confirmSend(threadId, tempId, serverMsg);
+      void realtimeChannelRef.current?.send({
+        type: "broadcast",
+        event: "message",
+        payload: {
+          viewerKey:
+            viewerRole === "provider"
+              ? `provider:${providerId}`
+              : `client:${realtimeTrackingToken || threadId}`,
+          message: serverMsg,
+        },
+      });
     } catch {
       failSend(threadId, tempId);
     }
-  }, [inputValue, disabled, threadId, currentSenderName, optimisticSend, confirmSend, failSend, sendMessage]);
+  }, [inputValue, disabled, threadId, currentSenderName, optimisticSend, confirmSend, failSend, sendMessage, providerId, realtimeTrackingToken, viewerRole]);
 
   const handleResend = useCallback(async (msg: ThreadMessage) => {
     // Remove the failed message and re-send
@@ -412,10 +432,21 @@ export default function ThreadChat({
     try {
       const serverMsg = await sendMessage(threadId, msg.content);
       confirmSend(threadId, tempId, serverMsg);
+      void realtimeChannelRef.current?.send({
+        type: "broadcast",
+        event: "message",
+        payload: {
+          viewerKey:
+            viewerRole === "provider"
+              ? `provider:${providerId}`
+              : `client:${realtimeTrackingToken || threadId}`,
+          message: serverMsg,
+        },
+      });
     } catch {
       failSend(threadId, tempId);
     }
-  }, [threadId, currentSenderName, removeFailed, optimisticSend, confirmSend, failSend, sendMessage]);
+  }, [threadId, currentSenderName, removeFailed, optimisticSend, confirmSend, failSend, sendMessage, providerId, realtimeTrackingToken, viewerRole]);
 
   const otherFallbackName = viewerRole === "provider" ? "Klientas" : "Tiekėjas";
   const otherDisplayName = otherParticipantName?.trim() || otherFallbackName;
@@ -533,10 +564,10 @@ export default function ThreadChat({
                         <div className={cn("flex max-w-full flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
                           <div
                             className={cn(
-                                "block max-w-full whitespace-pre-wrap break-words border px-3.5 py-2.5 text-[15px] leading-relaxed antialiased sm:px-4 sm:py-3",
-                                group.isOwn
-                                  ? "rounded-2xl rounded-tr-sm shadow-[0_1px_2px_rgba(15,23,42,0.12)]"
-                                  : "rounded-2xl rounded-tl-sm shadow-[0_1px_2px_rgba(37,34,30,0.04)]",
+                            "block max-w-full whitespace-pre-wrap break-words border px-4 py-2.5 text-[15px] leading-relaxed antialiased sm:px-5 sm:py-3",
+                            group.isOwn
+                                  ? "rounded-2xl rounded-tr-sm shadow-[0_1px_2px_rgba(15,23,42,0.16)]"
+                                  : "rounded-2xl rounded-tl-sm shadow-[0_1px_2px_rgba(37,34,30,0.08)]",
                               tail,
                               msg.status === "sending" && "ring-1 ring-inset ring-white/30",
                             )}
@@ -553,7 +584,7 @@ export default function ThreadChat({
                           <time
                             dateTime={msg.createdAt}
                             className={cn(
-                              "px-1 text-[11px] font-medium leading-none text-[#9CA3AF] dark:text-surface-500",
+                              "px-1 text-[11px] font-medium leading-none text-[#A6AFBA] dark:text-surface-500",
                               group.isOwn ? "text-right" : "text-left",
                             )}
                           >
@@ -593,7 +624,7 @@ export default function ThreadChat({
       {/* Composer */}
       {!disabled && (
         <div
-          className="mt-4 shrink-0 rounded-2xl border border-[#EAEAEA] bg-white p-3 shadow-[0_10px_30px_rgba(37,34,30,0.08)] dark:border-surface-700 dark:bg-surface-900"
+          className="mt-5 shrink-0 rounded-2xl border border-[#EAEAEA] bg-white p-3 shadow-[0_10px_28px_rgba(37,34,30,0.08)] dark:border-surface-700 dark:bg-surface-900"
         >
           {quickReplies.length > 0 && (
             <div className="mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-1 sm:pl-[5.5rem] sm:pr-14">
@@ -602,7 +633,7 @@ export default function ThreadChat({
                   key={reply}
                   type="button"
                   onClick={() => setInputValue(reply)}
-                  className="min-h-9 shrink-0 rounded-xl border border-[#ece9e2] bg-white px-4 py-2 text-sm font-medium text-[#25221e] transition-all hover:border-[#c25e3a]/40 hover:bg-[#faeee7] dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
+                  className="min-h-9 shrink-0 rounded-xl border border-[#E8E2D8] bg-white px-4 py-2 text-sm font-medium text-[#25221e] transition-all hover:border-[#2F3F56]/30 hover:bg-[#F8FAFC] dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
                 >
                   {decodeHtmlEntities(reply)}
                 </button>
@@ -638,7 +669,7 @@ export default function ThreadChat({
                   handleSend();
                 }
               }}
-              className="min-h-[52px] w-full resize-none rounded-2xl border border-[#ece9e2] bg-white py-3 pl-[5.5rem] pr-14 text-body-sm text-[#25221e] shadow-[inset_0_1px_2px_rgba(37,34,30,0.06)] ring-1 ring-transparent transition-all placeholder:text-[#7E7768] focus:border-[#C29B74] focus:bg-white focus:outline-none focus:ring-[#C29B74]/20 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:focus:bg-surface-900"
+              className="min-h-[52px] w-full resize-none rounded-2xl border border-[#E8E2D8] bg-white py-3 pl-[5.5rem] pr-14 text-body-sm text-[#25221e] shadow-[inset_0_1px_2px_rgba(37,34,30,0.04)] ring-1 ring-transparent transition-all placeholder:text-[#8A8176] focus:border-[#2F3F56]/40 focus:bg-white focus:outline-none focus:ring-[#2F3F56]/10 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:focus:bg-surface-900"
             />
             {isOtherOnline && (
               <span className="mt-2 inline-flex items-center gap-1.5 pl-1 text-micro font-medium text-emerald-600">
@@ -651,7 +682,7 @@ export default function ThreadChat({
               onClick={handleSend}
               disabled={!inputValue.trim()}
               aria-label="Siųsti žinutę"
-              className="absolute right-1.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl bg-[#25221e] text-white transition hover:bg-[#C29B74] disabled:cursor-not-allowed disabled:bg-[#ece9e2] disabled:text-[#7E7768] dark:disabled:bg-surface-700"
+              className="absolute right-1.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl bg-[#E8E2D8] text-[#2F3F56] transition hover:bg-[#2F3F56] hover:text-white disabled:cursor-not-allowed disabled:bg-[#F0ECE6] disabled:text-[#9A9288] dark:disabled:bg-surface-700"
             >
               <Send className="h-4 w-4" />
             </button>

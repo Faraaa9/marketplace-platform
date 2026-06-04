@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -19,17 +20,24 @@ type CachedProvider = {
   expiresAt: number;
 };
 
-const ACTIVE_PROVIDER_CACHE_TTL_MS = 30_000;
+const ACTIVE_PROVIDER_CACHE_TTL_MS = 120_000;
 const activeProviderCache = new Map<string, CachedProvider>();
 
 /**
  * Checks that the caller has a providerProfile with verified email and active status.
  * Uses providerProfile existence as the source of truth (not just user.role).
  */
-export async function requireActiveProvider(): Promise<ProviderGuardResult> {
-  const session = await getServerSession(authOptions);
+export async function requireActiveProvider(req?: NextRequest): Promise<ProviderGuardResult> {
+  const token = req
+    ? await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    : null;
+  const session = token
+    ? null
+    : await getServerSession(authOptions);
+  const userId = (token?.id as string | undefined) ?? session?.user?.id;
+  const userName = (token?.name as string | null | undefined) ?? session?.user?.name ?? null;
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return {
       authorized: false,
       response: NextResponse.json(
@@ -39,19 +47,19 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
-  const cached = activeProviderCache.get(session.user.id);
+  const cached = activeProviderCache.get(userId);
   if (cached && cached.expiresAt > Date.now()) {
     return {
       authorized: true,
-      userId: session.user.id,
-      userName: session.user.name ?? null,
+      userId,
+      userName,
       providerProfileId: cached.providerProfileId,
       creditBalance: cached.creditBalance,
     };
   }
 
   const profile = await prisma.providerProfile.findUnique({
-    where: { userId: session.user.id },
+    where: { userId },
     select: {
       id: true,
       isActive: true,
@@ -109,7 +117,7 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
     };
   }
 
-  activeProviderCache.set(session.user.id, {
+  activeProviderCache.set(userId, {
     providerProfileId: profile.id,
     creditBalance: profile.creditBalance,
     expiresAt: Date.now() + ACTIVE_PROVIDER_CACHE_TTL_MS,
@@ -117,8 +125,8 @@ export async function requireActiveProvider(): Promise<ProviderGuardResult> {
 
   return {
     authorized: true,
-    userId: session.user.id,
-    userName: session.user.name ?? null,
+    userId,
+    userName,
     providerProfileId: profile.id,
     creditBalance: profile.creditBalance,
   };
