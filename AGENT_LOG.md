@@ -17,6 +17,27 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 12:46 — Codex
+
+**Commit:** `431c5fa` — fix(categories): add intent-gated category selection · lokalus
+
+**Pakeitimai:** 7 files changed, 42699 insertions(+), 19 deletions(-)
+
+**Failai:**
+- category-map.html
+- src/app/api/admin/ai-registry/route.ts
+- src/lib/__tests__/category-selection-rules.test.ts
+- src/lib/ai-improve.ts
+- src/lib/ai/prompt-config.ts
+- src/lib/category-selection-rules.ts
+- src/lib/category-suggestions.ts
+
+**Toliau:** Po deploy patikrinti Telegram audio scenarijų „varva vanduo po
+virtuvės kriaukle...“ — turi grįžti `Smulkūs santechnikos darbai`, be virtuvės
+baldų kategorijų. Taip pat patikrinti `/admin/ai`: registry endpointas dabar
+turi fallback'ą, jei `ai_touchpoint_configs.enabled` migracija dar nepritaikyta.
+
+
 ## 2026-06-05 09:39 — Codex
 
 **Commit:** `9c05da9` — feat(admin): add AI workflow toggles · lokalus
