@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
+import { filterRequestCategoryChoices } from "@/lib/category-selection-rules";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
@@ -59,7 +60,7 @@ type CandidateRow = {
 
 // Common Lithuanian/English filler words that shouldn't drive matching.
 const STOPWORDS = new Set([
-  "ir", "ar", "tai", "yra", "bet", "kad", "kaip", "jei", "nes", "del", "su",
+  "ir", "ar", "arba", "tai", "yra", "bet", "kad", "kaip", "jei", "nes", "del", "su",
   "uz", "be", "po", "is", "ant", "prie", "tarp", "iki", "nuo", "kol", "tik",
   "tas", "ta", "tie", "tos", "sis", "si", "siuo", "sia", "siais", "sioms",
   "as", "tu", "jis", "ji", "mes", "jus", "jie", "jos", "save", "savo",
@@ -499,6 +500,26 @@ function mergeWithAi(
   return { picked: ordered, reasonBySlug, confidenceBySlug };
 }
 
+function applyRequestIntentRules(
+  picked: ScoredCandidate[],
+  text: string,
+  limit: number,
+): ScoredCandidate[] {
+  const filtered = filterRequestCategoryChoices(
+    picked,
+    text,
+    (entry) => ({
+      id: entry.candidate.id,
+      slug: entry.candidate.slug,
+      name: entry.candidate.name,
+      depth: entry.candidate.depth,
+      parentId: entry.candidate.parentId,
+      rootId: entry.candidate.rootId,
+    }),
+  );
+  return filtered.slice(0, limit);
+}
+
 export async function suggestCategories(
   input: SuggestCategoriesInput,
 ): Promise<SuggestCategoriesResult> {
@@ -550,14 +571,19 @@ export async function suggestCategories(
   }
 
   const scoredWithOverride = forcePreferredFirst(scored, overrideEntry, scored.length + 1);
+  const intentFilteredScored =
+    input.mode === "request"
+      ? applyRequestIntentRules(scoredWithOverride, text, scoredWithOverride.length)
+      : scoredWithOverride;
+  const safeScored = intentFilteredScored.length > 0 ? intentFilteredScored : scoredWithOverride;
   const deterministicPicked = forcePreferredFirst(
-    pickTopSuggestions(scoredWithOverride, input.mode, limit),
+    pickTopSuggestions(safeScored, input.mode, limit),
     overrideEntry,
     limit,
   );
-  const bestScore = deterministicPicked[0]?.score ?? scoredWithOverride[0].score;
+  const bestScore = deterministicPicked[0]?.score ?? safeScored[0].score;
 
-  const rerank = await aiRerank(input, scoredWithOverride.slice(0, 30));
+  const rerank = await aiRerank(input, safeScored.slice(0, 30));
   const ai = rerank.result;
 
   let pickedEntries = deterministicPicked;
@@ -574,7 +600,12 @@ export async function suggestCategories(
     aiClarification = ai.clarificationQuestion;
   }
 
-  const suggestions = pickedEntries.map((entry) => {
+  if (input.mode === "request") {
+    const filtered = applyRequestIntentRules(pickedEntries, text, limit);
+    pickedEntries = filtered.length > 0 ? forcePreferredFirst(filtered, overrideEntry, limit) : deterministicPicked.slice(0, 1);
+  }
+
+  const suggestionsRaw = pickedEntries.map((entry) => {
     const base = toSuggestion(entry, bestScore);
     const overrideReason = reasonBySlug?.get(entry.candidate.slug);
     const overrideConfidence = confidenceBySlug?.get(entry.candidate.slug);
@@ -585,6 +616,10 @@ export async function suggestCategories(
         typeof overrideConfidence === "number" ? overrideConfidence : base.confidence,
     };
   });
+  const suggestions =
+    input.mode === "request" && suggestionsRaw[0]?.confidence >= 0.9
+      ? suggestionsRaw.filter((suggestion, index) => index === 0 || suggestion.confidence >= 0.75)
+      : suggestionsRaw;
 
   const clarificationQuestion =
     aiClarification && aiClarification.length > 0

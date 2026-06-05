@@ -1,6 +1,7 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
 import { getFlatServiceCategories } from "@/lib/service-categories";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
+import { categoryMatchesRequestIntent, filterRequestCategoryChoices } from "@/lib/category-selection-rules";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
@@ -59,6 +60,19 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
         score: scoreCategory(query, breadcrumb, category.depth),
       };
     })
+    .filter(({ category }) =>
+      categoryMatchesRequestIntent(
+        {
+          id: category.id,
+          slug: category.slug,
+          name: category.name,
+          depth: category.depth ?? null,
+          parentId: category.parentId ?? null,
+          rootId: category.rootId ?? null,
+        },
+        query,
+      ),
+    )
     .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
     .slice(0, 140);
 
@@ -120,7 +134,12 @@ export interface ImproveDescriptionResult {
   recommendations: ImproveRecommendation[];
 }
 
-function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionResult | null {
+function parseResult(
+  raw: string,
+  validSlugs: Set<string>,
+  categoryBySlug: Map<string, Awaited<ReturnType<typeof getFlatServiceCategories>>[number]>,
+  originalText: string,
+): ImproveDescriptionResult | null {
   const cleaned = raw
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
@@ -163,6 +182,23 @@ function parseResult(raw: string, validSlugs: Set<string>): ImproveDescriptionRe
     categories.push(slug);
     if (categories.length === 3) break;
   }
+  const filteredCategories = filterRequestCategoryChoices(
+    categories,
+    originalText,
+    (slug) => {
+      const category = categoryBySlug.get(slug)!;
+      return {
+        id: category.id,
+        slug: category.slug,
+        name: category.name,
+        depth: category.depth ?? null,
+        parentId: category.parentId ?? null,
+        rootId: category.rootId ?? null,
+      };
+    },
+  );
+  categories.length = 0;
+  categories.push(...filteredCategories);
 
   // Legacy single-slug fallback for the v1 panel. Prefer the array's first
   // entry; fall back to the model's separately-returned "category" if it
@@ -225,6 +261,8 @@ export async function improveDescription(
     throw new AiImproveError("AI_NOT_CONFIGURED");
   }
 
+  const categories = await getFlatServiceCategories();
+  const categoryBySlug = new Map(categories.map((category) => [category.slug, category]));
   const { list: categoryList, validSlugs } = await getCategoryPromptData(input);
   const systemPrompt = await resolvePrompt("request_improve", "system", { categoryList });
   const model = await resolveModel("request_improve", process.env.OPENROUTER_MODEL || DEFAULT_MODEL);
@@ -274,7 +312,7 @@ export async function improveDescription(
     throw new AiImproveError(errorCode);
   }
 
-  const result = parseResult(call.content, validSlugs);
+  const result = parseResult(call.content, validSlugs, categoryBySlug, userContent);
   if (!result) {
     await logError("AI_EMPTY_RESPONSE", { parseFailed: true });
     throw new AiImproveError("AI_EMPTY_RESPONSE");

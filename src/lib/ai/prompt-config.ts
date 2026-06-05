@@ -467,6 +467,19 @@ async function loadActiveConfigs(): Promise<Record<string, ActiveConfig>> {
   try {
     const rows = await prisma.aiTouchpointConfig.findMany({
       select: { touchpointId: true, enabled: true, activeModel: true, activePromptsJson: true },
+    }).catch(async (error) => {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2022"
+      ) {
+        const fallbackRows = await prisma.aiTouchpointConfig.findMany({
+          select: { touchpointId: true, activeModel: true, activePromptsJson: true },
+        });
+        return fallbackRows.map((row) => ({ ...row, enabled: true }));
+      }
+      throw error;
     });
     const map: Record<string, ActiveConfig> = {};
     for (const row of rows) {

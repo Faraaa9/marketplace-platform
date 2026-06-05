@@ -27,6 +27,51 @@ function parsePrompts(json: string | null): Record<string, string> {
   }
 }
 
+function isMissingEnabledColumn(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2022" &&
+    "meta" in error &&
+    typeof error.meta === "object" &&
+    error.meta !== null &&
+    "column" in error.meta &&
+    error.meta.column === "ai_touchpoint_configs.enabled"
+  );
+}
+
+async function loadConfigRows() {
+  try {
+    return await prisma.aiTouchpointConfig.findMany({
+      select: {
+        touchpointId: true,
+        enabled: true,
+        draftModel: true,
+        draftPromptsJson: true,
+        activeModel: true,
+        activePromptsJson: true,
+        activatedAt: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    if (!isMissingEnabledColumn(error)) throw error;
+    const rows = await prisma.aiTouchpointConfig.findMany({
+      select: {
+        touchpointId: true,
+        draftModel: true,
+        draftPromptsJson: true,
+        activeModel: true,
+        activePromptsJson: true,
+        activatedAt: true,
+        updatedAt: true,
+      },
+    });
+    return rows.map((row) => ({ ...row, enabled: true }));
+  }
+}
+
 export async function GET() {
   await connection();
   try {
@@ -41,18 +86,7 @@ export async function GET() {
 
     const [usage, configRows] = await Promise.all([
       getAiFeatureUsage(thirtyDaysAgo),
-      prisma.aiTouchpointConfig.findMany({
-        select: {
-          touchpointId: true,
-          enabled: true,
-          draftModel: true,
-          draftPromptsJson: true,
-          activeModel: true,
-          activePromptsJson: true,
-          activatedAt: true,
-          updatedAt: true,
-        },
-      }),
+      loadConfigRows(),
     ]);
 
     const configs: Record<string, TouchpointConfigPayload> = {};
