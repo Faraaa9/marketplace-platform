@@ -400,7 +400,6 @@ async function aiRerank(
     timeoutMs: RERANK_TIMEOUT_MS,
     temperature: 0.2,
     maxTokens: 600,
-    reasoning: false,
     jsonObject: true,
     title: "paslaugurinka.lt category-suggest",
     messages: [

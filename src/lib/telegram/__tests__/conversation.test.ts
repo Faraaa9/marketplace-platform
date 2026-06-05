@@ -215,17 +215,24 @@ const tests: Test[] = [
     },
   ],
   [
-    "category resolution receives the original text for fallback matching",
+    "category resolution receives the improved text for fallback matching",
     async () => {
       const description = "Reikia santechniko, po kriaukle bėga vanduo Vilniuje.";
+      const improvedDescription =
+        "Reikia sutvarkyti vandens nuotėkį po kriaukle Vilniuje.";
       const t = makeDeps({
         async improve() {
           t.calls.improve++;
-          return { ...IMPROVE_RESULT, categories: [], category: "" };
+          return {
+            ...IMPROVE_RESULT,
+            improvedDescription,
+            categories: [],
+            category: "",
+          };
         },
         async resolveCategories(slugs, fallbackText) {
           assert.deepEqual(slugs, []);
-          assert.equal(fallbackText, description);
+          assert.equal(fallbackText, improvedDescription);
           return [{ id: "plumbing", name: "Smulkūs santechnikos darbai" }];
         },
       });

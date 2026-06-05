@@ -197,17 +197,17 @@ async function buildAndShowDraft(
     return;
   }
 
-  const categories = await deps.resolveCategories(result.categories, description);
-  if (categories.length === 0) {
-    await deps.saveSession({ ...session, chatId, state: "awaiting_input", draft: null });
-    await deps.sendMessage(chatId, MSG.noCategory);
-    return;
-  }
-
   const finalDescription = result.improvedDescription.trim() || description;
   if (finalDescription.length < 20) {
     await deps.saveSession({ ...session, chatId, state: "awaiting_input", draft: null });
     await deps.sendMessage(chatId, MSG.tooShort);
+    return;
+  }
+
+  const categories = await deps.resolveCategories(result.categories, finalDescription);
+  if (categories.length === 0) {
+    await deps.saveSession({ ...session, chatId, state: "awaiting_input", draft: null });
+    await deps.sendMessage(chatId, MSG.noCategory);
     return;
   }
 
