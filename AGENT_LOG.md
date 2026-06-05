@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 09:30 — Codex
+
+**Commit:** `24f44d3` — fix(telegram): categorize voice drafts from cleaned text · lokalus
+
+**Pakeitimai:** 3 files changed, 16 insertions(+), 10 deletions(-)
+
+**Failai:**
+- src/lib/category-suggestions.ts
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/conversation.ts
+
+**Toliau:** Po production deploy pakartoti Telegram balso testą su tekstu apie
+plytelių keitimą bute. Tikėtinas rezultatas: juodraščio kategorijos iš
+sutvarkyto aprašymo, pvz. „Plytelių klijavimas“ / „Plytelių demontavimas“,
+ne raw transkripto triukšmo kategorijos. Taip pat stebėti, ar
+`category_suggest` nebekrenta dėl OpenRouter `reasoning` klaidos.
+
+
 ## 2026-06-05 09:14 — Codex
 
 **Commit:** `8d2bcad` — fix(telegram): fallback category matching for voice drafts · lokalus
