@@ -883,3 +883,24 @@ model TelegramSession {
 
   @@map("telegram_sessions")
 }
+
+// One-time web login challenge confirmed from the Telegram bot. The browser
+// creates a short-lived token + QR, Telegram confirms it, then NextAuth consumes
+// the same token exactly once through the credentials provider.
+model TelegramLoginToken {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  status          String    @default("PENDING") // PENDING | CONFIRMED | EXPIRED
+  telegramUserId  BigInt?
+  userId          String?
+  callbackUrl     String?
+  expiresAt       DateTime
+  confirmedAt     DateTime?
+  consumedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([token, status])
+  @@index([expiresAt])
+  @@index([userId])
+  @@map("telegram_login_tokens")
+}

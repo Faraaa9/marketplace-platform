@@ -5,7 +5,14 @@
  */
 import type { SendMessageOptions } from "./api";
 import type { TgCallbackQuery, TgContact, TgMessage, TgUpdate, TgUser } from "./types";
-import { DraftData, MSG, draftButtons, formatDraft } from "./format";
+import {
+  DraftData,
+  MSG,
+  draftButtons,
+  formatDraft,
+  loginConfirmButtons,
+  loginReturnButtons,
+} from "./format";
 import type {
   CreateServiceRequestInput,
   CreateServiceRequestResult,
@@ -33,9 +40,18 @@ export interface BotDeps {
   improve(description: string): Promise<ImproveDescriptionResult>;
   /** Resolve AI category slugs to DB categories, preserving order, capped at 3. */
   resolveCategories(slugs: string[]): Promise<Array<{ id: string; name: string }>>;
-  findOrCreateUserByPhone(phone: string, name?: string): Promise<{ userId: string }>;
+  findOrCreateUserByPhone(
+    phone: string,
+    name?: string,
+    preferredUserId?: string | null,
+  ): Promise<{ userId: string }>;
   /** Raw stored email for a user (a Telegram placeholder is fine for the schema). */
   getStoredEmail(userId: string): Promise<string | null>;
+  confirmTelegramLogin(
+    token: string,
+    from: TgUser,
+    chatId: number,
+  ): Promise<{ status: "ok"; returnUrl: string } | { status: "expired" }>;
   createServiceRequest(input: CreateServiceRequestInput): Promise<CreateServiceRequestResult>;
   getSession(telegramUserId: bigint, chatId: number): Promise<SessionRow>;
   saveSession(session: SessionRow): Promise<void>;
@@ -89,6 +105,15 @@ async function handleMessage(msg: TgMessage, deps: BotDeps): Promise<void> {
   }
 
   const text = msg.text?.trim();
+  const loginToken = parseLoginStartToken(text);
+  if (loginToken) {
+    await deps.saveSession({ ...session, chatId });
+    await deps.sendMessage(chatId, MSG.loginConfirm, {
+      inlineKeyboard: loginConfirmButtons(loginToken),
+    });
+    return;
+  }
+
   if (text === "/start") {
     await deps.saveSession({ ...session, chatId, state: "awaiting_input", draft: null });
     await deps.sendMessage(chatId, MSG.welcome);
@@ -277,6 +302,17 @@ async function handleCallback(cq: TgCallbackQuery, deps: BotDeps): Promise<void>
       await deps.sendMessage(chatId, MSG.cancelled);
       return;
     default:
+      if (cq.data?.startsWith("login:")) {
+        const token = cq.data.slice("login:".length);
+        const result = await deps.confirmTelegramLogin(token, cq.from, chatId);
+        if (result.status === "ok") {
+          await deps.sendMessage(chatId, MSG.loginConfirmed, {
+            inlineKeyboard: loginReturnButtons(result.returnUrl),
+          });
+        } else {
+          await deps.sendMessage(chatId, MSG.loginExpired);
+        }
+      }
       return;
   }
 }
@@ -327,7 +363,7 @@ async function handleContact(
   // leading "+", which our E164 normalizer rejects. Contacts are always
   // international, so restore the "+".
   const phone = ensurePlusPrefix(contact.phone_number);
-  const { userId } = await deps.findOrCreateUserByPhone(phone, name);
+  const { userId } = await deps.findOrCreateUserByPhone(phone, name, session.userId);
   const linked: SessionRow = {
     ...session,
     chatId,
@@ -404,6 +440,11 @@ function normalizeTitle(title: string, description: string): string {
 function ensurePlusPrefix(phone: string): string {
   const compact = phone.trim().replace(/[\s().-]/g, "");
   return compact.startsWith("+") ? compact : `+${compact}`;
+}
+
+function parseLoginStartToken(text: string | undefined): string | null {
+  const match = text?.match(/^\/start\s+login_([A-Za-z0-9_-]{16,64})$/);
+  return match?.[1] ?? null;
 }
 
 function mimeToFormat(mime?: string): "wav" | "ogg" | "mp3" {

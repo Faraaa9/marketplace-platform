@@ -10,7 +10,10 @@ import { getConfiguredCloudinary } from "@/lib/cloudinary";
 import { transcribeAudio } from "@/lib/ai-transcribe";
 import { improveDescription } from "@/lib/ai-improve";
 import { getFlatServiceCategories } from "@/lib/service-categories";
-import { findOrCreateUserByPhone } from "@/lib/service-requests/link-user";
+import {
+  findOrCreateUserByPhone,
+  findOrCreateUserByTelegramId,
+} from "@/lib/service-requests/link-user";
 import { createServiceRequest } from "@/lib/service-requests/create";
 import { answerCallbackQuery, downloadFile, sendMessage } from "./api";
 import type { TgUpdate } from "./types";
@@ -23,7 +26,11 @@ import {
 } from "./conversation";
 
 function baseUrl(): string {
-  return (process.env.NEXTAUTH_URL || "https://paslaugurinka.lt").replace(/\/$/, "");
+  return (
+    process.env.TELEGRAM_LOGIN_RETURN_URL ||
+    process.env.NEXTAUTH_URL ||
+    "https://paslaugurinka.lt"
+  ).replace(/\/$/, "");
 }
 
 async function resolveCategories(
@@ -94,8 +101,8 @@ const deps: BotDeps = {
   transcribe: (audioBase64, format) => transcribeAudio(audioBase64, format, { source: "telegram" }),
   improve: (description) => improveDescription({ description }),
   resolveCategories,
-  findOrCreateUserByPhone: async (phone, name) => {
-    const { userId } = await findOrCreateUserByPhone(phone, name);
+  findOrCreateUserByPhone: async (phone, name, preferredUserId) => {
+    const { userId } = await findOrCreateUserByPhone(phone, name, preferredUserId);
     return { userId };
   },
   getStoredEmail: async (userId) => {
@@ -104,6 +111,65 @@ const deps: BotDeps = {
       select: { email: true },
     });
     return user?.email ?? null;
+  },
+  confirmTelegramLogin: async (token, from, chatId) => {
+    const now = new Date();
+    const row = await prisma.telegramLoginToken.findUnique({
+      where: { token },
+      select: {
+        id: true,
+        status: true,
+        expiresAt: true,
+        consumedAt: true,
+        callbackUrl: true,
+      },
+    });
+    if (!row || row.status !== "PENDING" || row.consumedAt || row.expiresAt < now) {
+      if (row?.status === "PENDING" && row.expiresAt < now) {
+        await prisma.telegramLoginToken.update({
+          where: { token },
+          data: { status: "EXPIRED" },
+          select: { id: true },
+        });
+      }
+      return { status: "expired" };
+    }
+
+    const name = [from.first_name, from.last_name].filter(Boolean).join(" ").trim();
+    const telegramUserId = BigInt(from.id);
+    const { userId } = await findOrCreateUserByTelegramId(
+      telegramUserId,
+      name || from.username || undefined,
+    );
+
+    await prisma.$transaction([
+      prisma.telegramSession.upsert({
+        where: { telegramUserId },
+        create: {
+          telegramUserId,
+          chatId: BigInt(chatId),
+          userId,
+          state: "idle",
+        },
+        update: {
+          chatId: BigInt(chatId),
+          userId,
+        },
+      }),
+      prisma.telegramLoginToken.update({
+        where: { token },
+        data: {
+          status: "CONFIRMED",
+          telegramUserId,
+          userId,
+          confirmedAt: now,
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    const callbackPath = row.callbackUrl?.startsWith("/") ? row.callbackUrl : "/";
+    return { status: "ok", returnUrl: `${baseUrl()}${callbackPath}` };
   },
   createServiceRequest,
   getSession,

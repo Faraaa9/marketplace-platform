@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { QrCode, RefreshCw, Send } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
@@ -165,6 +166,13 @@ function LoginForm() {
             </div>
           )}
 
+          <TelegramQrLogin
+            callbackUrl={callbackUrl}
+            onError={setError}
+            getRedirectPath={getRedirectPath}
+            getFreshSessionRole={getFreshSessionRole}
+          />
+
           <div className="mb-5 space-y-3">
             <GoogleSignInButton callbackUrl={callbackUrl} />
           </div>
@@ -215,6 +223,166 @@ function LoginForm() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface TelegramLoginChallenge {
+  token: string;
+  deepLink: string;
+  qrLink?: string;
+  qrDataUrl: string;
+  expiresInSeconds: number;
+}
+
+function TelegramQrLogin({
+  callbackUrl,
+  onError,
+  getRedirectPath,
+  getFreshSessionRole,
+}: {
+  callbackUrl: string | null;
+  onError: (message: string) => void;
+  getRedirectPath: (role?: string) => string;
+  getFreshSessionRole: () => Promise<string | undefined>;
+}) {
+  const router = useRouter();
+  const [challenge, setChallenge] = useState<TelegramLoginChallenge | null>(null);
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "waiting" | "signing" | "expired" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  async function createChallenge() {
+    setStatus("loading");
+    setMessage("");
+    try {
+      const res = await fetch("/api/auth/telegram-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callbackUrl }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setStatus("error");
+        setMessage(data.error || "Telegram prisijungimas laikinai nepasiekiamas");
+        return;
+      }
+      setChallenge(data.data);
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+      setMessage("Nepavyko paruošti Telegram prisijungimo");
+    }
+  }
+
+  useEffect(() => {
+    if (!open || challenge) return;
+    createChallenge();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callbackUrl, challenge, open]);
+
+  useEffect(() => {
+    if (!challenge?.token || status === "signing" || status === "expired") return;
+
+    let cancelled = false;
+    const interval = window.setInterval(async () => {
+      try {
+        const res = await fetch(`/api/auth/telegram-login?token=${encodeURIComponent(challenge.token)}`);
+        const data = await res.json();
+        if (cancelled || !data.success) return;
+
+        if (data.data.status === "EXPIRED") {
+          setStatus("expired");
+          setMessage("QR kodas nebegalioja. Sugeneruokite naują.");
+          return;
+        }
+
+        if (data.data.confirmed && data.data.telegramLoginToken) {
+          setStatus("signing");
+          const result = await signIn("credentials", {
+            telegramLoginToken: data.data.telegramLoginToken,
+            redirect: false,
+          });
+          if (result?.error) {
+            setStatus("error");
+            onError(result.error);
+            return;
+          }
+          const role = await getFreshSessionRole();
+          const redirectPath = getRedirectPath(role);
+          router.replace(redirectPath);
+          router.refresh();
+          window.location.replace(redirectPath);
+        }
+      } catch {
+        // Keep polling; transient network errors should not force a restart.
+      }
+    }, 1800);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [challenge?.token, getFreshSessionRole, getRedirectPath, onError, router, status]);
+
+  return (
+    <div className="mb-5">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 text-body-sm font-semibold text-surface-700 transition-colors hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-100 dark:hover:bg-surface-800"
+      >
+        <Send className="h-4 w-4 text-[#229ED9]" />
+        Prisijungti su Telegram
+      </button>
+
+      {open && (
+        <div className="mt-3 rounded-2xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/50">
+          <div className="grid gap-4 sm:grid-cols-[176px_minmax(0,1fr)]">
+            <div className="grid aspect-square place-items-center rounded-xl border border-surface-200 bg-white p-2 dark:border-surface-700">
+              {challenge?.qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={challenge.qrDataUrl} alt="Telegram prisijungimo QR kodas" className="h-full w-full" />
+              ) : (
+                <QrCode className="h-10 w-10 text-surface-300" />
+              )}
+            </div>
+            <div className="flex min-w-0 flex-col justify-center gap-2">
+              <p className="text-body-sm text-surface-600 dark:text-surface-300">
+                {status === "loading"
+                  ? "Ruošiame QR kodą..."
+                  : status === "signing"
+                    ? "Prisijungiame..."
+                    : status === "expired"
+                      ? "QR kodas baigė galioti."
+                      : status === "error"
+                        ? message
+                        : "Nuskenuokite QR ir patvirtinkite bot'e."}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {challenge?.deepLink && (
+                  <a
+                    href={challenge.deepLink}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 text-body-sm font-semibold text-white transition-colors hover:bg-[#1b8cc2]"
+                    onClick={() => setStatus("waiting")}
+                  >
+                    <Send className="h-4 w-4" />
+                    Atidaryti Telegram
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={createChallenge}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-surface-200 px-4 text-body-sm font-semibold text-surface-700 transition-colors hover:bg-white dark:border-surface-700 dark:text-surface-200 dark:hover:bg-surface-800"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Naujas QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

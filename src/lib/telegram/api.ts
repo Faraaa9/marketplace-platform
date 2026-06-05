@@ -55,11 +55,16 @@ async function callMethod<T>(method: string, body: Record<string, unknown>): Pro
   return payload.result as T;
 }
 
-/** One inline-keyboard button: tapping it sends `callback_data` back as a callback query. */
-export interface InlineButton {
-  text: string;
-  callback_data: string;
-}
+/** One inline-keyboard button: callback buttons post back, URL buttons open a link. */
+export type InlineButton =
+  | {
+      text: string;
+      callback_data: string;
+    }
+  | {
+      text: string;
+      url: string;
+    };
 
 export interface SendMessageOptions {
   /** Rows of inline buttons rendered under the message. */

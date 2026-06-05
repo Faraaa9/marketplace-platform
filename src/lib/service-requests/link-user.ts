@@ -12,6 +12,10 @@ function placeholderEmailForPhone(normalizedPhone: string): string {
   return `tg-${digits}@${TELEGRAM_EMAIL_DOMAIN}`;
 }
 
+function placeholderEmailForTelegramId(telegramUserId: bigint): string {
+  return `tgid-${telegramUserId.toString()}@${TELEGRAM_EMAIL_DOMAIN}`;
+}
+
 export function isPlaceholderTelegramEmail(email: string | null | undefined): boolean {
   return !!email && email.toLowerCase().endsWith(`@${TELEGRAM_EMAIL_DOMAIN}`);
 }
@@ -28,6 +32,7 @@ export function isPlaceholderTelegramEmail(email: string | null | undefined): bo
 export async function findOrCreateUserByPhone(
   phone: string,
   name?: string,
+  preferredUserId?: string | null,
 ): Promise<{ userId: string; email: string | null }> {
   const normalized = normalizePhoneNumber(phone);
   if (!normalized) {
@@ -45,6 +50,22 @@ export async function findOrCreateUserByPhone(
     };
   }
 
+  if (preferredUserId) {
+    const updated = await prisma.user.update({
+      where: { id: preferredUserId },
+      data: {
+        phone: normalized,
+        phoneVerifiedAt: new Date(),
+        name: name?.trim() || undefined,
+      },
+      select: { id: true, email: true },
+    });
+    return {
+      userId: updated.id,
+      email: isPlaceholderTelegramEmail(updated.email) ? null : updated.email,
+    };
+  }
+
   const created = await prisma.user.create({
     data: {
       email: placeholderEmailForPhone(normalized),
@@ -57,4 +78,33 @@ export async function findOrCreateUserByPhone(
   });
 
   return { userId: created.id, email: null };
+}
+
+export async function findOrCreateUserByTelegramId(
+  telegramUserId: bigint,
+  name?: string,
+): Promise<{ userId: string }> {
+  const existingSession = await prisma.telegramSession.findUnique({
+    where: { telegramUserId },
+    select: { userId: true },
+  });
+  if (existingSession?.userId) {
+    return { userId: existingSession.userId };
+  }
+
+  const email = placeholderEmailForTelegramId(telegramUserId);
+  const user = await prisma.user.upsert({
+    where: { email },
+    create: {
+      email,
+      name: name?.trim() || null,
+      role: "CLIENT",
+    },
+    update: {
+      name: name?.trim() || undefined,
+    },
+    select: { id: true },
+  });
+
+  return { userId: user.id };
 }

@@ -53,6 +53,14 @@ export function draftButtons(): InlineButton[][] {
   ];
 }
 
+export function loginConfirmButtons(token: string): InlineButton[][] {
+  return [[{ text: "Patvirtinti prisijungimą", callback_data: `login:${token}` }]];
+}
+
+export function loginReturnButtons(url: string): InlineButton[][] {
+  return [[{ text: "Grįžti į paslaugurinka.lt", url }]];
+}
+
 export const MSG = {
   welcome:
     "Sveiki! Parašykite arba įrašykite balso žinutę, kokios paslaugos ieškote.\n\n" +
@@ -85,6 +93,12 @@ export const MSG = {
     "ranka nereikia (taip jį patvirtina pats Telegram).",
   contactNotOwn: "Pasidalinkite savo kontaktu, ne kito žmogaus.",
   genericError: "Įvyko klaida. Pabandykite dar kartą.",
+  loginConfirm:
+    "Patvirtinkite prisijungimą prie paslaugurinka.lt. Jei šio veiksmo nepradėjote jūs, tiesiog ignoruokite šią žinutę.",
+  loginConfirmed:
+    "Prisijungimas patvirtintas. Grįžkite į naršyklę - puslapis prisijungs automatiškai.",
+  loginExpired:
+    "Šis prisijungimo QR kodas nebegalioja. Grįžkite į svetainę ir sugeneruokite naują.",
 
   postedLive: (link: string): string =>
     `Užklausa paskelbta! Tiekėjai jau gali ją matyti.\nSekite ją čia:\n${link}`,

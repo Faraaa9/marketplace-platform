@@ -27,8 +27,64 @@ export const authOptions: NextAuthOptions = {
         email: { label: "El. paštas", type: "email" },
         password: { label: "Slaptažodis", type: "password" },
         signinToken: { label: "Auto signin token", type: "text" },
+        telegramLoginToken: { label: "Telegram login token", type: "text" },
       },
       async authorize(credentials) {
+        // Branch 0: Telegram QR login confirmed in the bot. The browser only
+        // receives this token after the bot writes userId onto the challenge.
+        if (credentials?.telegramLoginToken) {
+          const tokenRow = await prisma.telegramLoginToken.findUnique({
+            where: { token: credentials.telegramLoginToken },
+            select: {
+              token: true,
+              status: true,
+              expiresAt: true,
+              consumedAt: true,
+              userId: true,
+            },
+          });
+
+          if (
+            !tokenRow ||
+            tokenRow.status !== "CONFIRMED" ||
+            tokenRow.consumedAt ||
+            tokenRow.expiresAt < new Date() ||
+            !tokenRow.userId
+          ) {
+            throw new Error("Telegram prisijungimas nebegalioja");
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { id: tokenRow.userId },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              image: true,
+              blocked: true,
+            },
+          });
+
+          if (!user || user.blocked) {
+            throw new Error("Paskyra nerasta arba užblokuota");
+          }
+
+          await prisma.telegramLoginToken.update({
+            where: { token: tokenRow.token },
+            data: { consumedAt: new Date() },
+            select: { id: true },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            image: user.image,
+          };
+        }
+
         // Branch A: one-time signin token issued during registration. Lets the
         // original tab auto-login after the user verifies email in another tab.
         if (credentials?.signinToken) {

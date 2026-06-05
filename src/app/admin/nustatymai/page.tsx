@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Sparkles, Mail, X, Gift } from "lucide-react";
+import { CreditCard, Gift, Mail, Sparkles, X } from "lucide-react";
 import CreditPacksCard from "./CreditPacksCard";
 
 interface Settings {
@@ -337,6 +337,33 @@ export default function AdminSettingsPage() {
 
           {/* Kreditų paketai */}
           <CreditPacksCard />
+
+          {/* Prenumeratos */}
+          <Card>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-100 dark:bg-surface-800">
+                  <CreditCard className="h-5 w-5 text-surface-500 dark:text-surface-400" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-body font-semibold text-surface-900 dark:text-white">
+                      Prenumeratos modelis
+                    </p>
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-micro font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                      Išjungta
+                    </span>
+                  </div>
+                  <p className="mt-1 text-micro text-surface-500 dark:text-surface-400">
+                    BASIC / PRO planai šiuo metu nerodomi tiekėjams. Aktyvus monetizacijos modelis yra kreditai už užklausų atrakinimą.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-xl border border-dashed border-surface-200 bg-surface-50 px-4 py-3 text-micro text-surface-500 dark:border-surface-700 dark:bg-surface-800/50 dark:text-surface-400 sm:max-w-xs">
+                Reikia atskiro darbo: aiškūs planų limitai, Stripe subscription flow, billing portal ir migracija nuo kreditų arba hibridinis modelis.
+              </div>
+            </div>
+          </Card>
         </div>
       )}
     </div>
