@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateProposalDraft, AiProposalError } from "@/lib/ai-proposal";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 /**
  * Generates an AI proposal draft for the provider, built from their own
@@ -22,6 +23,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (!guard.authorized) return guard.response;
     actorUserId = guard.userId;
     providerProfileId = guard.providerProfileId;
+    if (!(await isAiTouchpointEnabled("proposal_draft"))) {
+      return NextResponse.json(
+        { success: false, error: "AI pasiūlymo juodraštis šiuo metu išjungtas" },
+        { status: 503 },
+      );
+    }
 
     const rl = await rateLimitAsync(`ai:proposal:${guard.userId}`, RATE_LIMITS.aiProposal);
     if (!rl.success) {

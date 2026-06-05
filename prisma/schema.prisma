@@ -781,6 +781,7 @@ model AiRun {
 model AiTouchpointConfig {
   id                String    @id @default(cuid())
   touchpointId      String    @unique
+  enabled           Boolean   @default(true)
   draftModel        String?
   draftPromptsJson  String?   @db.Text
   activeModel       String?

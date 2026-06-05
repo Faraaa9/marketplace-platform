@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Save,
   Rocket,
+  Power,
 } from "lucide-react";
 
 interface WorkflowStep {
@@ -76,6 +77,7 @@ interface ModelOption {
   kind: "text" | "image";
 }
 interface TouchpointConfig {
+  enabled: boolean;
   draftModel: string | null;
   draftPrompts: Record<string, string>;
   activeModel: string | null;
@@ -130,6 +132,44 @@ function ParamPill({ label, value }: { label: string; value: string }) {
   );
 }
 
+function WorkflowStatusBadge({
+  enabled,
+  usage,
+}: {
+  enabled: boolean;
+  usage?: FeatureUsage;
+}) {
+  if (!enabled) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-surface-100 px-2 py-0.5 text-micro font-semibold text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+        <Power className="h-3 w-3" /> Išjungta
+      </span>
+    );
+  }
+
+  if (usage?.lastErrorCode) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-micro font-semibold text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+        Klaida: {usage.lastErrorCode}
+      </span>
+    );
+  }
+
+  if (usage && usage.errors > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-micro font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+        {usage.errors} klaid.
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-micro font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+      <Check className="h-3 w-3" /> Veikia
+    </span>
+  );
+}
+
 function TouchpointCard({
   tp,
   usage,
@@ -137,6 +177,7 @@ function TouchpointCard({
   models,
   windowDays,
   onApply,
+  onToggle,
 }: {
   tp: Touchpoint;
   usage?: FeatureUsage;
@@ -144,6 +185,7 @@ function TouchpointCard({
   models: ModelOption[];
   windowDays: number;
   onApply: (action: ApplyAction, payload: { model: string | null; prompts: Record<string, string> }) => Promise<boolean>;
+  onToggle: (enabled: boolean) => Promise<boolean>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const isLlm = tp.kind === "llm";
@@ -163,7 +205,9 @@ function TouchpointCard({
   const [model, setModel] = useState<string>(initModel);
   const [prompts, setPrompts] = useState<Record<string, string>>(initPrompts);
   const [busy, setBusy] = useState<ApplyAction | null>(null);
+  const [toggleBusy, setToggleBusy] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const enabled = config?.enabled ?? true;
 
   const hasActive = Boolean(config?.activeModel) || Object.keys(config?.activePrompts ?? {}).length > 0;
 
@@ -209,6 +253,16 @@ function TouchpointCard({
     setBusy(null);
   }
 
+  async function handleToggle(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    setToggleBusy(true);
+    setFlash(null);
+    const nextEnabled = !enabled;
+    const ok = await onToggle(nextEnabled);
+    if (ok) setFlash(nextEnabled ? "Workflow įjungtas" : "Workflow išjungtas");
+    setToggleBusy(false);
+  }
+
   const modelOptions = models.filter((m) => m.kind === tp.modelKind);
 
   return (
@@ -231,6 +285,7 @@ function TouchpointCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white">{tp.title}</h3>
+            <WorkflowStatusBadge enabled={enabled} usage={usage} />
             {!isLlm && (
               <span className="rounded-md bg-surface-100 px-2 py-0.5 text-micro font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
                 be LLM
@@ -273,6 +328,29 @@ function TouchpointCard({
           </div>
         </div>
 
+        <span
+          className={`mt-0.5 inline-flex h-11 w-[78px] shrink-0 items-center rounded-full border p-1 transition-colors ${
+            enabled
+              ? "border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+              : "border-surface-200 bg-surface-100 dark:border-surface-700 dark:bg-surface-800"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={handleToggle}
+            disabled={toggleBusy}
+            aria-label={enabled ? "Išjungti workflow" : "Įjungti workflow"}
+            title={enabled ? "Išjungti workflow" : "Įjungti workflow"}
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all disabled:opacity-60 ${
+              enabled
+                ? "translate-x-8 bg-emerald-600 text-white shadow-sm"
+                : "translate-x-0 bg-white text-surface-500 shadow-sm dark:bg-surface-900 dark:text-surface-300"
+            }`}
+          >
+            <Power className="h-4 w-4" />
+          </button>
+        </span>
+
         <ChevronDown
           className={`mt-1 h-5 w-5 shrink-0 text-surface-400 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
@@ -280,6 +358,12 @@ function TouchpointCard({
 
       {expanded && (
         <div className="space-y-6 border-t border-surface-200/60 px-5 py-5 dark:border-surface-700/50">
+          {!enabled && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-body-sm text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
+              Workflow šiuo metu išjungtas. UI gali likti matomas adminui, bet runtime kelias turi grąžinti tuščią/saugią būseną arba nekviesti AI.
+            </div>
+          )}
+
           <div>
             <h4 className="mb-1.5 text-caption font-semibold uppercase tracking-wide text-surface-500">
               Kada paleidžiama
@@ -542,6 +626,7 @@ export default function AdminAiRegistryPage() {
         }
         const existing = next[touchpointId];
         const base: TouchpointConfig = existing ?? {
+          enabled: true,
           draftModel: null,
           draftPrompts: {},
           activeModel: null,
@@ -567,6 +652,32 @@ export default function AdminAiRegistryPage() {
     },
     [],
   );
+
+  const onToggle = useCallback(async (touchpointId: string, enabled: boolean): Promise<boolean> => {
+    const res = await fetch("/api/admin/ai-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ touchpointId, action: "toggle", enabled }),
+    })
+      .then((r) => r.json())
+      .catch(() => null);
+    if (!res?.success) return false;
+
+    setConfigs((prev) => {
+      const existing = prev[touchpointId];
+      const base: TouchpointConfig = existing ?? {
+        enabled: true,
+        draftModel: null,
+        draftPrompts: {},
+        activeModel: null,
+        activePrompts: {},
+        activatedAt: null,
+        updatedAt: null,
+      };
+      return { ...prev, [touchpointId]: { ...base, enabled } };
+    });
+    return true;
+  }, []);
 
   const areas = useMemo(() => {
     if (!data) return [];
@@ -656,6 +767,7 @@ export default function AdminAiRegistryPage() {
                     models={data.models}
                     windowDays={data.windowDays}
                     onApply={(action, payload) => onApply(tp.id, action, payload)}
+                    onToggle={(enabled) => onToggle(tp.id, enabled)}
                   />
                 ))}
             </div>

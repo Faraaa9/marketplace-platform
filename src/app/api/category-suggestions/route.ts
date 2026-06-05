@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { categorySuggestionsSchema } from "@/lib/validations";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { suggestCategories } from "@/lib/category-suggestions";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 export async function POST(req: NextRequest) {
   await connection();
@@ -12,6 +13,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
         { status: 429 },
+      );
+    }
+    if (!(await isAiTouchpointEnabled("category_suggest"))) {
+      return NextResponse.json(
+        { success: false, error: "Kategorijų AI parinkimas šiuo metu išjungtas" },
+        { status: 503 },
       );
     }
 

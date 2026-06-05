@@ -9,6 +9,7 @@ import {
   type DirectInquiryFollowUpInput,
   type ResponseFollowUpInput,
 } from "@/lib/ai/follow-up";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 import ProviderFollowUpsCard, { type FollowUpItem } from "../ProviderFollowUpsCard";
 
 const DASHBOARD_FOLLOW_UP_THREAD_LIMIT = 50;
@@ -22,6 +23,12 @@ const DASHBOARD_FOLLOW_UP_THREAD_LIMIT = 50;
  */
 export async function FollowUpsCard({ userId }: { userId: string }) {
   const timer = createServerTimer("provider-dashboard-follow-ups");
+  const enabled = await isAiTouchpointEnabled("follow_up_scan");
+  if (!enabled) {
+    timer.end({ enabled: false });
+    return null;
+  }
+
   const [user, profile] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },

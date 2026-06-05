@@ -8,6 +8,7 @@ import { getAiFeatureUsage } from "@/lib/admin/ai-usage";
 import { prisma } from "@/lib/prisma";
 
 interface TouchpointConfigPayload {
+  enabled: boolean;
   draftModel: string | null;
   draftPrompts: Record<string, string>;
   activeModel: string | null;
@@ -43,6 +44,7 @@ export async function GET() {
       prisma.aiTouchpointConfig.findMany({
         select: {
           touchpointId: true,
+          enabled: true,
           draftModel: true,
           draftPromptsJson: true,
           activeModel: true,
@@ -57,6 +59,7 @@ export async function GET() {
     for (const row of configRows) {
       configs[row.touchpointId] = {
         draftModel: row.draftModel,
+        enabled: row.enabled,
         draftPrompts: parsePrompts(row.draftPromptsJson),
         activeModel: row.activeModel,
         activePrompts: parsePrompts(row.activePromptsJson),

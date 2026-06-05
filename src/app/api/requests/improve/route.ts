@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { improveDescriptionSchema } from "@/lib/validations";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { improveDescription, AiImproveError } from "@/lib/ai-improve";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
         { status: 429 }
+      );
+    }
+    if (!(await isAiTouchpointEnabled("request_improve"))) {
+      return NextResponse.json(
+        { success: false, error: "AI sutvarkymas šiuo metu išjungtas" },
+        { status: 503 }
       );
     }
 

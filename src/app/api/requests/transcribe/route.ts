@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { transcribeAudioSchema } from "@/lib/validations";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { transcribeAudio, AiTranscribeError } from "@/lib/ai-transcribe";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Per daug bandymų. Bandykite vėliau." },
         { status: 429 },
+      );
+    }
+    if (!(await isAiTouchpointEnabled("audio_transcribe"))) {
+      return NextResponse.json(
+        { success: false, error: "Diktavimo funkcija šiuo metu išjungta" },
+        { status: 503 },
       );
     }
 

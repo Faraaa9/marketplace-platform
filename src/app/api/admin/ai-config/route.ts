@@ -4,17 +4,20 @@ import { isDynamicServerError } from "next/dist/client/components/hooks-server-c
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AI_MODELS, PROMPT_DEFAULTS, invalidateAiConfigCache } from "@/lib/ai/prompt-config";
+import { AI_TOUCHPOINTS } from "@/lib/ai/registry";
 
-type Action = "save" | "activate" | "reset";
+type Action = "save" | "activate" | "reset" | "toggle";
 
 interface Body {
   touchpointId?: string;
   action?: Action;
   model?: string | null;
   prompts?: Record<string, unknown>;
+  enabled?: boolean;
 }
 
 const VALID_MODEL_IDS = new Set(AI_MODELS.map((m) => m.id));
+const VALID_TOUCHPOINT_IDS = new Set(AI_TOUCHPOINTS.map((touchpoint) => touchpoint.id));
 
 /**
  * Sanitize an incoming model choice: must be one of the curated AI_MODELS, and
@@ -67,17 +70,44 @@ export async function POST(req: NextRequest) {
     const touchpointId = body?.touchpointId;
     const action = body?.action;
 
-    if (!touchpointId || !PROMPT_DEFAULTS[touchpointId]) {
+    if (!touchpointId || !VALID_TOUCHPOINT_IDS.has(touchpointId)) {
       return NextResponse.json({ success: false, error: "Nežinomas AI kelias" }, { status: 400 });
     }
-    if (action !== "save" && action !== "activate" && action !== "reset") {
+    if (action !== "save" && action !== "activate" && action !== "reset" && action !== "toggle") {
       return NextResponse.json({ success: false, error: "Netinkamas veiksmas" }, { status: 400 });
+    }
+
+    if (action === "toggle") {
+      if (typeof body?.enabled !== "boolean") {
+        return NextResponse.json({ success: false, error: "Netinkama būsena" }, { status: 400 });
+      }
+      await prisma.aiTouchpointConfig.upsert({
+        where: { touchpointId },
+        create: {
+          touchpointId,
+          enabled: body.enabled,
+          updatedBy: session.user.id,
+        },
+        update: {
+          enabled: body.enabled,
+          updatedBy: session.user.id,
+        },
+      });
+      invalidateAiConfigCache();
+      return NextResponse.json({ success: true, data: { enabled: body.enabled } });
     }
 
     if (action === "reset") {
       await prisma.aiTouchpointConfig.deleteMany({ where: { touchpointId } });
       invalidateAiConfigCache();
       return NextResponse.json({ success: true, data: { reset: true } });
+    }
+
+    if (!PROMPT_DEFAULTS[touchpointId]) {
+      return NextResponse.json(
+        { success: false, error: "Šis workflow neturi redaguojamo modelio ar prompto" },
+        { status: 400 },
+      );
     }
 
     const modelResult = sanitizeModel(touchpointId, body?.model);

@@ -454,6 +454,7 @@ export function interpolate(
 // process). On serverless, other instances pick up changes after the TTL.
 
 interface ActiveConfig {
+  enabled: boolean;
   model: string | null;
   prompts: Record<string, string>;
 }
@@ -465,7 +466,7 @@ async function loadActiveConfigs(): Promise<Record<string, ActiveConfig>> {
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.map;
   try {
     const rows = await prisma.aiTouchpointConfig.findMany({
-      select: { touchpointId: true, activeModel: true, activePromptsJson: true },
+      select: { touchpointId: true, enabled: true, activeModel: true, activePromptsJson: true },
     });
     const map: Record<string, ActiveConfig> = {};
     for (const row of rows) {
@@ -478,7 +479,7 @@ async function loadActiveConfigs(): Promise<Record<string, ActiveConfig>> {
           // ignore malformed JSON; fall back to defaults
         }
       }
-      map[row.touchpointId] = { model: row.activeModel, prompts };
+      map[row.touchpointId] = { enabled: row.enabled, model: row.activeModel, prompts };
     }
     cache = { at: Date.now(), map };
     return map;
@@ -491,6 +492,12 @@ async function loadActiveConfigs(): Promise<Record<string, ActiveConfig>> {
 /** Clear the in-process active-override cache (call after save/activate/reset). */
 export function invalidateAiConfigCache(): void {
   cache = null;
+}
+
+/** Admin on/off switch for individual AI/workflow touchpoints. */
+export async function isAiTouchpointEnabled(touchpointId: string): Promise<boolean> {
+  const map = await loadActiveConfigs();
+  return map[touchpointId]?.enabled ?? true;
 }
 
 /**

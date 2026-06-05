@@ -9,6 +9,7 @@ import {
   type DirectInquiryFollowUpInput,
   type ResponseFollowUpInput,
 } from "@/lib/ai/follow-up";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 /**
  * Read-only Follow-Up Agent for the active provider. Returns advisory
@@ -19,6 +20,24 @@ export async function GET() {
   await connection();
   const guard = await requireActiveProvider();
   if (!guard.authorized) return guard.response;
+  if (!(await isAiTouchpointEnabled("follow_up_scan"))) {
+    return NextResponse.json({
+      success: true,
+      data: {
+        threads: [],
+        totals: {
+          totalThreads: 0,
+          countsByBucket: {
+            client_waiting: 0,
+            provider_waiting: 0,
+            stale_open: 0,
+            stale_won: 0,
+          },
+        },
+        disabled: true,
+      },
+    });
+  }
 
   const startedAt = Date.now();
 

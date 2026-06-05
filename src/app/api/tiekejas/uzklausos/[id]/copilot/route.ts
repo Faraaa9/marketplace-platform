@@ -6,6 +6,7 @@ import { activeCategoryFilter } from "@/lib/category-matching";
 import { isLeadUnlocked } from "@/lib/credits";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateLeadCopilot, AiLeadCopilotError } from "@/lib/ai/lead-copilot";
+import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
 
 /**
  * Read-only lead co-pilot. Gives the provider short decision support for a
@@ -17,6 +18,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const guard = await requireActiveProvider();
     if (!guard.authorized) return guard.response;
+    if (!(await isAiTouchpointEnabled("lead_copilot"))) {
+      return NextResponse.json(
+        { success: false, error: "Lead co-pilot šiuo metu išjungtas" },
+        { status: 503 },
+      );
+    }
 
     const rl = await rateLimitAsync(`ai:lead-copilot:${guard.userId}`, RATE_LIMITS.aiLeadCopilot);
     if (!rl.success) {

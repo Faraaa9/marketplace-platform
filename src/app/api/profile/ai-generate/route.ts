@@ -9,7 +9,12 @@ import { rateLimitAsync } from "@/lib/rate-limit";
 import { moderateText } from "@/lib/moderation";
 import { pickProviderCategoriesAI } from "@/lib/category-picker-ai";
 import { recordAiRun } from "@/lib/ai/audit";
-import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
+import {
+  isAiTouchpointEnabled,
+  resolveModel,
+  resolvePrompt,
+  resolvePromptVersion,
+} from "@/lib/ai/prompt-config";
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 
 export const maxDuration = 300;
@@ -577,6 +582,12 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!(await isAiTouchpointEnabled("profile_generate"))) {
+      return NextResponse.json(
+        { error: "AI profilio generavimas šiuo metu išjungtas" },
+        { status: 503 }
+      );
     }
 
     // Rate limit: max 3 generations per user per 24h
