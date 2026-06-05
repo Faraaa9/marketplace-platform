@@ -38,6 +38,7 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
   const calls = { improve: 0, transcribe: 0, create: 0, findOrCreate: 0, upload: 0 };
   let lastCreateInput: CreateServiceRequestInput | null = null;
   let lastPhoneArg: string | null = null;
+  let lastCategoryFallbackText: string | undefined;
 
   const deps: BotDeps = {
     async sendMessage(chatId, text, opts) {
@@ -59,7 +60,8 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
       calls.improve++;
       return IMPROVE_RESULT;
     },
-    async resolveCategories(slugs) {
+    async resolveCategories(slugs, fallbackText) {
+      lastCategoryFallbackText = fallbackText;
       return slugs.length ? [{ id: "cat1", name: "Plytelių klijavimas" }] : [];
     },
     async findOrCreateUserByPhone(phone) {
@@ -107,6 +109,7 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     session: () => store.get(String(FROM.id)),
     lastCreateInput: () => lastCreateInput,
     lastPhoneArg: () => lastPhoneArg,
+    lastCategoryFallbackText: () => lastCategoryFallbackText,
     last: () => sent[sent.length - 1],
   };
 }
@@ -209,6 +212,27 @@ const tests: Test[] = [
       assert.equal(t.session()!.state, "idle");
       assert.equal(t.session()!.draft, null);
       assert.match(t.last().text, /Atšaukta/);
+    },
+  ],
+  [
+    "category resolution receives the original text for fallback matching",
+    async () => {
+      const description = "Reikia santechniko, po kriaukle bėga vanduo Vilniuje.";
+      const t = makeDeps({
+        async improve() {
+          t.calls.improve++;
+          return { ...IMPROVE_RESULT, categories: [], category: "" };
+        },
+        async resolveCategories(slugs, fallbackText) {
+          assert.deepEqual(slugs, []);
+          assert.equal(fallbackText, description);
+          return [{ id: "plumbing", name: "Smulkūs santechnikos darbai" }];
+        },
+      });
+      await handleUpdate(textUpdate(description), t.deps);
+      assert.equal(t.calls.improve, 1);
+      assert.equal(t.session()!.state, "draft_ready");
+      assert.deepEqual(t.session()!.draft?.categoryIds, ["plumbing"]);
     },
   ],
   [

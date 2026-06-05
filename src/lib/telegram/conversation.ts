@@ -39,7 +39,10 @@ export interface BotDeps {
   transcribe(audioBase64: string, format: "wav" | "ogg" | "mp3"): Promise<string>;
   improve(description: string): Promise<ImproveDescriptionResult>;
   /** Resolve AI category slugs to DB categories, preserving order, capped at 3. */
-  resolveCategories(slugs: string[]): Promise<Array<{ id: string; name: string }>>;
+  resolveCategories(
+    slugs: string[],
+    fallbackText?: string,
+  ): Promise<Array<{ id: string; name: string }>>;
   findOrCreateUserByPhone(
     phone: string,
     name?: string,
@@ -194,7 +197,7 @@ async function buildAndShowDraft(
     return;
   }
 
-  const categories = await deps.resolveCategories(result.categories);
+  const categories = await deps.resolveCategories(result.categories, description);
   if (categories.length === 0) {
     await deps.saveSession({ ...session, chatId, state: "awaiting_input", draft: null });
     await deps.sendMessage(chatId, MSG.noCategory);

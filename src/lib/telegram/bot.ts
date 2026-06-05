@@ -9,6 +9,7 @@ import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { getConfiguredCloudinary } from "@/lib/cloudinary";
 import { transcribeAudio } from "@/lib/ai-transcribe";
 import { improveDescription } from "@/lib/ai-improve";
+import { suggestCategories } from "@/lib/category-suggestions";
 import { getFlatServiceCategories } from "@/lib/service-categories";
 import {
   findOrCreateUserByPhone,
@@ -35,14 +36,27 @@ function baseUrl(): string {
 
 async function resolveCategories(
   slugs: string[],
+  fallbackText?: string,
 ): Promise<Array<{ id: string; name: string }>> {
-  if (slugs.length === 0) return [];
   const flat = await getFlatServiceCategories();
   const bySlug = new Map(flat.map((c) => [c.slug, c]));
   const resolved: Array<{ id: string; name: string }> = [];
   for (const slug of slugs) {
     const match = bySlug.get(slug);
     if (match) resolved.push({ id: match.id, name: match.name });
+    if (resolved.length === 3) break;
+  }
+  if (resolved.length > 0 || !fallbackText?.trim()) return resolved;
+
+  const fallback = await suggestCategories({
+    mode: "request",
+    text: fallbackText,
+    limit: 3,
+  });
+  for (const suggestion of fallback.suggestions) {
+    if (!resolved.some((category) => category.id === suggestion.id)) {
+      resolved.push({ id: suggestion.id, name: suggestion.name });
+    }
     if (resolved.length === 3) break;
   }
   return resolved;
