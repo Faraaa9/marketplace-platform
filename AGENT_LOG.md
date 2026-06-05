@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 08:57 — Codex
+
+**Commit:** `a048a24` — feat(auth): add telegram qr login · lokalus
+
+**Pakeitimai:** 15 files changed, 861 insertions(+), 13 deletions(-)
+
+**Failai:**
+- package.json
+- pnpm-lock.yaml
+- prisma/manual-migrations/20260605_add_telegram_login_tokens.sql
+- prisma/schema.prisma
+- src/app/(auth)/prisijungti/page.tsx
+- src/app/admin/nustatymai/page.tsx
+- src/app/api/auth/telegram-login/route.ts
+- src/lib/auth.ts
+- src/lib/service-requests/link-user.ts
+- src/lib/telegram-login.ts
+- src/lib/telegram/api.ts
+- src/lib/telegram/bot.ts
+
+**Toliau:** Po production deploy patikrinti live `/prisijungti` Telegram QR/link login flow ir įsitikinti, kad Telegram webhook nukreiptas į `https://www.paslaugurinka.lt/api/telegram/webhook`.
+
+
 ## 2026-06-05 01:23 — Codex
 
 **Commit:** `822d326` — style(chat): apply warm premium messaging theme · lokalus
