@@ -17,6 +17,23 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 09:14 — Codex
+
+**Commit:** `8d2bcad` — fix(telegram): fallback category matching for voice drafts · lokalus
+
+**Pakeitimai:** 3 files changed, 45 insertions(+), 4 deletions(-)
+
+**Failai:**
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/telegram/bot.ts
+- src/lib/telegram/conversation.ts
+
+**Toliau:** Po production deploy patikrinti Telegram botą su realiu balso įrašu
+apie aiškią paslaugą (pvz. santechnikas / plytelių klijavimas) ir įsitikinti,
+kad po „Klausau įrašo...“ sukuriamas juodraštis su kategorija, nebe „Nepavyko
+parinkti kategorijos“.
+
+
 ## 2026-06-05 08:57 — Codex
 
 **Commit:** `a048a24` — feat(auth): add telegram qr login · lokalus
