@@ -17,6 +17,32 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-05 09:39 — Codex
+
+**Commit:** `9c05da9` — feat(admin): add AI workflow toggles · lokalus
+
+**Pakeitimai:** 14 files changed, 234 insertions(+), 7 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260605_add_ai_touchpoint_enabled.sql
+- prisma/schema.prisma
+- src/app/admin/ai/page.tsx
+- src/app/api/admin/ai-config/route.ts
+- src/app/api/admin/ai-registry/route.ts
+- src/app/api/category-suggestions/route.ts
+- src/app/api/profile/ai-generate/route.ts
+- src/app/api/requests/improve/route.ts
+- src/app/api/requests/transcribe/route.ts
+- src/app/api/tiekejas/follow-ups/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/copilot/route.ts
+- src/app/api/tiekejas/uzklausos/[id]/juodrastis/route.ts
+
+**Toliau:** Po deploy pritaikyti DB migraciją
+`prisma/manual-migrations/20260605_add_ai_touchpoint_enabled.sql`, tada
+admin `/admin/ai` išjungti `follow_up_scan` jei follow-up kortelė tiekėjo
+panelėje erzina. `npm run build` praėjo lokaliai prieš commit.
+
+
 ## 2026-06-05 09:30 — Codex
 
 **Commit:** `24f44d3` — fix(telegram): categorize voice drafts from cleaned text · lokalus
