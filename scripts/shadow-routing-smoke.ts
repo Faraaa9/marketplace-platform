@@ -132,47 +132,60 @@ function main(): number {
     const oldPrimaryName = s.oldCategories[0] ?? null;
     const oldPrimaryId = oldPrimaryName ? idOf(oldPrimaryName) : null;
 
-    // V4 shadow: candidates = the request's curated category names.
+    // V4 shadow (Phase A2): candidates carry {categoryId, categoryName}; v4 keeps
+    // each survivor's ORIGINAL id — no name→id remap.
+    const candidates = s.oldCategories.map((name) => ({
+      categoryId: idOf(name) ?? `(no-id:${name})`,
+      categoryName: name,
+    }));
     const v4: MultiRoutingResult = classifyMultiRouting({
       title: s.title,
       description: s.description,
-      candidateCategories: s.oldCategories,
+      candidates,
       status: "OPEN",
     });
-    const v4Mapped = mapNamesToCategoryIds(index, v4.routingCategories);
+    const v4Names = v4.routingCategories.map((c) => c.categoryName);
+    const v4Ids = v4.routingCategories.map((c) => c.categoryId);
 
-    const suppressed = s.oldCategories.filter((c) => !v4.routingCategories.includes(c));
+    const suppressed = s.oldCategories.filter((c) => !v4Names.includes(c));
+    const drift = v4.routingCategories.filter((c) => !idOf(c.categoryName)).map((c) => c.categoryName);
 
     console.log(`\n─ ${s.id}: ${s.title}  ·  ${s.city}`);
     console.log(`  why                : ${s.note}`);
     console.log(`  OLD primary        : ${oldPrimaryName ?? "(none)"} [${oldPrimaryId ?? "—"}]`);
     console.log(`  OLD categories (${s.oldCategories.length})  : ${fmtCats(s.oldCategories, idOf)}`);
     console.log(`  OLD categoryIds    : [${oldMapped.matchedIds.join(", ")}]`);
-    console.log(`  V4 routing (${v4.routingCategories.length})      : ${fmtCats(v4.routingCategories, idOf)}`);
-    console.log(`  V4 categoryIds     : [${v4Mapped.matchedIds.join(", ")}]`);
-    console.log(`  unmatched names    : ${v4Mapped.unmatched.length ? JSON.stringify(v4Mapped.unmatched) : "(none)"}`);
+    console.log(`  V4 routing (${v4Names.length})      : ${fmtCats(v4Names, idOf)}`);
+    console.log(`  V4 categoryIds     : [${v4Ids.join(", ")}]  (carried from request)`);
+    console.log(`  drift (no fixture id): ${drift.length ? JSON.stringify(drift) : "(none)"}`);
     console.log(`  suppressed vs old  : ${suppressed.length ? JSON.stringify(suppressed) : "(none)"}`);
     console.log(`  project_type       : ${v4.projectType ?? "(none)"}`);
     console.log(`  routing_tags       : [${v4.routingTags.join(", ")}]`);
     console.log(`  routing_confidence : ${v4.routingConfidence.toFixed(2)}`);
-    console.log(`  category_count     : ${v4.routingCategories.length}`);
+    console.log(`  category_count     : ${v4Names.length}`);
 
     // Behavioural assertions per sample (the contract the shadow log must reflect).
     if (s.id === "req_2") {
-      check(!v4.routingCategories.includes("Statybos darbai"), "req_2: 'Statybos darbai' must be suppressed");
+      check(!v4Names.includes("Statybos darbai"), "req_2: 'Statybos darbai' must be suppressed");
+      check(
+        v4Ids.includes("cat_elektrikai") && v4Ids.includes("cat_santechnika"),
+        "req_2: surviving categories keep their ORIGINAL ids (carried)",
+      );
       check(v4.projectType === "Namo renovacija", "req_2: project_type should be 'Namo renovacija'");
       check(v4.routingTags.includes("subrangovų_paieška"), "req_2: should tag subrangovų_paieška");
     }
     if (s.id === "req_3") {
-      check(v4.routingCategories.length === 1, "req_3: single category");
+      check(v4Names.length === 1, "req_3: single category");
       check(!v4.routingTags.includes("reikia_kelių_specialistų"), "req_3: no multi-specialist tag");
     }
     if (s.id === "req_4") {
-      check(v4Mapped.unmatched.includes("Lietaus nuvedimo sistemos"), "req_4: drift name must be unmatched");
-      check(v4Mapped.matchedIds.includes("cat_stogai"), "req_4: known category still maps");
+      check(v4Names.includes("Stogdengiai, stogo darbai"), "req_4: known category kept");
+      check(v4Ids.includes("cat_stogai"), "req_4: known category keeps its ORIGINAL id (carried)");
+      check(v4Names.includes("Lietaus nuvedimo sistemos"), "req_4: drift name still routed (carried, no crash)");
     }
     if (s.id === "req_5") {
-      check(v4.routingCategories.length === 1 && v4.routingCategories[0] === "Griovimo darbai", "req_5: shrinks to Griovimo darbai");
+      check(v4Names.length === 1 && v4Names[0] === "Griovimo darbai", "req_5: shrinks to Griovimo darbai");
+      check(v4Ids[0] === "cat_griovimas", "req_5: surviving 'Griovimo darbai' keeps its ORIGINAL id");
     }
   }
 

@@ -18,7 +18,8 @@
     "telegram:set-webhook": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/telegram-set-webhook.ts",
     "test:telegram": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/telegram/__tests__/conversation.test.ts",
     "seo:check": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seo-check.ts",
-    "shadow:smoke": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/shadow-routing-smoke.ts"
+    "shadow:smoke": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/shadow-routing-smoke.ts",
+    "routing:identity": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/identity.test.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

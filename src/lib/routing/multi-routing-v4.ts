@@ -9,9 +9,12 @@
  * Phase 1 uses this in SHADOW mode only — its output is logged for comparison
  * and never affects provider notifications, lead visibility, or payments.
  *
- * Output mirrors v4 exactly:
+ * Output:
  *   { routingCategories, projectType, routingTags, routingConfidence }
- * `routingCategories` are canonical Lithuanian category NAME strings (not ids).
+ * `routingCategories` are the surviving candidates as `{ categoryId, categoryName }`
+ * objects — v4 filters/suppresses by name + text but PRESERVES each candidate's
+ * id, so Phase 1 never re-resolves a name back to an id (ambiguous for
+ * DISTINCT_TAX duplicates). See docs/ai-routing/phase-a2-routing-contract-plan.md.
  */
 
 export const ROUTING_VERSION = "multi-routing-v4";
@@ -103,22 +106,34 @@ const ACTIVE_STATUS = new Set([
   "new", "active", "aktyvi", "aktyvus", "aktyvuota", "open",
 ]);
 
+/**
+ * A candidate category carrying BOTH its stable marketplace identity and its
+ * canonical name. v4 filters by name/text but keeps the id, so a kept category
+ * always retains the id the caller supplied — never a re-resolved duplicate.
+ */
+export interface RoutingCandidate {
+  categoryId: string;
+  categoryName: string;
+}
+
 export interface MultiRoutingInput {
   title?: string | null;
   description?: string | null;
   /**
-   * Candidate trade categories as canonical NAME strings. In the offline v4 these
-   * come from the bot's `suggested_primary/secondary_categories` (or `raw_categories`);
-   * in Phase 1 shadow mode they are the request's already-curated category names.
+   * Candidate trade categories, each carrying its `categoryId` + `categoryName`.
+   * In Phase 1 shadow mode these are the request's already-curated categories, so
+   * every kept category keeps the request's own id. In the offline v4 they
+   * originate from the bot's suggested/raw categories.
    */
-  candidateCategories: string[];
+  candidates: RoutingCandidate[];
   /** Request status (e.g. "OPEN"); drives the `aktyvi_užklausa` tag. */
   status?: string | null;
   isActive?: boolean;
 }
 
 export interface MultiRoutingResult {
-  routingCategories: string[];
+  /** Surviving candidates, identity (id + name) preserved — never re-mapped. */
+  routingCategories: RoutingCandidate[];
   projectType: string | null;
   routingTags: string[];
   routingConfidence: number;
@@ -133,26 +148,28 @@ export function classifyMultiRouting(input: MultiRoutingInput): MultiRoutingResu
   const desc = input.description ?? "";
   const text = fold(`${title} . ${desc}`);
 
-  // candidates: de-duplicated by folded form, original order preserved.
+  // candidates: de-duplicated by folded NAME, original order + identity preserved.
   const seen = new Set<string>();
-  const cands: string[] = [];
-  for (const c of input.candidateCategories ?? []) {
-    const v = (c ?? "").trim();
-    if (v && !seen.has(fold(v))) {
-      seen.add(fold(v));
-      cands.push(v);
-    }
+  const cands: RoutingCandidate[] = [];
+  for (const c of input.candidates ?? []) {
+    const name = (c?.categoryName ?? "").trim();
+    if (!name) continue;
+    const f = fold(name);
+    if (seen.has(f)) continue;
+    seen.add(f);
+    cands.push({ categoryId: c.categoryId, categoryName: name });
   }
 
   let routing = [...cands]; // v1 baseline: route to all candidate trades
 
   // Drop a suppressible catch-all only when (a) at least one truly specific
   // (non-catch-all) category survives AND (b) the catch-all has no stem-level
-  // evidence in the request text. Conservative subset only.
-  if (routing.some((c) => !isListedCatchAll(c))) {
+  // evidence in the request text. Conservative subset only. Suppression only ever
+  // REMOVES candidates — it never re-maps, so kept categories keep their id.
+  if (routing.some((c) => !isListedCatchAll(c.categoryName))) {
     const ts = textStemSet(text);
     routing = routing.filter(
-      (c) => !isSuppressibleCatchAll(c) || catchAllHasTextEvidence(c, ts),
+      (c) => !isSuppressibleCatchAll(c.categoryName) || catchAllHasTextEvidence(c.categoryName, ts),
     );
   }
 
@@ -162,7 +179,7 @@ export function classifyMultiRouting(input: MultiRoutingInput): MultiRoutingResu
   // detected project scope. Bounded to [0, 1].
   let grounded = 0;
   for (const c of routing) {
-    const toks = distinctiveTokens(c);
+    const toks = distinctiveTokens(c.categoryName);
     if (toks.length && toks.some((t) => text.includes(t))) grounded += 1;
   }
   const share = routing.length ? grounded / routing.length : 0;
