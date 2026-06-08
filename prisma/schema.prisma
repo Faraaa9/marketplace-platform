@@ -905,3 +905,37 @@ model TelegramLoginToken {
   @@index([userId])
   @@map("telegram_login_tokens")
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Multi-routing v4 — SHADOW mode (Phase 1)
+// ═══════════════════════════════════════════════════════════════════════
+// Observational only: one row per created request capturing the OLD (current
+// production) categories vs the v4 shadow routing, for off-line comparison.
+// Writing a row never affects provider notifications, lead visibility, or
+// payments. No FK to ServiceRequest by design — kept fully decoupled so it is a
+// pure additive observation surface; `requestId` is the join key for tooling.
+model RoutingDecisionLog {
+  id             String @id @default(cuid())
+  requestId      String
+  routingVersion String @default("multi-routing-v4")
+
+  // ── OLD (current production) routing snapshot ──
+  oldPrimaryCategoryId   String?
+  oldPrimaryCategoryName String?
+  oldCategoryIds         String[] @default([])
+
+  // ── v4 shadow output ──
+  v4CategoryNames        String[] @default([])
+  v4CategoryIds          String[] @default([])
+  unmatchedCategoryNames String[] @default([])
+  categoryCount          Int      @default(0)
+  projectType            String?
+  routingTags            String[] @default([])
+  routingConfidence      Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([requestId])
+  @@index([routingVersion, createdAt])
+  @@map("routing_decision_logs")
+}

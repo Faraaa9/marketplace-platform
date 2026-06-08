@@ -9,6 +9,7 @@ import { PHONE_VERIFICATION_VALID_MS } from "@/lib/phone-verification";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 import { isPlaceholderTelegramEmail } from "./link-user";
+import { runShadowRouting } from "@/lib/routing/shadow";
 
 const VERIFICATION_VALID_MS = 60 * 60 * 1000;
 
@@ -215,6 +216,7 @@ export async function createServiceRequest(
         trackingToken: crypto.randomBytes(32).toString("hex"),
       },
       select: {
+        id: true,
         title: true,
         categoryId: true,
         location: true,
@@ -253,6 +255,22 @@ export async function createServiceRequest(
         clientId,
       ).catch((error) => console.error("Provider notification error:", error));
     }
+
+    // ── Phase 1 SHADOW ROUTING (multi-routing v4) ──────────────────────────
+    // Compute v4 routing in parallel for OFF-LINE comparison only. This does
+    // NOT notify providers, change lead visibility, or touch payments. It is
+    // gated by ROUTING_SHADOW_ENABLED (default off) and fully error-isolated,
+    // so production behavior is unchanged unless explicitly enabled. Runs for
+    // every created request (incl. PENDING), unlike the APPROVED-only push.
+    runShadowRouting({
+      requestId: request.id,
+      title: data.title,
+      description: data.description,
+      city: locationValue,
+      status: "OPEN",
+      oldPrimaryCategoryId: primaryCategory.id,
+      oldCategoryIds: orderedCategories.map((cat) => cat.id),
+    }).catch((error) => console.error("Shadow routing dispatch error:", error));
 
     if (clientId) {
       await prisma.notification.create({
