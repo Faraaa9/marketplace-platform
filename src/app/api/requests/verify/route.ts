@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, connection } from "next/server";
+import { after, NextRequest, NextResponse, connection } from "next/server";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { notifyRelevantProviders } from "@/lib/request-notifications";
@@ -80,8 +80,13 @@ export async function GET(req: NextRequest) {
       : request.categoryId
         ? [request.categoryId]
         : [];
-    notifyRelevantProviders(request.title, notifyCategoryIds, request.location, request.clientId).catch((error) =>
-      console.error("Provider notification error:", error)
+    // Same durability fix as the create path: schedule via `after()` so the
+    // notification survives the serverless response (which here ends in a
+    // redirect) instead of being dropped by the Vercel function freeze.
+    after(() =>
+      notifyRelevantProviders(request.title, notifyCategoryIds, request.location, request.clientId).catch((error) =>
+        console.error("Provider notification error:", error)
+      )
     );
 
     trackingUrl.searchParams.set("verification", "success");

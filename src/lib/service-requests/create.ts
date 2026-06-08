@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { after } from "next/server";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { serviceRequestV2Schema } from "@/lib/validations";
@@ -248,12 +249,17 @@ export async function createServiceRequest(
       // skip everyone). The DB row keeps the empty value to reflect what the
       // client actually entered.
       const notifyLocation = request.location.trim() || "Visa Lietuva";
-      notifyRelevantProviders(
-        request.title,
-        orderedCategories.map((cat) => cat.id),
-        notifyLocation,
-        clientId,
-      ).catch((error) => console.error("Provider notification error:", error));
+      // Detached after the response: scheduling via `after()` lets Vercel keep the
+      // function alive (waitUntil) until this settles, instead of freezing it the
+      // moment the response is sent — which silently dropped notifications.
+      after(() =>
+        notifyRelevantProviders(
+          request.title,
+          orderedCategories.map((cat) => cat.id),
+          notifyLocation,
+          clientId,
+        ).catch((error) => console.error("Provider notification error:", error)),
+      );
     }
 
     // ── Phase 1 SHADOW ROUTING (multi-routing v4) ──────────────────────────
@@ -262,15 +268,22 @@ export async function createServiceRequest(
     // gated by ROUTING_SHADOW_ENABLED (default off) and fully error-isolated,
     // so production behavior is unchanged unless explicitly enabled. Runs for
     // every created request (incl. PENDING), unlike the APPROVED-only push.
-    runShadowRouting({
-      requestId: request.id,
-      title: data.title,
-      description: data.description,
-      city: locationValue,
-      status: "OPEN",
-      oldPrimaryCategoryId: primaryCategory.id,
-      oldCategoryIds: orderedCategories.map((cat) => cat.id),
-    }).catch((error) => console.error("Shadow routing dispatch error:", error));
+    //
+    // Scheduled via `after()` so it survives the serverless response: a detached
+    // fire-and-forget promise was being killed by the Vercel function freeze once
+    // the response was sent, so the RoutingDecisionLog row never got written.
+    // `after()` extends the invocation (waitUntil) until this settles.
+    after(() =>
+      runShadowRouting({
+        requestId: request.id,
+        title: data.title,
+        description: data.description,
+        city: locationValue,
+        status: "OPEN",
+        oldPrimaryCategoryId: primaryCategory.id,
+        oldCategoryIds: orderedCategories.map((cat) => cat.id),
+      }).catch((error) => console.error("Shadow routing dispatch error:", error)),
+    );
 
     if (clientId) {
       await prisma.notification.create({
