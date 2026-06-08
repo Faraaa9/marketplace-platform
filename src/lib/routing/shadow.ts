@@ -15,7 +15,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { classifyMultiRouting, ROUTING_VERSION } from "./multi-routing-v4";
+import { classifyMultiRouting, ROUTING_VERSION, fold } from "./multi-routing-v4";
 import {
   buildCategoryNameIndex,
   mapNamesToCategoryIds,
@@ -41,13 +41,52 @@ async function loadCategoryNameIndex(): Promise<CategoryNameIndex> {
   }
   const [categories, aliases] = await Promise.all([
     prisma.category.findMany({
+      // Live taxonomy only. The category table holds three id-spaces — the
+      // curated `tax_*` service rows plus two dead snapshots (`barehex` leaf/hub
+      // rows + legacy `svc-*` rows) with heavily duplicated names. Indexing all
+      // of them made name→id non-deterministic (buildCategoryNameIndex is
+      // first-writer-wins) and frequently resolved a correct name to a dead id
+      // no provider is attached to. The active service rows are exactly the
+      // canonical `tax_` id-space. See docs/ai-routing/taxonomy-deduplication-audit.md.
+      where: { pageType: "service", isActive: true },
       select: { id: true, name: true, slug: true, externalSlug: true },
     }),
     prisma.categoryAlias.findMany({
       select: { categoryId: true, aliasName: true, aliasSlug: true },
     }),
   ]);
-  const index = buildCategoryNameIndex(categories, aliases);
+  // Stable order so any remaining same-name collisions WITHIN the live taxonomy
+  // resolve deterministically across deploys. (Truly disambiguating those needs
+  // the v4 routing-contract change — see the audit's Phase A2 — not just sorting.)
+  const ordered = [...categories].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const index = buildCategoryNameIndex(ordered, aliases);
+
+  // Visibility into UNRESOLVED ambiguity: names that still map to >1 active
+  // service category (the DISTINCT_TAX case from the de-dup audit). First-writer
+  // -wins on the sorted list picks one deterministically, but the choice is
+  // semantically arbitrary — these genuinely need the v4 routing-contract fix,
+  // not a data merge. Logged once per index refresh (TTL-cached, so low-noise).
+  const idsByName = new Map<string, string[]>();
+  for (const c of ordered) {
+    const f = fold(c.name);
+    if (!f) continue;
+    const ids = idsByName.get(f) ?? [];
+    ids.push(c.id);
+    idsByName.set(f, ids);
+  }
+  const ambiguous = [...idsByName.entries()].filter(([, ids]) => ids.length > 1);
+  if (ambiguous.length > 0) {
+    console.warn(
+      `[shadow-routing] ${ambiguous.length} category name(s) map to >1 active service id ` +
+        `(DISTINCT_TAX — name→id pick is deterministic but arbitrary until the v4 routing ` +
+        `contract is fixed). e.g. ` +
+        ambiguous
+          .slice(0, 5)
+          .map(([f, ids]) => `"${f}"→[${ids.join(", ")}]`)
+          .join("; "),
+    );
+  }
+
   indexCache = { index, at: Date.now() };
   return index;
 }
