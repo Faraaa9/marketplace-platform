@@ -34,6 +34,24 @@ function baseUrl(): string {
   ).replace(/\/$/, "");
 }
 
+// Telegram user IDs exempt from the posting rate limits (AI-improve + photo).
+// Set via TELEGRAM_UNRESTRICTED_USER_IDS — a comma-separated list of numeric
+// Telegram user ids — so the team's own posting/test account isn't throttled
+// during QA. Empty in normal operation.
+const UNRESTRICTED_TELEGRAM_USER_IDS = new Set(
+  (process.env.TELEGRAM_UNRESTRICTED_USER_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
+);
+
+// Rate-limit keys are `telegram:<id>` / `telegram-photo:<id>`; the id is the
+// trailing segment.
+function isUnrestrictedKey(key: string): boolean {
+  if (UNRESTRICTED_TELEGRAM_USER_IDS.size === 0) return false;
+  return UNRESTRICTED_TELEGRAM_USER_IDS.has(key.slice(key.lastIndexOf(":") + 1));
+}
+
 async function resolveCategories(
   slugs: string[],
   fallbackText?: string,
@@ -189,10 +207,12 @@ const deps: BotDeps = {
   getSession,
   saveSession,
   rateLimit: async (key) => {
+    if (isUnrestrictedKey(key)) return true;
     const result = await rateLimitAsync(key, RATE_LIMITS.aiImprove);
     return result.success;
   },
   rateLimitPhoto: async (key) => {
+    if (isUnrestrictedKey(key)) return true;
     const result = await rateLimitAsync(key, { maxRequests: 20, windowMs: 60 * 60 * 1000 });
     return result.success;
   },
