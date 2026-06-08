@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-08 19:53 — Claude
+
+**Commit:** `063e118` — docs(ai-routing): record taxonomy coverage shadow findings · lokalus
+
+**Pakeitimai:** 1 file changed, 124 insertions(+)
+
+**Failai:**
+- docs/ai-routing/2026-06-08-taxonomy-coverage-and-shadow-findings.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-05 12:46 — Codex
 
 **Commit:** `431c5fa` — fix(categories): add intent-gated category selection · lokalus
