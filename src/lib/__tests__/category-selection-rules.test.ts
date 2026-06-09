@@ -246,6 +246,72 @@ tests.push(
   ],
 );
 
+// --- PRECISION: cross-domain false-positive leaks must NOT survive (regressions
+// from the production smoke test, 2026-06-09), while genuine matches still do. ---
+tests.push(
+  [
+    "precision: 'Virusų valymas' (IT) does not leak into a generic cleaning request",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [
+          cat("virusu-valymas", "Virusų valymas", "it"),
+          cat("stogu-valymas", "Stogų valymas", "statyba"),
+        ],
+        "biuro valymas kas savaitę",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), [], "no specific cleaning leaf should match a bare 'valymas'");
+    },
+  ],
+  [
+    "precision: a specifically-named cleaning category still matches its own request",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("langu-valymas", "Langų valymas", "valymas")],
+        "Reikia langų valymo bute.",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["langu-valymas"]);
+    },
+  ],
+  [
+    "precision: ceiling work does not leak into 'baidarės perdažymas' (5-char stem collision)",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [
+          cat("perdangos-siltinimas", "Perdangos šiltinimas", "statyba"),
+          cat("perdangu-betonavimas", "Perdangų betonavimas", "statyba"),
+        ],
+        "baidarės perdažymas",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), [], "'perda' stem must not bridge perdažymas↔perdangos");
+    },
+  ],
+  [
+    "precision: an exact/declension-named repaint category still matches 'baidarės perdažymas'",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("baidariu-perdazymas", "Baidarių perdažymas", "sportas")],
+        "baidarės perdažymas",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["baidariu-perdazymas"]);
+    },
+  ],
+  [
+    "precision: 'Elektros instaliacija' still matches 'elektriko' (≥6 prefix keeps declension)",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("elektros-instaliacija", "Elektros instaliacija", "statyba")],
+        "ieškau elektriko Kaune",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["elektros-instaliacija"]);
+    },
+  ],
+);
+
 (async () => {
   for (const [name, fn] of tests) {
     fn();
