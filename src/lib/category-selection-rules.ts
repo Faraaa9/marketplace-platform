@@ -51,25 +51,36 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text));
 }
 
+// Lithuanian verbal/derivational prefixes attach in front of a root, which
+// defeats a plain `\b` anchor: "su"+"montuoti" → "sumontuoti", "į"+"stiklinti"
+// → "istiklinti". Without tolerating them, the gates only matched the bare noun
+// form and silently dropped the (more common) prefixed verb form. `root()` keeps
+// the word-start anchor but allows one optional known prefix, so the empty-prefix
+// case is still exactly the old `\b<root>` behaviour — a strict superset.
+const LT_PREFIX = "(?:ap|at|be|i|is|nu|pa|par|per|pra|pri|sa|su|uz)?";
+function root(r: string): RegExp {
+  return new RegExp(`\\b${LT_PREFIX}${r}`);
+}
+
 function inferRequestIntent(normalizedText: string): RequestIntent {
   const domains = new Set<ServiceDomain>();
   const hasRepairAction = hasAny(normalizedText, [
-    /\btais/,
-    /\bremont/,
-    /\bsutvark/,
-    /\bsalint/,
-    /\bpatais/,
+    root("tais"),
+    root("remont"),
+    root("sutvark"),
+    root("salint"),
+    // 3rd-person symptom verbs stay as exact words — prefixing them is not idiomatic.
     /\bvarva\b/,
     /\bbega\b/,
     /\bteka\b/,
     /\bleidzia\b/,
     /\bprateka\b/,
-    /\bnuotek/,
-    /\bgedim/,
+    root("nuotek"),
+    root("gedim"),
   ]);
-  const hasInstallAction = hasAny(normalizedText, [/\bmont/, /\bireng/, /\bpajung/, /\bprijung/]);
-  const hasBuildAction = hasAny(normalizedText, [/\bgamin/, /\bpagamin/, /\bpastat/, /\bstatyb/, /\bireng/]);
-  const hasDesignAction = hasAny(normalizedText, [/\bprojekt/, /\bdizain/, /\bbrezin/, /\bschem/]);
+  const hasInstallAction = hasAny(normalizedText, [root("mont"), root("ireng"), root("pajung"), root("prijung")]);
+  const hasBuildAction = hasAny(normalizedText, [root("gamin"), root("pastat"), root("statyb"), root("ireng")]);
+  const hasDesignAction = hasAny(normalizedText, [root("projekt"), root("dizain"), root("brezin"), root("schem")]);
 
   if (
     hasAny(normalizedText, [
@@ -81,6 +92,7 @@ function inferRequestIntent(normalizedText: string): RequestIntent {
       /\bunitaz/,
       /\bvamzd/,
       /\bvanduo\b/,
+      /\bvandent/,
       /\bvarva\b/,
       /\bbega\b/,
       /\bteka\b/,
@@ -129,7 +141,7 @@ function candidateDomains(candidate: CategorySelectionCandidate): Set<ServiceDom
   const value = normalize(`${candidate.slug} ${candidate.name}`);
   const domains = new Set<ServiceDomain>();
 
-  if (hasAny(value, [/\bsantechnik/, /\bkriaukl/, /\bciaup/, /\bmaisytuv/, /\bklozet/, /\bunitaz/, /\bvamzd/, /\bnuotek/])) {
+  if (hasAny(value, [/\bsantechnik/, /\bvandent/, /\bkriaukl/, /\bciaup/, /\bmaisytuv/, /\bklozet/, /\bunitaz/, /\bvamzd/, /\bnuotek/])) {
     domains.add("plumbing");
   }
   if (hasAny(value, [/\belektr/, /\brozet/, /\bjungikl/, /\bskydin/, /\bkabel/])) {
@@ -239,19 +251,19 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
   }
 
   if (slugAndName.includes("plyteliu-pjovimas") || slugAndName.includes("plyteliu pjovimas")) {
-    return hasAny(normalizedText, [/\bpjov/, /\bpjaust/]);
+    return hasAny(normalizedText, [root("pjov"), root("pjaust")]);
   }
 
   if (slugAndName.includes("vonios-remontas") || slugAndName.includes("vonios remontas")) {
-    return hasAny(normalizedText, [/\bremont/, /\brenov/, /\bperdar/, /\bkapital/, /\bpiln/]);
+    return hasAny(normalizedText, [root("remont"), root("renov"), root("perdar"), root("kapital"), root("piln")]);
   }
 
   if (slugAndName.includes("restauravimas") || slugAndName.includes("restaurav")) {
-    return hasAny(normalizedText, [/\brestaur/]);
+    return hasAny(normalizedText, [root("restaur")]);
   }
 
   if (slugAndName.includes("nuotekio-reles") || slugAndName.includes("nuotekio reles")) {
-    return hasAny(normalizedText, [/\brele/, /\belektr/, /\bskydin/, /\bautomat/]);
+    return hasAny(normalizedText, [root("rele"), root("elektr"), root("skydin"), root("automat")]);
   }
 
   if (
@@ -260,11 +272,11 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
     slugAndName.includes("vandentiekiu kanalizacijos irengimas") ||
     slugAndName.includes("vandentiekio kanalizacijos irengimas")
   ) {
-    return hasAny(normalizedText, [/\bireng/, /\bnauj/, /\bvedziot/, /\bkloj/, /\btras/]);
+    return hasAny(normalizedText, [root("ireng"), root("nauj"), root("vedziot"), root("kloj"), root("tras")]);
   }
 
   if (slugAndName.includes("nuoteku-isvezimas") || slugAndName.includes("nuoteku isvezimas")) {
-    return hasAny(normalizedText, [/\bisvez/, /\bissiurb/, /\bsiurb/]);
+    return hasAny(normalizedText, [root("isvez"), root("issiurb"), root("siurb")]);
   }
 
   if (slugAndName.includes("nuoteku-valymo") || slugAndName.includes("nuoteku valymo")) {
@@ -272,15 +284,15 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
   }
 
   if (slugAndName.includes("laistymo")) {
-    return hasAny(normalizedText, [/\blaist/]);
+    return hasAny(normalizedText, [root("laist")]);
   }
 
   if (slugAndName.includes("alyvavimas")) {
-    return hasAny(normalizedText, [/\balyv/]);
+    return hasAny(normalizedText, [root("alyv")]);
   }
 
   if (slugAndName.includes("stiklinimas")) {
-    return hasAny(normalizedText, [/\bstiklin/]);
+    return hasAny(normalizedText, [root("stiklin")]);
   }
 
   if (slugAndName.includes("tentai") || slugAndName.includes("tentu")) {
@@ -288,15 +300,17 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
   }
 
   if (slugAndName.includes("plovimas") || slugAndName.includes("atnaujinimas")) {
-    return hasAny(normalizedText, [/\bplov/, /\batnaujin/]);
+    // "valy" covers the cleaning synonym (nuvalyti) — window/surface washing is
+    // requested as often with "valyti" as with "plauti".
+    return hasAny(normalizedText, [root("plov"), root("atnaujin"), root("valy")]);
   }
 
   if (slugAndName.includes("terasines-lentos") || slugAndName.includes("terasines lentos")) {
-    return hasAny(normalizedText, [/\blent/]);
+    return hasAny(normalizedText, [root("lent")]);
   }
 
   if (slugAndName.includes("skulptur")) {
-    return hasAny(normalizedText, [/\bskulpt/]);
+    return hasAny(normalizedText, [root("skulpt")]);
   }
 
   if (slugAndName.includes("ip-kameru") || slugAndName.includes("kameru montavimas")) {
@@ -315,7 +329,9 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
   }
 
   if (slugAndName.includes("projektai") || slugAndName.includes("projektavimas")) {
-    return hasAny(normalizedText, [/\bprojekt/, /\bbrezin/, /\bschem/]);
+    // "dizain" admits the common phrasing "ieškau dizainerio" without an explicit
+    // "projektas" — design intent is the same.
+    return hasAny(normalizedText, [root("projekt"), root("dizain"), root("brezin"), root("schem")]);
   }
 
   if (slugAndName.includes("telefonspyn")) {
@@ -338,15 +354,25 @@ export function categoryMatchesRequestIntent(
   const intent = inferRequestIntent(normalizedText);
   const domains = candidateDomains(candidate);
 
+  // A genuine cross-domain conflict (plumbing request vs. a kitchen-furniture
+  // category) stays a hard reject — shared context words must not rescue it.
   if (intent.domains.size > 0 && domains.size > 0 && !intersects(intent.domains, domains)) {
-    return false;
-  }
-  if (intent.domains.size > 0 && domains.size === 0) {
     return false;
   }
 
   if (!passesActionGate(candidate, normalizedText)) return false;
+
+  // A literal name match is the strongest signal we have, so it is checked BEFORE
+  // the "intent has a domain but this candidate is untagged" reject below. An
+  // incomplete candidate-domain regex (e.g. "Vandentiekio įrengimas" historically
+  // not recognised as plumbing) must not drop a category the text names outright.
   if (hasSpecificNameEvidence(candidate, normalizedText)) return true;
+
+  // No literal evidence and the request is clearly in a known domain this
+  // candidate matched none of → treat it as off-topic.
+  if (intent.domains.size > 0 && domains.size === 0) {
+    return false;
+  }
 
   if (intersects(intent.domains, domains)) {
     if (domains.has("plumbing") && intent.hasRepairAction) return true;

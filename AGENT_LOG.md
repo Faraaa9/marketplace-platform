@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-09 08:58 — Claude
+
+**Commit:** `d29edf9` — fix(routing): recover recall in live category-selection rule filter
+
+**Pakeitimai:** 4 files changed, 168 insertions(+), 28 deletions(-)
+
+**Failai:**
+- .github/workflows/ci.yml
+- package.json
+- src/lib/__tests__/category-selection-rules.test.ts
+- src/lib/category-selection-rules.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-08 19:53 — Claude
 
 **Commit:** `063e118` — docs(ai-routing): record taxonomy coverage shadow findings · lokalus

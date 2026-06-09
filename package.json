@@ -19,7 +19,8 @@
     "test:telegram": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/telegram/__tests__/conversation.test.ts",
     "seo:check": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seo-check.ts",
     "shadow:smoke": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/shadow-routing-smoke.ts",
-    "routing:identity": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/identity.test.ts"
+    "routing:identity": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/identity.test.ts",
+    "test:category-rules": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-selection-rules.test.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

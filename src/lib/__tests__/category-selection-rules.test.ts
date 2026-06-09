@@ -84,6 +84,74 @@ const tests: Array<[string, () => void]> = [
       assert.deepEqual(picked.map((item) => item.slug), ["smulkus-elektros-darbai"]);
     },
   ],
+
+  // --- RECALL cases: legitimate categories must SURVIVE. Each of these was a
+  // false-negative before the prefix-tolerance + evidence-ordering fixes. ---
+
+  [
+    "recall: balcony glazing survives the prefixed verb 'įstiklinti' (not just the noun)",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [
+          cat("balkonu-stiklinimas", "Balkonų stiklinimas", "langai"),
+          cat("kompiuteriu-remontas", "Kompiuterių remontas", "it"),
+        ],
+        "Norėčiau įstiklinti balkoną bute.",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["balkonu-stiklinimas"]);
+    },
+  ],
+  [
+    "recall: a literally-named cleaning category survives a plumbing-flavoured request",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [
+          cat("smulkus-santechnikos-darbai", "Smulkūs santechnikos darbai", "santechnika"),
+          cat("patalpu-valymas", "Patalpų valymas", "valymas"),
+        ],
+        "Bute trūko vamzdis, reikia santechniko ir patalpų valymo po avarijos.",
+        (item) => item,
+      );
+      assert.ok(
+        picked.some((item) => item.slug === "patalpu-valymas"),
+        "Patalpų valymas should survive on literal name evidence, not be dropped as off-domain",
+      );
+    },
+  ],
+  [
+    "recall: 'Vandentiekio įrengimas' survives a plumbing request (candidate-domain gap)",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("vandentiekio-irengimas", "Vandentiekio įrengimas", "santechnika")],
+        "Reikia pakeisti vamzdžius ir įvesti vandentiekį naujame bute.",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["vandentiekio-irengimas"]);
+    },
+  ],
+  [
+    "recall: 'Interjero projektavimas' survives when the user says 'dizaineris'",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("interjero-projektavimas", "Interjero projektavimas", "dizainas")],
+        "Ieškau interjero dizainerio idėjoms ir vizualizacijoms.",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["interjero-projektavimas"]);
+    },
+  ],
+  [
+    "recall: 'Langų plovimas' survives the verb 'nuvalyti' (prefix + cleaning synonym)",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("langu-plovimas", "Langų plovimas", "valymas")],
+        "Reikia nuvalyti langus name po remonto.",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["langu-plovimas"]);
+    },
+  ],
 ];
 
 (async () => {
