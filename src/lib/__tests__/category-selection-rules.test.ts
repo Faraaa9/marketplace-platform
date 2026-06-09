@@ -6,6 +6,7 @@ import {
   type CategorySelectionCandidate,
   type DomainIndexCategory,
 } from "../category-selection-rules";
+import { pickCategoryOverrideSlug } from "../category-overrides";
 
 function cat(
   slug: string,
@@ -347,6 +348,52 @@ tests.push(
         (item) => item,
       );
       assert.deepEqual(picked.map((item) => item.slug), ["sienu-dazymas"]);
+    },
+  ],
+);
+
+// --- VOCABULARY: office/commercial cleaning queries route to the existing
+// "Valymo paslaugos" leaves (taxonomy gap, not a matching bug). pickCategoryOverrideSlug
+// forces the right canonical category to the top instead of an unrelated fallback. ---
+const BIURU_VALYMAS = "pr-buitines-paslaugos--valymo-paslaugos--biuru-valymas";
+const KOMERCINIU_VALYMAS = "pr-buitines-paslaugos--valymo-paslaugos--komerciniu-patalpu-valymas";
+const CLEANING_SLUGS = new Set([BIURU_VALYMAS, KOMERCINIU_VALYMAS]);
+
+tests.push(
+  [
+    "override: 'biuro valymas kas savaitę' routes to Biurų valymas (not a roof-cleaning fallback)",
+    () => {
+      assert.equal(pickCategoryOverrideSlug("biuro valymas kas savaitę", CLEANING_SLUGS), BIURU_VALYMAS);
+    },
+  ],
+  [
+    "override: 'ofiso valymas' routes to the same office cleaning category",
+    () => {
+      assert.equal(pickCategoryOverrideSlug("reikia ofiso valymo", CLEANING_SLUGS), BIURU_VALYMAS);
+      assert.equal(pickCategoryOverrideSlug("biurų valymas", CLEANING_SLUGS), BIURU_VALYMAS);
+    },
+  ],
+  [
+    "override: commercial/administrative premises cleaning routes to Komercinių patalpų valymas",
+    () => {
+      assert.equal(pickCategoryOverrideSlug("komercinių patalpų valymas", CLEANING_SLUGS), KOMERCINIU_VALYMAS);
+      assert.equal(
+        pickCategoryOverrideSlug("administracinių patalpų valymas kas savaitę", CLEANING_SLUGS),
+        KOMERCINIU_VALYMAS,
+      );
+    },
+  ],
+  [
+    "override: 'stogo valymas' is NOT hijacked to office cleaning (stays normal → Stogų valymas)",
+    () => {
+      assert.equal(pickCategoryOverrideSlug("stogo valymas", CLEANING_SLUGS), null);
+    },
+  ],
+  [
+    "override: 'biuro baldų gamyba' / 'biuro baldai' are not pulled into cleaning",
+    () => {
+      assert.equal(pickCategoryOverrideSlug("biuro baldų gamyba", CLEANING_SLUGS), null);
+      assert.equal(pickCategoryOverrideSlug("biuro baldai", CLEANING_SLUGS), null);
     },
   ],
 );
