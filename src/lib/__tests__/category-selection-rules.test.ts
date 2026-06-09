@@ -312,6 +312,45 @@ tests.push(
   ],
 );
 
+// --- PRECISION (follow-up): short function words and bare location nouns must
+// not constitute name evidence (production smoke residue after the perda/valymas
+// fixes), while genuine ≥5-char containment matches are preserved. ---
+tests.push(
+  [
+    "precision: function word 'kas' does not bridge to 'kasimas' via containment",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("tvenkiniu-kasimas-valymas", "Tvenkinių, prūdų kasimas, valymas", "statyba")],
+        "biuro valymas kas savaitę",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), [], "'kas' ⊂ 'kasimas' must not count");
+    },
+  ],
+  [
+    "precision: bare 'biuro' (office location) does not qualify 'Biuro baldų gamyba'",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("biuro-baldu-gamyba", "Biuro baldų gamyba", "baldai")],
+        "biuro valymas kas savaitę",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), []);
+    },
+  ],
+  [
+    "precision: a ≥5-char shared root still matches via containment ('dažymas' ⊂ 'perdažymas')",
+    () => {
+      const picked = filterRequestCategoryChoices(
+        [cat("sienu-dazymas", "Sienų dažymas", "statyba")],
+        "baidarės perdažymas",
+        (item) => item,
+      );
+      assert.deepEqual(picked.map((item) => item.slug), ["sienu-dazymas"]);
+    },
+  ],
+);
+
 (async () => {
   for (const [name, fn] of tests) {
     fn();
