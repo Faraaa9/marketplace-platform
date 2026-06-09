@@ -208,6 +208,11 @@ const GENERIC_CATEGORY_TOKENS = new Set([
   "keitimo",
   "remontas",
   "remonto",
+  // "valymas" is the action, not the distinctive noun: every "X valymas" leaf is
+  // told apart by X (langų / kilimų / virusų). Without this, a generic request
+  // like "biuro valymas" matched "Virusų valymas" (IT) on the shared word alone.
+  "valymas",
+  "valymo",
 ]);
 
 const CONTEXT_ONLY_TOKENS = new Set([
@@ -226,21 +231,36 @@ const CONTEXT_ONLY_TOKENS = new Set([
   "viduje",
 ]);
 
+// True when two tokens are the same word up to Lithuanian declension, WITHOUT
+// conflating two different words that merely share a short stem. The old check
+// matched on a 5-char stem, which collided unrelated long words ("perda"zymas ~
+// "perda"ngos, "elekt"riko ~ "elekt"roninių). Rule: containment, OR a ≥6-char
+// shared prefix (a real shared root: "elektros" ~ "elektriko"), OR a 5-char prefix
+// only when the words differ solely in a short ending — i.e. a 5-char root's
+// declension ("teras-a" ~ "teras-u"), which excludes long divergent words.
+const MIN_STRONG_PREFIX = 6;
+const MAX_DECLENSION_TAIL = 2;
+
+function tokensCohere(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  let i = 0;
+  const n = Math.min(a.length, b.length);
+  while (i < n && a[i] === b[i]) i += 1;
+  if (i >= MIN_STRONG_PREFIX) return true;
+  if (i >= 5 && Math.max(a.length, b.length) - i <= MAX_DECLENSION_TAIL) return true;
+  return false;
+}
+
 function hasSpecificNameEvidence(candidate: CategorySelectionCandidate, text: string): boolean {
   const textTokens = tokenize(text);
-  const textStems = new Set(textTokens.map(stem));
   const specificNameTokens = tokenize(candidate.name).filter(
     (token) => !GENERIC_CATEGORY_TOKENS.has(token) && !CONTEXT_ONLY_TOKENS.has(token),
   );
 
-  return specificNameTokens.some((token) => {
-    const tokenStem = stem(token);
-    return (
-      textTokens.includes(token) ||
-      (tokenStem.length >= 4 && textStems.has(tokenStem)) ||
-      textTokens.some((textToken) => textToken.includes(token) || token.includes(textToken))
-    );
-  });
+  return specificNameTokens.some((token) =>
+    textTokens.some((textToken) => tokensCohere(textToken, token)),
+  );
 }
 
 function passesActionGate(candidate: CategorySelectionCandidate, normalizedText: string): boolean {
