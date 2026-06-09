@@ -229,6 +229,12 @@ const CONTEXT_ONLY_TOKENS = new Set([
   "virtuve",
   "lauke",
   "viduje",
+  // Workplace location nouns: a setting, not a service. "biuro" alone matched
+  // "Biuro baldų gamyba" (furniture) for an office-cleaning request.
+  "biuro",
+  "biure",
+  "ofise",
+  "ofisas",
 ]);
 
 // True when two tokens are the same word up to Lithuanian declension, WITHOUT
@@ -240,10 +246,17 @@ const CONTEXT_ONLY_TOKENS = new Set([
 // declension ("teras-a" ~ "teras-u"), which excludes long divergent words.
 const MIN_STRONG_PREFIX = 6;
 const MAX_DECLENSION_TAIL = 2;
+// Containment counts only when the shorter token is at least this long. Without it,
+// a 3-4 char function word ("kas"/"per"/"apie") substring-matched a real category
+// token ("kas" ⊂ "kasimas" routed "kas savaitę" to pond-digging). Real shared roots
+// reached by containment ("dažymas" ⊂ "perdažymas", "baldu" ⊂ "baldus") are ≥5.
+const MIN_CONTAINMENT = 5;
 
 function tokensCohere(a: string, b: string): boolean {
   if (a === b) return true;
-  if (a.includes(b) || b.includes(a)) return true;
+  if (Math.min(a.length, b.length) >= MIN_CONTAINMENT && (a.includes(b) || b.includes(a))) {
+    return true;
+  }
   let i = 0;
   const n = Math.min(a.length, b.length);
   while (i < n && a[i] === b[i]) i += 1;
