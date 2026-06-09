@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-09 09:36 — Claude
+
+**Commit:** `3bb4a41` — feat(routing): add data-driven taxonomy domain signal to category filter · lokalus
+
+**Pakeitimai:** 4 files changed, 247 insertions(+), 7 deletions(-)
+
+**Failai:**
+- src/lib/__tests__/category-selection-rules.test.ts
+- src/lib/ai-improve.ts
+- src/lib/category-selection-rules.ts
+- src/lib/category-suggestions.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-09 08:58 — Claude
 
 **Commit:** `d29edf9` — fix(routing): recover recall in live category-selection rule filter

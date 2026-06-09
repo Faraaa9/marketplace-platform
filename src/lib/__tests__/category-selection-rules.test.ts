@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
-import { filterRequestCategoryChoices, type CategorySelectionCandidate } from "../category-selection-rules";
+import {
+  filterRequestCategoryChoices,
+  buildDomainIndex,
+  inferRequestRoots,
+  type CategorySelectionCandidate,
+  type DomainIndexCategory,
+} from "../category-selection-rules";
 
 function cat(
   slug: string,
@@ -152,7 +158,93 @@ const tests: Array<[string, () => void]> = [
       assert.deepEqual(picked.map((item) => item.slug), ["langu-plovimas"]);
     },
   ],
+
+  // --- DATA-DRIVEN taxonomy domain signal (Gap 4). A confident dominant root
+  // recovers same-root candidates the literal-evidence path misses, while staying
+  // conservative: it abstains on sparse/ambiguous requests. ---
 ];
+
+// Mini two-root taxonomy for the data-driven domain tests.
+const taxonomy: DomainIndexCategory[] = [
+  { id: "verslui", name: "Paslaugos verslui", rootId: null },
+  { id: "v1", name: "Buhalterinė apskaita", rootId: "verslui" },
+  { id: "v2", name: "Mokesčių konsultacijos", rootId: "verslui" },
+  { id: "v3", name: "Metinių ataskaitų rengimas", rootId: "verslui" },
+  { id: "v4", name: "Finansinis auditas", rootId: "verslui" },
+  { id: "statyba", name: "Statybos, apdaila", rootId: null },
+  { id: "s1", name: "Plytelių klijavimas", rootId: "statyba" },
+  { id: "s2", name: "Elektros instaliacija", rootId: "statyba" },
+];
+
+const businessCandidate: CategorySelectionCandidate = {
+  id: "v4",
+  slug: "finansinis-auditas",
+  name: "Finansinis auditas",
+  depth: 2,
+  parentId: "verslui",
+  rootId: "verslui",
+};
+
+tests.push(
+  [
+    "data-driven: a confident root keeps a same-root candidate with no literal name hit",
+    () => {
+      const index = buildDomainIndex(taxonomy);
+      // Note: the request never says "auditas" or "finansinis".
+      const text = "Reikia buhalterinės apskaitos ir mokesčių konsultacijos įmonei.";
+      const signal = inferRequestRoots(text, index);
+      assert.equal(signal.dominantRoot, "verslui", "request should confidently map to the business root");
+
+      // Baseline (no signal): no literal name evidence → dropped.
+      assert.deepEqual(
+        filterRequestCategoryChoices([businessCandidate], text, (item) => item).map((c) => c.slug),
+        [],
+      );
+      // With the confident root signal → recovered.
+      assert.deepEqual(
+        filterRequestCategoryChoices([businessCandidate], text, (item) => item, signal).map((c) => c.slug),
+        ["finansinis-auditas"],
+      );
+    },
+  ],
+  [
+    "data-driven: a sparse request abstains — no over-accept of a same-root candidate",
+    () => {
+      const index = buildDomainIndex(taxonomy);
+      // A single distinctive token that does NOT literally name the candidate
+      // ("buhalterio" ≠ "Finansinis auditas").
+      const text = "Reikia buhalterio.";
+      const signal = inferRequestRoots(text, index);
+      assert.equal(signal.dominantRoot, null, "one token must not be enough to declare a root");
+      // dominantRoot null → behaves like baseline → no name hit → dropped.
+      assert.deepEqual(
+        filterRequestCategoryChoices([businessCandidate], text, (item) => item, signal).map((c) => c.slug),
+        [],
+      );
+    },
+  ],
+  [
+    "data-driven: buildDomainIndex keeps distinctive stems and drops generic ones",
+    () => {
+      const index = buildDomainIndex(taxonomy);
+      assert.ok(index.tokenToRoots.get("buhal")?.has("verslui"), "distinctive stem maps to its root");
+      assert.equal(index.tokenToRoots.has("pasla"), false, "'paslaugos' is generic and must be excluded");
+    },
+  ],
+  [
+    "data-driven: inferRequestRoots needs a clear margin to declare a dominant root",
+    () => {
+      const index = buildDomainIndex(taxonomy);
+      // One business + one construction token → tie, insufficient margin → abstain.
+      assert.equal(inferRequestRoots("buhalterinė plytelių", index).dominantRoot, null);
+      // Two clear business tokens → confident.
+      assert.equal(
+        inferRequestRoots("buhalterinė apskaita mokesčių konsultacijos", index).dominantRoot,
+        "verslui",
+      );
+    },
+  ],
+);
 
 (async () => {
   for (const [name, fn] of tests) {

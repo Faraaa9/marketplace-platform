@@ -1,7 +1,13 @@
 import type { ImproveDescriptionInput } from "@/lib/validations";
 import { getFlatServiceCategories } from "@/lib/service-categories";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
-import { categoryMatchesRequestIntent, filterRequestCategoryChoices } from "@/lib/category-selection-rules";
+import {
+  categoryMatchesRequestIntent,
+  filterRequestCategoryChoices,
+  buildDomainIndex,
+  inferRequestRoots,
+  type RootSignal,
+} from "@/lib/category-selection-rules";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
@@ -43,6 +49,7 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
   const categories = await getFlatServiceCategories();
   const byId = new Map(categories.map((category) => [category.id, category]));
   const query = `${input.title ?? ""} ${input.category ?? ""} ${input.description}`;
+  const rootSignal = inferRequestRoots(query, buildDomainIndex(categories));
 
   const candidates = categories
     .filter((category) => (category.depth ?? 0) > 0)
@@ -71,6 +78,7 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
           rootId: category.rootId ?? null,
         },
         query,
+        rootSignal,
       ),
     )
     .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
@@ -139,6 +147,7 @@ function parseResult(
   validSlugs: Set<string>,
   categoryBySlug: Map<string, Awaited<ReturnType<typeof getFlatServiceCategories>>[number]>,
   originalText: string,
+  rootSignal?: RootSignal,
 ): ImproveDescriptionResult | null {
   const cleaned = raw
     .trim()
@@ -196,6 +205,7 @@ function parseResult(
         rootId: category.rootId ?? null,
       };
     },
+    rootSignal,
   );
   categories.length = 0;
   categories.push(...filteredCategories);
@@ -312,7 +322,8 @@ export async function improveDescription(
     throw new AiImproveError(errorCode);
   }
 
-  const result = parseResult(call.content, validSlugs, categoryBySlug, userContent);
+  const resultRootSignal = inferRequestRoots(userContent, buildDomainIndex(categories));
+  const result = parseResult(call.content, validSlugs, categoryBySlug, userContent, resultRootSignal);
   if (!result) {
     await logError("AI_EMPTY_RESPONSE", { parseFailed: true });
     throw new AiImproveError("AI_EMPTY_RESPONSE");

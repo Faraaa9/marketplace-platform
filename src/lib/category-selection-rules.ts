@@ -348,6 +348,7 @@ function passesActionGate(candidate: CategorySelectionCandidate, normalizedText:
 export function categoryMatchesRequestIntent(
   candidate: CategorySelectionCandidate,
   text: string,
+  rootSignal?: RootSignal,
 ): boolean {
   const normalizedText = normalize(text);
   if (!normalizedText) return false;
@@ -372,6 +373,21 @@ export function categoryMatchesRequestIntent(
   // candidate matched none of → treat it as off-topic.
   if (intent.domains.size > 0 && domains.size === 0) {
     return false;
+  }
+
+  // Data-driven taxonomy signal: only for requests OUTSIDE the hand-tuned domains
+  // (those stay authoritative). When the request's distinctive words point at one
+  // CONFIDENT taxonomy root and this candidate lives under that same root, keep it
+  // even without a literal name hit — this recovers synonym/morphology misses for
+  // the vocabulary-rich requests the index can classify. The confidence gate (see
+  // inferRequestRoots) abstains on the sparse/ambiguous majority, so it never
+  // over-accepts off-root noise. See docs/ai-routing/ (Gap 4).
+  if (
+    intent.domains.size === 0 &&
+    rootSignal?.dominantRoot &&
+    (candidate.rootId ?? candidate.id) === rootSignal.dominantRoot
+  ) {
+    return true;
   }
 
   if (intersects(intent.domains, domains)) {
@@ -402,9 +418,10 @@ export function filterRequestCategoryChoices<T>(
   choices: T[],
   text: string,
   getCandidate: (choice: T) => CategorySelectionCandidate,
+  rootSignal?: RootSignal,
 ): T[] {
   const evidenceFiltered = choices.filter((choice) =>
-    categoryMatchesRequestIntent(getCandidate(choice), text),
+    categoryMatchesRequestIntent(getCandidate(choice), text, rootSignal),
   );
   const byId = new Map(evidenceFiltered.map((choice) => {
     const candidate = getCandidate(choice);
@@ -429,4 +446,110 @@ export function filterRequestCategoryChoices<T>(
   }
 
   return deduped;
+}
+
+// ── Data-driven taxonomy domain signal (Gap 4) ────────────────────────────────
+// The 11 hand-tuned ServiceDomains above stay authoritative for the construction-
+// adjacent cases they were tuned for. This layer GENERALISES domain awareness to
+// every taxonomy root by mining distinctive keywords from the category names
+// themselves — no per-category maintenance. It is deliberately conservative: it
+// only ACCEPTS a same-root candidate (recall), only for requests outside the hand-
+// tuned domains, and only when the root signal is CONFIDENT — abstaining on the
+// sparse/ambiguous majority so it can never over-reject. See docs/ai-routing/.
+
+/** A taxonomy row reduced to what the domain index needs. */
+export interface DomainIndexCategory {
+  id: string;
+  name: string;
+  rootId?: string | null;
+  aliases?: string[];
+}
+
+export interface DomainIndex {
+  /** distinctive stem → the set of roots it points at (only stems in ≤ maxRoots roots). */
+  tokenToRoots: Map<string, Set<string>>;
+}
+
+export interface RootSignal {
+  /** rootId → number of distinct distinctive request tokens pointing at it. */
+  rootHits: Map<string, number>;
+  /** the single confidently-dominant root, or null when the signal is ambiguous/sparse. */
+  dominantRoot: string | null;
+}
+
+// A stem pointing at more roots than this is too generic to be a domain signal
+// ("montavimas", "paslaugos"); such stems are dropped from the index entirely.
+const DOMAIN_MAX_ROOTS_PER_TOKEN = 2;
+// A dominant root needs both enough absolute evidence and a clear lead, otherwise
+// inferRequestRoots abstains (dominantRoot = null) and the caller falls back to
+// literal-evidence behaviour. Tuned on the live taxonomy: lower values let
+// incidental single-token collisions (e.g. a stray "Sveikata" hit) win.
+const ROOT_MIN_HITS = 2;
+const ROOT_MIN_MARGIN = 2;
+
+/**
+ * Build the keyword→root index from the taxonomy. Pure and deterministic; safe to
+ * call per request (it is O(total category name tokens)).
+ */
+export function buildDomainIndex(
+  categories: DomainIndexCategory[],
+  maxRootsPerToken: number = DOMAIN_MAX_ROOTS_PER_TOKEN,
+): DomainIndex {
+  const all = new Map<string, Set<string>>();
+  for (const category of categories) {
+    const rootId = category.rootId ?? category.id;
+    const source = [category.name, ...(category.aliases ?? [])].join(" ");
+    for (const token of tokenize(source)) {
+      if (GENERIC_CATEGORY_TOKENS.has(token) || CONTEXT_ONLY_TOKENS.has(token)) continue;
+      const tokenStem = stem(token);
+      if (tokenStem.length < 4) continue;
+      let roots = all.get(tokenStem);
+      if (!roots) {
+        roots = new Set<string>();
+        all.set(tokenStem, roots);
+      }
+      roots.add(rootId);
+    }
+  }
+  const tokenToRoots = new Map<string, Set<string>>();
+  for (const [tokenStem, roots] of all) {
+    if (roots.size <= maxRootsPerToken) tokenToRoots.set(tokenStem, roots);
+  }
+  return { tokenToRoots };
+}
+
+/**
+ * Infer which taxonomy root a request points at, with a confidence gate. Returns
+ * the raw per-root hit counts plus a single `dominantRoot` only when one root has
+ * both ≥ ROOT_MIN_HITS hits and a ≥ ROOT_MIN_MARGIN lead over the runner-up;
+ * otherwise `dominantRoot` is null (abstain).
+ */
+export function inferRequestRoots(text: string, index: DomainIndex): RootSignal {
+  const rootHits = new Map<string, number>();
+  const seenStems = new Set<string>();
+  for (const token of tokenize(text)) {
+    const tokenStem = stem(token);
+    if (seenStems.has(tokenStem)) continue;
+    seenStems.add(tokenStem);
+    const roots = index.tokenToRoots.get(tokenStem);
+    if (!roots) continue;
+    for (const root of roots) rootHits.set(root, (rootHits.get(root) ?? 0) + 1);
+  }
+
+  let topRoot: string | null = null;
+  let top = 0;
+  let second = 0;
+  for (const [root, n] of rootHits) {
+    if (n > top) {
+      second = top;
+      top = n;
+      topRoot = root;
+    } else if (n > second) {
+      second = n;
+    }
+  }
+  const dominantRoot =
+    top >= ROOT_MIN_HITS && top - second >= ROOT_MIN_MARGIN ? topRoot : null;
+
+  return { rootHits, dominantRoot };
 }
