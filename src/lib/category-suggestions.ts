@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
-import { filterRequestCategoryChoices } from "@/lib/category-selection-rules";
+import {
+  filterRequestCategoryChoices,
+  buildDomainIndex,
+  inferRequestRoots,
+  type RootSignal,
+} from "@/lib/category-selection-rules";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
@@ -504,6 +509,7 @@ function applyRequestIntentRules(
   picked: ScoredCandidate[],
   text: string,
   limit: number,
+  rootSignal?: RootSignal,
 ): ScoredCandidate[] {
   const filtered = filterRequestCategoryChoices(
     picked,
@@ -516,6 +522,7 @@ function applyRequestIntentRules(
       parentId: entry.candidate.parentId,
       rootId: entry.candidate.rootId,
     }),
+    rootSignal,
   );
   return filtered.slice(0, limit);
 }
@@ -540,6 +547,13 @@ export async function suggestCategories(
   if (candidates.length === 0) {
     return { suggestions: [] };
   }
+
+  // Data-driven taxonomy domain signal — only meaningful for request-side filtering.
+  // Built from the full loaded taxonomy so every root has its keyword vocabulary.
+  const rootSignal =
+    input.mode === "request"
+      ? inferRequestRoots(text, buildDomainIndex(candidates))
+      : undefined;
 
   const byId = new Map(candidates.map((c) => [c.id, c]));
   const scored = rankCandidates(candidates, byId, text);
@@ -573,7 +587,7 @@ export async function suggestCategories(
   const scoredWithOverride = forcePreferredFirst(scored, overrideEntry, scored.length + 1);
   const intentFilteredScored =
     input.mode === "request"
-      ? applyRequestIntentRules(scoredWithOverride, text, scoredWithOverride.length)
+      ? applyRequestIntentRules(scoredWithOverride, text, scoredWithOverride.length, rootSignal)
       : scoredWithOverride;
   const safeScored = intentFilteredScored.length > 0 ? intentFilteredScored : scoredWithOverride;
   const deterministicPicked = forcePreferredFirst(
@@ -601,7 +615,7 @@ export async function suggestCategories(
   }
 
   if (input.mode === "request") {
-    const filtered = applyRequestIntentRules(pickedEntries, text, limit);
+    const filtered = applyRequestIntentRules(pickedEntries, text, limit, rootSignal);
     pickedEntries = filtered.length > 0 ? forcePreferredFirst(filtered, overrideEntry, limit) : deterministicPicked.slice(0, 1);
   }
 
