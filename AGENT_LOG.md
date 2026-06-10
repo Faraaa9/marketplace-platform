@@ -17,6 +17,27 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-10 20:36 — Claude
+
+**Commit:** `30f5ddd` — feat(routing): routing review queue MVP — schema + admin API + eval export
+
+**Pakeitimai:** 10 files changed, 959 insertions(+), 1 deletion(-)
+
+**Failai:**
+- .env.example
+- package.json
+- prisma/manual-migrations/20260610_add_routing_review_items.sql
+- prisma/schema.prisma
+- src/app/api/admin/routing-review/[id]/route.ts
+- src/app/api/admin/routing-review/export/route.ts
+- src/app/api/admin/routing-review/route.ts
+- src/lib/routing/__tests__/review-queue.test.ts
+- src/lib/routing/review-queue.ts
+- src/lib/routing/shadow.ts
+
+**Toliau:** DB migracija NEpaleista — pritaikyti `prisma/manual-migrations/20260610_add_routing_review_items.sql` (arba `pnpm db:push`) prieš įjungiant `ROUTING_REVIEW_QUEUE_ENABLED`. Enqueue hook'as veikia tik kartu su `ROUTING_SHADOW_ENABLED`. Kitas etapas: admin UI peržiūros eilei + eval eksporto integracija į v4 vertinimo tooling'ą.
+
+
 ## 2026-06-10 19:52 — Claude
 
 **Commit:** `0e38936` — chore(data): commit routing eval datasets + gitignore python pycache · lokalus
