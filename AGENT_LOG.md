@@ -19,7 +19,32 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-06-10 19:39 — Claude
 
-**Commit:** `40503f9` — fix(payments,ops): production blockers — webhook idempotency, refunds, health, chat reconnect
+**Commit:** `e32d0e0` — chore(lint): zero warnings — real fixes + documented per-line disables
+
+**Pakeitimai:** 16 files changed, 37 insertions(+), 16 deletions(-)
+
+**Failai:**
+- eslint.config.mjs
+- src/app/(auth)/prisijungti/page.tsx
+- src/app/api/requests/[id]/route.ts
+- src/app/chat-preview/page.tsx
+- src/app/paskyra/uzklausos/MyRequestsList.tsx
+- src/app/tiekejas/StoryModal.tsx
+- src/app/tiekejas/sections/FollowUpsCard.tsx
+- src/app/tiekejas/uzklausos/sections/RequestCard.tsx
+- src/app/tiekejas/uzklausos/sections/RequestsList.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/components/marketing/HeroSearch.tsx
+- src/components/uzklausos/RequestFilterBar.tsx
+
+**Toliau:** Lint dabar 0 warnings — `react-hooks/purity` ir `set-state-in-effect`
+liko aktyvios; naujam kodui jų neslopinti be priežasties komentaro.
+`no-unused-vars` dabar laikosi `^_`/`ignoreRestSiblings` konvencijos.
+
+
+## 2026-06-10 19:39 — Claude
+
+**Commit:** `254b570` — fix(payments,ops): production blockers — webhook idempotency, refunds, health, chat reconnect
 
 **Pakeitimai:** 12 files changed, 490 insertions(+), 21 deletions(-)
 
@@ -37,7 +62,11 @@ sprendžia kontekstą iš diff'o.
 - src/lib/telegram/__tests__/conversation.test.ts
 - src/lib/webhook-events.ts
 
-**Toliau:** _(papildyk ranka kai aišku)_
+**Toliau:** PRIEŠ deploy: (1) pritaikyti
+`prisma/manual-migrations/20260610_add_webhook_events_and_charge_id.sql`
+Supabase'e — be jos webhook'as kris ant `webhook_events` lentelės;
+(2) Stripe Dashboard'e prijungti `charge.refunded` prie webhook endpoint'o.
+Likę launch darbai — NOTES.md sekcija "Production launch".
 
 
 ## 2026-06-09 09:36 — Claude
