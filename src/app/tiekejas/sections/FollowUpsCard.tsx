@@ -47,6 +47,7 @@ export async function FollowUpsCard({ userId }: { userId: string }) {
     return null;
   }
 
+  // eslint-disable-next-line react-hooks/purity -- Server Component renders once per request; Date.now() is stable for this render
   const startedAt = Date.now();
   const lookback = new Date();
   lookback.setDate(lookback.getDate() - 30);

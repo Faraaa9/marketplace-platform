@@ -43,6 +43,7 @@ export async function RequestsList({
   const location = sp.location || "";
   const search = sp.search || "";
   const sort = sp.sort || "relevance";
+  // eslint-disable-next-line react-hooks/purity -- Server Component renders once per request; latency timing needs the wall clock
   const semanticStarted = Date.now();
 
   // The edge proxy (src/proxy.ts) enforces auth + PROVIDER role for /tiekejas/*,
@@ -208,6 +209,7 @@ export async function RequestsList({
     provider: "deterministic",
     model: "weighted-token-v1",
     promptVersion: "semantic_shadow_v1",
+    // eslint-disable-next-line react-hooks/purity -- latency measurement, not render output
     latencyMs: Date.now() - semanticStarted,
     actorUserId: userId,
     entityType: "ProviderProfile",

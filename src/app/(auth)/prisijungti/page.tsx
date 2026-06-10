@@ -277,6 +277,7 @@ function TelegramQrLogin({
 
   useEffect(() => {
     if (!open || challenge) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-open init; the synchronous "loading" status is intentional UI feedback
     createChallenge();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callbackUrl, challenge, open]);

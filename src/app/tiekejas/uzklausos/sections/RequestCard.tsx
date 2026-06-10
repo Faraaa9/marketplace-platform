@@ -36,6 +36,7 @@ function budgetLabel(value: string) {
 }
 
 export function RequestCard({ req }: { req: ProviderLead }) {
+  // eslint-disable-next-line react-hooks/purity -- Server Component renders once per request; "new" badge cutoff is stable for this render
   const isNewRequest = Date.now() - new Date(req.createdAt).getTime() < DAY_MS;
   const responses = req._count.responses;
   const categoryNames =

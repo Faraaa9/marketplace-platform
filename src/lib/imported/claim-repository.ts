@@ -294,7 +294,7 @@ export async function markUserEmailVerified(userId: string) {
  * the role to PROVIDER. Does NOT create or activate a ProviderProfile —
  * the imported profile they are claiming becomes theirs only on approval.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export async function prepareUserForClaimProviderAccount(userId: string, _isActive: boolean) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

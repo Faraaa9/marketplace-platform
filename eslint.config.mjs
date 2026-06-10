@@ -22,6 +22,19 @@ const eslintConfig = defineConfig([
       // Surfaced as warnings so they stay visible without blocking.
       "react-hooks/purity": "warn",
       "react-hooks/set-state-in-effect": "warn",
+      // Standard underscore convention: `const { x: _x, ...rest } = obj` is the
+      // idiomatic "omit a key" destructure; `ignoreRestSiblings` stops flagging
+      // it, and the `^_` patterns cover intentionally unused args/vars.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
   globalIgnores([

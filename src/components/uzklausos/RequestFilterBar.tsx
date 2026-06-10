@@ -131,6 +131,7 @@ function RequestFilterBarInner({
   // Lazy-load the category tree the first time the panel opens.
   useEffect(() => {
     if (!isOpen || groups || loadingGroups) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag must flip before the fetch so the guard above blocks re-entry
     setLoadingGroups(true);
     fetch("/api/service-categories")
       .then((r) => r.json())

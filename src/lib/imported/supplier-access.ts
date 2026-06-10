@@ -67,14 +67,14 @@ export async function getUserManagedSuppliers(userId: string) {
  * Kept as an export (and intentionally `async`) so `auth.ts` keeps importing
  * it without changes.
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 export async function attachIdentityToUserByEmail(
   _email: string,
   _userId: string
 ): Promise<number> {
   return 0;
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+ 
 
 /**
  * Check if a user owns a provider profile (by profile ID).

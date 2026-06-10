@@ -133,6 +133,7 @@ export default function HeroSearch() {
   useEffect(() => {
     const draft = loadListingDraft();
     if (!draft || draft.attachmentUrls.length === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restores attachments from sessionStorage after a refresh; see eslint.config.mjs note
     setAttachments(draft.attachmentUrls);
     if (draft.description) {
       setValue((current) => (current ? current : draft.description));

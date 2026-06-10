@@ -108,10 +108,9 @@ export default function StoryModal({
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
-  // Reset drag state when modal closes
-  useEffect(() => {
-    if (!open) setIsDragging(false);
-  }, [open]);
+  // Reset drag state when the modal closes — render-phase adjustment instead
+  // of an effect round-trip (react.dev/learn/you-might-not-need-an-effect).
+  if (!open && isDragging) setIsDragging(false);
 
   async function handleUpload(file: File) {
     if (!file.type.startsWith("image/")) {

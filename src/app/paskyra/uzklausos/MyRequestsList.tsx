@@ -100,6 +100,7 @@ export default async function MyRequestsList({
 
   const filtered =
     active === "ALL" ? data : data.filter((r) => r.status === active);
+  // eslint-disable-next-line react-hooks/purity -- relative-time labels; a per-render timestamp is the intended behavior
   const now = Date.now();
 
   return (

@@ -1,7 +1,4 @@
 import {
-  Archive,
-  CheckCheck,
-  Copy,
   MessageCircle,
   MoreHorizontal,
   Paperclip,

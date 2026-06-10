@@ -423,6 +423,7 @@ export default function ProviderInboxClient() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init-from-sessionStorage hydration; see eslint.config.mjs note
     setListError("");
     if (typeof window !== "undefined") {
       const cached = window.sessionStorage.getItem(INBOX_CACHE_KEY);
@@ -549,12 +550,15 @@ export default function ProviderInboxClient() {
         .subscribe();
     })();
 
+    // The ref holds one stable Map for the component's lifetime; capturing it
+    // here (not in cleanup) satisfies the linter and is behavior-identical.
+    const threadRefreshTimers = threadRefreshTimersRef.current;
     return () => {
       cancelled = true;
-      for (const timer of threadRefreshTimersRef.current.values()) {
+      for (const timer of threadRefreshTimers.values()) {
         window.clearTimeout(timer);
       }
-      threadRefreshTimersRef.current.clear();
+      threadRefreshTimers.clear();
       if (channel) supabase.removeChannel(channel);
     };
   }, [loadConversation, session?.user?.id]);
