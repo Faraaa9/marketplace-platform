@@ -67,3 +67,6 @@ vercel-env-import.txt
 # Python bytecode (offline ai-routing scripts)
 __pycache__/
 *.pyc
+
+# Dry-run output from scripts/backfill-category-dedup.ts (audit log, not source)
+scripts/dedup-journal-*.json
