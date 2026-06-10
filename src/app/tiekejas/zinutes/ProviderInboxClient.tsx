@@ -154,7 +154,7 @@ function ConversationAvatar({
   const badgeSize = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
   return (
     <div className="relative shrink-0" title={presenceLabel || undefined}>
-      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D38331] text-caption font-semibold text-white ring-1 ring-[#D7C7B6] ${dimensions}`}>
+      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#73804B] text-caption font-semibold text-white ring-1 ring-[#D8C79A] ${dimensions}`}>
         {image ? (
           <Image
             src={image}
@@ -171,7 +171,7 @@ function ConversationAvatar({
       {presenceLevel && (
         <span
           className={`absolute bottom-0 right-0 rounded-full border-2 border-white ${
-            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
+            presenceLevel === "online" ? "bg-[#73804B]" : "bg-[#B48645]"
           } ${badgeSize}`}
           aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
         />
@@ -672,11 +672,11 @@ export default function ProviderInboxClient() {
   );
 
   return (
-    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#EFECE5] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#DDD3C5] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(93,70,54,0.10)] dark:border-surface-800 dark:bg-surface-900/90">
+    <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#ECE9E2] bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:56px_56px] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950 dark:bg-none">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#D8D1BF] bg-[#FBFAF6] shadow-[0_12px_40px_rgba(72,65,52,0.10)] dark:border-surface-800 dark:bg-surface-900/90">
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
-            <div className="flex min-h-[64px] items-center justify-between border-b border-[#DDD3C5] bg-[#FFFDF8] px-5 py-2.5 dark:border-surface-700/60">
+          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#D8D1BF] bg-[#F7F4ED] dark:border-surface-700/60 dark:bg-surface-950/40`}>
+            <div className="flex min-h-[64px] items-center justify-between border-b border-[#D8C79A] bg-[#FBFAF6] px-5 py-2.5 dark:border-surface-700/60">
               {searchOpen ? (
                 <label className="min-w-0 flex-1">
                   <span className="sr-only">Ieškoti pokalbių</span>
@@ -685,13 +685,13 @@ export default function ProviderInboxClient() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Ieškoti pokalbių..."
-                    className="h-11 w-full rounded-full border border-[#D7C7B6] bg-[#F7F1E8] px-4 text-body-sm text-[#1E1B18] outline-none transition focus:border-[#A7826D] focus:bg-white"
+                    className="h-11 w-full rounded-full border border-[#D8C79A] bg-[#F1E7CE] px-4 text-body-sm text-[#24211D] outline-none transition focus:border-[#73804B] focus:bg-white"
                   />
                 </label>
               ) : (
                 <div>
-                  <p className="text-body font-semibold text-[#1E1B18] dark:text-white">Visos žinutės</p>
-                  <Link href="/tiekejas" className="inline-flex items-center gap-1 text-micro text-[#6B6760] hover:text-[#1E1B18]">
+                  <p className="text-body font-semibold text-[#24211D] dark:text-white">Visos žinutės</p>
+                  <Link href="/tiekejas" className="inline-flex items-center gap-1 text-micro text-[#6C6558] hover:text-[#24211D]">
                     <ArrowLeft className="h-3 w-3" />
                     Valdymo panelė
                   </Link>
@@ -705,7 +705,7 @@ export default function ProviderInboxClient() {
                   setSearchOpen((open) => !open);
                   if (searchOpen) setSearchQuery("");
                 }}
-                className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18] dark:bg-surface-900 dark:ring-surface-700"
+                className="grid min-h-11 min-w-11 place-items-center rounded-full border border-[#D8C79A] bg-[#FBFAF6] text-[#6C6558] transition hover:bg-[#F1E7CE] hover:text-[#24211D] dark:bg-surface-900 dark:ring-surface-700"
               >
                 {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
               </button>
@@ -715,13 +715,13 @@ export default function ProviderInboxClient() {
               {loadingList ? (
                 <div>
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border border-[#ece9e2] bg-white p-3">
+                    <div key={i} className="rounded-xl border border-[#D8D1BF] bg-[#FBFAF6] p-3">
                       <div className="flex items-start gap-3.5">
-                        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-[#F5F3EF]" />
+                        <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-[#EFE5CC]" />
                         <div className="min-w-0 flex-1 space-y-2 pt-1">
-                          <div className="h-3.5 w-2/3 animate-pulse rounded bg-[#F5F3EF]" />
-                          <div className="h-3 w-1/2 animate-pulse rounded bg-[#F5F3EF]" />
-                          <div className="h-3 w-5/6 animate-pulse rounded bg-[#F5F3EF]" />
+                          <div className="h-3.5 w-2/3 animate-pulse rounded bg-[#EFE5CC]" />
+                          <div className="h-3 w-1/2 animate-pulse rounded bg-[#EFE5CC]" />
+                          <div className="h-3 w-5/6 animate-pulse rounded bg-[#EFE5CC]" />
                         </div>
                       </div>
                     </div>
@@ -739,12 +739,12 @@ export default function ProviderInboxClient() {
                     const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
                     return (
                       <button key={`${c.type}-${c.id}`} onClick={() => selectConversation(c)} className="group block w-full text-left">
-                        <article className={`relative border-b border-[#DDD3C5] p-3 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
+                        <article className={`relative border-b border-[#DDD4BF] p-3 transition-colors hover:bg-[#F1E7CE] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
                           active
-                            ? "rounded-xl border border-[#A7826D] bg-[#F1E7DA] shadow-[0_6px_18px_rgba(93,70,54,0.10)] dark:bg-surface-800/70"
+                            ? "rounded-xl border border-[#C7B77E] bg-[#EFE5CC] shadow-[0_6px_18px_rgba(72,65,52,0.10)] dark:bg-surface-800/70"
                             : c.unread
-                              ? "bg-[#F7F1E8] dark:bg-surface-800/40"
-                              : "bg-[#FFFDF8] dark:bg-surface-950/40"
+                              ? "bg-[#F1E7CE] dark:bg-surface-800/40"
+                              : "bg-[#FBFAF6] dark:bg-surface-950/40"
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
                           <div className="flex items-start gap-3.5">
@@ -756,27 +756,27 @@ export default function ProviderInboxClient() {
                             />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start gap-2">
-                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
+                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#24211D]">
                                   {decodeHtmlEntities(c.title)}
                                 </h3>
-                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6F6258]" dateTime={c.lastMessageAt}>
+                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6C6558]" dateTime={c.lastMessageAt}>
                                   {formatRelativeDate(new Date(c.lastMessageAt))}
                                 </time>
                               </div>
                               <div className="mt-0.5 flex items-center gap-2">
-                                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" />}
+                                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-[#A65336]" />}
                                 {c.subtitle && !(c.title && c.subtitle.includes("@")) && (
-                                  <p className="min-w-0 flex-1 truncate text-micro text-[#6B6760]">
+                                  <p className="min-w-0 flex-1 truncate text-micro text-[#6C6558]">
                                     {decodeHtmlEntities(c.subtitle)}
                                   </p>
                                 )}
-                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258]">
+                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#F1E7CE] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6C6558]">
                                   {status && <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />}
                                   {status ? status.label : "Tiesioginė"}
                                 </span>
                               </div>
                               <div className="mt-1.5 flex items-start gap-2">
-                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6B6760]">
+                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6C6558]">
                                   {c.fromProvider && <span>Jūs: </span>}
                                   {decodeHtmlEntities(c.preview)}
                                 </p>
@@ -793,7 +793,7 @@ export default function ProviderInboxClient() {
                         type="button"
                         onClick={loadMoreConversations}
                         disabled={loadingMore}
-                        className="min-h-11 w-full rounded-xl border border-[#EAEAEA] bg-white px-4 text-body-sm font-semibold text-[#6B6760] transition hover:bg-[#F8F7F4] hover:text-[#1E1B18] disabled:cursor-wait disabled:opacity-60"
+                        className="min-h-11 w-full rounded-xl border border-[#D8C79A] bg-[#FBFAF6] px-4 text-body-sm font-semibold text-[#6C6558] transition hover:bg-[#F1E7CE] hover:text-[#24211D] disabled:cursor-wait disabled:opacity-60"
                       >
                         {loadingMore ? "Kraunama..." : "Įkelti senesnius pokalbius"}
                       </button>
@@ -804,7 +804,7 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
+          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FBFAF6] dark:bg-surface-900`}>
             {threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
@@ -812,20 +812,20 @@ export default function ProviderInboxClient() {
             ) : !thread && !loadingThread ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center">
                 <div>
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#ece9e2]/40 text-[#C29B74]">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#EFE5CC]/70 text-[#B48645]">
                     <MessageCircle className="h-7 w-7" />
                   </div>
-                  <h1 className="mt-4 text-heading-2 font-semibold text-[#1E1B18]">Pasirinkite pokalbį</h1>
-                  <p className="mt-2 max-w-sm text-body-sm text-[#6B6760]">Kairėje pasirinkite klientą arba užklausą.</p>
+                  <h1 className="mt-4 text-heading-2 font-semibold text-[#24211D]">Pasirinkite pokalbį</h1>
+                  <p className="mt-2 max-w-sm text-body-sm text-[#6C6558]">Kairėje pasirinkite klientą arba užklausą.</p>
                 </div>
               </div>
             ) : loadingThread || !thread ? (
-              <div className="grid min-h-0 flex-1 place-items-center text-body-sm text-[#6B6760]">Kraunama...</div>
+              <div className="grid min-h-0 flex-1 place-items-center text-body-sm text-[#6C6558]">Kraunama...</div>
             ) : (
               <>
-                <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-[#DDD3C5] bg-[#FFFDF8] px-4 py-1.5 dark:border-surface-700/60 md:px-5">
+                <div className="flex min-h-[54px] items-center justify-between gap-3 border-b border-[#D8C79A] bg-[#FBFAF6] px-4 py-1.5 dark:border-surface-700/60 md:px-5">
                   <div className="flex min-w-0 items-center gap-3">
-                  <button className="grid min-h-11 min-w-11 place-items-center rounded-xl text-[#6B6760] hover:bg-[#faeee7] hover:text-[#1E1B18] lg:hidden" onClick={() => setSelectedId(null)}>
+                  <button className="grid min-h-11 min-w-11 place-items-center rounded-xl text-[#6C6558] hover:bg-[#F1E7CE] hover:text-[#24211D] lg:hidden" onClick={() => setSelectedId(null)}>
                     <ArrowLeft className="h-5 w-5" />
                   </button>
                     <ConversationAvatar
@@ -837,13 +837,13 @@ export default function ProviderInboxClient() {
                     />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 leading-tight">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" aria-hidden="true" />
-                      <p className="truncate text-body font-semibold text-[#1E1B18]">{decodeHtmlEntities(thread.title)}</p>
-                      <span className="rounded-full bg-[#F5F3EF] px-2 py-0.5 text-micro font-medium text-[#6B6760]">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#B48645]" aria-hidden="true" />
+                      <p className="truncate text-body font-semibold text-[#24211D]">{decodeHtmlEntities(thread.title)}</p>
+                      <span className="rounded-full bg-[#F1E7CE] px-2 py-0.5 text-micro font-medium text-[#6C6558]">
                         {selectedConversation?.type === "direct" ? "Tiesioginė" : "Užklausa"}
                       </span>
                     </div>
-                    {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{decodeHtmlEntities(thread.subtitle)}</p>}
+                    {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6C6558]">{decodeHtmlEntities(thread.subtitle)}</p>}
                   </div>
                   </div>
                   <div className="relative hidden items-center gap-1 sm:flex">
@@ -855,7 +855,7 @@ export default function ProviderInboxClient() {
                         setSettingsOpen((open) => !open);
                         setMoreOpen(false);
                       }}
-                    className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18]"
+                    className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D8C79A] bg-[#FBFAF6] text-[#6C6558] transition hover:bg-[#F1E7CE] hover:text-[#24211D]"
                     >
                       <Settings className="h-4 w-4" />
                     </button>
@@ -867,15 +867,15 @@ export default function ProviderInboxClient() {
                         setMoreOpen((open) => !open);
                         setSettingsOpen(false);
                       }}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D7C7B6] bg-[#FFFDF8] text-[#6F6258] transition hover:bg-[#F1E7DA] hover:text-[#1E1B18]"
+                      className="grid min-h-9 min-w-9 place-items-center rounded-xl border border-[#D8C79A] bg-[#FBFAF6] text-[#6C6558] transition hover:bg-[#F1E7CE] hover:text-[#24211D]"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                     {settingsOpen && (
-                      <div className="absolute right-10 top-11 z-30 w-64 rounded-xl border border-[#EAEAEA] bg-white p-2 text-body-sm text-[#1E1B18] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
-                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6B6760]">Nustatymai</p>
-                        <button type="button" onClick={markSelectedConversationRead} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]">
-                          <CheckCheck className="h-4 w-4 text-[#6B6760]" />
+                      <div className="absolute right-10 top-11 z-30 w-64 rounded-xl border border-[#D8C79A] bg-[#FBFAF6] p-2 text-body-sm text-[#24211D] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
+                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6C6558]">Nustatymai</p>
+                        <button type="button" onClick={markSelectedConversationRead} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F1E7CE]">
+                          <CheckCheck className="h-4 w-4 text-[#6C6558]" />
                           Pažymėti kaip perskaitytą
                         </button>
                         <button
@@ -884,18 +884,18 @@ export default function ProviderInboxClient() {
                             setSettingsOpen(false);
                             setMoreOpen(true);
                           }}
-                          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]"
+                          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F1E7CE]"
                         >
-                          <Archive className="h-4 w-4 text-[#6B6760]" />
+                          <Archive className="h-4 w-4 text-[#6C6558]" />
                           Tvarkyti pokalbį
                         </button>
                       </div>
                     )}
                     {moreOpen && (
-                      <div className="absolute right-0 top-11 z-30 w-64 rounded-xl border border-[#EAEAEA] bg-white p-2 text-body-sm text-[#1E1B18] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
-                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6B6760]">Veiksmai</p>
-                        <button type="button" onClick={copyConversationLink} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F8F7F4]">
-                          <Copy className="h-4 w-4 text-[#6B6760]" />
+                      <div className="absolute right-0 top-11 z-30 w-64 rounded-xl border border-[#D8C79A] bg-[#FBFAF6] p-2 text-body-sm text-[#24211D] shadow-[0_18px_45px_rgba(31,27,23,0.14)]">
+                        <p className="px-3 py-2 text-micro font-semibold uppercase tracking-wide text-[#6C6558]">Veiksmai</p>
+                        <button type="button" onClick={copyConversationLink} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left transition hover:bg-[#F1E7CE]">
+                          <Copy className="h-4 w-4 text-[#6C6558]" />
                           Kopijuoti nuorodą
                         </button>
                       </div>
@@ -903,21 +903,21 @@ export default function ProviderInboxClient() {
                   </div>
                 </div>
                 <div
-                  className="flex min-h-0 flex-1 flex-col bg-[#FFFDF8] px-4 py-4 md:px-5"
+                  className="flex min-h-0 flex-1 flex-col bg-[#FBFAF6] px-4 py-4 md:px-5"
                 >
-                  <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#DED2C1] bg-[#FFFDF8] px-4 py-3 shadow-[0_8px_24px_rgba(93,70,54,0.08)] dark:border-surface-700 dark:bg-surface-900">
+                  <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#D8C79A] bg-[#F7F0DF] px-4 py-3 shadow-[0_8px_24px_rgba(72,65,52,0.08)] dark:border-surface-700 dark:bg-surface-900">
                     <div className="min-w-0">
-                      <p className="truncate text-body-sm font-semibold text-[#111827] dark:text-white">
+                      <p className="truncate text-body-sm font-semibold text-[#24211D] dark:text-white">
                         Užsakymas: {decodeHtmlEntities(orderSummaryTitle(thread))}
                       </p>
-                      <p className="mt-1 text-caption font-medium text-[#6B6760] dark:text-surface-400">
+                      <p className="mt-1 text-caption font-medium text-[#6C6558] dark:text-surface-400">
                         Statusas: {conversationStatusLabel(thread, selectedConversation)}
                       </p>
                     </div>
                     {thread.requestBrief && (
                       <RequestBriefDrawer
                         brief={thread.requestBrief}
-                        triggerClassName="ml-auto border border-[#D7C7B6] bg-[#EFE4D5] text-[#3B2D24] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] hover:bg-[#E4D2BE] focus:ring-[#A7826D]/25"
+                        triggerClassName="ml-auto border border-[#D8C79A] bg-[#73804B] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-[#6A7544] focus:ring-[#73804B]/25"
                       />
                     )}
                   </div>
