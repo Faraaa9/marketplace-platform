@@ -1,0 +1,10 @@
+# Offline Category Intelligence inputs copied from the
+# "KATEGORIJOS + 200K-uzklausu" data-science project. Large/derivable, not
+# source of truth — regenerate there, not here. The evaluation/ outputs (the
+# actual deliverable) are intentionally NOT ignored.
+category-intelligence/phrase_category_stats.json
+category-intelligence/category_phrase_summary.json
+category-intelligence/category_confusions.csv
+taxonomy/taxonomy_flat.jsonl
+eval/golden_eval_300_labeled.jsonl
+eval/requests_sample_10000.parquet

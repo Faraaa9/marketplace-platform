@@ -670,3 +670,53 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
 - "Tapti meistru" nebekuria tuščio ProviderProfile ir nebeflipina rolės — rolė PROVIDER + starter kreditai dabar suteikiami tik realiai sukūrus profilį (ai-generate / profile-complete create šakoje). Route /api/tiekejas/tapti pašalinta.
 - Dashboard /tiekejas rodo NoProviderProfile, kai nėra profilio ARBA profilis tuščias (be description ir be enrichedAt) — laikina apsauga seniems prod klientams su tuščiomis eilutėmis.
 - TODO (DB cleanup): vienkartinis skriptas išvalyti senas tuščias ProviderProfile eilutes (description IS NULL AND enrichedAt IS NULL AND images = '{}') + grąžinti tuos userius į role=CLIENT, jei jie nieko nesukūrė. Atsargiai — realūs duomenys.
+
+---
+
+## Category Intelligence — offline adapter + shadow eval
+
+- [x] **2026-06-09 — Offline phrase-intelligence adapter + before/after eval (NEjungta į produkciją).**
+  Naujas `scripts/ai-routing/category_intelligence_adapter.py` (krauna 20 348 frazių brain'ą,
+  atkartoja `analyze_category_phrases.py` normalizaciją, grąžina struktūruotą signalą:
+  `matched_phrases` / `category_boosts` / `ranking_boosts` / `ambiguity_signals` /
+  `redirect_hints` / `should_trigger_review`). `evaluate_category_intelligence_shadow.py`
+  lygina baseline routerį vs baseline+intelligence ant `golden_eval_300`, ambiguous-heavy
+  slice ir random-500. Output: `data/routing/category-intelligence/evaluation/` (6 failai).
+  Rezultatas: **selekcijos NEKEISTI** (re-rank net-negative ant gold: +6/−10 — bendros
+  „umbrella" kategorijos permuša specifines). Vertė = **high-confidence-wrong 44→22** (golden)
+  flaginant ambiguous į review. Rekomendacija: `SAFE_TO_INTEGRATE_WITH_LIMITS` —
+  TIK review + confidence signalas, jokio frazių selektoriaus.
+- [ ] **Follow-up (prieš bet kokį re-rank):** žmogaus Obsidian review katalogams, kurie
+  varo regresijas (Vidaus apdailos darbai, Statybos darbai, Meistrai į namus — catch-all
+  neturi gauti ranking svorio) ir redirect leksikai (lietvamzdis/latakas/radiatorius/katilas/
+  rekuperatorius). Intelligence JSON'ai šiame repo yra gitignored kopija iš
+  `~/Documents/KATEGORIJOS + 200K-uzklausu` — regeneruoti ten.
+- [x] **2026-06-10 — CI signalas įjungtas į shadow routingą (pagal eval rekomendaciją, su limitais).**
+  TS portas `src/lib/routing/category-intelligence.ts` (tik validated „shipped" config:
+  review + confidence, selekcija NIEKADA nekeičiama) + kompaktinis brain'as
+  `src/lib/routing/data/phrase-brain.v1.json` (1.08MB, 18 873 frazės, generuojamas
+  `build_phrase_brain_compact.py`). `shadow.ts` lazy-importuoja signalą už
+  `ROUTING_SHADOW_ENABLED` (jau įjungtas Vercel prod/preview) ir rašo
+  `ciShouldReview`/`ciConfidence`/`ciSignal` į `routing_decision_logs` (additive
+  nullable stulpeliai, migracija `20260610_add_ci_signal_to_routing_logs.sql`
+  pritaikyta Supabase). Parity su Python adapteriu: 66 fixture atvejų,
+  `pnpm routing:ci-signal` (9/9 PASS); `routing:identity` ir `shadow:smoke` žali;
+  E2E insert/select/delete realioje DB patikrintas. tsc švarus (1 pre-existing
+  telegram testo klaida nesusijusi).
+- [ ] **Po ~savaitės shadow duomenų:** užquerinti `routing_decision_logs` —
+  ciShouldReview rate, ciConfidence pasiskirstymą, redirect hits — ir palyginti su
+  offline eval prognozėmis (review ~50-70%, high-conf-wrong ↓) prieš sprendžiant,
+  ar review flag'ą rodyti admin UI.
+- [x] **2026-06-10 — 100 random užklausų (iš 218 980) live analizė + review triukšmo filtro tyrimas.**
+  Pilnas TS pipeline'as (v4+CI) veikia: 88/100 frazių coverage, 34/100 review,
+  34 confidence patvirtinimai, 3 redirect (1 tobulas — „dujinio katilo profilaktinis"
+  ant generinės Santechnikos; 1 triukšmingas — „oras-vanduo katilą" šilumos siurblio
+  užklausoje numušė teisingą 0.9 pick'ą į review). Ištirtas ambiguity-noise filtras
+  (share>=0.30 & count>=50): review 0.72→0.54 golden, BET high-conf-wrong 22→27 —
+  „šiukšlinės" frazės netyčia gaudo realiai klaidingus sprendimus (padrika kalba
+  koreliuoja su blogu routingu). Sweep'as monotoniškas, free lunch nėra →
+  **filtras paliktas OFF**; knobai `amb_review_min_share`/`amb_review_min_count`
+  liko eval'e ateities tuningui ant realių shadow logų.
+- [ ] **ciShouldReview vartoti kaip prioritizavimo signalą, ne binarinį gate'ą:**
+  flag'as low-precision (žymi ~50-70%), bet gaudo realius wrongus — admin
+  review eilę rikiuoti pagal (ciShouldReview, ciConfidence ASC), o ne filtruoti.

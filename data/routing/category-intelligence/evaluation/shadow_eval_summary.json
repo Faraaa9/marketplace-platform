@@ -1,0 +1,176 @@
+[
+  {
+    "dataset": "golden_300",
+    "rows": 300,
+    "rows_with_gold": 254,
+    "baseline": {
+      "top1_accuracy": 0.4094,
+      "top3_accuracy": 0.8465,
+      "parent_accuracy": 0.8465,
+      "manual_review_rate": 0.19,
+      "confidence_distribution": {
+        "low": 57,
+        "medium": 142,
+        "high": 101
+      },
+      "high_confidence_wrong": 44
+    },
+    "with_intelligence": {
+      "top1_accuracy": 0.4094,
+      "top3_accuracy": 0.8465,
+      "parent_accuracy": 0.8465,
+      "manual_review_rate": 0.7167,
+      "confidence_distribution": {
+        "low": 53,
+        "medium": 199,
+        "high": 48
+      },
+      "high_confidence_wrong": 22
+    },
+    "delta": {
+      "top1_accuracy": 0.0,
+      "top3_accuracy": 0.0,
+      "parent_accuracy": 0.0,
+      "manual_review_rate": 0.5267,
+      "high_confidence_wrong": -22
+    },
+    "rerank_experiment": {
+      "top1_accuracy_if_reranked": 0.3937,
+      "top1_delta_vs_baseline": -0.0157
+    },
+    "decision_changes": {
+      "changed_total": 32,
+      "changed_on_gold": 23,
+      "wrong_to_correct": 6,
+      "correct_to_wrong": 10,
+      "unchanged_correct": 94,
+      "unchanged_wrong": 137
+    },
+    "ambiguous": {
+      "ambiguous_rows": 46,
+      "review_trigger_rate_base": 0.1087,
+      "review_trigger_rate_intel": 0.7391
+    },
+    "coverage": {
+      "rows_with_any_matched_phrase": 286,
+      "rows_with_ambiguity_signal": 237,
+      "rows_with_redirect_hint": 19
+    }
+  },
+  {
+    "dataset": "golden_ambiguous_heavy",
+    "rows": 58,
+    "rows_with_gold": 12,
+    "baseline": {
+      "top1_accuracy": 0.25,
+      "top3_accuracy": 1.0,
+      "parent_accuracy": 0.8333,
+      "manual_review_rate": 0.1207,
+      "confidence_distribution": {
+        "low": 7,
+        "medium": 31,
+        "high": 20
+      },
+      "high_confidence_wrong": 2
+    },
+    "with_intelligence": {
+      "top1_accuracy": 0.25,
+      "top3_accuracy": 1.0,
+      "parent_accuracy": 0.8333,
+      "manual_review_rate": 0.7931,
+      "confidence_distribution": {
+        "low": 6,
+        "medium": 44,
+        "high": 8
+      },
+      "high_confidence_wrong": 0
+    },
+    "delta": {
+      "top1_accuracy": 0.0,
+      "top3_accuracy": 0.0,
+      "parent_accuracy": 0.0,
+      "manual_review_rate": 0.6724,
+      "high_confidence_wrong": -2
+    },
+    "rerank_experiment": {
+      "top1_accuracy_if_reranked": 0.4167,
+      "top1_delta_vs_baseline": 0.1667
+    },
+    "decision_changes": {
+      "changed_total": 12,
+      "changed_on_gold": 3,
+      "wrong_to_correct": 2,
+      "correct_to_wrong": 0,
+      "unchanged_correct": 3,
+      "unchanged_wrong": 6
+    },
+    "ambiguous": {
+      "ambiguous_rows": 46,
+      "review_trigger_rate_base": 0.1087,
+      "review_trigger_rate_intel": 0.7391
+    },
+    "coverage": {
+      "rows_with_any_matched_phrase": 58,
+      "rows_with_ambiguity_signal": 55,
+      "rows_with_redirect_hint": 7
+    }
+  },
+  {
+    "dataset": "random_500_unlabeled",
+    "rows": 500,
+    "rows_with_gold": 0,
+    "baseline": {
+      "top1_accuracy": null,
+      "top3_accuracy": null,
+      "parent_accuracy": null,
+      "manual_review_rate": 0.26,
+      "confidence_distribution": {
+        "low": 130,
+        "medium": 114,
+        "high": 256
+      },
+      "high_confidence_wrong": 0
+    },
+    "with_intelligence": {
+      "top1_accuracy": null,
+      "top3_accuracy": null,
+      "parent_accuracy": null,
+      "manual_review_rate": 0.54,
+      "confidence_distribution": {
+        "low": 115,
+        "medium": 187,
+        "high": 198
+      },
+      "high_confidence_wrong": 0
+    },
+    "delta": {
+      "top1_accuracy": null,
+      "top3_accuracy": null,
+      "parent_accuracy": null,
+      "manual_review_rate": 0.28,
+      "high_confidence_wrong": 0
+    },
+    "rerank_experiment": {
+      "top1_accuracy_if_reranked": null,
+      "top1_delta_vs_baseline": null
+    },
+    "decision_changes": {
+      "changed_total": 5,
+      "changed_on_gold": 0,
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "unchanged_correct": 0,
+      "unchanged_wrong": 0
+    },
+    "ambiguous": {
+      "ambiguous_rows": 0,
+      "review_trigger_rate_base": null,
+      "review_trigger_rate_intel": null
+    },
+    "coverage": {
+      "rows_with_any_matched_phrase": 452,
+      "rows_with_ambiguity_signal": 301,
+      "rows_with_redirect_hint": 5
+    }
+  }
+]

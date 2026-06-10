@@ -63,3 +63,7 @@ skills-lock.json
 vercel-env-import.txt
 .gstack/
 .firecrawl/
+
+# Python bytecode (offline ai-routing scripts)
+__pycache__/
+*.pyc

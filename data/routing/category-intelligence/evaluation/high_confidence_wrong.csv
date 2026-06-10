@@ -1,0 +1,69 @@
+dataset,config,request_id,title,predicted_top1,gold_primary,confidence,boosts
+golden_300,baseline,3817057,Statybos konservavimo darbai,"Tvoros, vartai, montavimas","Žemės kasimas, lyginimas",0.82,
+golden_300,intel,3817057,Statybos konservavimo darbai,"Tvoros, vartai, montavimas","Žemės kasimas, lyginimas",0.82,"{""Griovimo darbai"": 0.18}"
+golden_300,baseline,3358451,Pamatų šiltinimo ir hidroizoliacijos darbai,"Betonavimo darbai, betonavimas",Pamatų šiltinimas,0.92,
+golden_300,intel,2741305,Kondicionierių pildymas,"Autoservisai, automobilių remontas",Kondicionierių pildymas,0.83,"{""Autoservisai, automobilių remontas"": 0.18}"
+golden_300,baseline,3795121,Kondicionierių montavimas,Kondicionierių montavimas,"Kondicionierių montavimas, remontas",0.9,
+golden_300,baseline,3911121,Ieškau meistrų fasado tinkavimui ir balkono hidroizoliacijai,Lietaus nuvedimo sistemos,Fasado tinkavimas,0.9,
+golden_300,baseline,3390997,Stogo dažymas,Aukštalipiai,Stogo dažymas,0.78,
+golden_300,intel,3390997,Stogo dažymas,Aukštalipiai,Stogo dažymas,0.78,"{""Statybos darbai"": 0.1089, ""Aukštalipiai"": 0.0278, ""Autoservisai, automobilių remontas"": 0.0139, ""Metalo gaminiai, suvirintojai"": 0.012, ""Stogdengiai, stogo darbai"": 0.024, ""Elektrikai, elektros darbai"": 0.0267}"
+golden_300,baseline,3446479,"Pamatų sildymas, drenazas, lietaus nuotekos",Drenažo įrengimas,Pamatų šiltinimas,0.78,
+golden_300,baseline,3547920,Ieškau meistro vidaus apdailai,"Įtempiamos lubos, montavimas",Vidaus apdailos darbai,0.8,
+golden_300,baseline,3016285,Reikalingos perkraustymo paslaugos – statybinių atliekų pervežimas,Perkraustymo paslaugos,Statybinių atliekų išvežimas,0.9,
+golden_300,intel,3016285,Reikalingos perkraustymo paslaugos – statybinių atliekų pervežimas,Perkraustymo paslaugos,Statybinių atliekų išvežimas,0.9,"{""Griovimo darbai"": 0.248, ""Vidaus apdailos darbai"": 0.011, ""Krovinių pervežimas"": 0.228, ""Valymo paslaugos"": 0.0141, ""Projektų ir dokumentų rengėjai"": 0.0094, ""Elektrikai, elektros darbai"": 0.0094, ""Perkraustymo paslaugos"": 0.008}"
+golden_300,intel,2647482,Reikalinga kapavietės pamatų apdaila ir aplink trinkelių ar plytelių išklojimas,"Kapų tvarkymas, priežiūra",Kapavietės pamatų betonavimas,0.91,"{""Kapų tvarkymas, priežiūra"": 0.18, ""Vidaus apdailos darbai"": 0.06}"
+golden_300,baseline,2963335,Ieškau interjero dizainerio/kapitalinis buto remontas,Interjero dizaineriai,Kapitalinis buto remontas,0.75,
+golden_300,intel,2963335,Ieškau interjero dizainerio/kapitalinis buto remontas,Interjero dizaineriai,Kapitalinis buto remontas,1.0,"{""Vidaus apdailos darbai"": 0.25, ""Elektrikai, elektros darbai"": 0.0351, ""Interjero dizaineriai"": 0.25, ""Architektai, projektavimas"": 0.0462, ""Valymo paslaugos"": 0.015, ""Baldų gamyba"": 0.1985, ""Medžio darbai, staliai"": 0.0369}"
+golden_300,baseline,3378921,Užklausa dėl PVC langų vidaus dažymo arba plėvelės klijavimo,Plėvelės klijavimas,"Langų, durų apdaila",0.9,
+golden_300,baseline,3931791,"Stogo, fasado ir trinkelių valymas",Srautinis valymas,Stogų valymas ir priežiūra,0.78,
+golden_300,intel,3931791,"Stogo, fasado ir trinkelių valymas",Srautinis valymas,Stogų valymas ir priežiūra,1.0,"{""Srautinis valymas"": 0.25, ""Valymo paslaugos"": 0.0343, ""Sniego valymas"": 0.0206, ""Statybos darbai"": 0.12}"
+golden_300,baseline,3571792,"Paviršinių nuotekų šalinimo (lietaus tinklų) įrengimas, Šlapelio g., Vilnius",Inžinerinių tinklų įrengimas,Lietaus nuotekų tinklų montavimas,1.0,
+golden_300,baseline,3238724,Metalo išvežimas,Metalo laužo supirkimas,Statybinių atliekų išvežimas,0.9,
+golden_300,baseline,3738926,Vandens filtrų aptarnavimas,Vandens filtrų aptarnavimas,Vandens filtrų remontas,0.9,
+golden_300,baseline,2616950,"Statybinio laužo, žaliųjų atliekų išvežimas ir žemės lyginimo darbai","Žemės kasimas, lyginimas",Statybinių atliekų išvežimas,0.78,
+golden_300,intel,2616950,"Statybinio laužo, žaliųjų atliekų išvežimas ir žemės lyginimo darbai","Žemės kasimas, lyginimas",Statybinių atliekų išvežimas,0.78,"{""Griovimo darbai"": 0.2044, ""Vidaus apdailos darbai"": 0.0409, ""Šiukšlių išvežimas: statybinių ir kt."": 0.0089, ""Aplinkos tvarkymas, apželdinimas"": 0.06, ""Žemės kasimas, lyginimas"": 0.0337, ""Statybos darbai"": 0.0211, ""Vejos priežiūra, įrengimas"": 0.0084}"
+golden_300,baseline,3753403,Drenažo įrengimas,Lietaus nuotekų tinklų montavimas,Drenažo įrengimas,0.9,
+golden_300,baseline,3370453,Epdm,"Skardinimo darbai, skardininkai","Stogdengiai, stogo darbai",0.8,
+golden_300,baseline,3972056,Kondicionieriaus montavimas paleidimas,Kondicionierių pildymas,Kondicionierių montavimas,0.9,
+golden_300,baseline,3533563,"Pamatų hidroizoliavimas, apšiltinimas, drenažo ir lietaus surinkimas","Pamatų liejimas, įrengimas",Pamatų šiltinimas,0.9,
+golden_300,baseline,3565396,Akmens masės plokščių klijavimas,"Baldų restauravimas, remontas","Akmens masės, marmuro, granito darbai",0.9,
+golden_300,intel,4013854,Kapavietės pamatų betonavimas,"Kapų tvarkymas, priežiūra",Kapavietės pamatų betonavimas,0.9,"{""Kapų tvarkymas, priežiūra"": 0.25, ""Statybos darbai"": 0.0336}"
+golden_300,baseline,3203534,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,0.9,
+golden_300,intel,3203534,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,1.0,"{""Ventiliacija, vėdinimo sistemos"": 0.06, ""Autoservisai, automobilių remontas"": 0.25}"
+golden_300,baseline,3118539,"Rangovai vidaus apdailai, baldu gamybai",Baldų gamyba,Vidaus apdailos darbai,0.83,
+golden_300,intel,3118539,"Rangovai vidaus apdailai, baldu gamybai",Baldų gamyba,Vidaus apdailos darbai,0.89,"{""Vidaus apdailos darbai"": 0.25, ""Baldų gamyba"": 0.06}"
+golden_300,baseline,3649333,Kondicionierių montavimas,Kondicionierių montavimas,Šilumos siurblių montavimas,0.9,
+golden_300,baseline,2964755,Namo renovacija,"Skardinimo darbai, skardininkai",Namo renovacija,0.88,
+golden_300,baseline,4020070,Skylių pamatų poliams išgręžimas,"Pamatų liejimas, įrengimas",polių gręžimas,0.78,
+golden_300,baseline,3029765,Betono laužo išvežimas,Šiukšlių išvežimas,Statybinių atliekų išvežimas,0.9,
+golden_300,intel,3029765,Betono laužo išvežimas,Šiukšlių išvežimas,Statybinių atliekų išvežimas,0.9,{}
+golden_300,baseline,3420499,Lietvamzdžių remontas,Stogų ir lietvamzdžių valymas,Lietaus nuvedimo sistemos,0.9,
+golden_300,baseline,3821159,Reikia virtuvės baldų,"Baldų restauravimas, remontas",Virtuvės baldų gamyba,0.9,
+golden_300,intel,3821159,Reikia virtuvės baldų,"Baldų restauravimas, remontas",Virtuvės baldų gamyba,0.9,"{""Baldų gamyba"": 0.06}"
+golden_300,baseline,3396785,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,0.9,
+golden_300,intel,3396785,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,1.0,"{""Ventiliacija, vėdinimo sistemos"": 0.06, ""Autoservisai, automobilių remontas"": 0.25}"
+golden_300,baseline,4036840,Fasado šiltinimas,"Fasadų apdaila, dažymas","Fasadų, sienų šiltinimas",0.8,
+golden_300,baseline,2607828,"Drenažo darbai, pamatų apšiltinimas, vandens valymo įrengimo pastatymas","Vandens filtrai: montavimas, keitimas",Drenažo įrengimas,0.9,
+golden_300,intel,2607828,"Drenažo darbai, pamatų apšiltinimas, vandens valymo įrengimo pastatymas","Vandens filtrai: montavimas, keitimas",Drenažo įrengimas,0.9,"{""Santechnikai, santechnikos darbai"": 0.0291, ""Vandens filtrai: montavimas, keitimas"": 0.0291, ""Statybos darbai"": 0.0109, ""Apšiltinimas, šiltinimas"": 0.18}"
+golden_300,baseline,3688167,Kondicionierių remontas,Kondicionierių remontas,"Šilumos siurblių montavimas, remontas",0.9,
+golden_300,intel,3688167,Kondicionierių remontas,Kondicionierių remontas,"Šilumos siurblių montavimas, remontas",0.9,"{""Ventiliacija, vėdinimo sistemos"": 0.06}"
+golden_300,baseline,3643915,Kondicionierių valymas,Kondicionierių montavimas,Kondicionierių remontas,0.9,
+golden_300,intel,3643915,Kondicionierių valymas,Kondicionierių montavimas,Kondicionierių remontas,0.9,"{""Ventiliacija, vėdinimo sistemos"": 0.06}"
+golden_300,baseline,3814087,"Tvoros montuotojai, skardinimo, lietaus montavimo sistemos","Skardinimo darbai, skardininkai","Stogdengiai, stogo darbai",0.78,
+golden_300,baseline,3529289,Lietvamzdžių sutvarkymas,Stogų ir lietvamzdžių valymas,Lietaus nuvedimo sistemos,0.9,
+golden_300,intel,3529289,Lietvamzdžių sutvarkymas,Stogų ir lietvamzdžių valymas,Lietaus nuvedimo sistemos,0.9,{}
+golden_300,baseline,3360779,Kondicionieriai ir rekuperacija,"Ventiliacija, vėdinimo sistemos",Vėdinimo sistemų montavimas,0.78,
+golden_300,intel,3360779,Kondicionieriai ir rekuperacija,"Ventiliacija, vėdinimo sistemos",Vėdinimo sistemų montavimas,0.78,"{""Vidaus apdailos darbai"": 0.1135, ""Santechnikai, santechnikos darbai"": 0.0681, ""Statybos darbai"": 0.0207, ""Buhalterinės apskaitos paslaugos"": 0.0148, ""Elektrikai, elektros darbai"": 0.0089, ""Interjero dizaineriai"": 0.0373, ""Ventiliacija, vėdinimo sistemos"": 0.0249}"
+golden_300,baseline,3661265,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,0.9,
+golden_300,intel,3661265,Automobilių kondicionierių remontas,"Autoservisai, automobilių remontas",Automobilių kondicionierių remontas,1.0,"{""Ventiliacija, vėdinimo sistemos"": 0.06, ""Autoservisai, automobilių remontas"": 0.25}"
+golden_300,baseline,3529009,Kondicionieriaus remontas ir pildymas (R32),Kondicionierių montavimas,Kondicionierių remontas,0.9,
+golden_300,intel,3529009,Kondicionieriaus remontas ir pildymas (R32),Kondicionierių montavimas,Kondicionierių remontas,0.9,"{""Ventiliacija, vėdinimo sistemos"": 0.06}"
+golden_300,baseline,3830641,Lietaus drenažas,Lietaus nuotekų tinklų montavimas,Drenažo įrengimas,0.9,
+golden_300,baseline,2632876,"Reikia uždengti stogo dangą, apskardinti, sumontuoti lietaus nuvedimo sistemą","Skardinimo darbai, skardininkai","Stogdengiai, stogo darbai",0.78,
+golden_300,baseline,3969186,Medinio namo dažymas,"Smėliavimas, dažymas","Fasado dažymas, remontas",0.9,
+golden_300,baseline,3796901,"Vonios patalpos ir wc apdaila, skalbyklės pajungimas virtuvėje, pakabinamo klozeto sumontavimas",Vidaus apdailos darbai,Plytelių klijavimas,0.78,
+golden_300,intel,3796901,"Vonios patalpos ir wc apdaila, skalbyklės pajungimas virtuvėje, pakabinamo klozeto sumontavimas",Vidaus apdailos darbai,Plytelių klijavimas,0.96,"{""Vidaus apdailos darbai"": 0.18, ""Santechnikai, santechnikos darbai"": 0.06}"
+golden_300,baseline,4014354,Stogo remontas/lietaus sistema,"Stogdengiai, stogo darbai",Stogų remontas,0.78,
+golden_300,baseline,3609052,"Stogdengiai, stogo darbai","Skardinimo darbai, skardininkai","Stogdengiai, stogo darbai",0.78,
+golden_ambiguous_heavy,baseline,3547920,Ieškau meistro vidaus apdailai,"Įtempiamos lubos, montavimas",Vidaus apdailos darbai,0.8,
+golden_ambiguous_heavy,baseline,2632876,"Reikia uždengti stogo dangą, apskardinti, sumontuoti lietaus nuvedimo sistemą","Skardinimo darbai, skardininkai","Stogdengiai, stogo darbai",0.78,

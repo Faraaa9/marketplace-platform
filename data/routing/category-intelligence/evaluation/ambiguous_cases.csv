@@ -1,0 +1,600 @@
+dataset,request_id,title,gold_is_ambiguous,gold_primary,matched_phrases,ambiguity_signals,base_review,intel_review,intel_conf
+golden_300,3106617,Įrengti 6 butų gyvenamąjį namą,True,,gyvenamąjį namą,1,True,True,0.4
+golden_300,4010808,Noriu pakeisti vonios plyteles,False,Vidaus apdailos darbai,vonios kambario | pakeisti vonios | vonios plyteles | atnaujinti vonios | plyteles taip pat,1,True,True,0.52
+golden_300,3944452,Vidaus įrengimo ir ŠVOK darbai Kaune,False,Vidaus apdailos darbai,naujos statybos | antras aukštas | statybos namas | naujos statybos namas | grindų ir sienų | sienos dažytos | vidaus įrengimo | plyteles ant grindų | medinės pakopos | durys paprastos,4,False,True,0.53
+golden_300,3199094,"Stogo meistrai, Fasadininkai, Vidaus apdailos meistrai, Santechnikai, Elektrikai ir kt.",True,,vidaus apdailos | nuosavo namo | pilnas remontas | kuo anksčiau | vis žiūrėti | apdailos meistrai | remontas palangoje | stogo meistrai | vidaus apdailos meistrai,4,False,True,0.6
+golden_300,2772331,Statybos darbai,True,,šildomų grindų | pilnai įrengti | mūrinio namo | elektros tinklų | namo dalį | vidaus pertvarų | kelių žmonių | nebrangaus meistro,5,False,True,0.6
+golden_300,3361373,Aplinkos sutvarkymas,False,Griovimo darbai,aplinkos sutvarkymas | nupjauti medžius | išgriauti ir išvežti,1,False,True,0.53
+golden_300,3358451,Pamatų šiltinimo ir hidroizoliacijos darbai,False,Pamatų šiltinimas,nuvedimo sistemos | sistemos montavimas | vandens nuvedimo,2,False,True,0.6
+golden_300,3836749,Meistro darbams prie namo,True,,vietose kur | pagal pridėtas,2,True,True,0.4
+golden_300,2677868,Krovinių pervežimas,False,Šiukšlių išvežimas: statybinių ir kt.,krovinių pervežimas | seni baldai | atliekos seni,1,False,True,0.6
+golden_300,3888715,Ieškome namui vidaus ir išorės rangovų Klaipėdoje / Klaipėdos r.,True,,šiukšlių išvežimas | pagal projektą | statybinių šiukšlių | vidaus ir išorės | statybinių šiukšlių išvežimas | namo įrengimui | patikimų rangovų | įrengimui pagal,6,False,True,0.6
+golden_300,3437847,Reikia sutvarkyti ūkinio pastato fasadą,False,"Fasadų apdaila, dažymas",ūkinio pastato | vieną sieną | tos vietos | pagaminti ir įstatyti | apkalti dailylentėmis,4,True,True,0.4
+golden_300,4006118,Reikalingas remontas ir nauji baldai,True,,blokinio namo | nauji baldai,2,True,True,0.4
+golden_300,4012176,"Pamato atkasimo darbai, pamato apšildymas ir lietaus dranažo systemos yvedimas",False,Pamatų šiltinimas,sklypo sutvarkymas | namo pamato | meistrų namo,3,False,False,0.6
+golden_300,2629806,Ieškomi staliai plokščių sumontavimui ir ventiliuojamo fasado apdailai,False,"Fasadų apdaila, dažymas",karkasinio namo | ventiliuojamo fasado,1,False,True,0.57
+golden_300,2786279,"Sklypo sutvarkymas, tvoros pamatas, trinkelių klojimas",True,,šiukšlių išvežimas | trinkelių klojimas | aplink namą | sklypo sutvarkymas | tvoros stulpai | tvoros pamatas | sklypo reljefo,5,False,False,0.9
+golden_300,3753899,Santechnika,False,"Santechnikai, santechnikos darbai",vandens filtrą | pajungti kriauklę | įmanoma padaryti,2,False,True,0.53
+golden_300,3875143,Ieškau gerų meistrų...,False,Šiltnamių surinkimas,gerų meistrų,1,True,True,0.4
+golden_300,3400989,"Sklypo lyginimas, lietaus nuotekų įrengimas",False,Lietaus nuvedimo sistemos,sklypo lyginimas | aplink namą | išlyginti sklypą | lietaus nuotekų | įrengti lietaus | lietaus nuotekas | nuotekų įrengimas | sklypą aplink | sklypą aplink namą | namą įrengti,6,False,True,0.6
+golden_300,3795121,Kondicionierių montavimas,False,"Kondicionierių montavimas, remontas",kondicionierių montavimas | oras oras | šilumos siurblį | sodo namelyje | sumontuoti oras | oras šilumos | oras oras šilumos | sumontuoti oras oras,3,False,True,0.6
+golden_300,3601992,Daugiabučio namo terasos virš automobilių parkavimo aikštelės remontas,False,Terasų įrengimas,daugiabučio namo | pagal pridedamą | namo terasos | automobilių parkavimo | sutarties pasirašymo | parkavimo aikštelės,6,True,True,0.4
+golden_300,3424139,"Statybos darbai, stogas, fasadas",True,,seno stogo | pagal naują | namo statyboms | vidaus pertvarų | putų polistirolas | meistrai namo | naują projektą,7,False,True,0.6
+golden_300,3907491,Namu Kondicionierių remontas,False,Kondicionierių remontas,remontas sugedo | kondicionierių remontas | oro kondicionierius,1,False,False,0.65
+golden_300,3645611,"Reikia padaryti vakuumavima,pervalcuoti vamzdelius ir gal papildyti freona,siurblys oras oras Gorenj",False,"Šilumos siurblių montavimas, remontas",oras oras | siurblys oras | siurblys oras oras,1,True,True,0.4
+golden_300,3911121,Ieškau meistrų fasado tinkavimui ir balkono hidroizoliacijai,False,Fasado tinkavimas,balkono durų | meistrų fasado | lietaus vandeniui,3,False,True,0.6
+golden_300,3876959,Statybos darbai,True,,glaistymas dažymas | klinkerio klijavimas | fasado šiltinimas | gipso klijavimas | tinkavimas gipso | klijavimas glaistymas,1,False,False,0.79
+golden_300,3390997,Stogo dažymas,False,Stogo dažymas,stogo dažymas | cinkuotos skardos | skardos stogo,3,False,False,0.78
+golden_300,3578092,LVN ir VN sistemų sąmata ir įrengimas,False,Sąmatininkai: sąmatų skaičiavimas,projekto trukmė,1,True,True,0.4
+golden_300,3771461,Statinių (nebaigtos statybos) konservavimo darbai,True,,statybinių atliekų | nebaigtos statybos,1,False,True,0.57
+golden_300,2568740,Kapavietės pamatų betonavimas,False,Kapavietės pamatų betonavimas,pamatų betonavimas | kapavietės pamatų | kapavietės pamatų betonavimas | seno pamato,2,False,True,0.6
+golden_300,3316549,Kondicionierių pildymas,False,Automobilių kondicionierių remontas,honda crv | kondicionierių pildymas,1,False,True,0.6
+golden_300,3446479,"Pamatų sildymas, drenazas, lietaus nuotekos",False,Pamatų šiltinimas,lietaus nuotekos | lietaus nuvedimas | apšiltinti pamatą,2,False,True,0.6
+golden_300,2779279,Dalies stogo lietaus latako keitimas,False,Lietaus nuvedimo sistemos,keitimas pakeisti | lietaus lataką | dalies stogo | lietaus latako | stogo lietaus,5,False,True,0.6
+golden_300,3547920,Ieškau meistro vidaus apdailai,False,Vidaus apdailos darbai,naujos statybos | vonios kambario | įtempiamų lubų | vonios kambarys | šildomos grindys | plytelių klijavimui | statybos buto | vidaus apdailai | smulkiems darbams | grindų betonavimui | naujos statybos buto | buto įrengimui | kambario grindų | laminato klojimui | meistro vidaus | lubų montavimui,5,False,True,0.6
+golden_300,3547992,Skubiai išvežti gruntą,False,Birių krovinių pervežimas,išvežti gruntą,1,True,True,0.4
+golden_300,3016285,Reikalingos perkraustymo paslaugos – statybinių atliekų pervežimas,False,Statybinių atliekų išvežimas,statybinių atliekų | statybines atliekas | asmens galinčio | reikalingos perkraustymo | paslaugų įmonės | įmonės ar asmens | perkraustymo paslaugų,2,False,False,0.9
+golden_300,3821055,Mažo įbrėžimo ant laminuoto virtuvės stalviršio remontas/Repair of a small scratch on a laminated ki,False,"Baldų restauravimas, remontas",looking for | virtuvės stalviršio,2,True,True,0.4
+golden_300,2959953,Namo rekonstrukcija,True,,esama situacija | namo rekonstrukcija | pilnos apdailos | rangovų galinčių | šalčininkų r sav | jašiūnų sen,6,False,False,0.67
+golden_300,2963335,Ieškau interjero dizainerio/kapitalinis buto remontas,False,Kapitalinis buto remontas,senos statybos | interjero dizainerio | buto remontas | kapitalinio remonto | kapitalinis buto | kapitalinis buto remontas | interjero dizainas | statybos butą | senos statybos butą | butą kuriame | virtuvės gamyba | gamyba su montavimu,5,False,False,1.0
+golden_300,4038304,Laiptų įrengimas,False,Laiptų remontas,atliekų išvežimas | statybinių atliekų | statybinių atliekų išvežimas | senų plytelių | laiptų remontas | laiptų įrengimas | plytelių demontavimas | turėklų dažymas,2,False,True,0.57
+golden_300,3974668,"Aplinkos tvarkymas, namo remontas",True,,aplink namą | aplinkos tvarkymas | valymo įrenginio | išlyginti sklypą | remontas reikia sutvarkyti | sutvarkyti aplinką | namo remontas,5,False,True,0.5
+golden_300,2766497,Šildymo sistemų montavimas,False,Kondicionierių montavimas,sistemų montavimas | šildymo sistemų | šildymo sistemų montavimas | matmenys ilgis | sandėliavimo paskirties | spalio vidurio | patalpos matmenys | terminas iki spalio,3,False,True,0.6
+golden_300,3433149,Gerbuvio darbai,False,"Tvoros, vartai, montavimas",segmentinės tvoros | tvoros stulpus | išvežti žemes | segmentinės tvoros stulpus,1,False,True,0.57
+golden_300,3378921,Užklausa dėl PVC langų vidaus dažymo arba plėvelės klijavimo,False,"Langų, durų apdaila",naujos statybos | juoda spalva | meistro ar įmonės | pvc langų | užklijuoti plėvelę | pvc langus | langų vidaus,4,False,True,0.6
+golden_300,3408741,Statybos remonto darbai,False,Terasų įrengimas,daugiabučio namo | statybos remonto | lietaus vandens | nuvedimo sistemą | automobilių parkavimo | parkavimo aikštelės | vandens nuvedimo | plytelių danga,6,False,True,0.6
+golden_300,3823015,Remontuoti pastato iškabą,False,"Iškabų, reklaminių tentų montavimas ir demontavimas",pirmame aukšte,1,True,True,0.4
+golden_300,4025492,Lauko terasos stogelis,False,"Stoginės, stoginių gamyba",gali but | lauko terasos | terasos ilgis | lauko terasai | stogas gali,4,False,True,0.6
+golden_300,2622414,Stogo danga,False,"Stogdengiai, stogo darbai",stogo danga | stogo dangos,2,False,True,0.6
+golden_300,2747673,Kondicionieriai,False,Kondicionierių remontas,situacija tokia | kažkokiu būdu,2,False,True,0.6
+golden_300,3005921,Renovacijos projektai,True,,šlapio fasado | sutapdinto stogo | tam tikrus | pilnos apimties | šildymo ir karšto | daugiabučių renovacijai,5,False,True,0.6
+golden_300,3931791,"Stogo, fasado ir trinkelių valymas",False,Stogų valymas ir priežiūra,trinkelių valymas | valymas reikia nuvalyti | fasado valymas | čerpinį stogą | stogo fasado,1,False,False,1.0
+golden_300,3390609,"Reikia išbetonuoti apie 14 m2 grindų ir apšiltinti sienas, pamatus",False,Grindų betonavimas,apšiltinti sienas,1,False,True,0.6
+golden_300,3413573,Norime įrengti sporto suoliuką,False,"Metalo gaminiai, suvirintojai",norime įrengti,1,False,True,0.6
+golden_300,3201206,"Betoninė sienelė, tvoros įrengimas, veja ir laistymas",True,,laistymo sistemą | tvoros įrengimas | įrengti laistymo | įrengti laistymo sistemą | pasėti veją | reiktų įrengti | rombo formos | vartais ir varteliais | išlyginti kiemą | tvoros su vartais,4,False,True,0.6
+golden_300,3364935,Lauko palangiu ir lietaus sistemos keitimas,False,Palangių montavimas,lietaus sistemos | lauko palanges | vnt langų | lauko palangių | senas lauko | sistemos keitimas,6,False,True,0.6
+golden_300,3392493,Renovacijos Vokietijoje,True,,dviejų aukštų | stogo dangos | stogo šiltinimas | aukštų namo | dangos įrengimas | dviejų aukštų namo | namo renovacijai | ieškoma brigada | stoglangių keitimas,7,False,True,0.6
+golden_300,3571792,"Paviršinių nuotekų šalinimo (lietaus tinklų) įrengimas, Šlapelio g., Vilnius",False,Lietaus nuotekų tinklų montavimas,tinklų įrengimas | nuotekų šalinimo | projektą atsiųsiu,2,False,True,0.6
+golden_300,3466593,Skylės pjovimas per sandwich stogą,False,"Skylių gręžimas, angų pjovimas",ieškoma įmonė | išpjauti skylę,2,False,True,0.6
+golden_300,3257786,Ieškau įmonės ar brigados kapitalinio remonto projekto įgyvendinimui,True,,kapitalinio remonto | sienos griovimas | metalo konstrukcijos | remonto projekto | įmonės ar brigados,3,True,True,0.4
+golden_300,3238724,Metalo išvežimas,False,Statybinių atliekų išvežimas,buitinės technikos | reiktų išvežti | metalo laužą | išvežimas reiktų | išvežimas reiktų išvežti,4,False,True,0.6
+golden_300,3902377,Kapu tvoreles betonavimas,False,Kapavietės pamatų betonavimas,demontavimas naujos | betonavimas senos,1,False,True,0.6
+golden_300,3218864,Žemių išvežimas,False,Birių krovinių pervežimas,žemių išvežimas,1,False,True,0.57
+golden_300,3601532,"Išvežti žemes apie 1,5 m3.",False,Birių krovinių pervežimas,išvežti žemes,1,True,True,0.4
+golden_300,3738926,Vandens filtrų aptarnavimas,False,Vandens filtrų remontas,leidžia vandenį | meta klaidą | vandens filtrų | filtrų aptarnavimas | vandens filtrų aptarnavimas,2,False,True,0.6
+golden_300,4041264,Vonios remontas,False,Vidaus apdailos darbai,dušo kabiną | vonios remontas | klijuoti plyteles | vonią pakeisti,2,False,True,0.6
+golden_300,3350473,Klinkerio plytų sienų fugavimas,False,"Fasadų apdaila, dažymas",objektas randasi | meistrų galinčių | san mazgas | namo sienų | stogo pakalimą | randasi trakų | objektas randasi trakų | klinkerio plytų | sumontuoti lietvamzdžius,7,False,True,0.6
+golden_300,3363141,Kondicionierių remontas,False,Kondicionierių remontas,kondicionierių remontas | nustojo veikti | remontas nustojo | remontas nustojo veikti,3,False,True,0.6
+golden_300,2870341,Kapitalinis namo 55 m2 remontas,True,,stogo dangos | statybos darbams,2,False,True,0.57
+golden_300,3267868,Komercinių patalpų vidaus patalpų pilnas remontas,True,,sienos lubos | grindys sienos | elektra santechnika | pilnas remontas | vidaus patalpų | komercinių patalpų | grindys sienos lubos | lauko fasado | tinko remontas | patalpų vidaus,3,False,False,0.67
+golden_300,3874995,Buto kapitalinis remontas,True,,plytelių klijavimas | įtempiamos lubos | glaistymas dažymas | sienų glaistymas | kapitalinis remontas | sienų glaistymas dažymas | kapitalinį remontą | klijavimas sienų | buto kapitalinis | buto kapitalinis remontas | grindų ardymas | plytelių klijavimas sienų,0,False,False,0.8
+golden_300,3837183,Tvoros stulpai bei lietaus nuotekų įrengimas,False,"Tvoros, vartai, montavimas",lietaus nuotekų | tvoros stulpus | tvoros stulpai | lietaus nuotekas | nuotekų įrengimas | namas stovi,3,False,False,0.9
+golden_300,3850979,Pastatų griovimas,False,Pastatų griovimas,viską išvežti | pastatų griovimas,1,False,True,0.57
+golden_300,2627030,Statybos darbai,True,,fasado šiltinimas | sistemos įrengimas | šiltinimas armavimas | stoglangių montavimas | atliktą darbą | lietaus sistemos | fasado šiltinimas armavimas | statybos objekte | atsiskaitymas už atliktą darbą | atsiskaitymas už atliktą | ieškomi subrangovai | armavimas smeigiavimas,7,False,True,0.6
+golden_300,2776627,"Fasado renovacija, Vilniaus raj.",True,,namo fasado | lietaus nuvedimo | nuvedimo sistemą | stogo pakalimus | lietaus nuvedimo sistemą | apšiltinti pamatus | sutvarkyti pakeisti | trinkelių perklojimas | kiemo trinkelių | pakeisti lietaus | nudažyti namo | medinę dalį | pamatus pamatai | sutvarkyti stogo | pamatai gręžtiniai | fasado renovacija,6,False,True,0.6
+golden_300,3826005,1920 statybos namo renovacija,True,,statybos namo | namo renovacija | norime atnaujinti | stogą namas | sutvarkyti stogą,5,False,True,0.6
+golden_300,3532009,Balkono ir fasado remontas,False,"Fasado dažymas, remontas",fasado remontas | sutvarkyti lietaus,1,False,True,0.6
+golden_300,3795359,Revizines dureles,False,Baldų gamyba,baldinių plokščių | revizines dureles,1,True,True,0.4
+golden_300,2616950,"Statybinio laužo, žaliųjų atliekų išvežimas ir žemės lyginimo darbai",False,Statybinių atliekų išvežimas,atliekų išvežimas | išlyginti sklypą | statybinio laužo | žaliųjų atliekų | statybinį laužą | išvežti statybinį | žaliųjų atliekų išvežimas | žemės lyginimo | išvežti statybinį laužą,3,False,False,0.78
+golden_300,3521301,"Gerbūvio įrengimo darbai: sklypo sutvakymas, apžedinimas, terasos/stoginės, tvoros įrengimas",True,,aplink namą | lietaus nuotekų | tvoros įrengimas | terasos stoginės | nuotekų šulinio | drenažą aplink | įrengtų terasą | sklypą aplink | terasą su stogine | gerbūvio įrengimo | sklypą aplink namą,8,False,True,0.6
+golden_300,3608720,"Fiskaras, atlieku isvezimas",False,Statybinių atliekų išvežimas,atlieku isvezimas | išvežimas ieškau kas galėtų išvežti,1,False,False,0.65
+golden_300,3161588,Panevėžyje atvirkštinio osmoso filtro montavimas,False,"Vandens filtrai: montavimas, keitimas",meistras galintis | montavimas reikalingas meistras | galintis sumontuoti,3,True,True,0.4
+golden_300,3362867,Sieninio kondicionieriaus valymas,False,Srautinis valymas,nemalonus kvapas | prieš du metus,1,False,True,0.6
+golden_300,2649046,Kondicionieriaus remontas,False,Kondicionierių remontas,oras oras | remontas sugedo | siurblys oras | kondicionieriaus remontas | šilumos siurblys oras | išorinio bloko | silumos siurblys | siurblys oras oras | šilumos siurblys oras oras,3,False,True,0.6
+golden_300,3753403,Drenažo įrengimas,False,Drenažo įrengimas,drenažo įrengimas | lietaus vandens | vandens nuvedimo,2,False,True,0.6
+golden_300,3626076,Kondicionierių montavimas,False,Kondicionierių montavimas,montavimas reikia sumontuoti | kondicionierių montavimas | šilumos siurblį | sumontuoti kondicionierių | kondicionierių montavimas reikia sumontuoti,1,False,True,0.6
+golden_300,3370453,Epdm,False,"Stogdengiai, stogo darbai",lietaus sistema | epdm danga,2,False,True,0.6
+golden_300,3051010,Ieškome statybininkų medinio stovyklos namelio remontui,True,,abiejų pusių | stogas dvišlaitis,2,True,True,0.4
+golden_300,2625724,Smulkus buitinis remontas + indaplovės remontas,False,Meistrai į namus,indaplovės remontas | pakeisti vieną | specialisto kuris padėtų | indaploves remontas | remontas ieškome meistro | remontas indaplovės | durų rankenų,4,True,True,0.6
+golden_300,3964640,Lietaus nuotekų tinklų montavimas,False,Lietaus nuotekų tinklų montavimas,nuotekų tinklų | lietaus nuotekų | pagal projekta | lietaus nuotekų tinklų | tinklų montavimas | nuotekų tinklų montavimas | lietaus nuotekų tinklų montavimas,2,False,True,0.6
+golden_300,3943228,Komercinio pasiūlymo defektų taisymui bei realios pagalbos,False,"Apšiltinimas, šiltinimas",pagal projektą | šiai dienai | komercinio pasiūlymo | šiltinimas biria,3,False,False,0.73
+golden_300,3409111,Balkonų stogelių remontas ir hermetizavimas,False,"Stogdengiai, stogo darbai",įmonės galinčios | bendrija ieško | ieško įmonės | bendrija ieško įmonės | ieško įmonės galinčios | vandens pratekėjimo | bendrija ieško įmonės galinčios | galinčios sutvarkyti,8,True,True,0.4
+golden_300,3655883,"Miesto nuotekų pajungimas, darbų sąmata",False,Sąmatininkai: sąmatų skaičiavimas,nuosavą namą | miesto nuotekų,1,False,True,0.57
+golden_300,3972056,Kondicionieriaus montavimas paleidimas,False,Kondicionierių montavimas,kondicionieriaus montavimas | montavimas paleidimas,1,False,True,0.6
+golden_300,2592690,"Ieškome apdailininkų, meistrų gebančių atlikti stogo, fasado, gerbūvio, plytelių ir klijavimo darbus",True,,klinkerio klijavimo | kontaktinis asmuo | stogo fasado,1,False,True,0.53
+golden_300,2582084,Metalinių vartų perdažymas ir vartų stulpelio perbetonavimas,False,"Smėliavimas, dažymas",pat pakeisti | metalinių vartų,2,False,True,0.6
+golden_300,3494825,"Pamatų šiltinimas, komunikacijų išvedimas",False,Pamatų šiltinimas,pamatų šiltinimas | apšiltinti pamatus | išoriniai matmenys | pamato aukštis,2,False,True,0.57
+golden_300,3365595,Stogo remontas,False,Lietaus nuvedimo sistemos,stogo remontas | lietaus lataką,1,False,True,0.6
+golden_300,3533563,"Pamatų hidroizoliavimas, apšiltinimas, drenažo ir lietaus surinkimas",False,Pamatų šiltinimas,akmens vata | gyv namas | drenažo ir lietaus | visu namu,4,False,True,0.6
+golden_300,3116409,Šiukšlių išvežimas,False,Statybinių atliekų išvežimas,šiukšlių išvežimas,1,False,False,0.9
+golden_300,3679277,"Išvalyti, remontuoti sandarinti lietaus lataką",False,Stogų ir lietvamzdžių valymas,lietaus lataką,1,False,True,0.6
+golden_300,3440071,"Ieškau atsakingų meistrų, uždėti lietvamzdžius, padaryti, oro išmetimo kaminėlį",False,"Stogdengiai, stogo darbai",stogo danga | danga skarda | stogo danga skarda | atsakingų meistrų,4,False,True,0.57
+golden_300,3565396,Akmens masės plokščių klijavimas,False,"Akmens masės, marmuro, granito darbai",virtuvės baldų | akmens masės | patyrę meistrai | plokščių klijavimas | meistrai su patirtimi,3,False,True,0.6
+golden_300,3544631,Stogo konstrukcijos pakeitimas,False,"Stogdengiai, stogo darbai",stogo konstrukcijos,1,False,True,0.57
+golden_300,4013854,Kapavietės pamatų betonavimas,False,Kapavietės pamatų betonavimas,pamatų betonavimas | kapavietės pamatų | kapavietės pamatų betonavimas,1,False,False,0.9
+golden_300,3467721,"Dalinis namo vidaus įrengimas nuo dizaino, statybos darbų iki baldų projektavimo ir gamybos",True,,namo vidaus | ieškoma įmonė | pilnas remontas | vidaus įrengimas | dizaino projektas,2,False,True,0.6
+golden_300,3384497,Lietaus nuvedimo sistemos,False,Lietaus nuvedimo sistemos,pagal projektą | lietaus nuvedimo | nuvedimo sistemos | lietaus nuvedimo sistemos | užsakovas įmonė | lietaus nuvedimą | vanduo nuotekos,4,False,True,0.6
+golden_300,2834627,Reikalingi gerbuvio darbai,True,,namo fasado | sklypo planą | reljefo formavimas | sklypo reljefo,4,False,True,0.5
+golden_300,3361897,"Statybos, apdaila",False,Stogų remontas,statybos apdaila | aukštis maždaug | pakeisti supuvusias,3,False,True,0.57
+golden_300,4044062,Pvc dangos suvirinimas,False,"Suvirintojai, suvirinimo darbai",stogo danga | pvc dangos | danga pvc | viskas sudėta,3,False,True,0.6
+golden_300,3563844,Stiklinių durų atnaujinimas,False,Plėvelės klijavimas,durų atnaujinimas | stiklinių durų | užklijuoti naujus | atnaujinimas reiktų,3,False,True,0.6
+golden_300,3731224,Remontuoti pastato iškabą,False,"Iškabų, reklaminių tentų montavimas ir demontavimas",pirmame aukšte,1,True,True,0.4
+golden_300,2655782,5 aukstu daugiabuciui reikia pakeisti stogo angu (islipimui) dangcius ( 2vnt.),False,"Stogdengiai, stogo darbai",pakeisti stogo | aukštų daugiabučiui,2,False,True,0.57
+golden_300,3408761,Ieškome meistrų namo užbaigimui nuo 80-85 proc. iki 100 proc.,True,,oras vanduo | grindų dangą | namas 2 aukštų | 100 proc | meistrų namo | šildymas oras | šildymas oras vanduo | elektros laidas,5,False,True,0.56
+golden_300,3176696,"Angaro stogo perdengimas, fasado pakeitimas, pakeliamų vartų įrengimas",False,"Stogdengiai, stogo darbai",siųskite el paštu | pakeliamų vartų | vartų įrengimas | stogo perdengimas | uždengti naują,2,False,False,0.6
+golden_300,3771631,Daugiabučių namų remonto darbai Vilniuje,True,,daugiabučių namų | ieškomi rangovai | pamatų hidroizoliacija | apdailos remontas,4,False,True,0.6
+golden_300,3006283,Seno namo renovacija,True,,pirmas aukštas | seno namo | gali reikėti | namo renovacija | namas medinis,4,False,False,0.7
+golden_300,3607266,Reikalinga įmonė kapitaliniam namo remontui iki dalinės apdailos,True,,elektros instaliacija | šildomų grindų | grindų įrengimas | šildomų grindų įrengimas | dalinės apdailos | nauja elektros | nauja elektros instaliacija | namo remontui,5,False,False,0.88
+golden_300,3323755,"Gyvenamo namo 200 kv dalinė rekonstrukcija Vilnius, Saulėtekio sodai",True,,gyvenamo namo | lubų remontas,1,False,True,0.6
+golden_300,4010536,Reikia apsauginės tvoreles su varteliais,False,"Tvoros, vartai, montavimas",atrodo dabar,1,True,True,0.4
+golden_300,4013318,Pastatų griovimas,False,Pastatų griovimas,statybines atliekas | išvežti statybines | išvežti statybines atliekas | sodo namelis | nugriauti ir išvežti | pastatų griovimas | senas sodo,2,False,True,0.6
+golden_300,4005546,Grūzo pervežimas,False,Krovinių pervežimas,vienos vietos | vietos į kitą | vienos vietos į kitą,3,False,False,0.65
+golden_300,3679469,Pilna namo renovacija Kaunas,True,,elektros instaliacija | fasado šiltinimas | langų keitimas | grindų šildymo | namo renovacija | nauja elektros | nauja elektros instaliacija | šiltinimas apdaila | dažymas tapetavimas | sistemos atnaujinimas | pilna namo,6,False,False,0.83
+golden_300,3530813,Įvairūs darbai,False,Meistrai į namus,namo fasado | šildymo sistemos | vandens nubėgimo,2,True,True,0.4
+golden_300,3535151,Ieškoma rangovo gyvenamojo namo griovimui ir sklypo sutvarkymui,False,Pastatų griovimas,gyvenamojo namo | statybines atliekas | išvežti statybines | gyvenamajam namui | išvežti statybines atliekas | sutvarkyti sklypą | pilnai sutvarkyti | išlyginti gruntą | ter žiūrėti,5,False,False,0.67
+golden_300,3925915,Vaikų žaidimo aikštelės atnaujinimo darbai,False,"Medžio darbai, staliai",vaikų žaidimo | žaidimo aikštelės,2,True,True,0.4
+golden_300,3727862,Nuimti vandens filtrą ir sujungti vamzdžius po nuėmimo,False,"Vandens filtrai: montavimas, keitimas",vandens filtrą,1,False,True,0.57
+golden_300,3946050,Reikalingas meistras nušpakliuoti sienas,False,Sienų glaistymas,dvi rozetes | išpjauti skylę | padaryti dvi | sienas padaryti,2,True,True,0.4
+golden_300,3655259,Šilumos siurblių remontas,False,"Šilumos siurblių montavimas, remontas",šilumos siurblių | šilumos siurblys | siurblių remontas | vidinio bloko,1,False,True,0.6
+golden_300,3783751,Lietaus nuotekų tinklų montavimas,False,Lietaus nuotekų tinklų montavimas,gyvenamojo namo | nuotekų tinklų | lietaus nuotekų | lietaus nuotekų tinklų | tinklų montavimas | nuotekų tinklų montavimas | lietaus nuotekų tinklų montavimas | sklypo gale | lietaus vandenį | namo objektas | montavimas reikia surinkti,6,False,True,0.6
+golden_300,3649333,Kondicionierių montavimas,False,Šilumos siurblių montavimas,kondicionierių montavimas | oras oras | šilumos siurblio | siurblio oras | šilumos siurblio oras | siurblio oras oras | šilumos siurblio oras oras,1,False,True,0.6
+golden_300,2964755,Namo renovacija,False,Namo renovacija,antro aukšto | dekoratyvinis tinkavimas | namo renovacija | stogo konstrukciją | armavimas dekoratyvinis | apšiltinimas armavimas,3,False,True,0.6
+golden_300,3923221,Generalinė ranga,True,,grindinio šildymo | fasado apšiltinimas | stogo apšiltinimas | namo renovacijai | gipsinės pertvaros | šildymo išvedžiojimas,1,False,True,0.6
+golden_300,2847225,Santechniko ir Elektriko,False,"Santechnikai, santechnikos darbai",skalbimo masina | pajungti skalbimo | buitine technika | kiti smulkus | pajungti skalbimo masina | smulkus elektros | mašina džiovyklė | skalbimo mašina džiovyklė | pajungti kaitlente | bent viena,7,False,True,0.57
+golden_300,3977020,Lietvamzdžių keitimas,False,Lietaus nuvedimo sistemos,keitimas reikia pakeisti | lietaus lataką | pakeisti lietaus,3,False,True,0.6
+golden_300,3614694,Statybos darbai,False,Statybos darbai,išbetonuoti grindis | lauko pusės | keliose vietose | baltų plytų | skardinį stogą | baltos plytos | mūrines sienas,5,True,True,0.4
+golden_300,3744841,"Stogdengiai, stogo darbai",False,"Stogdengiai, stogo darbai",stogdengiai stogo | dvišlaičio stogo,1,False,True,0.57
+golden_300,2590844,Stogo remontas,False,Stogų remontas,stogo remontas | draudimo bendrovei,1,False,True,0.6
+golden_300,2645154,Kondicioneriaus montavimas ir freono pildymas,False,Kondicionierių montavimas,elektros laidai | netoli lentvario | veiksmas netoli,3,False,True,0.6
+golden_300,2618040,"Vidaus ir lauko darbai, stogo renovacija, montavimas",True,,šiems darbams | stogo renovacija | vidaus ir lauko | lauko apdaila | stogu dengimas,3,False,True,0.6
+golden_300,2627792,Kapavietės pamatų betonavimas,False,Kapavietės pamatų betonavimas,pamatų betonavimas | kapavietės pamatų | kapavietės pamatų betonavimas,1,False,True,0.6
+golden_300,2591218,Nuimti senus isores langu daszus ir perdazyti,False,"Langų, durų restauravimas",nuimti senus | išorės langų,1,False,True,0.6
+golden_300,3977488,Lietaus drenazas,False,Lietaus nuvedimo sistemos,padaryti lietaus | lietaus kanalizaciją,1,False,True,0.6
+golden_300,2732893,"Stogų remontas, lietvamzdžiu montavimas, skardinimas",False,Stogų remontas,stogų remontas | dangos remontas | prilydomos dangos | parapetų skardinimas | lietvamzdžių montavimas | pakeisti lietvamzdžius,2,False,True,0.6
+golden_300,4020070,Skylių pamatų poliams išgręžimas,False,polių gręžimas,sodo namelio,1,False,True,0.6
+golden_300,3960470,Išnešimo ir išvežimo paslauga,False,Perkraustymo paslaugos,išnešti ir išvežti | miegamojo lovą,2,True,True,0.4
+golden_300,3420499,Lietvamzdžių remontas,False,Lietaus nuvedimo sistemos,remontas reiktų | lietaus lataką | reiktų suremontuoti,3,False,True,0.6
+golden_300,2872833,Kaminų apsaugos nuo lietaus ekspertų,False,"Kaminai, kaminų įdėklai, valymas",dujinio katilo | gali padėti | prateka vanduo,2,False,True,0.6
+golden_300,3017661,Reikalingas meistras Vilniuje galintis suprojektuoti ir įgyvendinti vonios kambario remontą,False,Vonios remontas,vonios kambario | artimiausiu laiku | kambario remontą | vonios kambario remontą | pilną vonios,1,False,True,0.57
+golden_300,3883367,Kapitalinis buto remontas,False,Kapitalinis buto remontas,buto remontas | kapitalinis buto | kapitalinis buto remontas | kambario butas | butas buvo | remontas senas | buvo gautas | buto plane,5,False,True,0.6
+golden_300,2595600,Namo statybos rangovas,True,,elektros instaliacija | grindų betonavimas | fasado šiltinimas | vandentiekio ir nuotekų | namo statybos | pertvarų montavimas | gipso pertvarų | gipso pertvarų montavimas | nuotekų įrengimas | vidaus vandentiekio | įrengimas grindų | šiltinimas eps | įrengimas vidaus | tinkavimas gipso,6,False,True,0.6
+golden_300,3985930,"Reikalinga yra atlikti vienos laiptinės, visų įėjimo plytelių remonto darbus",False,Plytelių klijavimas,daugiabučio namo | vienos laiptinės | prelim žiūrėti,3,False,True,0.6
+golden_300,3407107,Dažymas ant betoninės sienos,False,"Fasado dažymas, remontas",marijampolės sav | storis 10cm | betoninės sienos | 30cm aukščio | aukštis 30cm,4,False,False,0.6
+golden_300,3499097,Statybos darbai.Stogas.Fasadas.Vilniuje.,False,"Stogdengiai, stogo darbai",šiukšlių išvežimas | namo renovacijai | meistrai namo | griovimas šiukšlių,3,False,True,0.6
+golden_300,3786939,Ieskome kas vilniaus rajone gali atlikti pilna apdaila vieno auksto name 112 kv.m.,False,Vidaus apdailos darbai,vieno auksto | pilna apdaila | aukšto name | vieno aukšto name | silumos siurblio | galiu pateikti,4,False,False,0.62
+golden_300,3811787,"Šildymo sistemų montavimas,vidaus apdailos darbai",True,,vidaus apdailos | šildomų grindų | šilumos siurblio | vandentiekio kanalizacijos | sistemų montavimas | šildymo sistemų | šildymo sistemų montavimas | grindų paruošimas | siurblio montavimas | šilumos siurblio montavimas | montavimas vidaus,0,False,False,0.98
+golden_300,3884283,Ieškau rangovo vidaus apdailai individualiam namui Vilniaus rajone,False,Vidaus apdailos darbai,vidaus apdailos | grindinis šildymas | individualiam namui | vidaus apdailai | namas 2 aukštai,3,False,True,0.6
+golden_300,3856361,Grindų dažymas,False,"Grindų klojimas, remontas",baltos spalvos | medines grindis | dažymas reikia perdažyti | grindų dažymas,2,False,True,0.6
+golden_300,4013326,"Reikia demontuoti apie 160 metrų senos tvoros (betonas-mediena), išlyginti sklypą",False,"Tvoros, vartai, montavimas",išlyginti sklypą | pat reikės | 200 metrų | senos tvoros | tvoros ir vartų | trinkelių pagrindas | skardinę tvorą | reikės pakloti,4,False,False,0.78
+golden_300,2903133,"Kapsulės išgriovimas, baldu utilizavimas",False,Griovimo darbai,senos statybos | kambariu bute | virtuves spinteles | vonios kapsulę | visus baldus | išrinkti ir išvežti,5,True,True,0.4
+golden_300,3679615,Betoniniu laiptu apdaila,False,"Betonavimo darbai, betonavimas",betoniniu laiptu | islyginamuoju sluoksniu | laiptu apdaila,1,False,True,0.57
+golden_300,3077986,Įvaživimo įrengimas,False,Trinkelių klojimas,lietaus kanalizacija | įrengimas ieškau kas įrengtų | įvažiavimą į sklypą,2,False,True,0.6
+golden_300,4013740,"Išvežti betono laužą ~7,5 t Kaune",False,Statybinių atliekų išvežimas,išvežti betono | oro tarpu | betono gabalai | viename sklype | kiekis apie 200,3,True,True,0.4
+golden_300,3959338,50m2 namo + mansarda renovacija,True,,grindų betonavimas | plastikiniai langai | lauko durys | sienų šiltinimas | stogo keitimas | vidaus sienų | grindų šiltinimas | atvirų porų,2,False,True,0.6
+golden_300,4036840,Fasado šiltinimas,False,"Fasadų, sienų šiltinimas",fasado šiltinimas | lietaus nuotekų | fasado šiltinimui | meistrai fasado,1,False,True,0.6
+golden_300,3976744,"Cikloramos gamyba, Vilnius",False,Baldų gamyba,gipso kartono | teikiate tokią | projektavimas ir įrengimas,1,False,True,0.6
+golden_300,4037558,"Pagrindo, aikštelės įrengimas",False,"Žemės kasimas, lyginimas",augalinis sluoksnis | aikštelės įrengimas | įrengimas sveiki reikia įrengti | padaryti lietaus | lietaus nuvedimą | įrengti aikštelę,6,False,False,0.65
+golden_300,2661932,Statybinių atliekų išvežimas,False,Griovimo darbai,atliekų išvežimas | statybinių atliekų | statybinių atliekų išvežimas | dvi sienas | jas išvežti,1,False,False,0.73
+golden_300,2607828,"Drenažo darbai, pamatų apšiltinimas, vandens valymo įrengimo pastatymas",False,Drenažo įrengimas,vandens valymo | pamatų apšiltinimas,1,False,False,0.9
+golden_300,4041708,Reikia PAKEISTI apie 3-6 čerpes,False,"Stogdengiai, stogo darbai",atsiskaitymas iš karto,1,True,True,0.4
+golden_300,3822163,Terasos stogines ir lietvamzdziu irengimas,False,"Stoginės, stoginių gamyba",terasos stogine | įrengti terasos | įrengimas reikia sumontuoti | terasos stogines | sumontuoti lietvamzdžius,2,False,True,0.57
+golden_300,3814087,"Tvoros montuotojai, skardinimo, lietaus montavimo sistemos",False,"Stogdengiai, stogo darbai",įrengimo darbams | galime pateikti | galinčių atlikti šiuos,2,False,True,0.6
+golden_300,3887257,"Išmūryti keturias eiles silikatinių plytų per plytą, išpilti žiedą",True,,vidaus apdaila | dvišlaitis stogas | silikatinių plytų | padaryti apdailą | padaryti naują | išorės ir vidaus | išardyti seną | pastatyti karkasinį | seną stogą | pamatų ilgis,5,False,False,0.84
+golden_300,4026290,Oras-vanduo šilumos siurblys,False,Šilumos siurblių montavimas,oras vanduo | šilumos siurblys | sename name | vanduo šilumos | oras vanduo šilumos | bendro ploto | vanduo šilumos siurblys | oras vanduo šilumos siurblys | granulinį katilą,3,False,True,0.6
+golden_300,3971374,Lietaus nutekėjimo sistema,False,Lietaus nuvedimo sistemos,daugiabučiame name | penkių aukštų | žirmūnų g nuasmeninta | lietaus nutekėjimo | vanduo teka,4,False,True,0.6
+golden_300,3349165,Kompleksiniai šiltinimo ir kiti darbai mūriniame name,False,Pamatų šiltinimas,pamatų šiltinimas | šiems darbams | patyrusių meistrų | mūriniame name | esamų pamatų | meistrų šiems darbams | meistrų šiems | sistemos patikra,6,False,True,0.6
+golden_300,3903801,Lauko darbai,False,Aukštalipiai,namo fasado,1,False,True,0.57
+golden_300,2698552,Ekspertize stogo,False,Sąmatininkai: sąmatų skaičiavimas,namo stogo | skardinis stogas | šlaitinis skardinis | įvertinti namo,4,False,True,0.6
+golden_300,2621552,"Lauko gerbūvis (pieva, skalda, tvora, lietus)",False,"Aplinkos tvarkymas, apželdinimas",aplink namą | sistemos įrengimas | specialistų galinčių | tam tikrus | lietaus nubėgimo,4,False,True,0.57
+golden_300,2645178,Kapavietės pamatų betonavimas,False,Kapavietės pamatų betonavimas,pamatų betonavimas | kapavietės pamatų | kapavietės pamatų betonavimas,1,False,True,0.6
+golden_300,3400931,Drenažo įrengimas,False,Drenažo įrengimas,lietaus nuotekų | drenažo įrengimas | drenažo ir lietaus,2,False,True,0.6
+golden_300,3354533,Lietvamzdžio remontas,False,Lietaus nuvedimo sistemos,stogo remonto | įvertinti situaciją | meistras turėtų,1,True,True,0.4
+golden_300,3882999,Paviršinių pamatų įtrūkimų remontas,False,"Pamatų liejimas, įrengimas",gyvenamojo namo | keliose vietose,2,False,True,0.6
+golden_300,3175436,Šiukšlių išvežimas,False,Šiukšlių išvežimas,šiukšlių išvežimas | isvezti siuksles | išvežimas reikėtų išvežti,2,False,True,0.6
+golden_300,3867621,Baldų išvežimas,False,Baldų pervežimas,baldų išvežimas | išvežimas reik | biuro kėdės,2,False,True,0.53
+golden_300,2671228,Pakeisti stoga iki100m2 taip pat ir kamina,False,"Stogdengiai, stogo darbai",pakeisti stoga,1,True,True,0.4
+golden_300,3979876,Virtuvės atnaujinimas ir modernizavimas,False,Baldų gamyba,esama situacija | buitinę techniką | klasikinio stiliaus,3,True,True,0.4
+golden_300,4042312,Reikalingas laiptinės ir lauko įėjimo atnaujinimas,False,Vidaus apdailos darbai,aukštų daugiabutis | lauko įėjimo | pašto dėžučių,3,True,True,0.4
+golden_300,2629964,Reikia nudažyti cinkuotos skardos čerpių stogą apie 130 kv.m.,False,"Stogdengiai, stogo darbai",cinkuotos skardos | pagubės sodų | čerpių stogą,3,True,True,0.4
+golden_300,3360779,Kondicionieriai ir rekuperacija,False,Vėdinimo sistemų montavimas,naujos statybos | vėdinimo sistemą | visus metus | statybos 3 kambarių | naujos statybos 3 kambarių,4,False,False,0.78
+golden_300,4018872,Reikalingi meistrai gamybinių patalpų remontui 980 kV.m.,True,,grindų danga | epoksidine danga | sienų griovimas | sienų montavimas | gamybinių patalpų | priestato statyba | patalpų įrengimas,1,False,True,0.57
+golden_300,3929565,Statyba ir apdaila,True,,esama situacija | karkasinį namą | vidaus įrengimo | meistrų įrengti | namo baigtumas | įrengti pamatai,4,False,True,0.6
+golden_300,3091659,Vidaus apdailos darbai,False,"Grindų klojimas, remontas",vidaus apdailos | gyvenamas namas | namo išorės | statybos darbams | išorės apdaila | struktūriniu tinku,5,False,True,0.6
+golden_300,4037370,Tvora segmentas betonavimas,False,Segmentinės tvoros,betonavimas sveiki reikia išbetonuoti,1,False,True,0.6
+golden_300,3431073,Šiukšlių išvežimas,False,Griovimo darbai,šiukšlių išvežimas | išvežti šiukšles | išvalyti grindis | pat išvalyti | stiklo vata,4,False,False,0.73
+golden_300,3490957,Remonto darbai,False,Plytelių klijavimas,laiptų plyteles,1,True,True,0.4
+golden_300,3919611,"Trinkelių perklojimo, atraminės sienos kasimo ir hidroizoliavimo, aukštalipių ir kt.",True,,šiai dienai | rangovo galinčio | lietaus surinkimo | atraminės sienos | patikimo rangovo | trinkelių dangą,4,False,True,0.6
+golden_300,3444605,"Daiktų pervežimas, šiukšlių utilizavimas",False,Krovinių pervežimas,statybines atliekas | daiktų pervežimas | pasiūl žiūrėti | pervežti į kitą | įvažiavimas į kiemą | max aukštis,4,False,False,0.91
+golden_300,4000146,Komercinio pasiūlymo defektų taisymui bei realios pagalbos,True,,pagal projektą | šiai dienai | komercinio pasiūlymo | šiltinimas biria,3,False,True,0.6
+golden_300,3700511,Fasado remontas,False,"Fasadų apdaila, dažymas",fasado remontas | apdailą aplink | fasado apdailą | pro žiūrėti | įrengti naujas | demontuoti esamas,3,False,True,0.6
+golden_300,3979770,Vaiko kambario įrengimas,False,Vidaus apdailos darbai,kambario įrengimas | norime įrengti | vaiko kambario | įrengimas norime | vaiko kambarį | gali pilnai,5,True,True,0.4
+golden_300,3508645,Grunto išvežimas ir sklypo planiravimas,False,"Žemės kasimas, lyginimas",išlyginti sklypą | avižienių sen | grunto išvežimas | vejos sodinimui | išvežti gruntą | paruošti vejos | sklypo planiravimas,4,False,True,0.6
+golden_300,3441931,Maišyto grūzo išvežimas,False,Statybinių atliekų išvežimas,gruzo išvežimas | kuo skubiau išvežti,1,False,True,0.57
+golden_300,2678022,Kondicionieriaus vamzdelio sujungimas ir užpildymas,False,Kondicionierių remontas,patogus priėjimas,1,True,True,0.4
+golden_300,3830641,Lietaus drenažas,False,Drenažo įrengimas,aplink namą | objektas randasi | lietaus surinkimo | padaryti drenažą | drenažo vamzdį,4,False,True,0.6
+golden_300,2632876,"Reikia uždengti stogo dangą, apskardinti, sumontuoti lietaus nuvedimo sistemą",False,"Stogdengiai, stogo darbai",vieno aukšto | stogo dangą | namas vieno | lietaus nuvedimo | namas vieno aukšto | danga skarda | nuvedimo sistemą | stogo pakalimo | lietaus nuvedimo sistemą | čerpių imitacija | sumontuoti lietaus | skarda čerpių | skarda čerpių imitacija,9,False,True,0.6
+golden_300,3070666,Namo fasadas,False,"Fasadų, sienų šiltinimas",naujos statybos | apšiltinti namo | prisegu namo | namo fasadas | namo žiūrėti,4,True,True,0.48
+golden_300,2898269,Skalbimo mašinos pajungimas,False,Skalbimo mašinos pajungimas,skalbimo mašinos pajungimas | mašinos pajungimas | skalbimo masinos,1,False,True,0.57
+golden_300,3438617,Kaminelio irengimas duju katilui,False,Šildymo sistemų montavimas,dujinis katilas | viršutinė dalis | dujiniam katilui | dujų katilui,3,False,True,0.6
+golden_300,4007078,Lietaus sistemos įrengimas,False,Lietaus nuvedimo sistemos,sistemos įrengimas | lietaus sistemos,1,False,True,0.6
+golden_300,3772211,"Pamatų įrengimas, mūro darbai",True,,vieno aukšto | aukšto namas | pamatų įrengimas | vieno aukšto namas | taisyklingos formos | stogo uždengimas,4,False,True,0.6
+golden_300,3467363,Stogų siūlių hermetizavimas,False,Stogų remontas,stogo dangos | siūlių hermetizavimas | prilydomos stogo dangos | prilydomos stogo,1,False,True,0.6
+golden_300,2698594,"Stogdengiai, stogo darbai",False,"Stogdengiai, stogo darbai",stogdengiai stogo | penkių aukštų | planuojame keisti | pagal duotą,3,False,True,0.6
+golden_300,4007896,Kondicionierių pildymas,False,Kondicionierių pildymas,kondicionierių pildymas | sistemos patikra,1,False,True,0.6
+golden_300,2663398,"Vejos bortai, pralaida ir lietaus nuvedimas",False,Vejos bortelių įrengimas,vejos bortus | vejos bortai | sudėti vejos | lietaus nuvedimas | lietaus nuvedimą,2,False,True,0.6
+golden_300,2653744,Kapavietės pamatų betonavimas,False,Kapavietės pamatų betonavimas,pamatų betonavimas | kapavietės pamatų | kapavietės pamatų betonavimas,1,False,True,0.6
+golden_300,3969186,Medinio namo dažymas,False,"Fasado dažymas, remontas",medinio namo | namo dažymas | medinio namo dažymas,1,False,True,0.6
+golden_300,3169604,Automobilių kondicionierių remontas,False,Automobilių kondicionierių remontas,kondicionierių remontas | remontas leidžia | automobilių kondicionierių remontas | automobilių kondicionierių,1,False,True,0.6
+golden_300,3639077,"Drenažo, lietaus vandens surinkimo sistemos įrengimas",False,Drenažo įrengimas,sistemos įrengimas | lietaus vandens | vandens surinkimo | lietaus vandens surinkimo | surinkimo sistemos,4,False,True,0.6
+golden_300,3507929,Latako remontas,False,Lietaus nuvedimo sistemos,atlikimo terminas | bega vanduo | vanduo pro,2,True,True,0.4
+golden_300,3377827,Reikia Nuarmuoti Pamatus,False,"Pamatų liejimas, įrengimas",metrų aukštis | beginiu metru,2,False,True,0.6
+golden_300,3466813,Perteklinio grunto išvežimas,False,Birių krovinių pervežimas,reiktų išvežti | grunto išvežimas,2,False,True,0.57
+golden_300,3980700,Pianino išvežimas,False,Pianinų gabenimas,išvežimas reikia išvežti | surinkimo aikštelę,2,False,True,0.53
+golden_300,3217370,Statybinių atliekų išvežimas,False,Statybinių atliekų išvežimas,atliekų išvežimas | statybinių atliekų | išvežimas reikia išvežti | statybinių atliekų išvežimas | atliekų išvežimas reikia išvežti | statybinių atliekų išvežimas reikia išvežti | išvežti betono | betono atliekas,1,False,False,0.9
+golden_300,4014354,Stogo remontas/lietaus sistema,False,Stogų remontas,stogo remontas | lietaus sistema | pilnai pakeisti | apskardinti stogo,3,False,True,0.6
+golden_300,3903921,"Domina sienų, lubų, grindų, ventiliacijos pertvarkymas",False,Vidaus apdailos darbai,plytelių klijavimas | sienų lubų | vonios ir tualeto | klijavimas vonios | plytelių klijavimas vonios | reikės keisti | lubų grindų | sienų lubų grindų,2,True,True,0.4
+golden_300,3033047,Reikalingas rangovas namui irengti 154 kvm,True,,vonios kambari | isbetonuoti grindis | įrengti vonios kambarį | nudazyti sienas | irengti vonios,0,False,False,0.5
+golden_300,3970704,54 k/m butas,False,Kapitalinis buto remontas,įtempiamos lubos | glaistymas dažymas | durų montavimas | elektros instaliacijos | laminato klojimas | plytelių klojimas | gipso pertvarų | išlyginamasis sluoksnis | sienų lyginimas | radiatorių keitimas | lyginimas glaistymas | sienos dažymas | sienų lyginimas glaistymas | grindų išlyginamasis | mon žiūrėti | lyginimas glaistymas dažymas | grindų išlyginamasis sluoksnis,1,False,True,0.6
+golden_300,2720332,"Grindų remontas, įrengimas",False,Grindų betonavimas,išklijuoti plytelėmis | grindų remontas | garažo grindis | viską išvežti | 10cm storio | medžiagomis ir darbais,3,False,True,0.6
+golden_300,3839411,Medinės tvoros restauracija kotedžų gyvenvietėje,False,Medinės tvoros,medinės tvoros,1,False,False,0.73
+golden_300,3602446,"Griovimo, sklypo valymo ir sukėlimo darbai",False,Griovimo darbai,viską išvežti | išvalyti sklypą | visus kitus,1,False,True,0.57
+golden_300,3810337,"Reikalingas nubėgimo latako tvarkymas (remontas, betonavimas)",False,Lietaus nuvedimo sistemos,remontas betonavimas,1,False,False,0.65
+golden_300,2762303,Trinkelių latakų montavimas,False,Lietaus nuvedimo sistemos,montavimas reikia sumontuoti | vandens nubėgimo | prieš dedant,3,False,True,0.57
+golden_300,3572796,Reikia pervežti krovinį panaudotą šiferį,False,Krovinių pervežimas,pervežti krovinį | surinkimo aikštelę,1,True,True,0.58
+golden_300,3696401,Namo vidaus pilna renovacija Kaunas,False,Namo renovacija,plytelių klijavimas | grindu betonavimas | namo vidaus | langų durų | durų keitimas | namo renovacija | grindų šildymas | betonavimas grindų | dažymas tapetavimas | vasario mėnesio,4,False,True,0.6
+golden_300,2589812,Automobilio kondicionieriaus siurblio keitimas,False,Automobilių kondicionierių remontas,toyota corolla | corolla verso | toyota corolla verso | siurblio keitimas,1,True,True,0.4
+golden_300,3922073,Metalinė sija ir jos montavimas,False,Metalo konstrukcijos,namo fasado | darbo pobūdis | virš terasos | stogą virš | fasado dalį,1,False,True,0.6
+golden_300,2964683,Interjero dizainas,False,Interjero dizaineriai,interjero dizainas | rūsio patalpose,1,True,True,0.4
+golden_300,3588506,LG Kondicionierių remontas,False,Kondicionierių remontas,kondicionierių remontas | remontas reikalingas meistras,1,False,True,0.6
+golden_300,3837697,Lietaus nuotekų tinklų montavimas,False,Lietaus nuotekų tinklų montavimas,sistemos įrengimas | nuotekų tinklų | įmonės galinčios | lietaus nuotekų | nuvedimo sistemos | lietaus vandens | vandens surinkimo | lietaus nuotekų tinklų | tinklų montavimas | nuotekų tinklų montavimas | lietaus nuotekų tinklų montavimas | lietaus vandens surinkimo | vidiniame kieme | specialisto arba įmonės | nuotekų lietaus | įrengimas lietaus | vandens drenažo | nuotekų vamzdynų,9,False,True,0.6
+golden_300,3609052,"Stogdengiai, stogo darbai",False,"Stogdengiai, stogo darbai",stogdengiai stogo | lietaus sistemos | skardos lankstinių | sistemos montavimo,2,False,True,0.6
+golden_300,3995040,"Ieškau kas galėtų atlikti darbus Trakuose, Klevų g.",True,,pamatų įrengimas | silikatinių blokelių | stogo šiltinimas | reik žiūrėti | užsakovas įmonė | parapetų skardinimas | aukštų kotedžas | įrengimas objektas | pertvarų mūrijimas | pir plokštėmis,6,False,False,0.8
+golden_ambiguous_heavy,3106617,Įrengti 6 butų gyvenamąjį namą,True,,gyvenamąjį namą,1,True,True,0.4
+golden_ambiguous_heavy,4010808,Noriu pakeisti vonios plyteles,False,Vidaus apdailos darbai,vonios kambario | pakeisti vonios | vonios plyteles | atnaujinti vonios | plyteles taip pat,1,True,True,0.52
+golden_ambiguous_heavy,3199094,"Stogo meistrai, Fasadininkai, Vidaus apdailos meistrai, Santechnikai, Elektrikai ir kt.",True,,vidaus apdailos | nuosavo namo | pilnas remontas | kuo anksčiau | vis žiūrėti | apdailos meistrai | remontas palangoje | stogo meistrai | vidaus apdailos meistrai,4,False,True,0.6
+golden_ambiguous_heavy,2772331,Statybos darbai,True,,šildomų grindų | pilnai įrengti | mūrinio namo | elektros tinklų | namo dalį | vidaus pertvarų | kelių žmonių | nebrangaus meistro,5,False,True,0.6
+golden_ambiguous_heavy,3836749,Meistro darbams prie namo,True,,vietose kur | pagal pridėtas,2,True,True,0.4
+golden_ambiguous_heavy,3888715,Ieškome namui vidaus ir išorės rangovų Klaipėdoje / Klaipėdos r.,True,,šiukšlių išvežimas | pagal projektą | statybinių šiukšlių | vidaus ir išorės | statybinių šiukšlių išvežimas | namo įrengimui | patikimų rangovų | įrengimui pagal,6,False,True,0.6
+golden_ambiguous_heavy,4006118,Reikalingas remontas ir nauji baldai,True,,blokinio namo | nauji baldai,2,True,True,0.4
+golden_ambiguous_heavy,2786279,"Sklypo sutvarkymas, tvoros pamatas, trinkelių klojimas",True,,šiukšlių išvežimas | trinkelių klojimas | aplink namą | sklypo sutvarkymas | tvoros stulpai | tvoros pamatas | sklypo reljefo,5,False,False,0.9
+golden_ambiguous_heavy,3424139,"Statybos darbai, stogas, fasadas",True,,seno stogo | pagal naują | namo statyboms | vidaus pertvarų | putų polistirolas | meistrai namo | naują projektą,7,False,True,0.6
+golden_ambiguous_heavy,3876959,Statybos darbai,True,,glaistymas dažymas | klinkerio klijavimas | fasado šiltinimas | gipso klijavimas | tinkavimas gipso | klijavimas glaistymas,1,False,False,0.79
+golden_ambiguous_heavy,3771461,Statinių (nebaigtos statybos) konservavimo darbai,True,,statybinių atliekų | nebaigtos statybos,1,False,True,0.57
+golden_ambiguous_heavy,3547920,Ieškau meistro vidaus apdailai,False,Vidaus apdailos darbai,naujos statybos | vonios kambario | įtempiamų lubų | vonios kambarys | šildomos grindys | plytelių klijavimui | statybos buto | vidaus apdailai | smulkiems darbams | grindų betonavimui | naujos statybos buto | buto įrengimui | kambario grindų | laminato klojimui | meistro vidaus | lubų montavimui,5,False,True,0.6
+golden_ambiguous_heavy,2959953,Namo rekonstrukcija,True,,esama situacija | namo rekonstrukcija | pilnos apdailos | rangovų galinčių | šalčininkų r sav | jašiūnų sen,6,False,False,0.67
+golden_ambiguous_heavy,3974668,"Aplinkos tvarkymas, namo remontas",True,,aplink namą | aplinkos tvarkymas | valymo įrenginio | išlyginti sklypą | remontas reikia sutvarkyti | sutvarkyti aplinką | namo remontas,5,False,True,0.5
+golden_ambiguous_heavy,2622414,Stogo danga,False,"Stogdengiai, stogo darbai",stogo danga | stogo dangos,2,False,True,0.6
+golden_ambiguous_heavy,3005921,Renovacijos projektai,True,,šlapio fasado | sutapdinto stogo | tam tikrus | pilnos apimties | šildymo ir karšto | daugiabučių renovacijai,5,False,True,0.6
+golden_ambiguous_heavy,3201206,"Betoninė sienelė, tvoros įrengimas, veja ir laistymas",True,,laistymo sistemą | tvoros įrengimas | įrengti laistymo | įrengti laistymo sistemą | pasėti veją | reiktų įrengti | rombo formos | vartais ir varteliais | išlyginti kiemą | tvoros su vartais,4,False,True,0.6
+golden_ambiguous_heavy,3392493,Renovacijos Vokietijoje,True,,dviejų aukštų | stogo dangos | stogo šiltinimas | aukštų namo | dangos įrengimas | dviejų aukštų namo | namo renovacijai | ieškoma brigada | stoglangių keitimas,7,False,True,0.6
+golden_ambiguous_heavy,3257786,Ieškau įmonės ar brigados kapitalinio remonto projekto įgyvendinimui,True,,kapitalinio remonto | sienos griovimas | metalo konstrukcijos | remonto projekto | įmonės ar brigados,3,True,True,0.4
+golden_ambiguous_heavy,2870341,Kapitalinis namo 55 m2 remontas,True,,stogo dangos | statybos darbams,2,False,True,0.57
+golden_ambiguous_heavy,3267868,Komercinių patalpų vidaus patalpų pilnas remontas,True,,sienos lubos | grindys sienos | elektra santechnika | pilnas remontas | vidaus patalpų | komercinių patalpų | grindys sienos lubos | lauko fasado | tinko remontas | patalpų vidaus,3,False,False,0.67
+golden_ambiguous_heavy,3874995,Buto kapitalinis remontas,True,,plytelių klijavimas | įtempiamos lubos | glaistymas dažymas | sienų glaistymas | kapitalinis remontas | sienų glaistymas dažymas | kapitalinį remontą | klijavimas sienų | buto kapitalinis | buto kapitalinis remontas | grindų ardymas | plytelių klijavimas sienų,0,False,False,0.8
+golden_ambiguous_heavy,2627030,Statybos darbai,True,,fasado šiltinimas | sistemos įrengimas | šiltinimas armavimas | stoglangių montavimas | atliktą darbą | lietaus sistemos | fasado šiltinimas armavimas | statybos objekte | atsiskaitymas už atliktą darbą | atsiskaitymas už atliktą | ieškomi subrangovai | armavimas smeigiavimas,7,False,True,0.6
+golden_ambiguous_heavy,2776627,"Fasado renovacija, Vilniaus raj.",True,,namo fasado | lietaus nuvedimo | nuvedimo sistemą | stogo pakalimus | lietaus nuvedimo sistemą | apšiltinti pamatus | sutvarkyti pakeisti | trinkelių perklojimas | kiemo trinkelių | pakeisti lietaus | nudažyti namo | medinę dalį | pamatus pamatai | sutvarkyti stogo | pamatai gręžtiniai | fasado renovacija,6,False,True,0.6
+golden_ambiguous_heavy,3826005,1920 statybos namo renovacija,True,,statybos namo | namo renovacija | norime atnaujinti | stogą namas | sutvarkyti stogą,5,False,True,0.6
+golden_ambiguous_heavy,3521301,"Gerbūvio įrengimo darbai: sklypo sutvakymas, apžedinimas, terasos/stoginės, tvoros įrengimas",True,,aplink namą | lietaus nuotekų | tvoros įrengimas | terasos stoginės | nuotekų šulinio | drenažą aplink | įrengtų terasą | sklypą aplink | terasą su stogine | gerbūvio įrengimo | sklypą aplink namą,8,False,True,0.6
+golden_ambiguous_heavy,3051010,Ieškome statybininkų medinio stovyklos namelio remontui,True,,abiejų pusių | stogas dvišlaitis,2,True,True,0.4
+golden_ambiguous_heavy,2592690,"Ieškome apdailininkų, meistrų gebančių atlikti stogo, fasado, gerbūvio, plytelių ir klijavimo darbus",True,,klinkerio klijavimo | kontaktinis asmuo | stogo fasado,1,False,True,0.53
+golden_ambiguous_heavy,3440071,"Ieškau atsakingų meistrų, uždėti lietvamzdžius, padaryti, oro išmetimo kaminėlį",False,"Stogdengiai, stogo darbai",stogo danga | danga skarda | stogo danga skarda | atsakingų meistrų,4,False,True,0.57
+golden_ambiguous_heavy,3467721,"Dalinis namo vidaus įrengimas nuo dizaino, statybos darbų iki baldų projektavimo ir gamybos",True,,namo vidaus | ieškoma įmonė | pilnas remontas | vidaus įrengimas | dizaino projektas,2,False,True,0.6
+golden_ambiguous_heavy,2834627,Reikalingi gerbuvio darbai,True,,namo fasado | sklypo planą | reljefo formavimas | sklypo reljefo,4,False,True,0.5
+golden_ambiguous_heavy,4044062,Pvc dangos suvirinimas,False,"Suvirintojai, suvirinimo darbai",stogo danga | pvc dangos | danga pvc | viskas sudėta,3,False,True,0.6
+golden_ambiguous_heavy,3408761,Ieškome meistrų namo užbaigimui nuo 80-85 proc. iki 100 proc.,True,,oras vanduo | grindų dangą | namas 2 aukštų | 100 proc | meistrų namo | šildymas oras | šildymas oras vanduo | elektros laidas,5,False,True,0.56
+golden_ambiguous_heavy,3771631,Daugiabučių namų remonto darbai Vilniuje,True,,daugiabučių namų | ieškomi rangovai | pamatų hidroizoliacija | apdailos remontas,4,False,True,0.6
+golden_ambiguous_heavy,3006283,Seno namo renovacija,True,,pirmas aukštas | seno namo | gali reikėti | namo renovacija | namas medinis,4,False,False,0.7
+golden_ambiguous_heavy,3607266,Reikalinga įmonė kapitaliniam namo remontui iki dalinės apdailos,True,,elektros instaliacija | šildomų grindų | grindų įrengimas | šildomų grindų įrengimas | dalinės apdailos | nauja elektros | nauja elektros instaliacija | namo remontui,5,False,False,0.88
+golden_ambiguous_heavy,3323755,"Gyvenamo namo 200 kv dalinė rekonstrukcija Vilnius, Saulėtekio sodai",True,,gyvenamo namo | lubų remontas,1,False,True,0.6
+golden_ambiguous_heavy,3679469,Pilna namo renovacija Kaunas,True,,elektros instaliacija | fasado šiltinimas | langų keitimas | grindų šildymo | namo renovacija | nauja elektros | nauja elektros instaliacija | šiltinimas apdaila | dažymas tapetavimas | sistemos atnaujinimas | pilna namo,6,False,False,0.83
+golden_ambiguous_heavy,3923221,Generalinė ranga,True,,grindinio šildymo | fasado apšiltinimas | stogo apšiltinimas | namo renovacijai | gipsinės pertvaros | šildymo išvedžiojimas,1,False,True,0.6
+golden_ambiguous_heavy,2847225,Santechniko ir Elektriko,False,"Santechnikai, santechnikos darbai",skalbimo masina | pajungti skalbimo | buitine technika | kiti smulkus | pajungti skalbimo masina | smulkus elektros | mašina džiovyklė | skalbimo mašina džiovyklė | pajungti kaitlente | bent viena,7,False,True,0.57
+golden_ambiguous_heavy,2618040,"Vidaus ir lauko darbai, stogo renovacija, montavimas",True,,šiems darbams | stogo renovacija | vidaus ir lauko | lauko apdaila | stogu dengimas,3,False,True,0.6
+golden_ambiguous_heavy,2872833,Kaminų apsaugos nuo lietaus ekspertų,False,"Kaminai, kaminų įdėklai, valymas",dujinio katilo | gali padėti | prateka vanduo,2,False,True,0.6
+golden_ambiguous_heavy,3017661,Reikalingas meistras Vilniuje galintis suprojektuoti ir įgyvendinti vonios kambario remontą,False,Vonios remontas,vonios kambario | artimiausiu laiku | kambario remontą | vonios kambario remontą | pilną vonios,1,False,True,0.57
+golden_ambiguous_heavy,2595600,Namo statybos rangovas,True,,elektros instaliacija | grindų betonavimas | fasado šiltinimas | vandentiekio ir nuotekų | namo statybos | pertvarų montavimas | gipso pertvarų | gipso pertvarų montavimas | nuotekų įrengimas | vidaus vandentiekio | įrengimas grindų | šiltinimas eps | įrengimas vidaus | tinkavimas gipso,6,False,True,0.6
+golden_ambiguous_heavy,3811787,"Šildymo sistemų montavimas,vidaus apdailos darbai",True,,vidaus apdailos | šildomų grindų | šilumos siurblio | vandentiekio kanalizacijos | sistemų montavimas | šildymo sistemų | šildymo sistemų montavimas | grindų paruošimas | siurblio montavimas | šilumos siurblio montavimas | montavimas vidaus,0,False,False,0.98
+golden_ambiguous_heavy,3959338,50m2 namo + mansarda renovacija,True,,grindų betonavimas | plastikiniai langai | lauko durys | sienų šiltinimas | stogo keitimas | vidaus sienų | grindų šiltinimas | atvirų porų,2,False,True,0.6
+golden_ambiguous_heavy,3887257,"Išmūryti keturias eiles silikatinių plytų per plytą, išpilti žiedą",True,,vidaus apdaila | dvišlaitis stogas | silikatinių plytų | padaryti apdailą | padaryti naują | išorės ir vidaus | išardyti seną | pastatyti karkasinį | seną stogą | pamatų ilgis,5,False,False,0.84
+golden_ambiguous_heavy,4018872,Reikalingi meistrai gamybinių patalpų remontui 980 kV.m.,True,,grindų danga | epoksidine danga | sienų griovimas | sienų montavimas | gamybinių patalpų | priestato statyba | patalpų įrengimas,1,False,True,0.57
+golden_ambiguous_heavy,3929565,Statyba ir apdaila,True,,esama situacija | karkasinį namą | vidaus įrengimo | meistrų įrengti | namo baigtumas | įrengti pamatai,4,False,True,0.6
+golden_ambiguous_heavy,3919611,"Trinkelių perklojimo, atraminės sienos kasimo ir hidroizoliavimo, aukštalipių ir kt.",True,,šiai dienai | rangovo galinčio | lietaus surinkimo | atraminės sienos | patikimo rangovo | trinkelių dangą,4,False,True,0.6
+golden_ambiguous_heavy,4000146,Komercinio pasiūlymo defektų taisymui bei realios pagalbos,True,,pagal projektą | šiai dienai | komercinio pasiūlymo | šiltinimas biria,3,False,True,0.6
+golden_ambiguous_heavy,2632876,"Reikia uždengti stogo dangą, apskardinti, sumontuoti lietaus nuvedimo sistemą",False,"Stogdengiai, stogo darbai",vieno aukšto | stogo dangą | namas vieno | lietaus nuvedimo | namas vieno aukšto | danga skarda | nuvedimo sistemą | stogo pakalimo | lietaus nuvedimo sistemą | čerpių imitacija | sumontuoti lietaus | skarda čerpių | skarda čerpių imitacija,9,False,True,0.6
+golden_ambiguous_heavy,2898269,Skalbimo mašinos pajungimas,False,Skalbimo mašinos pajungimas,skalbimo mašinos pajungimas | mašinos pajungimas | skalbimo masinos,1,False,True,0.57
+golden_ambiguous_heavy,3438617,Kaminelio irengimas duju katilui,False,Šildymo sistemų montavimas,dujinis katilas | viršutinė dalis | dujiniam katilui | dujų katilui,3,False,True,0.6
+golden_ambiguous_heavy,3772211,"Pamatų įrengimas, mūro darbai",True,,vieno aukšto | aukšto namas | pamatų įrengimas | vieno aukšto namas | taisyklingos formos | stogo uždengimas,4,False,True,0.6
+golden_ambiguous_heavy,3507929,Latako remontas,False,Lietaus nuvedimo sistemos,atlikimo terminas | bega vanduo | vanduo pro,2,True,True,0.4
+golden_ambiguous_heavy,3033047,Reikalingas rangovas namui irengti 154 kvm,True,,vonios kambari | isbetonuoti grindis | įrengti vonios kambarį | nudazyti sienas | irengti vonios,0,False,False,0.5
+golden_ambiguous_heavy,3995040,"Ieškau kas galėtų atlikti darbus Trakuose, Klevų g.",True,,pamatų įrengimas | silikatinių blokelių | stogo šiltinimas | reik žiūrėti | užsakovas įmonė | parapetų skardinimas | aukštų kotedžas | įrengimas objektas | pertvarų mūrijimas | pir plokštėmis,6,False,False,0.8
+random_500_unlabeled,3403857,Reikia autobusiuko su vairuotoju šiandien,False,,autobusiuko su vairuotoju,1,True,True,0.4
+random_500_unlabeled,2775339,Valymas,False,,generalinis valymas | pagal susitarimą | langu valymas | valymas langų | valymas langų valymas,1,False,True,0.6
+random_500_unlabeled,2673004,"Reikia įrengti kavinės patalpas, suformuoti baro baldą, kitus baldus",False,,kitus baldus,1,False,False,0.9
+random_500_unlabeled,2987329,Jubiliejų vedimas,False,,jubiliejų vedimas | vakaro vedėjas,1,False,False,0.83
+random_500_unlabeled,3658715,Dainuojantis vedėjas,False,,šventės pravedimas,1,False,False,0.9
+random_500_unlabeled,3886479,Griovimo darbai+nauja santechnika+elektra,False,,senos statybos | statybos bute | senos statybos bute | pajungti naują | atjungti seną | santechnika elektra | šiukšlių išvežimu | vonios kambary | išvedžioti naujai | perkelti gyvatuką | nauja santechnika | naują vonią | pravesti elektrą | seną ir pajungti | seną ir pajungti naują,9,False,True,0.6
+random_500_unlabeled,3745985,Namo projektas su statybos leidimu,False,,valymo įrenginiai | namo projektas | statybos leidimu | detalųjį planą | projektas su statybos | projektas su statybos leidimu | namo projektas su statybos | namo projektas su statybos leidimu | esame išsirinkę,2,False,True,0.6
+random_500_unlabeled,3230518,Kasimo darbai / Zemkasys,False,,žmogaus galinčio | rankiniu būdu | galinčio padėti | žmogaus galinčio padėti | žemės kasimo | vienam žmogui | garažo sieną,4,False,False,0.9
+random_500_unlabeled,3186376,Vandens gręžiniai,False,,vandens gręžiniai | gyvenamajam namui | sodo bendrijos | gręžiniai reikalingas gręžinys | vandens gręžiniai reikalingas gręžinys,2,False,True,0.6
+random_500_unlabeled,3189408,Ieškau gerų meistrų sutvarkyti trinkelės,False,,gerų meistrų | sudėti atgal | meistrų sutvarkyti,3,True,True,0.4
+random_500_unlabeled,2671620,"Tvoros, vartai, montavimas",False,,vartai montavimas | tvoros vartai | tvoros vartai montavimas | kiemo vartus,1,False,True,0.6
+random_500_unlabeled,3014413,Reikia susiaurint virtuves spinteles dureles,False,,virtuves spinteles | spintelės dureles,2,True,True,0.4
+random_500_unlabeled,3820563,Keleivių pervežimas,False,,keleivių pervežimas | oro uostą | rygos oro | vienas asmuo | rygos oro uostą,1,False,False,1.0
+random_500_unlabeled,2569146,Sutvarkyti privataus namo įvažiavimo į požeminį garažą šonines sienas,False,,privačiame name | privataus namo | ieškomi meistrai | meistrai galintys | tad reiktų | sienas sienos | ieškomi meistrai galintys,5,False,True,0.6
+random_500_unlabeled,3940300,Stogų remontas,False,,stogų remontas | stogas šlaitinis | remontas stogas,1,False,False,0.9
+random_500_unlabeled,3745167,Sniego valymas,False,,sniego valymas | nuvalyti sniegą | valymas nuvalyti,1,False,False,0.96
+random_500_unlabeled,2919961,Lietuvių kalbos korepetitorius 12 klasės egzaminam,False,,lietuvių kalbos | galinčio padėti | kalbos korepetitoriaus | lietuvių kalbos korepetitoriaus | kalbos korepetitorius | padėti pasiruošti | lietuvių kalbos korepetitorius | pagalba ruošiant | pasiruošti 12 klasės | korepetitoriaus galinčio padėti | korepetitoriaus galinčio,6,False,False,1.0
+random_500_unlabeled,3554012,Raktų gamyba,False,,gamyba reikia pagaminti | raktų gamyba,1,False,True,0.6
+random_500_unlabeled,3810983,Ieškau konstruktorius - projektuotojo,False,,objektas randasi,1,True,True,0.4
+random_500_unlabeled,2925225,Sutvarkyti buto balkoną,False,,dekoratyviniu tinku | sudėti laminatą | dalis sienų | sutvarkyti buto | padengti dekoratyviniu,3,False,False,0.89
+random_500_unlabeled,3407261,"Putų šou, putų mašinos nuoma",False,,mašinos nuoma | rugpjūčio 16d | putų šou | putų mašinos nuoma | putų mašinos | putų šou putų | šou putų | šou putų mašinos nuoma | šou putų mašinos | putų šou putų mašinos nuoma | putų šou putų mašinos,1,False,True,0.6
+random_500_unlabeled,3156966,Orkaičių remontas,False,,orkaičių remontas | remontas reikia sutaisyti,1,False,False,0.83
+random_500_unlabeled,2604758,"Signalizacijos, kameros, apsaugos sistemos",False,,daugiabučiame name | apsaugos sistemos | kameros apsaugos | kameros apsaugos sistemos | signalizacijos kameros apsaugos | signalizacijos kameros | signalizacijos kameros apsaugos sistemos | laiptinės durys,2,False,True,0.6
+random_500_unlabeled,2679884,"Architektai, projektavimas",False,,dviejų aukštų | architektai projektavimas | norime statyti | sujungta su virtuve | nuasmeninta norime,4,False,True,0.6
+random_500_unlabeled,3809061,Pakeliami garažo vartai,False,,garažo vartai | pakeliami garažo | pakeliami garažo vartai | vartai varstomi,2,False,False,1.0
+random_500_unlabeled,3007981,"Mūro darbai, mūrijimas",False,,mūro darbai mūrijimas | namas 120 | blokelių mūro,1,False,True,0.6
+random_500_unlabeled,3976874,Trinkelių klojimas,False,,trinkelių klojimas | paruošti pagrindą | svarbu patirtis | reikės paruošti | objektas kaune aleksote | trinkeles objektas,4,False,True,0.6
+random_500_unlabeled,3157974,Spintų gamyba,False,,spintų gamyba | stumdomom durim,1,False,False,1.0
+random_500_unlabeled,3097003,Žvalgomieji archeologiniai tyrimai,False,,kultūros paveldo | norime statyti | nuasmeninta norime,3,False,True,0.6
+random_500_unlabeled,2876409,Namo remontas,False,,stogo remontas | grindinio šildymo | rangovo galinčio | sienų griovimas | mūrinį namą | grindų šiltinimas | namo remontas,3,False,False,1.0
+random_500_unlabeled,2831499,Automobilių raktų gamyba,False,,raktų gamyba | gali padėti | automobilių raktų | automobilių raktų gamyba | gali kainuoti | seat leon | kainuoti ačiū,3,False,False,1.0
+random_500_unlabeled,3436925,Stogo Visi Darbai,False,,stogo danga | stogo dalis,2,False,False,0.75
+random_500_unlabeled,4043948,Ieškau muzikantų giminės susitikimui,False,,giminės susitikimui,1,True,True,0.4
+random_500_unlabeled,3882703,Grindų klojimas eglute,False,,naujos statybos | grindų klojimas | butas naujos statybos | butas naujos | klojimas eglute | grindys išbetonuotos | gegužės pabaigoje,4,False,True,0.6
+random_500_unlabeled,3586790,Reikalingas marketingo ir komunikacijos specialistas (-ė),False,,žmogaus galinčio | socialinių tinklų | pagrindinės užduotys | instagram ir facebook,3,False,False,0.65
+random_500_unlabeled,2649332,Vaikų namelis,False,,foto pvz,1,True,True,0.4
+random_500_unlabeled,2773045,Pagalbiniai darbininkai,False,,nuosavo namo | pagalbiniai darbininkai | namo statybos | pagalbinio darbininko,2,False,True,0.6
+random_500_unlabeled,3774783,Ieškau architekto,False,,įmonės galinčios | norėjau pasiteirauti | sutvarkyti dokumentus | administracinės paskirties | asmens įmonės | galinčios sutvarkyti | paskirties pakeitimo,5,False,True,0.6
+random_500_unlabeled,3416641,Transportas į Šventoji,False,,gali nuvežti,1,True,True,0.4
+random_500_unlabeled,3031677,"Ieskau, kas galetu perdazyt laiptus ir tureklus pagaminti",False,,nieko ypatingo | ypatingo nereikia,2,False,True,0.6
+random_500_unlabeled,3446039,"Betonavimo darbai, betonavimas",False,,betonavimo darbai betonavimas | pirmas aukštas | butas pirmas,1,False,True,0.6
+random_500_unlabeled,2740677,Karkasinių namu projektavimas/perprojektavimas,False,,namo statybai | karkasinio namo | namo projektas | vidaus sienų | karkasinių namų | namų projektavimas | stogo konstrukcijos | karkasinį namą | norime keisti | konstrukcinės dalies | namo projektavimo | namo konstrukcinės,7,False,False,1.0
+random_500_unlabeled,3902447,Senų baldų išvežimas,False,,senų baldų | baldų išvežimas | senų baldų išvežimas | sofa lova | išvežimas reik | nereikalingus baldus,2,False,False,0.9
+random_500_unlabeled,3471613,Polių gręžimas,False,,polių gręžimas | didžiojoje riešėje | gręžimas reikia išgręžti | užpilti betonu,1,False,True,0.6
+random_500_unlabeled,2566928,"Rekonstrukcijos, kapitalinio remonto projektavimas",False,,kapitalinio remonto | remonto projektavimas | kapitalinio remonto projektavimas | rekonstrukcijos kapitalinio remonto | rekonstrukcijos kapitalinio | rekonstrukcijos kapitalinio remonto projektavimas | virtuvės svetainės | įmanoma padaryti,3,False,True,0.6
+random_500_unlabeled,3797503,Ieškau baldų konstruktoriaus / projektavimo specialisto,False,,specialisto galinčio | galinčio parengti | tikslas sukurti | specialisto galinčio parengti,3,False,True,0.6
+random_500_unlabeled,3005257,Dušo sutvarkymas,False,,išspręsti problemą | pat kada,1,True,True,0.4
+random_500_unlabeled,2975985,Kampo klijavimas plytelėmis,False,,akmens masės | laipsnių kampu | objektas šalia | akmens masės plytelės | masės plytelės | prisegu pavyzdį | 5mm storio | apklijuoti plytelėmis | klijavimas plytelėmis | plytelės dydis | šalia riešės,7,False,True,0.6
+random_500_unlabeled,3038945,Reikia pamuryt sienas garazui,False,,automobilių stoginė,1,True,True,0.4
+random_500_unlabeled,2754899,Betonavimas,False,,atraminę sienelę | padaryti atraminę | betonavimas reikia padaryti,1,False,False,1.0
+random_500_unlabeled,3750063,Buhalterinės apskaitos paslaugos,False,,buhalterinės apskaitos | mažajai bendrijai | prašytume pateikti | sąskaitų faktūrų | išrašomų sąskaitų | galinčio ios,2,False,True,0.6
+random_500_unlabeled,3958390,Gruzo išvežimas,False,,išvežimas reikia išvežti | gruzo išvežimas | išvežti betono,1,False,False,0.65
+random_500_unlabeled,3573174,"Tentai, tentų gamyba",False,,plius minus | tentų gamyba | tentai tentų gamyba | tentai tentų,1,False,False,1.0
+random_500_unlabeled,3915043,Tujų iškasimas ir naujų sodinimas,False,,tvoros ilgis,1,False,True,0.6
+random_500_unlabeled,3919151,Kilimų valymas,False,,kilimų valymas | pilkos spalvos,1,False,True,0.6
+random_500_unlabeled,4029546,Kemperių nuoma,False,,kemperių nuoma | prikabinamo namelio | kuo arciau | vienas asmuo,2,False,True,0.6
+random_500_unlabeled,3212180,Griovimo darbai,False,,senos statybos | statybos name | senos statybos name | laiko užtruktų | medinės grindys,3,False,True,0.6
+random_500_unlabeled,3791773,Pamato šiltinimas,False,,lietaus nuotekų | seno namo | namo pamato | pamato šiltinimas,3,False,True,0.6
+random_500_unlabeled,3187916,Šulinių kasimas,False,,šulinių kasimas | moduliniam nameliui,1,False,True,0.6
+random_500_unlabeled,3746381,Ieškau architekto,False,,antrame aukšte | keraminių blokelių,2,True,True,0.4
+random_500_unlabeled,3506975,Ieškau meistro...,False,,metalinis karkasas | prieš porą | metalinį rėmą | meistro suremontuoti,3,True,True,0.4
+random_500_unlabeled,3588550,"Ieškau logopedės, kuri galėtų kartą per savaitę padirbėti su 3 metų mergaite",False,,turite laiko | rasti žmogų,1,True,True,0.4
+random_500_unlabeled,3522325,Gimtadienių organizavimas,False,,gimtadienio proga | gimtadienių organizavimas,1,False,True,0.6
+random_500_unlabeled,3171444,Kondicionieriaus remontas,False,,kondicionieriaus remontas | surasti problemą,1,False,True,0.6
+random_500_unlabeled,3576344,Laiptinės turėklai metaliniai,False,,pagaminti ir sumontuoti | metalinius turėklus,2,False,True,0.6
+random_500_unlabeled,3400551,Elektrikas,False,,sumontuoti ir pajungti,1,True,True,0.4
+random_500_unlabeled,3092543,Monolitinių laiptų statyba,False,,pagal projekta,1,False,True,0.6
+random_500_unlabeled,3833077,Namo renovacija-Ieškau architekto,False,,stogo konstrukcija | namo renovacija | architekto namo | stogas langai,2,False,True,0.5
+random_500_unlabeled,2681514,Personažai vaikams,False,,personažai vaikams | įvairaus amžiaus,1,False,True,0.6
+random_500_unlabeled,2636462,Nekilnojamo turto brokeriai,False,,nekilnojamo turto | turto brokeriai | nekilnojamo turto brokeriai | buto nuomos,1,False,True,0.6
+random_500_unlabeled,3262812,Elektros kabelio pravedimas ir pajungimas į ivadą,False,,elektros kabelio | elektros kabelį | pravesti elektros | kabelio pravedimas,1,False,False,1.0
+random_500_unlabeled,3783729,Gipso montavimas,False,,sienų ir lubų | antrame aukšte | gipso montavimas | susukti gipsą | lubų taip pat,2,False,False,0.9
+random_500_unlabeled,2931493,Santechnikas,False,,bega vanduo | dušo sistemą,1,True,True,0.46
+random_500_unlabeled,3862279,"Tinkleliai nuo uodų, montavimas",False,,tinkleliai nuo uodų | uodų montavimas | tinkleliai nuo uodų montavimas | balkono duru | montavimas reik,1,False,True,0.6
+random_500_unlabeled,3249580,Metalo virinimo darbai,False,,juodo metalo,1,True,True,0.4
+random_500_unlabeled,3823615,Plytelių klyjavimas,False,,naujos statybos | sąskaita faktūra | san mazgai | individuali veikla | meistras plytelių,3,False,False,0.83
+random_500_unlabeled,3347859,Žemės paskirties keitimas,False,,reiktų pakeisti | paskirties keitimas | žemės paskirties | žemės paskirties keitimas | namu valda | zemes ukio | ukio paskirties | ūkio paskirties sklypą | zemes ukio paskirties | žemės ūkio paskirties sklypą | pakeisti žemės | keitimas reiktų | paskirties sklypa | keitimas reiktų pakeisti,8,False,True,0.6
+random_500_unlabeled,2702256,Automobilio įbrėžimo dažymas,False,,reiktų sutvarkyti,1,False,True,0.6
+random_500_unlabeled,2919717,Dėžių užnešimas,False,,aukšto išnešti,1,True,True,0.4
+random_500_unlabeled,3922891,Plastikinių balkono durų reguliavimas,False,,balkono durų | balkono duris | durų reguliavimas | reguliavimas reikia sureguliuoti | plastikinių balkono | plastikinių balkono durų | plastikines balkono | durų reguliavimas reikia sureguliuoti | plastikines balkono duris,1,False,True,0.6
+random_500_unlabeled,4021602,Ieškau architekto / projektuotojo katilinės priestatui prie namo,False,,vieno aukšto | prisegu foto | sklypo ribos | stogo konstrukcija | architekto projektuotojo | gyvenamą namą | namo namas,5,True,True,0.4
+random_500_unlabeled,3672981,VIDAUS MŪRINIŲ SIENŲ VALYMAS SMĖLIAVIMO BŪDU,False,,statybos name | senų dažų | sienų valymas,2,True,True,0.4
+random_500_unlabeled,3667379,Ieškau architekto,False,,vieno aukšto | namo projektas | aukšto namo | vieno aukšto namo,4,True,True,0.4
+random_500_unlabeled,2853829,Reklamos gamyba,False,,reklamos gamyba | kelis pvz,1,False,False,1.0
+random_500_unlabeled,3277836,Drenažo įrengimas,False,,įrengimas reikia įrengti | gali padaryti | drenažo įrengimas | nuotekų sistemą | įrengti drenažo,2,False,True,0.6
+random_500_unlabeled,2798717,Grindų betonavimas,False,,grindų betonavimas | išbetonuoti grindis | viskas paruošta,1,False,True,0.6
+random_500_unlabeled,3247284,Saulės Elektrinės Montavimas,False,,saulės elektrinės | saulės elektrinė | elektrinės montavimas | saulės elektrinės montavimas | off grid | šalčininkų r sav | trapecinės skardos,3,False,True,0.6
+random_500_unlabeled,2695656,Slaugytojai 76 m. moteriai,False,,žmogaus galinčio | galinčio padėti | žmogaus galinčio padėti | sveikatos problemų,1,False,False,0.9
+random_500_unlabeled,3916029,Terasų įrengimas,False,,terasų įrengimas | vienos pusės | vitrininių langų | terasos įrengimo | botanikos sodo | terasos danga | įrengimo meistrų,3,False,True,0.6
+random_500_unlabeled,2974821,Vaiko 2-ojo gimtadienio fotosesija,False,,dienos pusėje | pirmoje dienos | pirmoje dienos pusėje | ojo gimtadienio | gimtadienio fotosesija,1,True,True,0.58
+random_500_unlabeled,2737173,"Stogdengiai, stogo darbai",False,,stogdengiai stogo | keisti nereikia | difuzinę plėvelę | stogo konstrukcijų | stogo darbai stogas,4,False,False,0.9
+random_500_unlabeled,4017190,"Smėliavimas, dažymas",False,,sodo namelio | paruošimas dažymui | smėliavimas dažymas,1,False,True,0.6
+random_500_unlabeled,2694766,Aikštelės betonavimas,False,,sienos taip pat | betoninės sienos | visu perimetru | aikštelės betonavimas | sut žiūrėti,3,False,True,0.6
+random_500_unlabeled,3438625,Reikalingas pamatas tvorai,False,,tvorai ilgis,1,True,True,0.4
+random_500_unlabeled,2879837,Ieskau virtuves baldininko,False,,spintelė virš | panašios spalvos | domintu preliminari | plokštė balta | preliminarius išmatavimus,3,True,True,0.6
+random_500_unlabeled,2680148,Ieškau baldų gamintojų,False,,baldų gamintojų | darbo vietos | ilgis 210,2,False,False,1.0
+random_500_unlabeled,2855571,Privačios vokalo pamokos,False,,vokalo pamokos | privačios vokalo | privačios vokalo pamokos,1,False,False,0.9
+random_500_unlabeled,2797237,Kamino įdėklo montavimas,False,,montavimas reikia sumontuoti | kamino įdėklo | kamino įdėklą,3,True,True,0.4
+random_500_unlabeled,2837761,"Reikia išvalyti, pagilinti šulinį Ukmergės raj.",False,,užpilti skalda | pagilinti šulinį,1,True,True,0.4
+random_500_unlabeled,2594648,Metalo konstrukcijos gamyba - Pergolė,False,,metalo konstrukcijos | metalinės konstrukcijos | pridėtuose failuose,2,False,False,0.96
+random_500_unlabeled,3418249,Žolės pjovimas Zarasai,False,,žolės pjovimas | palei tvorą | surinkti ir išvežti,2,False,True,0.6
+random_500_unlabeled,4026568,Ieškau kas galėtų pastatyti lauko sandėliuką apie 20m2,False,,lauko sandėliuką | pastatyti lauko,2,True,True,0.4
+random_500_unlabeled,3562238,Ieškau architekto,False,,namo projektas | projektas sklypas,2,True,True,0.4
+random_500_unlabeled,2808199,Garažo stogo keitimas,False,,stogo keitimas | garažo stogo | garažo stogą,3,False,False,0.9
+random_500_unlabeled,3842797,Vonios spinteliu pagaminmas+montavimas,False,,montavimas reikalingos | matmenys maždaug | vidus balta | šviesiai pilka | arb žiūrėti | baldine plokste,4,True,True,0.58
+random_500_unlabeled,3259152,Keliems daugiabučiams reikia įrengti nuogrindas,False,,keturių laiptinių | daugiabutis 5 aukštų | laiptinės apdaila,2,False,True,0.6
+random_500_unlabeled,3448727,Atramine siena,False,,atramine siena | darbo patirtis | atramines sienos,1,False,True,0.6
+random_500_unlabeled,3115031,"Medžių pjovimas, šakų išvežimas, kelmo frezavimas",False,,šakų išvežimas | medžių pjovimas | laurų sodai,2,False,False,0.9
+random_500_unlabeled,3794731,Buhalterinės apskaitos paslaugos,False,,buhalterinės apskaitos | pardavimo sąskaitų | uab ieško,1,False,False,1.0
+random_500_unlabeled,3671991,IEŠKOME PVC DANGOS ĮRENGIMO SPECIALISTŲ,False,,pvc dangos | dangos įrengimo,1,True,True,0.4
+random_500_unlabeled,3326635,Reikia pagalbos sutvarkant kubilo dangtį,False,,įmonės galinčios | meistro ar įmonės | meistro ar įmonės galinčios | galinčios sutvarkyti | pagalbos sutvarkant,5,True,True,0.4
+random_500_unlabeled,2845025,Smulkūs santechnikos darbai,False,,smulkūs santechnikos | dušo kabinoje | santechnikos darbai pakeisti | smulkūs santechnikos darbai pakeisti | aplink vonią,2,False,True,0.6
+random_500_unlabeled,3256458,Interjero dizaineriai,False,,interjero dizaineriai | kurios buvo | keletą baldų,1,False,True,0.6
+random_500_unlabeled,3571988,Molingo grunto/betono atliekų išvežimas,False,,atliekų išvežimas | betono atliekos | betono atliekų,1,True,True,0.4
+random_500_unlabeled,3095045,Namo fasado dažymas,False,,gyvenamojo namo | namo fasado | fasado dažymas | namo fasadą | dažymas reikia nudažyti | namo fasado dažymas,4,False,True,0.6
+random_500_unlabeled,3677501,Tvenkinio kasimas,False,,tvenkinio kasimas | sklype sklypas | viršutinis sluoksnis,2,False,False,0.9
+random_500_unlabeled,3446225,Pagrindo betonavimas modulinei konstrukcijaiš 60m2,False,,ieškoma komanda | išbetonuoti pagrindą | komanda galinti | pagrindo betonavimas,3,False,True,0.6
+random_500_unlabeled,3571924,LED apšvietimas: montavimas kieme,False,,norime įsirengti | led apšvietimas | lauko šviestuvus | led apšvietimas montavimas | apšvietimas montavimas,2,False,True,0.6
+random_500_unlabeled,2893033,Klinkerio plyteliu klijavimas,False,,plyteliu klijavimas | klinkerio plytelių | klijavimas reikia suklijuoti | klinkerio plytelių klijavimas | nedidelį kiekį | klinkerinių plytelių | plytelių klijavimas reikia suklijuoti,1,False,True,0.6
+random_500_unlabeled,3796987,Ieškome grafikos dizainerės (-io) nuolatiniam bendradarbiavimui,False,,socialinių tinklų | ilgalaikiam bendradarbiavimui | grafikos dizainerio | nuolatiniam bendradarbiavimui | meta reklamos | prekės ženklas,3,False,False,1.0
+random_500_unlabeled,2670738,Archeologiniai tyrimai/konsultacija,False,,kultūros paveldo | sklypo lyginimo,1,True,True,0.4
+random_500_unlabeled,3855957,Gipso kartono montavimas,False,,gipso kartono | montavimas reikia sumontuoti | kartono montavimas | gipso kartono montavimas | sumontuoti gipso | sumontuoti gipso kartono | montavimas reikia sumontuoti gipso | gipso kartono montavimas reikia sumontuoti | kartono montavimas reikia sumontuoti,1,False,False,0.9
+random_500_unlabeled,2772229,Pagrindo paruošimas juodgrindėms,False,,paruošti pagrindą | pagrindo paruošimas,2,True,True,0.4
+random_500_unlabeled,2921857,Ieškau architekto namo projektavimui,False,,vieno aukšto | arų sklype | aukšto namą | vieno aukšto namą | architekto namo | namo projektavimui,5,True,True,0.4
+random_500_unlabeled,2828213,Laidojimo paslaugos,False,,iškasti duobę,1,False,False,0.9
+random_500_unlabeled,3457733,Buto grindų betonavimas,False,,grindų betonavimas | sąskaita faktūra | išlyginti grindis | buto grindų | padaryti dušo | grindų betonavimą | buto grindų betonavimas | grindis vonioje | butas žirmūnuose,2,False,True,0.6
+random_500_unlabeled,3008603,Ligonių slaugymas namuose,False,,slaugymas namuose | ligonių slaugymas | ligonių slaugymas namuose | maisto paruošimas,1,False,True,0.6
+random_500_unlabeled,4024726,Ieškau architekto,False,,namo pridavimui | kadastro byla | pridavimui 100,2,False,True,0.5
+random_500_unlabeled,3984596,Statybos darbai,False,,naujos statybos | daline apdaila | butas su daline | butas su daline apdaila,4,True,True,0.4
+random_500_unlabeled,3428519,Reikalingas infiltracinio šulinio valymas - grunto keitimas,False,,šulinio valymas | infiltracinio šulinio | infiltracinio šulinio valymas | prieš atvykstant,1,False,False,0.9
+random_500_unlabeled,3302887,"Skylių gręžimas, angų pjovimas",False,,skylių gręžimas | angų pjovimas | skylių gręžimas angų pjovimas | skylių gręžimas angų | gręžimas angų | gręžimas angų pjovimas | lauko sienos | pastato aukšte | balta plyta,3,False,True,0.6
+random_500_unlabeled,3501843,Reikia mini rekuperatorių su montavimo darbais,False,,montavimo darbais | mini rekuperatorių | mini rekuperatorius | spalio vidurio | mitsubishi electric,2,True,True,0.6
+random_500_unlabeled,3373661,Tapetų klijavimas,False,,tapetų klijavimas | miesto centre | vienos dienos | standartinio dydžio,1,False,True,0.6
+random_500_unlabeled,3329659,Automatiniai stumdomi vartai,False,,stumdomi vartai | automatiniai stumdomi | automatiniai stumdomi vartai,3,False,False,0.9
+random_500_unlabeled,3228484,Bamperio remontas dažymas,False,,remontas dažymas | bamperio remontas,1,True,True,0.4
+random_500_unlabeled,3625548,Rekuperatoriaus taisymas,False,,draudiminis įvykis,1,True,True,0.4
+random_500_unlabeled,3805553,Reikia glaistymo/dažymo,False,,nauja statyba | nuglaistyti ir nudažyti | glaistymo dažymo | lubos įtempiamos | sutvarkyti angokraščius | daryti nereikia | nieko daryti,1,True,True,0.6
+random_500_unlabeled,3018065,Stumdomu durų remontas,False,,durų remontas | stumdomų durų | reiktų pakeisti | kur turėtų | remontas sveiki reiktų | stumdomu durų,4,False,True,0.6
+random_500_unlabeled,3414843,Detaliųjų planų rengimas,False,,žemės ūkio | ūkio paskirties | žemės ūkio paskirties | planų rengimas | detaliųjų planų | detaliųjų planų rengimas | arų sklypas | detalusis planas,4,False,True,0.6
+random_500_unlabeled,2812229,Stiklo pertvarų gamyba,False,,pertvarų gamyba | stiklo pertvarų | stiklo pertvarų gamyba | dvivėrės durys,2,False,True,0.6
+random_500_unlabeled,3142487,Elektros instaliacija,False,,elektros instaliacija | pagal projekta | pirmas etapas,2,False,True,0.6
+random_500_unlabeled,3857813,Ieškau muzikantų,False,,šventės vedėjo,1,True,True,0.4
+random_500_unlabeled,3377811,Ieškau profesionalios keramikos gamybos,False,,vienas žmogus | nuolatiniam bendradarbiavimui | pagal brėžinius | galime pateikti,2,True,True,0.4
+random_500_unlabeled,3844003,Šiukšlių išvežimas: statybinių ir kt.,False,,šiukšlių išvežimas | išvežimas statybinių | šiukšlių išvežimas statybinių,3,False,False,0.9
+random_500_unlabeled,3759251,Stogų dengimas bitumine danga,False,,bitumine danga | stogų dengimas | dengimas bitumine | dengimas bitumine danga | stogų dengimas bitumine | stogų dengimas bitumine danga | sena danga,1,False,False,0.9
+random_500_unlabeled,3573936,Reikalinga uždengti dvišlaitį stogą 1 aukšto namui,False,,aukšto namui | dvišlaitį stogą | stogo nuolydis,3,False,False,0.65
+random_500_unlabeled,3506239,Ieškau architekto,False,,ekonominės klasės | architekto reikalingas architektas | architektas suprojektuoti | gyv namą,2,True,True,0.4
+random_500_unlabeled,2913247,Smulkūs buitinės technikos remonto darbai,False,,buitinės technikos | technikos remonto | buitinės technikos remonto | smulkūs buitinės technikos | smulkūs buitinės technikos remonto | smulkūs buitinės,1,False,True,0.6
+random_500_unlabeled,3394559,Lietaus nuvedimo sistemos,False,,daugiabučio namo | lietaus nuvedimo | nuvedimo sistemos | lietaus nuvedimo sistemos,1,False,True,0.6
+random_500_unlabeled,2781991,Dujų skaitliuko įrengimas,False,,įrengimas reikia įrengti | pastato sienos | dujų skaitliuko | dujų skaitliuką | įvado į namą,4,False,False,0.96
+random_500_unlabeled,3022463,Gipso lubų įrengimas vonioje,False,,vonios kambaryje | vonios kambarys | tuo geriau | kuo greičiau tuo geriau | gipso lubų | lubų įrengimas | gipsines lubas | led juostą | lubas vonios | lubas vonios kambaryje,4,False,False,0.9
+random_500_unlabeled,3891443,"Baldų restauravimas, remontas",False,,baldų restauravimas | restauravimas remontas | baldų restauravimas remontas | spintelių dureles | virtuves spinteliu,1,False,True,0.6
+random_500_unlabeled,3804651,Reikia pervežti skalbyklę,False,,vieno buto | buto į kitą | vieno buto į kitą,1,True,True,0.4
+random_500_unlabeled,3548396,Ieškau sodybos nuomai,False,,sodybos nuomai | ieškoma sodyba | miegamų vietų | kubilas ir pirtis,1,False,False,1.0
+random_500_unlabeled,3666901,Koridoriaus spinta,False,,pagal pridedamą | geros kokybės | koridoriaus spinta | spintą pagal,1,True,True,0.52
+random_500_unlabeled,3047126,Žibintų poliravimas,False,,toyota avensis | žibintų poliravimas,1,False,False,1.0
+random_500_unlabeled,3236518,Vonios apdaila,False,,naujas plyteles | įrengti dušo | suklijuoti naujas | dušo padą | nuimti plyteles | suklijuoti naujas plyteles | vonios apdaila | apdailos darbais,1,False,False,1.0
+random_500_unlabeled,3959176,Eso projektai,False,,partizanų g nuasmeninta | sklype kuriame | sklypo ribą,3,False,True,0.6
+random_500_unlabeled,3306595,Lengvųjų automobilių nuoma,False,,automobilių nuoma | lengvųjų automobilių | lengvųjų automobilių nuoma | oro uoste | nuoma reikalingas automobilis | automobilių nuoma reikalingas automobilis | lengvųjų automobilių nuoma reikalingas automobilis | blogiausiu atveju,2,False,False,1.0
+random_500_unlabeled,4026558,Vairo kolonėlių remontas,False,,kolonėlių remontas | vairo kolonėlių remontas | vairo kolonėlių | golf plus | volkswagen golf,2,False,False,0.9
+random_500_unlabeled,3462463,Mobilaus kubilo nuoma,False,,kubilo nuoma | mobilaus kubilo | mobilaus kubilo nuoma | vienai parai,1,False,False,1.0
+random_500_unlabeled,2795215,Faneros motavimas moduliniam name,False,,namo viduje | bendra kvadratūra | modulinio namo | name sumontuoti,4,True,True,0.4
+random_500_unlabeled,3145954,Elektrinės viryklės remontas,False,,viryklės remontas | nustatyti gedimą | elektrinės viryklės,2,True,True,0.46
+random_500_unlabeled,4007520,Tinkuotojai,False,,sienų tinkavimui | kiekis apie 500,1,False,True,0.6
+random_500_unlabeled,3180420,Gerbuvio darbai,False,,kontaktinis asmuo,1,True,True,0.4
+random_500_unlabeled,3866057,Šiukšlių išvezimas,False,,šiukšlių išvežimas | senų baldų | nuosavo namo | išvežimas senų | senų daiktų,3,False,False,1.0
+random_500_unlabeled,3163808,Ieškau gerų meistrų...sienu tinkavimas kretingos raj. Toliu kaimas,False,,gerų meistrų | senos statybos | sienu tinkavimas | namas senos | namas senos statybos | nutinkuoti sienas | raudonų plytų | meistrų sienų | 100 kvadratu | gerų meistrų sienų,6,False,False,0.9
+random_500_unlabeled,3672247,Baldų atvežimo,False,,vieno kambario | pirmą aukštą | pagal planą | pakabinamos spintelės | kambario butui | lova spinta,5,False,False,0.65
+random_500_unlabeled,3310213,Masažo paslaugos,False,,nugaros masažas,1,False,False,0.9
+random_500_unlabeled,3940260,Krovėjų paslaugos,False,,100 metrų,1,False,True,0.6
+random_500_unlabeled,3585438,"Apšiltinimas, šiltinimas",False,,apšiltinimas šiltinimas | senas pastatas | apšiltinimas šiltinimas reikia apšiltinti | šiltinimas reikia apsiltinti,2,False,False,0.9
+random_500_unlabeled,3889293,Konstrukcijų projektavimas,False,,vieno aukšto | abiejų pusių | individualaus namo | aukšto namas | vieno aukšto namas | konstrukcijų projektavimas | plokščias stogas | konstrukcinę dalį | stogas sienos,8,False,False,1.0
+random_500_unlabeled,2656990,Kondicionierių remontas,False,,kondicionierių remontas | remontas namuose,1,False,True,0.6
+random_500_unlabeled,3627416,Meistro surinkt IKEA spintą,False,,surinkti ikea | meistro meistrų | gali surinkti | ikea spintą,2,False,True,0.6
+random_500_unlabeled,3461479,Meistrai į namus,False,,meistrai į namus | dušo kabinos | lauko durys | balkono durys | butas randasi | įstiklinto balkono | balkono langas | durų atidarymo | durys neatsidaro,5,False,False,0.96
+random_500_unlabeled,2684444,Stogo remontas,False,,stogo remontas | skardinį stogą | remontas reikalinga sutvarkyti,2,False,False,0.71
+random_500_unlabeled,3699989,Ieškomas Apdailininkas,False,,nauja statyba | šiltinimas vata,1,False,True,0.57
+random_500_unlabeled,3423383,Kapaviečių tvarkymas,False,,kapavietės įrengimas,1,False,False,0.9
+random_500_unlabeled,3977878,Šiltnamio surinkimas,False,,surinkti šiltnamį | šiltnamio surinkimas | meistras surinkti | karkaso surinkimas,2,False,True,0.57
+random_500_unlabeled,3952192,Autocad photoshop schemos projektas,False,,techninius brėžinius | darbo projekto | pagal esamus | projekto brėžinius | apsauginės signalizacijos,4,True,True,0.4
+random_500_unlabeled,2627422,Kapo dengimas plokštėmis (ar jų gabalais),False,,uždengti kapą | kapo dengimas | dengimas plokštėmis | norime uždengti | norime palikti,4,False,True,0.6
+random_500_unlabeled,2944583,Pirties irengimo konsultacija,False,,pirties patalpos,1,True,True,0.4
+random_500_unlabeled,3360289,Ieškau baldų gamintojų,False,,baldų gamintojų | virtuvinį komplektą | įmontuojama orkaitė | orkaitė kaitlentė,3,False,False,1.0
+random_500_unlabeled,3015775,Stogo dangos keitimas,False,,stogo dangos | stogo keitimas | dangos keitimas | stogo dangos keitimas | asbestinio šiferio | šiferio stogo | kairė pusė | dešinė pusė,8,False,False,0.65
+random_500_unlabeled,2684314,Ieškau buto valymo paslaugos (su langų valymu),False,,buto valymo | šiam šeštadieniui | langų valymu,1,False,True,0.6
+random_500_unlabeled,3547285,Reikalinga siuvimo paslauga,False,,kitus variantus,1,False,True,0.6
+random_500_unlabeled,3224390,Virtuvės šefas (-ė),False,,galinčio pasirūpinti,1,True,True,0.4
+random_500_unlabeled,3070234,Laiptinių remontas,False,,laiptinių remontas | senų dažų | laiptinės dažymas,1,False,False,0.9
+random_500_unlabeled,3171238,Reikėtų 8 vnt. sėdmaišių liepos 12 dienai,False,,liepos 12 dienai,1,True,True,0.4
+random_500_unlabeled,3225664,Betoninės tvoros sumontavimas,False,,vartus ir vartelius | sumontuoti metalinius | betoninės tvoros | tvoros sumontavimas,2,False,True,0.6
+random_500_unlabeled,4036608,Mini ekskavatoriaus nuoma. Reikia prakadt griovį iki 80 cm gylio kanalizacijai.,False,,ekskavatoriaus nuoma | privažiavimas geras | mini ekskavatoriaus | mini ekskavatoriaus nuoma,1,False,True,0.6
+random_500_unlabeled,3386337,Sportinis masažas į namus (Kulautuvoje),False,,masažas į namus | dviems asmenims,1,False,True,0.6
+random_500_unlabeled,2601940,"Praustuvo, maišytuvo montavimas montavimas",False,,montavimas reikia sumontuoti | tuo pačiu | pakabinti veidrodį | sumontuoti vonios | ventiliacijos vamzdį | maišytuvo montavimas,3,True,True,0.4
+random_500_unlabeled,3921997,Itempamos lubos,False,,antrame aukšte | trys kambariai | ryt poryt | patalpų planą | virš laiptų | privaciame name | kambariai vonia | name antrame | įtemptų lubas | name antrame aukšte,9,False,True,0.6
+random_500_unlabeled,3535327,Senų baldų išvežimas išvežti senas vidaus duris,False,,senų baldų | baldų išvežimas | senų baldų išvežimas | vidaus duris | išvežimas išvežti | baldų išvežimas išvežti | senų baldų išvežimas išvežti | gatvė nuasmeninta | išvežti senas,1,False,False,0.9
+random_500_unlabeled,3301307,Apleistų sklypų tvarkymas,False,,vieno aukšto | sklypų tvarkymas | apleistų sklypų | apleistų sklypų tvarkymas | išvežti viską | medžius ir krūmus | apleistas sklypas,2,False,True,0.6
+random_500_unlabeled,3758977,Sage kavos aparatų remontas ir tech aptarnavimas,False,,bėga vanduo | kavos aparatų | aparatų remontas | kavos aparatų remontas | vanduo pro | galime tartis,3,False,False,0.9
+random_500_unlabeled,3853791,Pagrindo įrengimas baseinui,False,,pagrindo įrengimas | užpilti smėliu,2,True,True,0.4
+random_500_unlabeled,3190650,Stogo remontas,False,,stogo remontas | čerpių stogo,1,False,False,0.71
+random_500_unlabeled,2761187,Reikia išklijuoti plyteles,False,,išklijuoti plyteles | vonios patalpose,1,True,True,0.4
+random_500_unlabeled,3584682,Peugeot 307,False,,tech apžiūros,1,True,True,0.4
+random_500_unlabeled,2591838,"Langai, durys: gamyba, montavimas",False,,gamyba montavimas | durys gamyba | langai durys | durys gamyba montavimas | langai durys gamyba | langai durys gamyba montavimas | lauko durys | reikalingos lauko | angos aukštis | reikalingos lauko durys | aukštis 220cm | durys angos,3,False,True,0.6
+random_500_unlabeled,3283189,Stogų dengimas bitumine danga,False,,bitumine danga | stogų dengimas | dengimas bitumine | dengimas bitumine danga | stogų dengimas bitumine | stogų dengimas bitumine danga | medžiagos supirktos,1,False,True,0.6
+random_500_unlabeled,3302185,Ieškau gerų meistrų...,False,,gerų meistrų,1,False,True,0.6
+random_500_unlabeled,2965059,Kaminų valymas,False,,valymas reikia išvalyti | kaminų valymas | kieto kuro | išvalyti kaminą | kuro katilą | kieto kuro katilą | kaminų valymas reikia išvalyti | valymas reikia išvalyti kaminą | kaminų valymas reikia išvalyti kaminą,4,False,True,0.6
+random_500_unlabeled,3051226,Rūdžių šalinimas,False,,rūdžių šalinimas | bagažinės dangčio | nedidelio ploto,2,False,True,0.6
+random_500_unlabeled,3345073,Buhalterinės paslaugos,False,,buhalterinių paslaugų | susisiekite el paštu,1,False,False,1.0
+random_500_unlabeled,3112933,"Sraigtiniai poliai, 12 vnt., mediniam sandėliukui (3x4m.) netoli Dubingių 9 km nuo Dubingių",False,,sraigtiniai poliai,1,False,True,0.6
+random_500_unlabeled,3974526,Įrengimų lauke - šalčio mašinos patalpų garso izoliacijos įrengimas,False,,garso izoliacijos | izoliacijos įrengimas,1,True,True,0.4
+random_500_unlabeled,3681471,"Medžiagų užnešimas 5 aukštas, Kaunas",False,,dienos pusėje | pirmoje dienos | pirmoje dienos pusėje | medžiagų užnešimas | sunešti medžiagas,1,True,True,0.4
+random_500_unlabeled,3574354,Virtuvės baldų gamyba,False,,baldų gamyba | virtuvės baldų | virtuvės baldų gamyba | pagaminti naują,1,False,False,1.0
+random_500_unlabeled,3827417,Šiltnamio stogo dangos keitimas,False,,stogo dangos | keitimas reikia pakeisti | dangos keitimas | stogo dangos keitimas | stogo dangos keitimas reikia pakeisti | dangos keitimas reikia pakeisti,6,True,True,0.4
+random_500_unlabeled,3735322,Atraminės sienelės įrengimas,False,,atraminės sienelės | ieškoma įmonė | atraminės sienutės | sienelės įrengimas | atraminės sienelės įrengimas | įrengimas ieškoma,2,False,True,0.6
+random_500_unlabeled,3430581,Klinkerio klijavimas,False,,klinkerio klijavimas | namo fasado | namas apšiltintas,2,False,True,0.6
+random_500_unlabeled,3687547,"Vestuvių, švenčių dekoravimas",False,,svečių skaičius | švenčių dekoravimas | vestuvių švenčių | vestuvių švenčių dekoravimas,1,False,True,0.6
+random_500_unlabeled,2806381,Skardininkas,False,,namo stogo | dvibučio namo | ieškomas rangovas | rangovas galintis | ieškomas rangovas galintis,5,False,True,0.6
+random_500_unlabeled,3057952,Ieškau elektriko,False,,elektros instaliacijos | pradėti šią | šią kitą | naujai elektros | prisegu plana,3,False,True,0.6
+random_500_unlabeled,3431947,Vidaus apdaila kapitalinis remontas 25 kvadratu bustui,False,,vidaus apdaila | kapitalinis remontas | gali kainuoti,1,False,False,1.0
+random_500_unlabeled,2847615,Ieškau kas gali nudažyti sandwich plokštes (apie 4m),False,,gali nudažyti | sandwich plokštes | moka ir gali,3,True,True,0.4
+random_500_unlabeled,2638956,Skalbimo mašinos remontas,False,,skalbimo mašinos | mašinos remontas | skalbimo mašinos remontas | skalbyklės džiovyklės,1,False,True,0.6
+random_500_unlabeled,3861405,Šiukšlių išvežimas,False,,šiukšlių išvežimas,1,False,False,0.73
+random_500_unlabeled,3376125,Meistrai į namus,False,,meistrai į namus | pridėta foto | meistrai į namus reikia pakabinti | namus reikia pakabinti,1,False,False,0.9
+random_500_unlabeled,3662499,DJ paslaugos,False,,2025 m gruodžio,1,True,True,0.4
+random_500_unlabeled,3062248,"Architektai, projektavimas",False,,architektai projektavimas | bendro naudojimo,1,False,True,0.6
+random_500_unlabeled,3863805,Ieškomas vestuvių fotografas,False,,ieškomas fotografas | vestuvių fotografas | ieškomas vestuvių,1,False,False,0.89
+random_500_unlabeled,4019918,Cfa polių grežimas,False,,cfa polių | cfa polius | polių grežimas | cfa polių gręžimas,2,False,True,0.57
+random_500_unlabeled,3071518,"Reikalingas dujininkas Druskininkuose, pakeisti dujų vamzdžių vietą",False,,pakeisti dujų,1,False,False,0.9
+random_500_unlabeled,4002582,Senų baldų išvežimas,False,,senų baldų | baldų išvežimas | senų baldų išvežimas | išvežimas reikia išvežti | senus baldus | išvežti senus | baldų išvežimas reikia išvežti | senų baldų išvežimas reikia išvežti | išvežti senus baldus | baldinės plokštės | išvežimas reikia išvežti senus | išvežimas reikia išvežti senus baldus | baldų išvežimas reikia išvežti senus | viena spinta | rašomieji stalai,3,False,False,0.98
+random_500_unlabeled,2973643,"Animatoriai, personažai vaikams",False,,personažai vaikams | animatoriai personažai | animatoriai personažai vaikams | gimtadienio progai,1,False,True,0.6
+random_500_unlabeled,3112623,Pasodinti 5 vaismedžius,False,,iškasti duobes,1,True,True,0.4
+random_500_unlabeled,2677090,Vandens šildytuvo pakeitimas,False,,leidžia vandenį | vandens šildytuvo | vandens boilerį,2,True,True,0.46
+random_500_unlabeled,3328405,Pakeliami garažo vartai,False,,garažo vartai | pakeliami garažo | pakeliami garažo vartai | vartai su automatika | garažo vartai su automatika | vartai pakeliami | segmentiniai garažo | segmentiniai garažo vartai | pakeliami segmentiniai | garažo vartai pakeliami,2,False,False,1.0
+random_500_unlabeled,3003313,Kompiuterių remontas,False,,kompiuterių remontas | viskas veikia,1,False,True,0.6
+random_500_unlabeled,3438559,Grupinės treniruotės,False,,rugsėjo mėn,1,False,True,0.6
+random_500_unlabeled,2597132,"Trinkelių klojimas, bortai",False,,trinkelių klojimas | kelio bortus | važiuojamoji dalis,1,False,True,0.6
+random_500_unlabeled,2804729,"Kasimo darbai rankomis apie 45~m, 70cm gylio griovys",False,,70cm gylio,1,True,True,0.4
+random_500_unlabeled,3416737,"Baldai, baldinės plokštės, komunikacinių spintų apdaila , Palanga",False,,baldinės plokštės | spalio mėn | mėn pradžioje | terminas spalio | dvivėrės durys | durys 2vnt,4,True,True,0.4
+random_500_unlabeled,3926611,"Reikia pervezti gipso plokstes (3x1.2m) 2 paletes, profiliai",False,,gipso plokstes,1,True,True,0.4
+random_500_unlabeled,3489441,Baldų gamyba ir montavimas,False,,baldų gamyba | vonios kambarys | gamyba ir montavimas | san mazge | baldų gamyba ir montavimas | baldines plokstes,3,False,False,1.0
+random_500_unlabeled,3264940,Lietvamzdžių valymas,False,,dviejų aukštų | aukštų namas | lietvamzdžių valymas | dviejų aukštų namas | gali išvalyti,3,False,True,0.6
+random_500_unlabeled,3328447,Stiklo pertvara dušui. Gamyba,False,,gamyba reikia pagaminti | vienos sienos | stiklo pertvara | dydis maždaug | stiklo pertvarą,3,False,True,0.6
+random_500_unlabeled,3747125,Buhalterijos apskaitos tavrkymas,False,,pvm mokėtoja | visus metus | ieško buhalterės | ilgalaikei draugystei | sutvarkyti 2025,2,False,False,1.0
+random_500_unlabeled,3626532,Dušo kabinos montavimas,False,,dušo kabinos | kabinos montavimas | dušo kabinos montavimas | sausio mėnesį | vietoj jos,1,False,True,0.6
+random_500_unlabeled,2639870,21 keleiviui su vairuotojų paslauga,False,,mikroautobusų nuoma | mikroautobuso nuoma,1,False,True,0.6
+random_500_unlabeled,3403593,Griovimo darbai,False,,senos statybos | statybos bute | senos statybos bute | ieskomas zmogus,3,False,True,0.6
+random_500_unlabeled,3998014,"Kvapų naikinimas, patalpų ozonavimas",False,,nemalonus kvapas | rūsio patalpos,1,False,False,0.65
+random_500_unlabeled,3062982,"Suvirintojai, suvirinimo darbai",False,,suvirintojai suvirinimo | automobilio variklio | suvirinimo darbai reikia suvirinti | suvirintojai suvirinimo darbai reikia suvirinti,1,False,True,0.6
+random_500_unlabeled,3219070,Spauda ant džemperių,False,,gamybos terminas | prisegu pavyzdžius,2,False,True,0.6
+random_500_unlabeled,3081436,Ieškau fotografo,False,,fotografo kuris galėtų padaryti,1,True,True,0.4
+random_500_unlabeled,3295455,Ieškau gerų meistrų...,False,,gerų meistrų | seną šiferį | meistrų ieškau meistrų | gerų meistrų ieškau meistrų,2,True,True,0.4
+random_500_unlabeled,2881323,"Laiptų gamyba, montavimas",False,,gamyba montavimas | laiptų gamyba | laiptų gamyba montavimas | naujai statomame | statomame name | pilna apdaila | naujai statomame name,4,False,True,0.6
+random_500_unlabeled,3736374,Virtuvės baldų gamyba,False,,baldų gamyba | virtuvės baldų | pagaminti ir sumontuoti | virtuvės baldų gamyba | baldai pagal,1,False,False,1.0
+random_500_unlabeled,3920475,"Vejos įrengimas, tujų sodinimas",False,,vejos įrengimas | augalinio grunto | geros kokybės | šią arba kitą | tujų sodinimas | reikės atvežti | beveik visur,5,False,False,0.9
+random_500_unlabeled,3314623,Santechnikas į namus,False,,santechnikas į namus | looking for,1,False,True,0.6
+random_500_unlabeled,2677236,Grafiti SIENŲ UŽDAŽYMAS,False,,raudonų plytų | šviesios spalvos,2,False,True,0.6
+random_500_unlabeled,3950568,"Reikia nukasti ir išvežti 18m2 velėnos,15-20cm gylio ir.užpildyti žvyru, smulkia skalda",False,,nukasti ir išvežti,1,False,True,0.57
+random_500_unlabeled,2840579,Reikia virtuvės baldų,False,,baldų gamyba | virtuvės baldų | vienos sienos | virtuvinių baldų,1,False,True,0.6
+random_500_unlabeled,3863205,Krovininiai mikroautobusai,False,,krovininiai mikroautobusai | krovininio mikroautobuso | mikroautobuso nuomos,1,False,False,0.89
+random_500_unlabeled,3561370,Reikia nuvežti 5 žmones į Vilniaus oro uostą spalio 16d.,False,,oro uoste | oro uostą | spalio 19d,1,True,True,0.58
+random_500_unlabeled,3015361,Reikia užbaigti montuoti duris,False,,padaryti apdailą | apdailą aplink | vienų durų | padaryti apdailą aplink,1,False,True,0.6
+random_500_unlabeled,3771869,Durų stiklo pakeitimas,False,,lauko durų | durų stiklo | pakeitimas reikia pakeisti | durų stiklą,4,False,True,0.6
+random_500_unlabeled,3752193,Nuoteku isvezimas,False,,nuoteku isvezimas | isvezti nuotekas | isvezimas isvezti,1,False,True,0.6
+random_500_unlabeled,3264134,Reikalingas Fiskaras ar traliukas pervežimui,False,,sąskaita faktūra | osb plokštės,1,False,True,0.57
+random_500_unlabeled,3387911,Dušo kabinos montavimas,False,,dušo kabinos | kabinos montavimas | dušo kabinos montavimas | montavimas sveiki reikia sumontuoti | sumontuoti dušo | dušo kabinas,2,False,True,0.6
+random_500_unlabeled,4035834,Demontuoti ir sumontuoti atgal šaldytuvą,False,,sumontuoti atgal | baldų komplektas | radiatorių keitimui | demontuoti ir sumontuoti,2,True,True,0.4
+random_500_unlabeled,3367185,Smėliavimas,False,,antikorozine danga,1,False,True,0.57
+random_500_unlabeled,3163778,Garažo įrengimas,False,,grindų įrengimas | preliminariom kainom | dažymas sienų | kada galima pradėti | susukti gipsa | apšiltinti sienas,3,True,True,0.6
+random_500_unlabeled,3722602,Projekto konstrukcinė dalis,False,,dvibučio namo | plokščias stogas | vienas aukštas | konstrukcinė dalis | konstrukcinę dalį | ieškomas konstruktorius,6,True,True,0.4
+random_500_unlabeled,2885565,Grindu lyginimas,False,,viniline danga | grindu lyginimas | islyginamuoju sluoksniu | lyginimas reikia islyginti,1,False,True,0.6
+random_500_unlabeled,3827047,Sudėtinio stogo dažymas,False,,stogo dažymas | aplink kaminą,1,False,True,0.6
+random_500_unlabeled,2605142,Mobilaus kubilo nuoma,False,,kubilo nuoma | mobilaus kubilo | mobilaus kubilo nuoma | tuo geriau | kubilo nuomai,1,False,True,0.6
+random_500_unlabeled,4009004,Automobilių stiklo poliravimas,False,,priekinio stiklo | stiklo poliravimas | automobilių stiklo poliravimas | automobilių stiklo | priekinio stiklo poliravimas,1,False,True,0.6
+random_500_unlabeled,3222962,Reikia daugiabučiui namui nudažyti cokolį,False,,daugiabučiui namui,1,True,True,0.4
+random_500_unlabeled,2857009,Spynos remontas ar keitimas,False,,keitimas reikalinga pakeisti | spynos remontas,1,False,True,0.6
+random_500_unlabeled,3031579,Grindjuosčių montavimas,False,,grindjuosčių montavimas | sumontuoti medines | medines grindjuostes,1,False,True,0.6
+random_500_unlabeled,3531501,Namo irengimas nuo A iki Z,False,,glaistymas dažymas | itempiamos lubos | 100 baigtumo | namo įrengimas | dažymas grindys | meistrų įmonės | grindys durys,4,False,True,0.6
+random_500_unlabeled,2860537,Žemės teisės paslaugos,False,,žemės sklypo | žemės teisės | planuojama statyti,1,False,True,0.6
+random_500_unlabeled,3263350,"Apsauginės žaliuzės, montavimas",False,,apsauginės žaliuzės | vnt langų | žaliuzės montavimas | apsauginės žaliuzės montavimas | langų dydis,2,False,True,0.6
+random_500_unlabeled,2694802,Ventiliacija individualiam namui,False,,individualiam namui,1,False,True,0.6
+random_500_unlabeled,3738008,Grindjuosčių montavimas Vilniuje,False,,grindjuosčių montavimas | nuosavame name | name sumontuoti,2,False,True,0.6
+random_500_unlabeled,3629282,"Ieškome medinių laiptų 27 pakopos, 2 aikštelės",False,,keliose vietose | medinius laiptus | medinių laiptų | medžio spalvos,3,False,True,0.6
+random_500_unlabeled,3685437,Baldų surinkimas,False,,baldų surinkimas | surinkimas reikia surinkti | surinkti baldus | baldų surinkimas reikia surinkti | dvi lovos,2,False,True,0.6
+random_500_unlabeled,3909983,Trinkelių klojimas,False,,trinkelių klojimas | gyvenamasis namas,1,False,True,0.6
+random_500_unlabeled,3158468,Pamatų įrengimas (rostverkas),False,,pamatų įrengimas | moduliniam namui,1,False,True,0.6
+random_500_unlabeled,3840239,Fotografai,False,,svente vyks,1,False,False,0.9
+random_500_unlabeled,2914585,Reikia išklijuoti plyteles,False,,išklijuoti plyteles | vandens nubėgimo | plyteles ant grindų,1,True,True,0.6
+random_500_unlabeled,2613240,Iškasti apie 50cm gylio 30m ilgio duobę kanalizacijos vamzdžio įdėjimui,False,,porai valandų | kanalizacijos vamzdžio | 30m ilgio | darbo porai,3,True,True,0.4
+random_500_unlabeled,2643830,Statybinio lauzo isvezimas,False,,laužo išvežimas | duris su staktomis | statybinio laužo išvežimas | isvezimas reikia išvežti | statybinio lauzo,1,False,False,0.73
+random_500_unlabeled,4040956,Malkos,False,,veiksmas trakų | skaldytų malkų,2,False,False,0.65
+random_500_unlabeled,3671891,Gipso kartono lubų irengimas,False,,gipso kartono | privatus namas | lubų įrengimas | kartono lubų | gipso kartono lubų,1,False,True,0.6
+random_500_unlabeled,2608192,Medinių fasado lentų dažymas,False,,gyvenamojo namo | daugiabučio gyvenamojo | dažymo darbams | daugiabučio gyvenamojo namo,3,False,True,0.6
+random_500_unlabeled,2915645,Škoda Karoq 2017 m. 4*4 DSG pavarų dėžė,False,,pavarų dėžė | išmeta klaidą,2,False,False,0.65
+random_500_unlabeled,3446329,Reikia išmūryti vieno aukšto gyvenamąjį namą,False,,vieno aukšto | gyvenamąjį namą,2,True,True,0.4
+random_500_unlabeled,3656825,Skyliu grezimas,False,,sienos storis | skyliu grezimas,1,False,True,0.6
+random_500_unlabeled,3392483,Durų spynos keitimas,False,,keitimas reikia pakeisti | spynos keitimas | durų spynos | durų spyną | pakeisti durų | durų spynos keitimas | pakeisti durų spyną | spynos keitimas reikia pakeisti,2,False,True,0.6
+random_500_unlabeled,3336145,Langų valymas,False,,langų valymas | balkono langus,1,False,False,0.83
+random_500_unlabeled,2872185,Statinio projektavimas,False,,statybos leidimu | statinio projektavimas | kaimo plėtros,1,False,False,1.0
+random_500_unlabeled,3975970,Konstrukcijų projektavimas,False,,konstrukcijų projektavimas | metalinio karkaso | modulinio namo | modulinis namas | arb žiūrėti,3,False,True,0.6
+random_500_unlabeled,3454383,Automatiniai vartai,False,,spalva antracitas | kiemo vartus | automatiniai vartai | vartų ilgis | stumdomus kiemo vartus | stumdomus kiemo | sodų 5 oji | pravažiavimo plotis | vanaginės sodų,7,False,True,0.6
+random_500_unlabeled,3292629,Kondicionieriu pajungimas,False,,išorinis blokas | pajungimas reikia pajungti | birželio 20d | vidinis ir išorinis,3,False,False,0.71
+random_500_unlabeled,3285303,"Sąmata draudimui Vilniuje, Pilaitėje (su PVM s/f)",False,,sąskaitą faktūrą | pvm sąskaita faktūra | draudimo bendrovei | būtina sąlyga | draudiminio įvykio | pvm sąskaitą,4,True,True,0.4
