@@ -4,6 +4,7 @@ import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/layout/Header";
+import TestVersionBanner from "@/components/layout/TestVersionBanner";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
@@ -80,6 +81,8 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <LoadingProgressBar />
           </Suspense>
+          {/* Pre-production notice — invites testers to post/spam freely. */}
+          <TestVersionBanner />
           {/* Client components below read session/path — each wrapped in
               Suspense so Cache Components can prerender the layout shell. */}
           <Suspense fallback={null}>
