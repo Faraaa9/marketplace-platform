@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from "react";
 import Image from "next/image";
-import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile } from "lucide-react";
+import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile, WifiOff } from "lucide-react";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -222,7 +222,6 @@ export default function ThreadChat({
   sendMessage,
   placeholder = "Rašyti žinutę...",
   disabled = false,
-  requestBrief = null,
   fillHeight = false,
   quickReplies = [],
   hasMoreMessages: initialHasMoreMessages = false,
@@ -235,6 +234,13 @@ export default function ThreadChat({
   const [hasMoreMessages, setHasMoreMessages] = useState(initialHasMoreMessages);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [olderLoadError, setOlderLoadError] = useState<string | null>(null);
+  // Realtime connection state. We surface "degraded" to the user when Supabase
+  // drops or fails to subscribe so the chat doesn't silently freeze — without
+  // this banner a torn websocket looks identical to "the other side is quiet".
+  const [realtimeState, setRealtimeState] = useState<
+    "connecting" | "connected" | "degraded"
+  >("connecting");
+  const [reconnectNonce, setReconnectNonce] = useState(0);
   const messageStreamRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMarkedReadMessageIdRef = useRef<string | null>(null);
@@ -255,10 +261,12 @@ export default function ThreadChat({
   const messages = useConversationStore((s) => s.threads[threadId]) ?? EMPTY_MESSAGES;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs read-receipt state when the server prop refreshes; see eslint.config.mjs note
     setCurrentOtherReadAt(otherParticipantReadAt ?? null);
   }, [otherParticipantReadAt]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets pagination state on thread switch; see eslint.config.mjs note
     setHasMoreMessages(initialHasMoreMessages);
     setOlderLoadError(null);
   }, [threadId, initialHasMoreMessages]);
@@ -363,11 +371,28 @@ export default function ThreadChat({
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
+            setRealtimeState("connected");
             void channel?.track({
               viewerKey,
               viewerRole,
               onlineAt: new Date().toISOString(),
             });
+          } else if (
+            status === "CHANNEL_ERROR" ||
+            status === "TIMED_OUT" ||
+            status === "CLOSED"
+          ) {
+            // Supabase exhausted its own retries — show the user we're
+            // degraded and queue a manual reconnect via bumping the effect
+            // dep. The cooldown keeps us from hot-looping when the broker
+            // is down for an extended outage.
+            setRealtimeState("degraded");
+            setIsOtherOnline(false);
+            if (reconnectTimeoutRef.current) return;
+            reconnectTimeoutRef.current = setTimeout(() => {
+              reconnectTimeoutRef.current = null;
+              setReconnectNonce((n) => n + 1);
+            }, 8000);
           }
         });
       realtimeChannelRef.current = channel;
@@ -381,7 +406,35 @@ export default function ThreadChat({
       if (remoteTypingTimeoutRef.current) clearTimeout(remoteTypingTimeoutRef.current);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [threadId, threadKind, providerId, viewerRole, realtimeTrackingToken, otherParticipantImage, appendMessageIfNew]);
+  }, [threadId, threadKind, providerId, viewerRole, realtimeTrackingToken, otherParticipantImage, appendMessageIfNew, reconnectNonce]);
+
+  // Cooldown timer for the auto-reconnect — kept outside the subscribe effect
+  // so a reconnect-triggered rerun doesn't immediately clear its own timer.
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+  }, []);
+
+  // Tab-focus retry. When the user comes back to the tab after a network hiccup,
+  // we attempt one immediate reconnect instead of waiting out the 8s cooldown.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onFocus = () => {
+      if (realtimeState === "degraded") {
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+        setReconnectNonce((n) => n + 1);
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [realtimeState]);
 
   const sendTypingState = useCallback((state: "start" | "stop") => {
     const channel = realtimeChannelRef.current;
@@ -568,6 +621,15 @@ export default function ThreadChat({
 
   return (
     <div className={fillHeight ? "flex min-h-0 flex-1 flex-col" : undefined}>
+      {realtimeState === "degraded" && (
+        <div className="mx-2 mb-2 flex items-center gap-2 rounded-md border border-amber-300/70 bg-amber-50 px-3 py-2 text-caption text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+          <WifiOff className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            Atsijungta nuo realaus laiko žinučių. Bandoma jungtis iš naujo… Jei
+            laukimas užtruko, atnaujink puslapį.
+          </span>
+        </div>
+      )}
       <div
         ref={messageStreamRef}
         className={cn(

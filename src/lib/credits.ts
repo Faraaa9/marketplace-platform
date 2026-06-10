@@ -33,7 +33,8 @@ export type CreditTransactionType =
   | "UNLOCK_SPEND"
   | "ADMIN_GRANT"
   | "STARTER_GRANT"
-  | "CATEGORY_UNLOCK";
+  | "CATEGORY_UNLOCK"
+  | "REFUND_REVERSAL";
 
 /** A paid category counts as active while it has no expiry or expires later. */
 export function isCategoryActive(expiresAt: Date | null | undefined): boolean {
@@ -128,6 +129,8 @@ export interface GrantCreditsInput {
   requestId?: string;
   /** Stripe checkout session id — the idempotency key for purchases. */
   stripeCheckoutSessionId?: string;
+  /** Stripe charge id (latest_charge on the PaymentIntent) — joined later by charge.refunded. */
+  stripeChargeId?: string;
 }
 
 export interface GrantCreditsResult {
@@ -154,6 +157,7 @@ export async function grantCredits(
     creditPackId,
     requestId,
     stripeCheckoutSessionId,
+    stripeChargeId,
   } = input;
 
   if (!Number.isInteger(amount) || amount <= 0) {
@@ -190,6 +194,7 @@ export async function grantCredits(
           creditPackId,
           requestId,
           stripeCheckoutSessionId,
+          stripeChargeId,
         },
       });
 
@@ -421,6 +426,116 @@ export async function unlockCategory(input: {
         ok: false,
         reason: "INSUFFICIENT_CREDITS",
         balance: await getCreditBalance(providerProfileId),
+      };
+    }
+    throw error;
+  }
+}
+
+export type ReverseRefundResult =
+  | { ok: true; alreadyReversed: boolean; balance: number; reversed: number }
+  | { ok: false; reason: "PURCHASE_NOT_FOUND" };
+
+/**
+ * Reverse a previously granted purchase after Stripe reports a refund.
+ *
+ * Idempotent on (originalCheckoutSessionId): a redelivered or repeated
+ * `charge.refunded` event will not double-reverse. The reversal can take the
+ * balance negative — that is intentional. If the provider already spent the
+ * credits we still owe the platform, and admin gets a visible negative
+ * balance to follow up on.
+ */
+export async function reverseRefund(input: {
+  /** The PURCHASE ledger row to reverse, located via Stripe charge id. */
+  stripeChargeId: string;
+  /** Refunded amount in the original currency unit (cents). For audit only. */
+  refundedAmountCents?: number;
+  /** Stripe refund id — included in the note for audit. */
+  refundId?: string;
+}): Promise<ReverseRefundResult> {
+  const { stripeChargeId, refundedAmountCents, refundId } = input;
+
+  const purchase = await prisma.creditTransaction.findFirst({
+    where: { stripeChargeId, type: "PURCHASE" },
+    select: {
+      id: true,
+      amount: true,
+      providerProfileId: true,
+      stripeCheckoutSessionId: true,
+    },
+  });
+  if (!purchase) {
+    return { ok: false, reason: "PURCHASE_NOT_FOUND" };
+  }
+
+  const existingReversal = await prisma.creditTransaction.findFirst({
+    where: {
+      type: "REFUND_REVERSAL",
+      stripeChargeId,
+      providerProfileId: purchase.providerProfileId,
+    },
+    select: { id: true, balanceAfter: true },
+  });
+  if (existingReversal) {
+    return {
+      ok: true,
+      alreadyReversed: true,
+      balance: existingReversal.balanceAfter,
+      reversed: 0,
+    };
+  }
+
+  const reverseAmount = purchase.amount;
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.providerProfile.update({
+        where: { id: purchase.providerProfileId },
+        data: { creditBalance: { decrement: reverseAmount } },
+        select: { creditBalance: true },
+      });
+
+      const noteParts = [`Stripe grąžinimas (${reverseAmount} kr.)`];
+      if (refundId) noteParts.push(`refund=${refundId}`);
+      if (refundedAmountCents != null) {
+        noteParts.push(`refunded=${(refundedAmountCents / 100).toFixed(2)}`);
+      }
+
+      await tx.creditTransaction.create({
+        data: {
+          providerProfileId: purchase.providerProfileId,
+          amount: -reverseAmount,
+          balanceAfter: updated.creditBalance,
+          type: "REFUND_REVERSAL",
+          note: noteParts.join(" · "),
+          stripeChargeId,
+        },
+      });
+
+      return {
+        ok: true as const,
+        alreadyReversed: false,
+        balance: updated.creditBalance,
+        reversed: reverseAmount,
+      };
+    });
+  } catch (error) {
+    // Lost the race to a concurrent webhook delivery — the other call wrote
+    // the reversal. Refetch and report alreadyReversed.
+    if (isUniqueConstraintError(error)) {
+      const existing = await prisma.creditTransaction.findFirst({
+        where: {
+          type: "REFUND_REVERSAL",
+          stripeChargeId,
+          providerProfileId: purchase.providerProfileId,
+        },
+        select: { balanceAfter: true },
+      });
+      return {
+        ok: true,
+        alreadyReversed: true,
+        balance: existing?.balanceAfter ?? 0,
+        reversed: 0,
       };
     }
     throw error;

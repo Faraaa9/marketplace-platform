@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-10 19:39 — Claude
+
+**Commit:** `40503f9` — fix(payments,ops): production blockers — webhook idempotency, refunds, health, chat reconnect
+
+**Pakeitimai:** 12 files changed, 490 insertions(+), 21 deletions(-)
+
+**Failai:**
+- .github/workflows/ci.yml
+- NOTES.md
+- prisma/manual-migrations/20260610_add_webhook_events_and_charge_id.sql
+- prisma/schema.prisma
+- src/app/api/health/route.ts
+- src/app/api/stripe/webhook/route.ts
+- src/app/uzklausos/nauja/page.tsx
+- src/app/uzklausos/sekti/[id]/page.tsx
+- src/components/messaging/ThreadChat.tsx
+- src/lib/credits.ts
+- src/lib/telegram/__tests__/conversation.test.ts
+- src/lib/webhook-events.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-09 09:36 — Claude
 
 **Commit:** `3bb4a41` — feat(routing): add data-driven taxonomy domain signal to category filter · lokalus

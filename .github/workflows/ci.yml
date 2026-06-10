@@ -35,6 +35,17 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Catch type errors and Prisma drift before they hit production. `next
+      # build` would be stricter, but it needs a live DB to prerender the
+      # cacheComponents routes that read from Prisma; tsc on the whole tree
+      # catches the same class of regression (missing fields, renamed APIs,
+      # broken imports) without provisioning Postgres in CI.
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
       - name: Category selection rules (precision + recall)
         run: pnpm test:category-rules
 

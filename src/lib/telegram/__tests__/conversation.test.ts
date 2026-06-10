@@ -98,6 +98,9 @@ function makeDeps(overrides: Partial<BotDeps> = {}) {
     async rateLimitPhoto() {
       return true;
     },
+    async confirmTelegramLogin() {
+      return { status: "expired" };
+    },
     baseUrl: "https://paslaugurinka.lt",
     ...overrides,
   };

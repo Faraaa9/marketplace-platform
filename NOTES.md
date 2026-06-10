@@ -10,6 +10,45 @@ Konvencija:
 
 ---
 
+## Production launch — likę darbai po fix/production-blockers PR (2026-06-10)
+
+Šitas branch'as (`fix/production-blockers`) sutvarkė:
+- ✅ Stripe webhook persistent idempotency (`webhook_events` table)
+- ✅ `charge.refunded` handler + `stripeChargeId` ledger'yje + `reverseRefund()`
+- ✅ `/api/health` route (DB ping uptime monitor'ui)
+- ✅ Post-submit confirmation banner `/uzklausos/sekti/?created=1`
+- ✅ Realtime chat degraded banner + auto-reconnect (8s cooldown + focus retry)
+- ✅ CI: prisma generate + tsc --noEmit (vietoj `next build` kuriam reikia DB)
+- ✅ Stale STRIPE_SECRET_KEY TODO'ai iš webhook/checkout route'ų
+
+Likę darbai prieš/po launch:
+
+- [ ] **DB migracija prieš deploy.** Pritaikyti `prisma/manual-migrations/20260610_add_webhook_events_and_charge_id.sql`
+      Supabase'e PRIEŠ deploy'ą. Po to patvirtinti su `pnpm db:push` (no-op jeigu SQL teisingai pritaikytas).
+- [ ] **Stripe Dashboard** — prijungti `charge.refunded` event'ą prie webhook endpoint'o.
+- [ ] **Sentry** — `pnpm add @sentry/nextjs` + `npx @sentry/wizard@latest -i nextjs`.
+- [ ] **Vercel uptime monitor** ant `/api/health` (60s ping).
+- [ ] **`Response.price` Float → Int(cents)** — P0 pinigų-saugumo bug'as. Atskiras PR
+      (migracija + backfill + UI/API cents refactor).
+- [ ] **Cascade'ai → Restrict** ant `CreditTransaction.providerProfileId` ir `LeadUnlock.providerProfileId`,
+      kad ledger'is išliktų po ProviderProfile hard-delete'o.
+- [ ] **AdminActionLog modelis** — admin'o veiksmų audit trail.
+- [ ] **Rate-limit `failClosed: true`** ant `/api/auth/register`, `/api/auth/reset-password`, `/api/requests/send-code`.
+- [ ] **GDPR cleanup cron** (PasswordReset/EmailVerification/TelegramLogin tokens + InboundEmail 90d retention).
+- [ ] **AI improve fallback** ant `/uzklausos/nauja` — retry + manual category UX.
+- [ ] **Email/Phone verification UX** — resend/expired/rate-limit messages.
+- [ ] **`/paskyra` root dashboard** + `/tiekejas` blank-state checklist.
+- [ ] **`/claim/[slug]`** — `notFound()`. Sutvarkyti arba pašalinti.
+- [ ] **Per-page JSON-LD** — `LocalBusiness` ant `/meistrai/[slug]`, `Service`+`BreadcrumbList` ant `/paslaugos/*`.
+- [ ] **Status enums** → `src/lib/statuses.ts` const exports + state machines.
+- [ ] **Client comp'ai >800 LOC** skaldyti (`tiekejas/profilis`, `ProviderListingClient`, `ProviderInboxClient`,
+      `uzklausos/nauja`, `ThreadChat`).
+- [ ] **`console.log` → structured logger** (23 vietos, daugiausia `ai-generate`, `inbound-router`).
+- [ ] **E2E smoke (Playwright)** — landing, request-creation, provider-signup, unlock-lead, admin-claim.
+- [ ] **Vitest** + money testai (grantCredits idempotency, unlockLead race, reverseRefund idempotency, webhook replay).
+
+---
+
 ## AI stebėsena ir bendras OpenRouter klientas (A fazė)
 
 - [x] **2026-05-29 — A1: bendras OpenRouter klientas + audito „tiesos sluoksnis".**

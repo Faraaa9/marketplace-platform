@@ -372,6 +372,7 @@ function NewRequestV2Form() {
   useEffect(() => {
     if (sessionStatus !== "authenticated" || !session?.user) return;
     const user = session.user;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill from external session store; see eslint.config.mjs note
     setForm((f) => ({
       ...f,
       clientName: f.clientName || user.name || "",
@@ -407,6 +408,7 @@ function NewRequestV2Form() {
 
   useEffect(() => {
     if (!isLoggedIn || !accountPhone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- phoneVerified is mixed state (also set by the SMS verify flow), not purely derivable
       setPhoneVerified(false);
       return;
     }
@@ -443,6 +445,7 @@ function NewRequestV2Form() {
       if (id && !ids.includes(id)) ids.push(id);
     }
     if (ids.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- drains the pendingAiCategorySlugs queue once categories load; see eslint.config.mjs note
       setForm((f) =>
         f.categoryIds.length > 0
           ? f
@@ -463,6 +466,7 @@ function NewRequestV2Form() {
     if (!restored) return;
     const draft = loadListingDraft();
     if (draft) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restores the draft from sessionStorage after the OAuth round-trip; see eslint.config.mjs note
       setForm((f) => {
         const next = { ...f };
         if (draft.title) next.title = draft.title;
@@ -497,6 +501,7 @@ function NewRequestV2Form() {
   // First-paint AI run when arriving from the hero.
   useEffect(() => {
     if (!cameFromHero) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- kicks off the one-time AI run on arrival; status state updates are the point
     void runAiImprove(initialDescription);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -563,7 +568,10 @@ function NewRequestV2Form() {
       if (res.ok && data?.success && data.data?.trackingToken) {
         if (!isLoggedIn) saveGuestRequest(data.data.trackingToken, form.title);
         clearListingDraft();
-        router.push(`/uzklausos/sekti/${data.data.trackingToken}`);
+        // ?created=1 triggers the success banner on the tracker page — the
+        // user sees "Užklausa paskelbta" instead of landing on a quiet view
+        // and wondering whether the submit actually went through.
+        router.push(`/uzklausos/sekti/${data.data.trackingToken}?created=1`);
       } else {
         setPublishError(data?.error || "Nepavyko paskelbti skelbimo");
         setPublishing(false);
