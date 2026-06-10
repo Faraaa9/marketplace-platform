@@ -164,6 +164,39 @@ export async function runShadowRouting(input: ShadowRoutingInput): Promise<void>
       );
     }
 
+    // Category Intelligence phrase signal — REVIEW + CONFIDENCE only, never
+    // selection (the re-rank variant was net-negative in the offline eval; see
+    // data/routing/category-intelligence/evaluation/category_intelligence_eval_report.md).
+    // Lazy-imported so the ~1MB phrase brain is loaded only when shadow is
+    // enabled, and error-isolated so a CI failure never loses the v4 log row.
+    let ciShouldReview: boolean | null = null;
+    let ciConfidence: number | null = null;
+    let ciSignal: Record<string, unknown> | undefined;
+    try {
+      const { analyzeCategoryIntelligence, combineWithRouting } = await import(
+        "./category-intelligence"
+      );
+      const sig = analyzeCategoryIntelligence(input.title, input.description);
+      const combined = combineWithRouting(
+        sig,
+        v4CategoryNames[0] ?? null,
+        v4.routingConfidence,
+      );
+      ciShouldReview = combined.shouldReview;
+      ciConfidence = combined.confidence;
+      ciSignal = {
+        version: sig.version,
+        matchedPhrases: sig.matchedPhrases.slice(0, 8),
+        rankingBoosts: sig.rankingBoosts,
+        ambiguitySignals: sig.ambiguitySignals,
+        redirectHints: sig.redirectHints,
+        reviewReasons: combined.reviewReasons,
+        explanation: sig.explanation,
+      };
+    } catch (error) {
+      console.error("[shadow-routing] category-intelligence failed (ignored):", error);
+    }
+
     await prisma.routingDecisionLog.create({
       data: {
         requestId: input.requestId,
@@ -178,6 +211,9 @@ export async function runShadowRouting(input: ShadowRoutingInput): Promise<void>
         projectType: v4.projectType,
         routingTags: v4.routingTags,
         routingConfidence: v4.routingConfidence,
+        ciShouldReview,
+        ciConfidence,
+        ciSignal: ciSignal as object | undefined,
       },
       select: { id: true },
     });

@@ -933,6 +933,13 @@ model RoutingDecisionLog {
   routingTags            String[] @default([])
   routingConfidence      Float?
 
+  // ── Category Intelligence shadow signal (review + confidence ONLY) ──
+  // Observational, never affects selection. See src/lib/routing/category-intelligence.ts
+  // and data/routing/category-intelligence/evaluation/category_intelligence_eval_report.md.
+  ciShouldReview Boolean?
+  ciConfidence   Float?
+  ciSignal       Json?
+
   createdAt DateTime @default(now())
 
   @@index([requestId])

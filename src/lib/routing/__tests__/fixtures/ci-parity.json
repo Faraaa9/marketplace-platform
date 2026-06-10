@@ -1,0 +1,1144 @@
+[
+ {
+  "title": "Bėga vanduo",
+  "description": "bėga vanduo iš po kriauklės",
+  "matchedFolded": [
+   "bega vanduo"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "bega vanduo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Skalbimo mašinos remontas",
+  "description": "neveikia skalbimo mašina, bėga vanduo",
+  "matchedFolded": [
+   "bega vanduo",
+   "masinos remontas",
+   "remontas neveikia",
+   "skalbimo masina",
+   "skalbimo masinos",
+   "skalbimo masinos remontas"
+  ],
+  "rankingBoosts": {
+   "Buitinės technikos remontas": 0.25
+  },
+  "ambiguityPhrases": [
+   "bega vanduo",
+   "skalbimo masina",
+   "skalbimo masinos"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Stogo danga",
+  "description": "reikia pakeisti stogo dangą, čerpės",
+  "matchedFolded": [
+   "danga cerpes",
+   "pakeisti stogo",
+   "pakeisti stogo danga",
+   "stogo danga"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "danga cerpes",
+   "pakeisti stogo",
+   "pakeisti stogo danga",
+   "stogo danga"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Vonios kambario remontas",
+  "description": "vonios kambaryje plytelės ir santechnika",
+  "matchedFolded": [
+   "kambario remontas",
+   "remontas vonios",
+   "vonios kambario",
+   "vonios kambario remontas",
+   "vonios kambaryje"
+  ],
+  "rankingBoosts": {
+   "Vidaus apdailos darbai": 0.25
+  },
+  "ambiguityPhrases": [
+   "vonios kambaryje"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Dujinio katilo remontas",
+  "description": "neveikia dujinis katilas, šildymas",
+  "matchedFolded": [
+   "dujinio katilo",
+   "dujinio katilo remontas",
+   "dujinis katilas",
+   "katilo remontas",
+   "remontas neveikia"
+  ],
+  "rankingBoosts": {
+   "Katilų montavimas, remontas": 0.25,
+   "Santechnikai, santechnikos darbai": -0.21
+  },
+  "ambiguityPhrases": [
+   "dujinio katilo"
+  ],
+  "redirectTokens": [
+   "katilas",
+   "katilo",
+   "sildymas"
+  ]
+ },
+ {
+  "title": "Lietvamzdis",
+  "description": "lietvamzdis nuo stogo bėga vanduo lietaus",
+  "matchedFolded": [
+   "bega vanduo"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": -0.15,
+   "Stogdengiai, stogo darbai": 0.12
+  },
+  "ambiguityPhrases": [
+   "bega vanduo"
+  ],
+  "redirectTokens": [
+   "lietvamzdis"
+  ]
+ },
+ {
+  "title": "Automobilių kondicionierių remontas",
+  "description": "Tai veikia saldymas tai neveikia",
+  "matchedFolded": [
+   "automobiliu kondicionieriu",
+   "automobiliu kondicionieriu remontas",
+   "kondicionieriu remontas"
+  ],
+  "rankingBoosts": {
+   "Autoservisai, automobilių remontas": 0.25,
+   "Ventiliacija, vėdinimo sistemos": 0.06
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Stogo meistrai, Fasadininkai, Vidaus apdailos meistrai, Santechnikai, Elektrikai ir kt.",
+  "description": "DOMINA PILNAS REMONTAS PALANGOJE NUOSAVO NAMO\n\r\nNoriu pradėti ir įrengti kuo anksčiau :) \n\n\n\n\n\n\n\r\nAtsiųskite prašau sąmatą visiems reikiamiems darbams suterminais ar apsiimtumėte tik daliai kurių darb",
+  "matchedFolded": [
+   "apdailos meistrai",
+   "kuo anksciau",
+   "nuosavo namo",
+   "pilnas remontas",
+   "remontas palangoje",
+   "stogo meistrai",
+   "vidaus apdailos",
+   "vidaus apdailos meistrai"
+  ],
+  "rankingBoosts": {
+   "Vidaus apdailos darbai": 0.25
+  },
+  "ambiguityPhrases": [
+   "nuosavo namo",
+   "remontas palangoje",
+   "stogo meistrai"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Meistro darbams prie namo",
+  "description": "Reikalingas meistras, kuris pagal pridėtas nuotraukas galėtų:\n\r\n1. Perkloti žiemos metu iškeliamas trinkelas. Plotas pažymėtas apskritimu.\n\r\n2. Perdažyti vartelius vietose kur rūdija.\n\r\n3. Perkelti iš",
+  "matchedFolded": [
+   "pagal pridetas",
+   "vietose kur"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "pagal pridetas",
+   "vietose kur"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Reikalingas remontas ir nauji baldai",
+  "description": "Blokinio namo 4a.9m virtuvė,bute 3su holu Klaipėda.Reikalingas remontas ir nauji baldai,kad viskas būtų suderinta vienos kompanijos.Vedinimas ir garinės istraukimas yra problema.Laukiu protingų šiuola",
+  "matchedFolded": [
+   "blokinio namo",
+   "nauji baldai"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "blokinio namo",
+   "nauji baldai"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Ieškau gerų meistrų...",
+  "description": "Po žiemos snygių įgriuvo polikarbonatinis šiltnamis 3*6 m. Reikalingi darbai:\n\r\nSeno šiltnamio nugriovimas;\n\r\nVietos išvalymas ir paruošimas;\n\r\nSeno šiltnamio išvežimas;\n\r\nNaujo šiltnamio pastatymas. ",
+  "matchedFolded": [
+   "geru meistru"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "geru meistru"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybos darbai, stogas, fasadas",
+  "description": "Reikalingi meistrai namo statyboms.\n\r\nPreliminari darbų apimtis: \n\r\nStogas\t~90\tm2 ( seno stogo perdarymas, pagal naują projektą)\n\r\nStoginė\t~40\tm2 \n\r\nFasadai\t~190 m2 (putų polistirolas + skarda)\n\r\nGrin",
+  "matchedFolded": [
+   "meistrai namo",
+   "namo statyboms",
+   "nauja projekta",
+   "pagal nauja",
+   "putu polistirolas",
+   "seno stogo"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": -0.15,
+   "Stogdengiai, stogo darbai": 0.12
+  },
+  "ambiguityPhrases": [
+   "meistrai namo",
+   "namo statyboms",
+   "nauja projekta",
+   "pagal nauja",
+   "putu polistirolas",
+   "seno stogo"
+  ],
+  "redirectTokens": [
+   "stogas"
+  ]
+ },
+ {
+  "title": "Stogo dažymas",
+  "description": "Cinkuotos skardos  stogo dažymas , nuplovimas, rūdžių patvarkymas . Prienų r. apie 100 kv.m.",
+  "matchedFolded": [
+   "cinkuotos skardos",
+   "skardos stogo",
+   "stogo dazymas"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "cinkuotos skardos",
+   "skardos stogo",
+   "stogo dazymas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Konstrukciju dazymas (siltnamis, met .duris,mediniai suolai ir taip toliau)",
+  "description": "Konstrukciju dazymas (siltnamis, met .duris,mediniai suolai ir taip toliau)",
+  "matchedFolded": [],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Skubiai išvežti gruntą",
+  "description": "Reikia išvežti gruntą iš teritorijos N. Vilnioje, turėtų būti pilnas 10 kubų konteineris.",
+  "matchedFolded": [
+   "isvezti grunta"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "isvezti grunta"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Mažo įbrėžimo ant laminuoto virtuvės stalviršio remontas/Repair of a small scratch on a laminated ki",
+  "description": "I am looking for a specialist in Vilnius who can repair a small scratch on a laminated kitchen countertop without replacing the whole countertop. The scratch is small, so I only need surface repair or",
+  "matchedFolded": [
+   "looking for",
+   "virtuves stalvirsio"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "looking for",
+   "virtuves stalvirsio"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Laiptų įrengimas",
+  "description": "Sveiki. Reikalingas laiptų remontas ir padengimas Epoksidu.\n\n\n\r\n    1. Senų plytelių demontavimas \n\r\n2. Statybinių atliekų išvežimas \n\r\n3. Pakopų remonto ir betonavimo darbai \n\r\n4.Pakopų padengimas ep",
+  "matchedFolded": [
+   "atlieku isvezimas",
+   "laiptu irengimas",
+   "laiptu remontas",
+   "plyteliu demontavimas",
+   "senu plyteliu",
+   "statybiniu atlieku",
+   "statybiniu atlieku isvezimas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25,
+   "Vidaus apdailos darbai": 0.12
+  },
+  "ambiguityPhrases": [
+   "laiptu irengimas",
+   "laiptu remontas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybos remonto darbai",
+  "description": "Reikalinga remontuoti daugiabučio namo Senvagės g. (nuasmeninta), Klaipėda, terasą (plotas apie 330 m2), esančią virš požeminės automobilių parkavimo aikštelės. Pagrindiniai darbai: Nuardyti esamą, su",
+  "matchedFolded": [
+   "automobiliu parkavimo",
+   "daugiabucio namo",
+   "parkavimo aiksteles",
+   "statybos remonto"
+  ],
+  "rankingBoosts": {
+   "Valymo paslaugos": 0.06
+  },
+  "ambiguityPhrases": [
+   "automobiliu parkavimo",
+   "daugiabucio namo",
+   "parkavimo aiksteles"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Išvalyti ar pakeisti gręžinio filtrą, vandens gręžiniai",
+  "description": "Grežiniui17 metų,siurbys traukia vandenį su žemėmis",
+  "matchedFolded": [
+   "vandens greziniai"
+  ],
+  "rankingBoosts": {
+   "Statybos darbai": 0.18
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Hidroizoliacijos darbai",
+  "description": "Sveiki, reikia suremontuoti, perdaryti nesandarų, peršlampantį balkoną. Ilgis 25 m, plotis 1,1 m.\n\r\nManau tinkamos terasų, stogų, stoginių, lauko baseinų, kitų statybos darbų medžiagos ir galimybės.",
+  "matchedFolded": [],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Renovacijos Vokietijoje",
+  "description": "Ieškoma brigada / komanda namo renovacijai Vokietijoje (Pašto kodas 79618)\n\n\n\r\nIeškome patikimos statybininkų komandos 200 m² ploto dviejų aukštų namo renovacijai Vokietijoje.\n\n\n\r\nAtliekami darbai:\n\r\n",
+  "matchedFolded": [
+   "aukstu namo",
+   "dvieju aukstu",
+   "dvieju aukstu namo",
+   "ieskoma brigada",
+   "namo renovacijai"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "aukstu namo",
+   "dvieju aukstu",
+   "dvieju aukstu namo",
+   "ieskoma brigada",
+   "namo renovacijai"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Metalo išvežimas",
+  "description": "Reiktų išvežti metalo laužą , + 2 vnt buitinės technikos. Rumšiškės",
+  "matchedFolded": [
+   "buitines technikos",
+   "isvezimas reiktu",
+   "isvezimas reiktu isvezti",
+   "metalo lauza",
+   "reiktu isvezti"
+  ],
+  "rankingBoosts": {
+   "Metalo laužo supirkimas": 0.06
+  },
+  "ambiguityPhrases": [
+   "buitines technikos",
+   "isvezimas reiktu",
+   "isvezimas reiktu isvezti",
+   "reiktu isvezti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Vandens filtrų aptarnavimas",
+  "description": "Modelis a-star 18 ed nesustodamas leidžia vandenį, meta klaidą err01.",
+  "matchedFolded": [
+   "filtru aptarnavimas",
+   "leidzia vandeni",
+   "meta klaida",
+   "vandens filtru",
+   "vandens filtru aptarnavimas"
+  ],
+  "rankingBoosts": {
+   "Vandens filtrai: montavimas, keitimas": 0.25
+  },
+  "ambiguityPhrases": [
+   "leidzia vandeni",
+   "meta klaida"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Komercinių patalpų vidaus patalpų pilnas remontas",
+  "description": "Komercinių patalpų vidaus patalpų pilnas remontas. Klaipėda. Grindys sienos lubos elektra santechnika, kondicionavimas, lauko fasado tinko remontas perdažymas\n\r\nIeškau kas galėtu atlikti pridėtus darb",
+  "matchedFolded": [
+   "elektra santechnika",
+   "grindys sienos",
+   "grindys sienos lubos",
+   "komerciniu patalpu",
+   "lauko fasado",
+   "patalpu vidaus",
+   "pilnas remontas",
+   "sienos lubos",
+   "tinko remontas",
+   "vidaus patalpu"
+  ],
+  "rankingBoosts": {
+   "Statybos darbai": 0.06,
+   "Vidaus apdailos darbai": 0.25
+  },
+  "ambiguityPhrases": [
+   "komerciniu patalpu",
+   "lauko fasado",
+   "patalpu vidaus"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Fasado renovacija, Vilniaus raj.",
+  "description": "Sveiki, reikia apšiltinti pamatus (pamatai gręžtiniai). Sutvarkyti stogo pakalimus, apskardinti , pakeisti/renovuoti, nudažyti namo fasado medinę dalį. Sutvarkyti/pakeisti lietaus nuvedimo sistemą. Ki",
+  "matchedFolded": [
+   "apsiltinti pamatus",
+   "fasado renovacija",
+   "lietaus nuvedimo",
+   "lietaus nuvedimo sistema",
+   "medine dali",
+   "namo fasado",
+   "nudazyti namo",
+   "nuvedimo sistema",
+   "pakeisti lietaus",
+   "pamatai greztiniai",
+   "pamatus pamatai",
+   "stogo pakalimus",
+   "sutvarkyti pakeisti",
+   "sutvarkyti stogo"
+  ],
+  "rankingBoosts": {
+   "Apšiltinimas, šiltinimas": 0.06,
+   "Statybos darbai": 0.25,
+   "Stogdengiai, stogo darbai": 0.24
+  },
+  "ambiguityPhrases": [
+   "medine dali",
+   "namo fasado",
+   "pakeisti lietaus",
+   "sutvarkyti pakeisti",
+   "sutvarkyti stogo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Revizines dureles",
+  "description": "Reikia padaryti revizines dureles su magnetukais,aukstis 2.5 m plotis 0.70cm.dureles is baldiniu ploksciu spalva Bukas. Laukiu pasiulymu su medziagom ir darbu kaina. Vilnius",
+  "matchedFolded": [
+   "baldiniu ploksciu",
+   "revizines dureles"
+  ],
+  "rankingBoosts": {
+   "Vidaus apdailos darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "baldiniu ploksciu"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Sieninio kondicionieriaus valymas",
+  "description": "Vilnius, pašilaičiai. \n\r\nIeškau Bute esančio, sieninio kondicionieriaus valymo paslaugos. Buvo sumontuotas prieš du metus, dabar iš jo eina nemalonus kvapas. Kondicionierius Elit.",
+  "matchedFolded": [
+   "nemalonus kvapas",
+   "pries du metus"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "nemalonus kvapas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Ieškome statybininkų medinio stovyklos namelio remontui",
+  "description": "Ieškome patikimų statybininkų atlikti medinio stovyklos namelio remonto darbus.\n\n\n\r\nPastato aprašymas:\n\n\n\r\nIšmatavimai: 20 m x 8 m, su antru aukštu.\n\r\nKarkasas: rąstinis, vietomis stipriai išpuvęs, ap",
+  "matchedFolded": [],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Balkonų stogelių remontas ir hermetizavimas",
+  "description": "Bendrija ieško įmonės galinčios sutvarkyti pernkto aukšto balkonų stogelius juos hermetizuojant nuo vandens pratekėjimo. pasiųlymus siusti paštu, informacija pasiteiravimui tel.",
+  "matchedFolded": [
+   "bendrija iesko",
+   "bendrija iesko imones",
+   "bendrija iesko imones galincios",
+   "galincios sutvarkyti",
+   "iesko imones",
+   "iesko imones galincios",
+   "imones galincios",
+   "vandens pratekejimo"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "bendrija iesko",
+   "bendrija iesko imones",
+   "bendrija iesko imones galincios",
+   "galincios sutvarkyti",
+   "iesko imones",
+   "iesko imones galincios",
+   "imones galincios",
+   "vandens pratekejimo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Metalinių vartų perdažymas ir vartų stulpelio perbetonavimas",
+  "description": "Reikia nuimti rudis ir perdažyti metalinius vartus, taip pat pakeisti perbetonuojant vartų stulpelį.",
+  "matchedFolded": [
+   "metaliniu vartu",
+   "pat pakeisti"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "metaliniu vartu",
+   "pat pakeisti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Konteinerių nuoma",
+  "description": "Reikalingas didelis konteineris statybinio gruzo išvezimui.",
+  "matchedFolded": [
+   "konteineriu nuoma",
+   "statybinio gruzo"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.24
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Akmens masės plokščių klijavimas",
+  "description": "Sveiki, reikalingi patyrę meistrai apklijuoti virtuvės salą ir virtuvės baldų stalviršį akmens masės plokštėmis ( 1200*2700/2800). Reikalingi meistrai su patirtimi dirbant su akmens masės plokštėmis i",
+  "matchedFolded": [
+   "akmens mases",
+   "meistrai su patirtimi",
+   "patyre meistrai",
+   "ploksciu klijavimas",
+   "virtuves baldu"
+  ],
+  "rankingBoosts": {
+   "Baldų gamyba": 0.06,
+   "Vidaus apdailos darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "akmens mases",
+   "meistrai su patirtimi",
+   "patyre meistrai"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Reikalingi gerbuvio darbai",
+  "description": "Ieškome, kas atliktų gerbuvio darbus, pridedame sklypo planą.\n\r\nPasiūlymai gali būti nebūtinai visiems darbams, o tik tam tikriems.\n\n\n\r\nReikalingi darbai su medžiagomis:\n\r\n1. Sklypo reljefo formavimas",
+  "matchedFolded": [
+   "reljefo formavimas",
+   "sklypo plana",
+   "sklypo reljefo"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "reljefo formavimas",
+   "sklypo plana",
+   "sklypo reljefo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Remontuoti pastato iškabą",
+  "description": "Pirmame aukšte stomatologijos klinikoje reikia sutvarkyti užrašą. Nežinau, kokie variantai tiktų, apsvarstysime visus. Arba pataisyti šį,  arba padaryti visiškai naują.\n\r\nPastatas netoli Akropolis Vil",
+  "matchedFolded": [
+   "pirmame aukste"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "pirmame aukste"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Daugiabučių namų remonto darbai Vilniuje",
+  "description": "Ieškomi rangovai darbams:\n\r\n1) Karaliaučiaus g. 5B, Vilnius - ventiliacinės šachtos mūrinio kaminėlio remontas, apšiltinimas, hidroizoliacija, apskardinimas (pridedamas darbų žiniaraštis, foto)\n\r\n2) K",
+  "matchedFolded": [
+   "daugiabuciu namu",
+   "ieskomi rangovai"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "daugiabuciu namu",
+   "ieskomi rangovai"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Pastatų griovimas",
+  "description": "Senas sodo namelis likę pamatai, tai reikia nugriauti ir išvežti statybines atliekas. Kokia kaina?",
+  "matchedFolded": [
+   "isvezti statybines",
+   "isvezti statybines atliekas",
+   "nugriauti ir isvezti",
+   "pastatu griovimas",
+   "senas sodo",
+   "sodo namelis",
+   "statybines atliekas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25,
+   "Vidaus apdailos darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "senas sodo",
+   "sodo namelis"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Automobilių kondicionierių remontas",
+  "description": "Citroen C4 Picasso II 2017, 2 litrai dizelis, 110 Kw\n\r\nNešaldo.",
+  "matchedFolded": [
+   "automobiliu kondicionieriu",
+   "automobiliu kondicionieriu remontas",
+   "kondicionieriu remontas"
+  ],
+  "rankingBoosts": {
+   "Autoservisai, automobilių remontas": 0.25,
+   "Ventiliacija, vėdinimo sistemos": 0.06
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Reikia išvežti statybines atliekas ir išlupti grindis apie 25 kvadratus",
+  "description": "Reikia išvežti statybines atliekas ir išlupti grindis apie 25 kvadratus.",
+  "matchedFolded": [
+   "isvezti statybines",
+   "isvezti statybines atliekas",
+   "statybines atliekas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Kondicionierių montavimas",
+  "description": "Sveiki,\n\r\nIeškau patikimo šilumos siurblio oras–oras su pilnu montavimu į nedidelį, apie 30 m² b klasės namuką, su ~4 m aukščio lubomis. Mane domina Nordic tipo įrenginiai, kurie gerai dirba šaltyje i",
+  "matchedFolded": [
+   "kondicionieriu montavimas",
+   "oras oras",
+   "silumos siurblio",
+   "silumos siurblio oras",
+   "silumos siurblio oras oras",
+   "siurblio oras",
+   "siurblio oras oras"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": 0.25,
+   "Ventiliacija, vėdinimo sistemos": 0.18
+  },
+  "ambiguityPhrases": [
+   "oras oras"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietvamzdžių keitimas",
+  "description": "Reikia pakeisti lietaus lataką po stogu",
+  "matchedFolded": [
+   "keitimas reikia pakeisti",
+   "lietaus lataka",
+   "pakeisti lietaus"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "keitimas reikia pakeisti",
+   "lietaus lataka",
+   "pakeisti lietaus"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Vidaus ir lauko darbai, stogo renovacija, montavimas",
+  "description": "Reikalingi subrangovai siems darbams:\n\r\n1. Vidaus ir lauko apdaila\n\r\n2. Stogu dengimas\n\r\n3. Gerbuvis\n\r\n4. Vedinimas",
+  "matchedFolded": [
+   "lauko apdaila",
+   "siems darbams",
+   "stogo renovacija",
+   "stogu dengimas",
+   "vidaus ir lauko"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": -0.15,
+   "Statybos darbai": 0.06,
+   "Stogdengiai, stogo darbai": 0.18,
+   "Ventiliacija, vėdinimo sistemos": 0.12
+  },
+  "ambiguityPhrases": [
+   "siems darbams",
+   "stogo renovacija",
+   "vidaus ir lauko"
+  ],
+  "redirectTokens": [
+   "vedinimas"
+  ]
+ },
+ {
+  "title": "Stogų remontas, lietvamzdžiu montavimas, skardinimas",
+  "description": "Sveiki, ieškau meistrų bendradarbiavimui. Yra keletą objektų. Reikia pakeisti lietvamzdžius prie daugiabučių. Kaminų skardinimas, parapetų skardinimas/remontas, prilydomos dangos remontas ir pan.",
+  "matchedFolded": [
+   "dangos remontas",
+   "lietvamzdziu montavimas",
+   "pakeisti lietvamzdzius",
+   "parapetu skardinimas",
+   "prilydomos dangos",
+   "stogu remontas"
+  ],
+  "rankingBoosts": {
+   "Statybos darbai": 0.18,
+   "Stogdengiai, stogo darbai": 0.25
+  },
+  "ambiguityPhrases": [
+   "dangos remontas",
+   "prilydomos dangos"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybinių atliekų išvežimas",
+  "description": "Reikia konteinerio betono lauzui ir isvezti",
+  "matchedFolded": [
+   "atlieku isvezimas",
+   "statybiniu atlieku",
+   "statybiniu atlieku isvezimas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Kapo įrengimas",
+  "description": "Sutvarkyti pamatą, uždėti plokštes. Jurbarko senosios kapinės.",
+  "matchedFolded": [],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybos darbai.Stogas.Fasadas.Vilniuje.",
+  "description": "Reikalingi meistrai namo renovacijai-užbaigimui atlikti.\n\r\nPreliminarios darbų apimtys:\n\r\nStogas ~110 m2\n\r\nFasadas ~160 m2\n\r\nKiti darbai: murijimas, griovimas,  šiukšlių išvežimas.\n\r\nDaugiau informaci",
+  "matchedFolded": [
+   "griovimas siuksliu",
+   "meistrai namo",
+   "namo renovacijai",
+   "siuksliu isvezimas"
+  ],
+  "rankingBoosts": {
+   "Vidaus apdailos darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "meistrai namo",
+   "namo renovacijai",
+   "siuksliu isvezimas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Reikia demontuoti apie 160 metrų senos tvoros (betonas-mediena), išlyginti sklypą",
+  "description": "Reikia demontuoti apie 160 metrų senos tvoros (betonas-mediena), išlyginti sklypą, sumontuoti skardinę tvorą (apie 200 metrų) su kiemo vartais (tvoros ir vartų taip pat reikės), pakloti apie 350 kv.m.",
+  "matchedFolded": [
+   "200 metru",
+   "islyginti sklypa",
+   "pat reikes",
+   "reikes pakloti",
+   "senos tvoros",
+   "skardine tvora",
+   "tvoros ir vartu"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "200 metru",
+   "pat reikes",
+   "reikes pakloti",
+   "tvoros ir vartu"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "50m2 namo + mansarda renovacija",
+  "description": "~50 m² + mansarda\n\r\nKompleksiniai darbai:\n\r\n– Stogo keitimas/storinimas (atvirų porų PUR putos + skarda)\n\r\n– Pamato ir grindų šiltinimas + grindų betonavimas\n\r\n– 8 plastikiniai langai, 1 lauko durys (",
+  "matchedFolded": [
+   "atviru poru",
+   "grindu betonavimas",
+   "grindu siltinimas",
+   "lauko durys",
+   "plastikiniai langai",
+   "stogo keitimas"
+  ],
+  "rankingBoosts": {
+   "Apšiltinimas, šiltinimas": 0.18,
+   "Medžio darbai, staliai": 0.06,
+   "Vidaus apdailos darbai": 0.12
+  },
+  "ambiguityPhrases": [
+   "atviru poru",
+   "stogo keitimas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybinių atliekų išvežimas",
+  "description": "Reikia demontuoti ( nukelti) betoninio balkono dvi sienas ir jas išvežti.",
+  "matchedFolded": [
+   "atlieku isvezimas",
+   "dvi sienas",
+   "jas isvezti",
+   "statybiniu atlieku",
+   "statybiniu atlieku isvezimas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25,
+   "Vidaus apdailos darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "jas isvezti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Kondicionierių valymas",
+  "description": "Sveiki\n\r\nTuriu oro kondicionieriu fujisu \n\r\nReikia isvalyti",
+  "matchedFolded": [
+   "oro kondicionieriu"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietaus nutekėjimo sistema",
+  "description": "Penkių aukštų daugiabučiame name esančiame adresu Žirmūnų g. (nuasmeninta)(Vilniuje) turime 8-is įėjimus. Prieš daugiau nei dešimtmetį namas ir stogeliai buvo renovuoti. \n\n\n\r\nPastaraisiais metais susi",
+  "matchedFolded": [
+   "daugiabuciame name",
+   "lietaus nutekejimo",
+   "penkiu aukstu",
+   "zirmunu g nuasmeninta"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "daugiabuciame name",
+   "lietaus nutekejimo",
+   "penkiu aukstu",
+   "zirmunu g nuasmeninta"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lauko gerbūvis (pieva, skalda, tvora, lietus)",
+  "description": "Sveiki,\n\n\n\r\nIeškau specialistų, galinčių atlikti tam tikrus darbus mano kieme (Vilnius). Šiuo metu turiu kelis svarbius darbus:\n\n\n\r\n- Pievos įrengimas ir įvažiavimo padengimas skalda.\n\r\n- Lietaus nubė",
+  "matchedFolded": [
+   "specialistu galinciu",
+   "tam tikrus"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "specialistu galinciu",
+   "tam tikrus"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietvamzdžio remontas",
+  "description": "Ieškau kas galėtų atlikti lietvamzdžio remontą  jei reikia keitimą ir smulkių stogo remonto darbų. Meistras turėtų pats įvertinti situaciją vietoje. Lietvamzdis ~ 4 aukšto aukštyje.",
+  "matchedFolded": [
+   "ivertinti situacija",
+   "meistras turetu",
+   "stogo remonto"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": -0.15,
+   "Stogdengiai, stogo darbai": 0.12
+  },
+  "ambiguityPhrases": [
+   "ivertinti situacija"
+  ],
+  "redirectTokens": [
+   "lietvamzdis"
+  ]
+ },
+ {
+  "title": "Statybinių atliekų isvezimas",
+  "description": "Rytoj ryte isvezti statyb atliekų maisus. Vienas pakrovimas.",
+  "matchedFolded": [
+   "atlieku isvezimas",
+   "statybiniu atlieku",
+   "statybiniu atlieku isvezimas"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Reikia nudažyti cinkuotos skardos čerpių stogą apie 130 kv.m.",
+  "description": "Reikia nudažyti cinkuotos skardos čerpių stogą apie 130 kv .m.  Vilniuje, Pagubės sodų 17 g. Nr. 5.\n\n\n\r\nValerijonas",
+  "matchedFolded": [
+   "cerpiu stoga",
+   "cinkuotos skardos",
+   "pagubes sodu"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "cerpiu stoga",
+   "cinkuotos skardos",
+   "pagubes sodu"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Tvora segmentas betonavimas",
+  "description": "Sveiki reikia išbetonuoti stulpus ir susukti segmenta apie 200metru medžiagas turiu reikia darbu kainos betonavimo ir segmento susukimo parašykite telefono nr ačiū.",
+  "matchedFolded": [
+   "betonavimas sveiki reikia isbetonuoti"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "betonavimas sveiki reikia isbetonuoti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Komercinio pasiūlymo defektų taisymui bei realios pagalbos",
+  "description": "Turėjom karčios patirties su nesąžiningais meistrais. Šiai dienai labai reikia komercinio pasiūlymo taisyti darbus nurodytus defektų akte, ar yra kas galite padėti ?\n\r\nTaipat reikia kas pratęstų darbu",
+  "matchedFolded": [
+   "komercinio pasiulymo",
+   "siai dienai"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "komercinio pasiulymo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Maišyto grūzo išvežimas",
+  "description": "Reikia kuo skubiau išvežti maišyto grūzo krūvą. Yra sumaišyta su žemėmis, šaknimis ir betono atliekomis. Bivylių g. Romainiai.",
+  "matchedFolded": [
+   "gruzo isvezimas",
+   "kuo skubiau isvezti"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.06
+  },
+  "ambiguityPhrases": [
+   "kuo skubiau isvezti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietaus drenažas",
+  "description": "Ieškau žmogaus kuris galėtų aplink namą padaryti drenažą. Tai yra išvedžioti lietaus drenažo vamzdį, ir pastatyti lietaus surinkimo šulinukus. Trančėja jau yra iškasta. Būtina dirbti su nivelyru X,Y.\n",
+  "matchedFolded": [
+   "aplink nama",
+   "drenazo vamzdi",
+   "lietaus surinkimo",
+   "padaryti drenaza"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "aplink nama",
+   "lietaus surinkimo",
+   "padaryti drenaza"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietaus sistemos įrengimas",
+  "description": "Reikia skubiai įrengti apie 200m lietaus sistemos ( kanalizacija)Pilaitė, Vilnius. Visa informacija telefonu\n\r\nMartynas",
+  "matchedFolded": [
+   "lietaus sistemos",
+   "sistemos irengimas"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": 0.12,
+   "Statybos darbai": 0.06,
+   "Stogdengiai, stogo darbai": -0.15
+  },
+  "ambiguityPhrases": [
+   "lietaus sistemos"
+  ],
+  "redirectTokens": [
+   "kanalizacija"
+  ]
+ },
+ {
+  "title": "Vejos bortai, pralaida ir lietaus nuvedimas",
+  "description": "Sveiki, ieškau kas galėtų nukasti velėną, sudėti vejos bortus, padaryti pralaidą ir lietaus nuvedimą. Molėtų rajonas.",
+  "matchedFolded": [
+   "lietaus nuvedima",
+   "lietaus nuvedimas",
+   "sudeti vejos",
+   "vejos bortai",
+   "vejos bortus"
+  ],
+  "rankingBoosts": {
+   "Aplinkos tvarkymas, apželdinimas": 0.18
+  },
+  "ambiguityPhrases": [
+   "lietaus nuvedima",
+   "lietaus nuvedimas"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Latako remontas",
+  "description": "Skubokai reikia pataisyti nekokybiškai sujungta lataką, bega vanduo pro vietą nuotraukoje. Domina kaina ir galimas atlikimo terminas.",
+  "matchedFolded": [
+   "atlikimo terminas",
+   "bega vanduo",
+   "vanduo pro"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "bega vanduo",
+   "vanduo pro"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Statybinių atliekų išvežimas",
+  "description": "Reikia išvezti betono atliekas",
+  "matchedFolded": [
+   "atlieku isvezimas",
+   "atlieku isvezimas reikia isvezti",
+   "betono atliekas",
+   "isvezimas reikia isvezti",
+   "isvezti betono",
+   "statybiniu atlieku",
+   "statybiniu atlieku isvezimas",
+   "statybiniu atlieku isvezimas reikia isvezti"
+  ],
+  "rankingBoosts": {
+   "Griovimo darbai": 0.25
+  },
+  "ambiguityPhrases": [
+   "isvezimas reikia isvezti"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "54 k/m butas",
+  "description": "1.Grindų išlyginamasis sluoksnis ir laminato klojimas.\n\r\n2.Plytelių klojimas WC ir 2 balkonuose.\n\r\n3. Balkono sienos dažymas.\n\r\n4. Radiatorių keitimas 3 vnt.\n\r\n5. Sienų lyginimas/glaistymas/dažymas.\n\r",
+  "matchedFolded": [
+   "glaistymas dazymas",
+   "grindu islyginamasis",
+   "grindu islyginamasis sluoksnis",
+   "islyginamasis sluoksnis",
+   "laminato klojimas",
+   "lyginimas glaistymas",
+   "lyginimas glaistymas dazymas",
+   "plyteliu klojimas",
+   "radiatoriu keitimas",
+   "sienos dazymas",
+   "sienu lyginimas",
+   "sienu lyginimas glaistymas"
+  ],
+  "rankingBoosts": {
+   "Santechnikai, santechnikos darbai": 0.18,
+   "Vidaus apdailos darbai": 0.25
+  },
+  "ambiguityPhrases": [],
+  "redirectTokens": []
+ },
+ {
+  "title": "Trinkelių latakų montavimas",
+  "description": "Reikia: - Sumontuoti 15m vandens nubėgimo latakų palei trinkeles. - Sumontuoti 9m vandens nubėgimo latakų perdangoje išpajautoje artmėje (ertmė išpauta, prieš dedant latakus reikia išsilyginti dugną i",
+  "matchedFolded": [
+   "montavimas reikia sumontuoti",
+   "pries dedant",
+   "vandens nubegimo"
+  ],
+  "rankingBoosts": {},
+  "ambiguityPhrases": [
+   "montavimas reikia sumontuoti",
+   "pries dedant",
+   "vandens nubegimo"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Interjero dizainas",
+  "description": "(nuasmeninta)aikų dienos centras nori atsinaujinti savo patalpas. Ne tik spalvomis, bet ir naujais baldais. Valgomasis, WC ir sukurti patrauklią erdvę JAUNIMUI rūsio patalpose. Pridedame patalpų foto.",
+  "matchedFolded": [
+   "interjero dizainas",
+   "rusio patalpose"
+  ],
+  "rankingBoosts": {
+   "Interjero dizaineriai": 0.18
+  },
+  "ambiguityPhrases": [
+   "rusio patalpose"
+  ],
+  "redirectTokens": []
+ },
+ {
+  "title": "Lietaus nuotekų tinklų montavimas",
+  "description": "Ieškau specialisto arba įmonės, galinčios atlikti lietaus nuotekų (lietaus vandens) drenažo / lietaus nuotekų tinklų montavimo darbus mano namo vidiniame kieme.\n\n\n\r\nReikalingi darbai:\n\n\n\r\n- Lietaus va",
+  "matchedFolded": [
+   "imones galincios",
+   "lietaus nuoteku",
+   "lietaus nuoteku tinklu",
+   "lietaus nuoteku tinklu montavimas",
+   "lietaus vandens",
+   "nuoteku lietaus",
+   "nuoteku tinklu",
+   "nuoteku tinklu montavimas",
+   "specialisto arba imones",
+   "tinklu montavimas",
+   "vandens drenazo",
+   "vidiniame kieme"
+  ],
+  "rankingBoosts": {
+   "Architektai, projektavimas": 0.06,
+   "Santechnikai, santechnikos darbai": 0.24
+  },
+  "ambiguityPhrases": [
+   "imones galincios",
+   "lietaus nuoteku",
+   "lietaus vandens",
+   "nuoteku lietaus",
+   "specialisto arba imones",
+   "vandens drenazo",
+   "vidiniame kieme"
+  ],
+  "redirectTokens": []
+ }
+]
