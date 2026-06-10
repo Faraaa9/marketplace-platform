@@ -1,0 +1,1249 @@
+category_a,category_b,shared_phrase_weight,example_phrases
+Statybos darbai,Vidaus apdailos darbai,39429,vieno aukšto | daugiabučio namo | sąskaita faktūra | dviejų aukštų | pirmas aukštas
+"Santechnikai, santechnikos darbai",Vidaus apdailos darbai,15496,naujos statybos | vonios kambaryje | statybos bute | pirmame aukšte | statybos name
+"Elektrikai, elektros darbai",Vidaus apdailos darbai,13174,senos statybos | nauja statyba | kambarių bute | statybos namas | namo vidaus
+"Medžio darbai, staliai",Vidaus apdailos darbai,8633,pagaminti ir sumontuoti | gamyba ir montavimas | montavimo darbais | vidaus durų | baltos spalvos
+Baldų gamyba,Vidaus apdailos darbai,8486,lubų aukštis | pagal pateiktą | minkštų baldų | tokio tipo | spalva balta
+"Elektrikai, elektros darbai",Statybos darbai,7693,gyvenamojo namo | individualaus namo | gyvenamasis namas | sodo namo | ūkinio pastato
+Statybos darbai,"Stogdengiai, stogo darbai",7555,stogo danga | stogo dangos | namo stogo | stogo dangą | stogo keitimas
+Valymo paslaugos,Vidaus apdailos darbai,7455,vieno kambario | abiejų pusių | vonios kambarys | dviejų kambarių | pagal poreikį
+"Aplinkos tvarkymas, apželdinimas",Vidaus apdailos darbai,5392,gerų meistrų | žmogaus galinčio | paruošti pagrindą | pagrindo paruošimas | pagrindas paruoštas
+"Architektai, projektavimas","Elektrikai, elektros darbai",4742,kapitalinio remonto | statybos leidimas | namo projektas | statybos leidimo | kultūros paveldo
+Griovimo darbai,Šiukšlių išvežimas: statybinių ir kt.,3963,šiukšlių išvežimas | išvežimas reikia išvežti | išvežti šiukšles | siuksliu isvezimas | šiukšlių išvežimas reikia išvežti
+Meistrai į namus,Vidaus apdailos darbai,3866,dušo kabiną | dušo kabina | ieškomas meistras | duso kabina | pakeisti lauko
+"Langai, durys: gamyba, montavimas",Vidaus apdailos darbai,3807,lauko durų | plastikinių langų | plastikinius langus | balkono durys | balkono durų
+"Apšiltinimas, šiltinimas",Statybos darbai,3672,namo fasado | akmens vata | seno namo | dekoratyvinio tinko | namo fasadą
+"Santechnikai, santechnikos darbai",Statybos darbai,3210,pagal projektą | individualiam namui | daugiabutis namas | didžioji riešė | buitinių nuotekų
+Buitinės technikos remontas,"Santechnikai, santechnikos darbai",3091,skalbimo mašinos | skalbimo mašina | leidžia vandenį | bėga vanduo | skalbimo masina
+"Elektrikai, elektros darbai","Santechnikai, santechnikos darbai",3091,pakeisti seną | daugiabučiame name | pakeisti senus | pakeisti nauju | sistemos montavimas
+"Aplinkos tvarkymas, apželdinimas",Statybos darbai,2908,aplink namą | sodo sklype | privataus namo | nemėžio sen | šalia namo
+Statybos darbai,"Žemės kasimas, lyginimas",2762,kasimas lyginimas | žemės kasimas lyginimas | augalinį sluoksnį | augalinio sluoksnio | pasėti žolę
+Baldų gamyba,"Medžio darbai, staliai",2564,virtuvės baldus | gali pagaminti | gamyba reikia pagaminti | gamybos terminas | gamyba reikalingos
+"Elektrikai, elektros darbai","Matininkai, geodezininkai",2264,žemės ūkio | ūkio paskirties | namų valdos | žemės ūkio paskirties | paskirties keitimas
+Krovinių pervežimas,Vidaus apdailos darbai,2034,pirmo aukšto | antrą aukštą | pirmas aukstas | prekybos centro | dariaus ir girėno
+"Autoservisai, automobilių remontas",Vidaus apdailos darbai,1893,remontas reikia pakeisti | remontas reikia sutvarkyti | remontas pakeisti | gali sutvarkyti | reiktų sutvarkyti
+Baldų gamyba,Statybos darbai,1862,pagal pateiktus | kažką panašaus | išmatavimai ilgis | turėtų atrodyti | matmenys ilgis
+"Muzikantai, dainininkai, grupės",Renginių vedėjai,1814,šventė vyks | vestuvių šventei | data 2026 | jubiliejaus proga | jubiliejaus šventei
+Meistrai į namus,"Santechnikai, santechnikos darbai",1779,sumontuoti naują | pajungti naują | išmontuoti seną | pakeisti dušo | pajungimas reikia pajungti
+"Tvoros, vartai, montavimas",Vidaus apdailos darbai,1738,tvoros ilgis | tvoros įrengimas | rudos spalvos | tvoros aukštis | tame tarpe
+"Medžio darbai, staliai",Statybos darbai,1729,įrengimas reikia įrengti | lauko terasos | terasos stogo | medinis karkasas | sraigtinių polių
+Buitinės technikos remontas,Meistrai į namus,1658,buitinės technikos | technikos remontas | remontas sugedo | remontas sveiki sugedo | meistras į namus
+Interjero dizaineriai,Vidaus apdailos darbai,1555,daline apdaila | dalinė apdaila | seno buto | statybos butui | norime atnaujinti
+Krovinių pervežimas,Šiukšlių išvežimas: statybinių ir kt.,1544,sofa lova | sofą lovą | minkštą kampą | aukštas be lifto | grunto išvežimas
+"Metalo gaminiai, suvirintojai",Vidaus apdailos darbai,1454,lauko laiptų | stumdomi vartai | stumdomų vartų | vartų gamyba | sutvarkyti lauko
+"Santechnikai, santechnikos darbai","Stogdengiai, stogo darbai",1243,lietaus nuotekų | praleidžia vandenį | lietaus vandens | pakeisti sena | bega vanduo
+"Aplinkos tvarkymas, apželdinimas","Žemės kasimas, lyginimas",1166,arų sklypą | aplink nama | sklypo tvarkymas | sklypo sutvarkymas | sodo sklypą
+"Apšiltinimas, šiltinimas",Vidaus apdailos darbai,1083,naujos statybos namas | trakų vokėje | klinkerio klijavimui | 10cm storio | namas statytas
+"Aplinkos tvarkymas, apželdinimas",Griovimo darbai,1067,išvežimas statybinių | šiukšlių išvežimas statybinių | statybinių ir kt reikia išvežti | nedidelis kiekis | didelis kiekis
+"Ventiliacija, vėdinimo sistemos",Vidaus apdailos darbai,1064,montavimas reikia sumontuoti | aukšto name | montavimas bute | gali pagelbėti | montavimas namas
+"Maitinimas, maistas šventėms","Muzikantai, dainininkai, grupės",1027,gimtadienio šventei | data 2025 | svečių skaičius | esate laisvi | šeimos šventei
+"Garažo vartai, montavimas",Vidaus apdailos darbai,999,garažo vartai | vartai su automatika | garažo vartus | spalva ruda | garazo vartai
+Statybos darbai,"Vejos priežiūra, įrengimas",962,vejos įrengimas | šiais metais | arų sklype | sklypas lygus | vejos pjovimas
+Interneto svetainių kūrimas,Programuotojai,950,galinčių padėti | partnerių galinčių | padėti įgyvendinti | pagrindinės užduotys | galinčios sukurti
+Automobilių nuoma,Keleivių pervežimas,871,oro uoste | palangos oro | val ryto | parvežti atgal | anksti ryte
+"Santechnikai, santechnikos darbai","Ventiliacija, vėdinimo sistemos",868,oras oras | pastoviam bendradarbiavimui | išorinio bloko | rekuperacinės sistemos | išorinį bloką
+Vidaus apdailos darbai,Šiukšlių išvežimas: statybinių ir kt.,843,antras aukstas | išvežti atliekas | matosi nuotraukoje | trečias aukštas | aukštas lifto
+"Katilų montavimas, remontas","Santechnikai, santechnikos darbai",838,dujinio katilo | dujų katilo | dujinį katilą | techninis aptarnavimas | katilo profilaktika
+Automobilių supirkimas,"Autoservisai, automobilių remontas",830,opel astra | toyota avensis | techninė apžiūra | ford mondeo | opel zafira
+"Architektai, projektavimas",Statybos darbai,828,individualių namų | ieškomas specialistas | namas pastatytas | teikiate tokias | teikiate tokias paslaugas
+Baldų gamyba,Meistrai į namus,770,sieninės spintos | vonios spintelę | vonios spintelės | spintos duris | spintos durys
+Vidaus apdailos darbai,"Žemės kasimas, lyginimas",769,geros kokybės | suformuoti nuolydžius | api žiūrėti | parašykite kainas | galim žiūrėti
+Baldų gamyba,Krovinių pervežimas,767,buitine technika | baldų komplektą | miegamojo lova | rašomąjį stalą | dvi spintos
+Automobilių nuoma,Mikroautobusų nuoma,760,mikroautobuso nuoma | vienai dienai | mikroautobuso nuomai | transporto priemonė | dviem parom
+"Matininkai, geodezininkai",Nekilnojamo turto brokeriai,754,žemės sklypo | žemės sklypas | nebaigtos statybos | valstybinės žemės | paskirties žemės
+"Matininkai, geodezininkai",Statybos darbai,754,dokumentų tvarkymas | sklypo planą | sodo sklypas | marijampolės sav | sienos stogas
+"Stogdengiai, stogo darbai",Vidaus apdailos darbai,744,šlaitinis stogas | vandens nubėgimo | medžiagos užsakovo | montavimas pakeisti | spalio mėnesį
+Buitinės technikos remontas,"Elektrikai, elektros darbai",741,nustojo veikti | viskas veikia | kelis kartus | rodo klaidą | gali padeti
+"Architektai, projektavimas","Santechnikai, santechnikos darbai",741,vandentiekio ir nuotekų | vandens ir nuotekų | specialistas galintis | šildymo vėdinimo | sistemos projektas
+Statybos darbai,Valymo paslaugos,728,lauko pusės | ilgalaikis bendradarbiavimas | išorės ir vidaus | svetainė su virtuve | langų rėmų
+Griovimo darbai,Vidaus apdailos darbai,726,matosi nuotraukose | statybinio laužo | šiukšlių išvežimo | statybinį laužą | atliekų išvežimo
+"Anglų kalbos kursai, pamokos","Šokiai, šokių pamokos",662,anglų kalbos | anglu kalbos | anglų kalbos korepetitoriaus | kalbos pamokų | pamokos reikalingos
+"Dujų įvedimas, pajungimas","Santechnikai, santechnikos darbai",654,atjungti seną | toje pačioje | prijungti naują | įvesti dujas | dujų skaitliuko
+Krovinių pervežimas,"Santechnikai, santechnikos darbai",639,skalbimo mašiną | dienos pusėje | reikės sąskaitos faktūros | ukmergės g nuasmeninta | 100 eurų
+Buitinės technikos remontas,Vidaus apdailos darbai,633,remontas reikalingas meistras | remontas ieškau meistro | viršutinė dalis | remontas sveiki ieškau meistro | ieškom meistro
+Fotografai,"Muzikantai, dainininkai, grupės",610,kelioms valandoms | ceremonija vyks | vestuvių proga | biudžetas 100 | didelis pliusas
+"Architektai, projektavimas","Matininkai, geodezininkai",601,registrų centre | 100 proc | sutvarkyti dokumentus | namų valdą | sklypo planas
+Buhalterinės apskaitos paslaugos,Statybos darbai,600,įmonė ieško | individuali veikla | paslaugų tiekėjo | metus buvo | visus metus
+"Betonavimo darbai, betonavimas",Statybos darbai,591,virš žemės | atraminės sienos | haus blokelių | išbetonuoti lauko | 10m ilgio
+"Aplinkos tvarkymas, apželdinimas","Vejos priežiūra, įrengimas",574,pjovimas reikia nupjauti | palei tvorą | krūmų pjovimas | nupjauti ir išvežti | reiktų nupjauti
+Automobilių nuoma,"Autoservisai, automobilių remontas",569,toyota prius | pavarų dėžė | mercedes benz | greičių dėžė | toyota auris
+Nuotekų valymo įrenginiai,Statybos darbai,561,valymo įrenginio | valymo įrenginį | valymo įrenginių | valymo irenginio | nuotekų valymas
+"Santechnikai, santechnikos darbai",Valymo paslaugos,559,valymas reikia išvalyti | kada galite atvykti | valymas reikia isvalyti | pagal poreiki | gamybinių patalpų
+Pagalbiniai darbininkai,"Vejos priežiūra, įrengimas",549,žolės pjovimo | pjauti žolę | pjovimas nupjauti | nupjauti aukštą | paskutinį kartą
+Krovinių pervežimas,Valymo paslaugos,537,darbo laikas | pirmoje dienos pusėje | vienas žmogus | kampinę sofą | dvigulį čiužinį
+Lietuvių kalbos korepetitoriai,Matematikos korepetitoriai,524,nuotoliniu būdu | klasės mokiniui | padėti pasiruošti | kontaktiniu būdu | korepetitoriai reikalinga pagalba
+Krovinių pervežimas,Statybos darbai,516,kazlų rūdos | vieno namo | maps app | maps app goo | modulinio namelio
+"Aplinkos tvarkymas, apželdinimas",Šiukšlių išvežimas: statybinių ir kt.,504,reiktų išvežti | gali išvežti | surinkti ir išvežti | privažiavimas prie pat | nedidelį kiekį
+Automobilių nuoma,Vidaus apdailos darbai,498,kuo pigiau | rugpjūčio mėn | vidutinės klasės | kokio dydžio | siūlyti variantus
+"Medžio darbai, staliai","Metalo gaminiai, suvirintojai",494,nerūdijančio plieno | milteliniu būdu | juodo metalo | nerudijančio plieno | metalinių turėklų
+"Betonavimo darbai, betonavimas",Vidaus apdailos darbai,489,betoninių laiptų | laiptų įrengimas | metro aukščio | betonavimas reikalinga išbetonuoti | pirmo į antrą
+"Maitinimas, maistas šventėms",Sodybos nuomai,487,žmonių skaičius | data rugpjūčio | 100 žmonių | planuojamas žmonių | planuojame įmonės
+Automobilių nuoma,Mobilaus kubilo nuoma,465,vienai parai | šiam savaitgaliui | turite laisvą | parai laiko | nuoma rugpjūčio
+"Maitinimas, maistas šventėms",Renginių vedėjai,454,dalyvių skaičius | gimtadienio šventė | vyks 2026 | šventėje dalyvaus | žmonių kompanijai
+"Baseinų, jacuzzi įrengimas, priežiūra","Kapų tvarkymas, priežiūra",449,kapų tvarkymas | sutvarkyti kapavietę | kapo sutvarkymas | sutvarkyti kapą | aplink kapą
+Automobilių plovyklos,"Autoservisai, automobilių remontas",447,volvo xc60 | nissan qashqai | antikorozine danga | honda crv | citroen berlingo
+"Elektrikai, elektros darbai",Interjero dizaineriai,442,elektros taškų | techninis projektas | lauko apšvietimo | elektros planas | planuojama įrengti
+"Architektai, projektavimas",Vidaus apdailos darbai,441,statybos namą | galiu pateikti | naujos statybos namą | tipo name | sienų griovimo
+"Kalviai, kalvystės darbai","Stiklų, veidrodžių gamyba, keitimas",439,pagal individualius | individualius užsakymus | pagal individualius užsakymus | gaminiai pagal | gaminiai pagal individualius
+"Elektrikai, elektros darbai",Projektų ir dokumentų rengėjai,439,paramai gauti | projektą pagal | projektų ir dokumentų | dokumentų rengėjai | projektų ir dokumentų rengėjai
+"Aplinkos tvarkymas, apželdinimas","Elektrikai, elektros darbai",438,taisyklingos formos | viską sutvarkyti | pastatytas namas | vidiniame kieme | kiemo pusės
+"Metalo gaminiai, suvirintojai",Statybos darbai,433,metalo konstrukcijų | skardos lankstymas | metalinės konstrukcijos | skardos lankstiniai | metalo konstrukcija
+Fotografai,Pramogos vaikams,428,gimtadienio proga | vaiko gimtadieniui | žaidimų kambaryje | vaiko gimtadienio | liepos 13d
+"Autoservisai, automobilių remontas","Elektrikai, elektros darbai",428,kairės pusės | ford galaxy | norėjau paklausti | vairuotojo pusės | remontas keitimas
+"Betonavimo darbai, betonavimas","Metalo gaminiai, suvirintojai",423,lauko laiptus | lauko laiptai | laiptų remontas | lauko laiptu | įėjimo laiptų
+Automobilių stiklų keitimas,"Autoservisai, automobilių remontas",413,stiklo keitimas | stiklų keitimas | skoda octavia | automobilių stiklų | automobilių stiklų keitimas
+Interneto svetainių kūrimas,Vidaus apdailos darbai,412,žmogaus ar įmonės | žmogaus įmonės | žmogaus ar komandos | pagrindiniai reikalavimai | reiktų paruošti
+Krovinių pervežimas,Pagalbiniai darbininkai,411,pirmoje dienos | dviejų žmonių | statybines medžiagas | jūrinio konteinerio | trečią aukštą
+"Elektrikai, elektros darbai","Stogdengiai, stogo darbai",409,stogas šlaitinis | stogas plokščias | stogas skardinis | dviejų šlaitų | šlaitinis skardinis
+"Autoservisai, automobilių remontas",Techninė pagalba kelyje,405,ford transit | toyota yaris | opel insignia | subaru outback | automobilis toyota
+"Matininkai, geodezininkai",Vidaus apdailos darbai,397,dvi dalis | naujai pastatyto | gyv namas | 100 baigtumo | padaryti buto
+"Elektrikai, elektros darbai",Valymo paslaugos,391,bendro naudojimo | valymas reikalinga išvalyti | valymas isvalyti | aukštų daugiabutyje | namo bendrijai
+"Medžio darbai, staliai",Meistrai į namus,386,ikea lt lt products | surinkti naują | pritvirtinti prie sienos | pakabinti vonios | surinkti ir sumontuoti
+"Akmens masės, marmuro, granito darbai",Vidaus apdailos darbai,385,akmens masės | akmens mases | spalva gali
+Geologiniai tyrimai,Statybos darbai,377,namo statybai | individualaus namo statybai | druskininkų sav | namo pamatu | nedidelio namo
+"Langai, durys: gamyba, montavimas","Santechnikai, santechnikos darbai",372,keitimas reikia pakeisti | juos pakeisti | keitimas bute | sutvarkyti arba pakeisti | maždaug prieš
+Automobilių nuoma,Sodybos nuomai,351,nuomai liepos | miegamos vietos | aplink kauna | nuomai rugpjūčio | nuoma ieškoma
+Internetinio verslo konsultantai,Komunikacijos specialistai,350,socialinių tinklų | turinio kūrimas | soc tinklus | instagram ir facebook | facebook puslapį
+Pagalbiniai darbininkai,Vidaus apdailos darbai,347,galime mokėti | gipso plokštės | žalieji ežerai | kiti smulkus | plataus profilio
+"Autoservisai, automobilių remontas",Buitinės technikos remontas,344,meta klaida | siurblių remontas | remontas sveiki reikia pakeisti | remonto meistro | įmanoma pataisyti
+"Skalda, smėlis, žvyras, juodžemis","Žemės kasimas, lyginimas",327,augalinio grunto | sijoto augalinio | augalinį gruntą | malto betono | betono skaldos
+"Aplinkos tvarkymas, apželdinimas","Medžio darbai, staliai",320,surinkimas reikia surinkti | surinkimas surinkti | šaligatvio plytelių | meistras surinkti | kelis variantus
+Fotografai,"Maitinimas, maistas šventėms",313,krikštynų šventei | liepos 26d | svente vyks | norime turėti | kurios vyks
+Krovinių pervežimas,Techninė pagalba kelyje,312,lengvąjį automobilį | pervežti automobilį | parvežti automobilį | lengvajį automobilį | geležinio vilko
+"Roletai, žaliuzės, romanetės",Vidaus apdailos darbai,312,dviejų langų | tamsiai rudos | plotis x aukštis | lango išmatavimai | virš lango
+Grafikos dizaineriai,Interneto svetainių kūrimas,307,galinčio sukurti | norime sukurti | maisto papildų | žmogaus kuris galėtų sukurti | žmogaus galinčio sukurti
+"Langai, durys: gamyba, montavimas",Meistrai į namus,305,šarvuotų durų | pakeisti durų | durų rankeną | durų staktą | durų rankenas
+"Advokatai, teisininkai",Buhalterinės apskaitos paslaugos,304,turinčio patirties | pirkimo pardavimo | fizinio asmens | darbo sutartį | dokumentų rengimas
+"Aplinkos tvarkymas, apželdinimas","Santechnikai, santechnikos darbai",304,reikalui esant | kelis metus | įrengimas aplink | specialisto ar įmonės galinčios | visus kitus
+Automobilių nuoma,Pramogos vaikams,301,nuoma liepos | nuoma ieškomas | vienai valandai | rugpjūčio 16d | rugpjūčio 15d
+"Aplinkos tvarkymas, apželdinimas","Medžių genėjimas, pjovimas",298,medžių pjovimas | medžių krūmų | išrauti kelmus | kelmų rovimas | medžių pjovimas reikia nupjauti
+Fotografai,Renginių vedėjai,295,gimtadienio šventės | 2026 m birželio | data ir laikas | data gruodžio | krikštynų šventę
+"Elektrikai, elektros darbai",Interneto svetainių kūrimas,293,specialisto galinčio | tam tikrų | specialisto kuris gali | specialisto arba įmonės | valdymo sistema
+Restauravimas,Vidaus apdailos darbai,287,langų durų | medinių durų | medinių lauko | mediniu duru | atnaujinti senas
+"Elektrikai, elektros darbai",Meistrai į namus,284,įdėti naują | led apšvietimą | pajungti gartraukį | pakabinti šviestuvus | elektrinę viryklę
+"Katilų montavimas, remontas",Vidaus apdailos darbai,283,kuro katilo | kieto kuro katilo | katilo keitimas | granulinį katilą | katilo montavimas
+"Advokatai, teisininkai","Elektrikai, elektros darbai",277,situacija tokia | turintis patirties | pateikti dokumentus | rašau jums | buvo padaryta
+Buhalterinės apskaitos paslaugos,Vidaus apdailos darbai,277,individualia veikla | pilnai sutvarkyti | susisiekite el paštu | namų bendrija | apimtis nedidelė
+Automobilių plovyklos,Valymo paslaugos,273,cheminis valymas | cheminio valymo | vidaus valymas | cheminį valymą | pat išvalyti
+Pagalbiniai darbininkai,Statybos darbai,272,darbo pobūdis | stogelį virš | karkaso surinkimas | namo rūsį | senų lentų
+"Autoservisai, automobilių remontas","Santechnikai, santechnikos darbai",270,siurblio remontas | filtrų keitimas | remontas arba keitimas | reik pakeist | pakeisti tarpinę
+Krovinių pervežimas,Statybinės technikos nuoma,269,vienos vietos | vietos į kitą | jūrinį konteinerį | moki veži | pervežti į kitą
+Baldų gamyba,"Elektrikai, elektros darbai",269,kažko panašaus | pagal esamą | išoriniai matmenys | galinčio suprojektuoti | vilni žiūrėti
+Automobilių nuoma,Fotografai,268,porai valandų | asmenų šeima | liepos 18d | suaugę ir 2 vaikai | gegužės 16d
+Lietuvių kalbos korepetitoriai,"Šokiai, šokių pamokos",267,kalbos korepetitoriaus | kalbos mokytojos | kalbos mokytojo | individualios pamokos | kalbos lygis
+Automobilių nuoma,Krovinių pervežimas,266,lengvojo automobilio | vidutinio dydžio | transporto priemonės | pirmyn atgal | geriausiai tiktų
+Automobilių nuoma,Prikabinamų namelių nuoma,265,namelių nuoma | prikabinamų namelių | prikabinamų namelių nuoma | prikabinamas namelis | namelio nuoma
+"Psichologai, psichoterapeutai",Vidaus apdailos darbai,262,vienas kito | pat tiesiog smalsu | tiesiog smalsu | dienotvarke priimant | dienotvarke priimant klientus
+Grafikos dizaineriai,Video klipų kūrimas,258,ilgalaikiam bendradarbiavimui | socialiniams tinklams | soc tinklams | įmonė nuasmeninta | dirbtiniu intelektu
+"Santechnikai, santechnikos darbai","Žemės kasimas, lyginimas",258,sodo bendrija | vandens šulinio | pagilinti šulinį | kelmijos sodų | tinklų įrengimo
+"Matininkai, geodezininkai","Žemės kasimas, lyginimas",256,žemės sklypą | žemes sklypo | arų žemės | sklypo dalies | zemes sklypas
+Baldų gamyba,"Santechnikai, santechnikos darbai",253,pakeisti virtuvės | toks pat | kelių dienų | termin žiūrėti | parašykite preliminarią
+Baldų gamyba,"Langai, durys: gamyba, montavimas",251,stumdomos durys | nesu tikra | vienas šonas | ilgis 160 | stumdomu durų
+"Aplinkos tvarkymas, apželdinimas","Matininkai, geodezininkai",245,sodo sklypo | sklypo formavimo | sodo sklypa | žemės sklypus | nuasmeninta jonava
+Fotografai,Vidaus apdailos darbai,245,būčiau dėkinga | keletą nuotraukų | gruodžio mėn | nereikia svarbu | padaryti kelias
+"Matininkai, geodezininkai","Santechnikai, santechnikos darbai",244,inžinerinių tinklų | specialisto ar įmonės | sodų bendrijos | kryžiokų sodų | atliktas remontas
+"Elektrikai, elektros darbai",Krovinių pervežimas,233,vieno buto | darbo valandomis | trakų r sav | dviejų vietų | kuo įmanoma
+Reklamos paslaugos,SEO paslaugos,233,meta ads | ads specialisto | reklamos specialisto | google reklama | google reklamos
+Interjero dizaineriai,Statybos darbai,231,ieškomas žmogus galintis | namas 100 | nuoroda nuasmeninta | galintis padaryti | sienos ir stogas
+Krovinių pervežimas,"Medžio darbai, staliai",226,miegamojo lovą | antra auksta | dvigule lova | ilgio plotis | naujus baldus
+"Anglų kalbos kursai, pamokos","Vertėjai, vertimų biurai",221,anglų kalba
+"Apšiltinimas, šiltinimas","Stogdengiai, stogo darbai",221,biria vata | šiltinimas biria | šiltinimas biria vata | mineraline vata | stogo perdangos
+Vidaus apdailos darbai,Video klipų kūrimas,221,montavimo paslaugų | montavimas ieškau kas galėtų sumontuoti | montavimas ieškomas | dirbti kartu | pasiūlymo el paštu
+Griovimo darbai,Krovinių pervežimas,217,statybinių medžiagų | statybinės medžiagos | pat laiptinės | krovininis liftas | statybiniu medziagu
+"Stiklo konstrukcijos, montavimas",Vidaus apdailos darbai,217,konstrukcijos montavimas | lubos įtempiamos | stiklo gamyba | aliuminio stiklo | stiklines pertvaras
+Interjero dizaineriai,Interneto svetainių kūrimas,213,galinčio padėti | galintis padėti | padėtų sukurti | atnaujinti esamą | nieko mandro
+Nekilnojamo turto brokeriai,Vidaus apdailos darbai,210,miesto centre | butas palangoje | reiktų įvertinti | kambarių senos | kambarių senos statybos
+Slaugytojai,Valymo paslaugos,204,darbo dienomis | kartą savaitėje
+"Advokatai, teisininkai","Matininkai, geodezininkai",203,paruošti dokumentus | dokumentų paruošimas | zemes sklypo | registrų centro | rajono savivaldybės
+Baldų gamyba,Interjero dizaineriai,203,darbo vietos | virtuvės svetainės | dėkoju už atsakymą | kitų baldų | koridoriaus spintos
+Statybos darbai,Statybos dokumentų tvarkymas,202,statybos dokumentų | statybos dokumentų tvarkymas | namo statybas | namui namas | pasiūly žiūrėti
+Automobilių nuoma,"Muzikantai, dainininkai, grupės",201,data 2024 | liepos 12d | liepos 25d | rugpjūčio 24d | liepos 20d
+Baldų gamyba,"Stiklo konstrukcijos, montavimas",198,pertvarų gamyba | matinio stiklo | nišos plotis | gamyba sveiki reikalinga pagaminti | pertvaros gamyba
+"Elektrikai, elektros darbai","Medžio darbai, staliai",198,terminas ačiū | įrengti dvi | padaryti lauko | reiktų surinkti | namo terasos
+Buhalterinės apskaitos paslaugos,Valymo paslaugos,197,paslaugų teikėjo | individualios veiklos | pagal individualią | pagal individualią veiklą | kartą per metus
+"Autoservisai, automobilių remontas",Baldų gamyba,194,dešinės pusės | dešinėje pusėje | kairėje pusėje | kita spalva | spalvos kodas
+Baidarių nuoma,Sodybos nuomai,191,aplink vilnių | baidarių nuoma | 100km aplink
+"Automobilių poliravimas, priežiūra","Autoservisai, automobilių remontas",191,priekinio stiklo | skoda superb | bagažinės dangčio | keleivio pusės | sutvarkyti rūdis
+"Medžio darbai, staliai","Santechnikai, santechnikos darbai",191,įrengti lauko | perkelti į kitą | pagal pateiktą projektą | pastatyti lauko | galbūt pakeisti
+"Autoservisai, automobilių remontas",Meistrai į namus,190,keitimas pakeisti | keitimas remontas | visos dalys | vandens pompa | keitimas reiktų
+"Aplinkos tvarkymas, apželdinimas",Kelių tiesimas,182,metrų plotis | pagrindų įrengimas | bortų įrengimas | norime susitvarkyti | įvažiavimas į kiemą
+"Advokatai, teisininkai",Nekilnojamo turto brokeriai,181,nekilnojamojo turto | nekilnojamąjį turtą | turto paveldėjimo
+"Aplinkos tvarkymas, apželdinimas",Pagalbiniai darbininkai,181,aplinka sodas | teritorijos tvarkymas | kiemo tvarkymo | lapų grėbimas | pjovimas reikalinga nupjauti
+Aukštalipiai,Statybos darbai,181,stogo dažymas | aukšto stogas | skelbia konkursą | namo aukštis | stogas lygus
+Meistrai į namus,Valymo paslaugos,180,šiaurės miestelis | virtuvės spintelės | darbo valandų | trumpalaike nuoma | galiu privežti
+Statybinės technikos nuoma,"Žemės kasimas, lyginimas",177,visai dienai | privaziavimas geras | šulinio žiedus | pro vartus | vietos i kita
+Valymo paslaugos,Šiukšlių išvežimas: statybinių ir kt.,176,buitinė technika | dvi sofas | dvi sofos | kovo 11 osios | laikas nesvarbu
+"Advokatai, teisininkai",Projektų ir dokumentų rengėjai,176,paslaugų teikimo | teisininko konsultacija | nuomos sutartį | teisinės konsultacijos | nuomos sutartis
+"Langai, durys: gamyba, montavimas",Valymo paslaugos,175,balkono langus | balkono langų | balkono langai | balkono langas | langai vienas
+Fotografai,Fotografai verslui,175,pardavimo skelbimui | baltame fone | butą pardavimui | nufotografuoti butą | internetiniam puslapiui
+Baldų gamyba,Valymo paslaugos,174,virtuvės spinteles | viena spinta | šaldytuvas orkaitė | lovos čiužinio | smėlio spalvos
+Grafikos dizaineriai,Vidaus apdailos darbai,174,didelio formato | žmogaus kuris gali | nedidelės apimties | viena spalva | dėkoju iš anksto
+Fotografai,Video klipų kūrimas,173,spalio 25d | foto ir video | terminą ačiū | gali būti pradedantysis | vestuvių šventę
+Sodybos nuomai,Vidaus apdailos darbai,170,visoje lietuvoje | atskiri kambariai | liepos mėnesiui | rugpjūčio mėnesiui | birželio mėnesiui
+Pramogos vaikams,Renginių vedėjai,170,ojo gimtadienio | vaikų darželio | vaikų šventei | ojo gimtadienio šventei | gimtadienis vyks
+Plėvelės klijavimas,Vidaus apdailos darbai,170,langų išmatavimai | klijavimas reikia apklijuoti | lango dydis | matinė plėvelė | patalpų viduje
+Automobilių nuoma,Statybos darbai,167,asmenų šeimai | kitus variantus | liepos men | kuo pigesnio | rugpjūčio 20d
+Baldų gamyba,"Stiklų, veidrodžių gamyba, keitimas",167,gamyba ieškome kas pagamintų | pagaminti naują | pagaminti tokio | pagaminti tokio tipo | led apsvietimu
+Buhalterinės apskaitos paslaugos,"Elektrikai, elektros darbai",166,padėti sutvarkyti | įmonė turinti | buvo atlikta | asmens ar įmonės | parengti ir pateikti
+Nuotekų valymo įrenginiai,"Žemės kasimas, lyginimas",164,privažiavimas geras
+"Elektrikai, elektros darbai",Sniego valymas,164,automobilių stovėjimo | stovėjimo aikštelė | automobilių stovėjimo aikštelė | daugiabučio namo kieme | parkavimo aikštelės
+Reklamos gamyba,Vidaus apdailos darbai,164,tokio pat | prisegu failą | pavyzdį prisegu | foto taip pat | kiekis 200
+"Langai, durys: gamyba, montavimas","Medžio darbai, staliai",162,dviejų stiklų | metalinių durų | stiklų paketas | langai varstomi | varstomi langai
+Alternatyvi energija,"Elektrikai, elektros darbai",162,požeminiame parkinge | krovimo stotele | dingus elektrai | off grid | automobilio krovimo
+"Kapų tvarkymas, priežiūra","Paminklai kapams, antkapiai",161,uždengti kapą | kapo dengimas | ginkūnų kapinėse | kapo dydis | kapavietės sutvarkymas
+"Aplinkos tvarkymas, apželdinimas","Maitinimas, maistas šventėms",159,namo kieme | nuosavo namo kieme | privačiame kieme | privataus namo kieme
+Sodybos nuomai,Statybos darbai,159,siūlyti įvairius | siūlyti įvairius variantus | būtume dėkingi | tinka ir kiti | anksto dėkui
+Komunikacijos specialistai,Reklamos paslaugos,157,facebook instagram | facebook ir instagram | instagram reklamos | reklamos specialistas
+"Santechnikai, santechnikos darbai","Vandens filtrai: montavimas, keitimas",156,vandens filtro | sumontuoti vandens | vandens filtrą | vandens valymo | išvalyti vandens
+Djs,"Muzikantai, dainininkai, grupės",156,garso aparatūra | jubiliejaus šventę | lietuvių rusų | gera muzika | šventės pravedimas
+"Stiklų, veidrodžių gamyba, keitimas",Vidaus apdailos darbai,155,led apšvietimu | netaisyklingos formos | led pašvietimu | grindų žiūrėti | priklijuoti naują
+"Vertėjai, vertimų biurai","Šokiai, šokių pamokos",155,anglų kalbą | rusų kalbos | rusų kalbą | ispanų kalba
+"Elektrikai, elektros darbai",Statybos dokumentų tvarkymas,153,apva paramai | apva parama | namo statyboms | apva paramai gauti | apva paramos
+"Elektrikai, elektros darbai","Žemės kasimas, lyginimas",153,sklypą sklypas | reiktų iškasti | šalia esančios | galiu atsiliepti | jonavos r sav
+"Elektrikai, elektros darbai",Kaminų valymas,152,kamino valymas | kamino įdėklo | kamino įdėklą | kamino įdėklas | kamino aukštis
+Lietuvių kalbos korepetitoriai,"Vertėjai, vertimų biurai",151,lietuvių kalba | lietuviu kalba
+Interjero dizaineriai,Inžinieriai,150,techninius brėžinius | techninių brėžinių | baldų planas | stilius modernus | techninis planas
+Kelių tiesimas,Statybos darbai,148,kelio įrengimas | ilgis 100 | 400 metrų | kelio dangos | nuovažos įrengimas
+Statybinės technikos nuoma,Vidaus apdailos darbai,147,kitai savaitei | aukštasis pavilnys | kelioms dienoms | norejau paklausti | plokščių montavimui
+Grafikos dizaineriai,Komunikacijos specialistai,146,soc tinklų | prekės ženklui | kūrybingo žmogaus | instagram linkedin | sukurti vizualus
+Kelių tiesimas,"Žemės kasimas, lyginimas",143,kelio ilgis | kelio plotis | frezuoto asfalto | įrengti aikštelę | asfalto drožlių
+Komunikacijos specialistai,Rinkodara (marketingas),140,socialinius tinklus | instagram facebook | skaitmeninės rinkodaros | socialiniai tinklai | facebook tiktok
+Krovinių pervežimas,Meistrai į namus,139,buitinę techniką | buitines technikos | ryt ryte | galiu padėti | skalbyklę džiovyklę
+"Advokatai, teisininkai",Statybos darbai,139,visi dokumentai | prieš kelis | viskas vyksta | fizinių asmenų | gali pakonsultuoti
+"Langai, durys: gamyba, montavimas",Statybos darbai,139,aliuminio konstrukcija | metrai ilgio | pakeisti dviejų | aliuminio konstrukcijos | tonuotas stiklas
+Baldų gamyba,Šiukšlių išvežimas: statybinių ir kt.,137,sieninę spintą | rašomojo stalo | dvi spintelės | viengulės lovos | dvi lovos
+"Aplinkos tvarkymas, apželdinimas",Krovinių pervežimas,135,išvežti žemes | nuosavą namą | faktūra apmokėjimas | šaligatvio plyteles | sąskaita faktūra apmokėjimas
+"Vejos priežiūra, įrengimas",Vidaus apdailos darbai,134,išrašyti sąskaitą faktūrą | data kada | zapyškio sen | pakloti ruloninę | visus šiuos
+Keleivių pervežimas,Krovinių pervežimas,134,darbo dienom | reiktų paimti | pervežimas paimti | pervežimas iš palangos | gali paimti
+"Advokatai, teisininkai",Vidaus apdailos darbai,133,pagal sutartį | globos namuose | trumpai tariant | padėtų išspręsti | trumpai apie situaciją
+Interjero dizaineriai,Valymo paslaugos,133,grožio salono | komercines patalpas | ofiso patalpas | biuro patalpas | trys miegamieji
+"Muzikantai, dainininkai, grupės",Pramogos vaikams,132,gegužės 31d | šventei liepos | dienos proga | šventei data | gimtadienio progai
+Medienos gaminiai,"Medžio darbai, staliai",131,terasinės lentos | terasinių lentų | impregnuotos medienos | vnt ilgis | impregnuota mediena
+Buitinės technikos remontas,"Dujų įvedimas, pajungimas",130,dujinė viryklė | dujine virykle | dujinės kaitlentės | dujines virykles
+Kaminų valymas,Valymo paslaugos,128,valymas išvalyti | valymas reik | valymas reikėtų išvalyti | reik išvalyti
+Djs,Renginių vedėjai,128,val vakaro | balandžio 25d | vedėjo kartu | įmonės renginio | vyks gruodžio
+Automobilių nuoma,Valymo paslaugos,127,trumpalaikei nuomai | liepos 31d | mokyklos g nuasmeninta | vidutinio dydzio | gruodžio pradžioje
+Reklamos paslaugos,Video klipų kūrimas,125,klipų kūrimas | vaizdo įrašus | sukurti trumpą | video kūrėjo | reklaminį video
+Baldų gamyba,Reklamos gamyba,124,gamyba sveiki ieškau kas pagamintų | pagaminimo terminas | vienos spalvos | ilgalaikiui bendradarbiavimui | preliminarus dydis
+Djs,"Maitinimas, maistas šventėms",124,šventei kuri vyks | šventės data | privačiam renginiui | esančioje sodyboje | šventės laikas
+Grafikos dizaineriai,Reklamos gamyba,124,vizitinės kortelės | lauko reklamos | įmonės logo | dovanų kuponų | lauko reklamą
+"Aplinkos tvarkymas, apželdinimas",Pramogos vaikams,122,vaikų žaidimų
+"Vejos priežiūra, įrengimas","Žemės kasimas, lyginimas",122,arų sklypas | aru sklypa | sklypas buvo | auga žolė
+Krovinių pervežimas,"Žemės kasimas, lyginimas",122,gatvė nuasmeninta | gali atvežti | reiktų atvežti | kubiniai metrai | kazlų rudos
+"Elektrikai, elektros darbai","Ventiliacija, vėdinimo sistemos",122,visi laidai | visos komunikacijos | name išvedžioti | pirmas ir antras | pakabinti lubinį
+Renginių organizavimas,Sodybos nuomai,120,aplink kauną | vienos dienos | įmonės šventę
+Mobilaus kubilo nuoma,Sodybos nuomai,120,naujiems metams | gruodžio 31d | gruodžio 31 sausio
+"Elektrikai, elektros darbai","Signalizacijos, kameros, apsaugos sistemos",120,stebėjimo kamerų | vaizdo kameros | stebėjimo kamerą | stebėjimo sistemos | vaizdo stebėjimo sistemos
+"Elektrikai, elektros darbai",Fotografai,120,lauksime jūsų pasiūlymo | kur nors | galinčio padaryti | pat padaryti | pirma karta
+Automobilių nuoma,"Maitinimas, maistas šventėms",119,liepos 19d | asmenų grupei | 2025 m liepos | gruodžio 20d | birželio 26d
+Interneto svetainių kūrimas,SEO paslaugos,118,sutvarkyti google | google paieškoje | odontologijos klinikai | tag manager | seo optimizacija
+"Elektrikai, elektros darbai",Sodybos nuomai,117,kaimo turizmo | miegamieji kambariai
+Sportinių dangų sistemos,Statybos darbai,117,vaikų žaidimo | krepšinio aikštelę | krepšinio aikštelės | žaidimų aikštelės | žaidimo aikštelės
+"Autoservisai, automobilių remontas",Statybos darbai,116,dažymas reikia perdažyti | remontas reiktu | patenka vanduo | meistro kuris pakeistų | skoda kodiaq
+Automobilių nuoma,Šventinės įrangos nuoma,116,norime išsinuomoti | nuoma spalio | nuoma gegužės | biudžetas 200 | nuoma 2026
+Plėvelės klijavimas,Valymo paslaugos,115,namo langus | namo langų | stiklinių pertvarų | langų stiklų
+Grafikos dizaineriai,Interjero dizaineriai,115,padėti sukurti | dizainerio galinčio | dizainerio kuris sukurtų | dizaino paslaugų | ieškomas dizaineris
+Logopedai,"Vertėjai, vertimų biurai",114,rusų kalba
+Meistrai į namus,Statybos darbai,113,ventiliacijos anga | reiktų išpjauti | reiktų pataisyti | daugiabučio renovacijos | meistras galintis sutvarkyti
+Buhalterinės apskaitos paslaugos,"Matininkai, geodezininkai",112,registrų centrui | registrų centras | registru centrui | pateikti registrų | priduoti dokumentus
+Baldų gamyba,"Metalo gaminiai, suvirintojai",112,preliminarų brėžinį | vnt tokių | dalies ilgis | kitaip tariant | mėlynos spalvos
+Valymo paslaugos,"Žemės kasimas, lyginimas",111,val darbo | šiomis dienomis | pirmoj dienos | ketvirtadienį ar penktadienį
+Interneto svetainių kūrimas,Statybos darbai,110,turėtų turėti | nuasmeninta nuasmeninta | valandinis įkainis | žmogaus arba įmonės | padaryti viską
+"Advokatai, teisininkai","Santechnikai, santechnikos darbai",109,padėti išspręsti | tačiau jis | tokia situacija | prieš tris | juridinis asmuo
+Baldų gamyba,Griovimo darbai,107,baldinės plokštės | įdedu foto | viet žiūrėti | ziureti foto
+"Akmens masės, marmuro, granito darbai",Baldų gamyba,106,virtuvės stalviršio | dirbtinio akmens | vonios spintelei | virtuvės stalviršis
+"Aplinkos tvarkymas, apželdinimas","Betonavimo darbai, betonavimas",106,atraminės sienutės | aukštis virš | sklypas su nuolydžiu | sutvarkyti senus | 50m aukštis
+Srautinis valymas,Statybos darbai,104,milteliniu budu | dažymas reikia nudazyti | aukstu namo | vanduo ir elektra | stogo ir fasado
+Baldų gamyba,Dailininkai,102,pagal užsakymą
+Buhalterinės apskaitos paslaugos,Pagalbiniai darbininkai,102,individualią veiklą | tam tikrą
+Automobilių nuoma,"Žemės kasimas, lyginimas",102,ilgesniam laikui | nuoma sveiki reiktų | nuoma sveiki ieškomas | nuoma sveiki reiktu | nuoma reik
+Krovinių pervežimas,Perkraustymo paslaugos,101,pirmą aukštą | aukšto į pirmą | pristatyti į vilnių | rašomieji stalai
+Renginių vedėjai,Sodybos nuomai,101,įmonės renginiui | įmonės vasaros | planuojama data
+"Maitinimas, maistas šventėms",Pramogos vaikams,101,data birželio | data liepos | vasaros šventei | val šventė
+Statybos darbai,"Stiklo konstrukcijos, montavimas",100,grūdinto stiklo | grūdintas stiklas | skaidrus grūdintas
+Statybinės technikos nuoma,Įvairios technikos nuoma,99,technikos nuoma
+"Dainavimo, vokalo pamokos",Muzikos mokytojai,99,vokalo pamokos | vokalo mokytojos
+Srautinis valymas,Valymo paslaugos,99,išvalyti namo | valymas plovimas | valymo darbams | plauti nereikia | įvairių dydžių
+Užuolaidų siuvimas,Vidaus apdailos darbai,98,pastatytam namui | preliminarios kainos ir terminai | plotis žiūrėti | vonios kambariams | lubų iki grindų
+Mikroautobusų nuoma,Vidaus apdailos darbai,96,laukiame pasiūlymo | ačiū už atsakymą | geriausias variantas | biudžetinis variantas
+Statybinės technikos nuoma,Statybos darbai,96,modulinį namelį | darbinis aukštis | vanaginės sodų | 10m plotis | ilgis 12m
+"Kalviai, kalvystės darbai","Metalo gaminiai, suvirintojai",95,kalviai kalvystės | nerudijancio plieno | metalo gaminių | pagaminti metalinį
+Kelių tiesimas,Vidaus apdailos darbai,95,metrų pločio | viršutinis sluoksnis | plotis 3 metrai | namų bendrija ieško | sutvarkyti pagrindą
+Interjero dizaineriai,"Santechnikai, santechnikos darbai",95,info el paštu | renovuojamam namui | santechnikos taškų | namas 100kv | vedinimo sistemos
+Srautinis valymas,Vidaus apdailos darbai,94,užpildyti tarpus | klinkerio fasado | keramikinių plytelių | dviaukščio namo | medžiagas duosime
+"Elektrikai, elektros darbai",Statybinės technikos nuoma,93,vienos vietos į kitą | lauko darbams | tame pačiame sklype | pro šalį | dovilų sen
+"Aplinkos tvarkymas, apželdinimas","Autoservisai, automobilių remontas",92,tvarkymas reikia sutvarkyti | artimiausia data | galimai reiks
+"Apšiltinimas, šiltinimas","Santechnikai, santechnikos darbai",92,vandens bokšto | padaryti drenažą | objektas daugiabutis | namas su rūsiu | sutvarkyti žiūrėti
+Interneto svetainių administratoriai,Komunikacijos specialistai,91,soc tinkluose | interneto svetainių administratoriai | svetainių administratoriai | svetainės administravimas | tikslinė auditorija
+Grafikos dizaineriai,Statybos darbai,91,galėsiu atsiųsti | pagal duotą | norime rasti | padaryti mini | nurodykite kainas
+Buhalterinės apskaitos paslaugos,Grafikos dizaineriai,91,kiekvieną mėnesį | įmonė užsiima | kuriuo galėčiau | esame nuasmeninta | naujai įkurtai
+Automobilių nuoma,Nekilnojamo turto nuoma,90,ilgalaikei nuomai | ilgalaikė nuoma | ilgalaike nuoma
+Fotografai,Statybos darbai,90,ačiū pagarbiai | norime pasidaryti | norejau pasiteirauti | atsakant į užklausą
+"Aplinkos tvarkymas, apželdinimas","Architektai, projektavimas",90,namo kiemo | sklypo sutvarkymo | sklypo sklypas | pastatyti šiltnamį | projektavimas sveiki norime
+Valymo paslaugos,"Vejos priežiūra, įrengimas",90,vasaros sezonui | kartą į mėnesį | kartai per mėnesį | pat tinka | teritorijos priežiūros
+Aukštalipiai,Sniego valymas,89,nuvalyti sniegą | nukasti sniegą | sniego nukasimas
+Fotografai,Įvairios paslaugos vestuvėms,89,vestuvių ceremonijos | rugpjūčio 30d | birželio 27d | santuokos ceremonijos | santuokos rūmų
+"3D modeliavimas, vizualizacijų kūrimas",Interneto svetainių kūrimas,88,gali sukurti | kūrimas ieškau žmogaus | aukšto lygio | norime susikurti | tikslas gauti
+"Aplinkos tvarkymas, apželdinimas",Buitinės technikos remontas,88,metus laiko | veiksmas vyksta | sunkiai sukasi | vieną šoną | laiką buvo
+Buhalterinės apskaitos paslaugos,Projektų ir dokumentų rengėjai,88,paslaugų sutartį | europos sąjungos | įmonės veiklos | kokias paslaugas | teisės aktų
+Interjero dizaineriai,Rašto darbų konsultantai,86,žmogaus kuris padėtų | užduotis pagal
+Statybos darbai,Techninė pagalba kelyje,86,vieną pusę | sodų 5 oji
+"Aplinkos tvarkymas, apželdinimas",Valymo paslaugos,86,šiukšlių surinkimas | teritorijos priežiūra | kartus per metus | žmogaus arba komandos | priežiūros paslaugų
+Interneto svetainių administratoriai,Reklamos paslaugos,84,facebook ads | facebook reklamos | reklama facebook | instagram reklama
+Rinkodara (marketingas),SEO paslaugos,84,google analytics | rinkodaros specialisto | reklamos kampanijas | google tag | google tag manager
+"Medžio darbai, staliai",Valymo paslaugos,84,išorinės pusės | langai balkono | langų rėmai | lan žiūrėti | virtuvės langą
+Buhalterinės apskaitos paslaugos,Programuotojai,83,patirtis dirbant | veiklos sritis | darbo laiko
+Buitinės technikos remontas,Valymo paslaugos,83,keletą kartų | porą kartų | kiekvieną kartą | mikrobangų krosnelės | plovimo mašina
+"Dujų įvedimas, pajungimas","Elektrikai, elektros darbai",83,kvalifikuoto specialisto | reiktu pajungti | bute pajungti | dokumentu tvarkymas | pačios sienos
+Srautinis valymas,"Stogdengiai, stogo darbai",82,lietaus latakus | šiferio stogo | lietaus latako | šalia vievio | išvalyti latakus
+Krovinių pervežimas,Mikroautobusų nuoma,82,transporto priemone | ford transit custom | transit custom | ieškomas transportas | šeštadienį ryte
+"Barmenai, gėrimai renginiams","Maitinimas, maistas šventėms",81,žmonių kiekis | privačiai šventei | šventei žmonių | spalio 19d
+Plytelių pjovimas,Vidaus apdailos darbai,80,masės plyteles | akmens masės plyteles
+"Autoservisai, automobilių remontas","Smėliavimas, dažymas",79,juoda spalva
+Buhalterinės apskaitos paslaugos,Krovinių pervežimas,79,uab nuasmeninta
+"Ekskursijos, gidai","Vertėjai, vertimų biurai",79,anglu kalba | prancūzų kalba
+"Muzikantai, dainininkai, grupės","Vertėjai, vertimų biurai",79,lenkų kalba | vasario 14d | val dalyvaus
+Buitinės technikos remontas,"Langai, durys: gamyba, montavimas",79,remontas sunkiai | pakeisti gumas | skubaus remonto | meistras sureguliuoti | skleidžia garsus
+Baldų gamyba,Video klipų kūrimas,78,korpusinių baldų | suprojektuoti pagaminti | suprojektuoti pagaminti ir sumontuoti | baldų projektas
+"Elektrikai, elektros darbai",Kelių tiesimas,78,stovėjimo aikštelės | automobilių aikštelės | via lietuva | gatvės ilgis
+Aukštalipiai,"Elektrikai, elektros darbai",77,metrų aukštyje | stogo stogas | saulės panelės
+Baldų gamyba,Buitinės technikos remontas,77,apatinė dalis | mikrobangų krosnelė | įmontuojama orkaitė | galinė sienelė
+Pramogos vaikams,Video klipų kūrimas,77,min trukmės | vaizdo įrašą | youtube com
+"Elektrikai, elektros darbai",Video klipų kūrimas,77,galinčio paruošti | svarbu jog | aktualu sužinoti | pilnas paketas | projektavimas sveiki reikia suprojektuoti
+"Langai, durys: gamyba, montavimas",Plėvelės klijavimas,76,durų stiklo | durų stiklas | stiklo matmenys | balkono stiklo
+Baldų gamyba,"Juvelyrai, juvelyriniai dirbiniai",76,pagaminti tokį | pagaminti toki | pagaminimo laikas | pagaminti vieną
+Komunikacijos specialistai,Video klipų kūrimas,76,reels kūrimas | video kūrimas | instagram reels | video turinio | kurti reels
+Buitinės technikos remontas,Vizažistės,75,atvykti į namus
+Baldų gamyba,"Siuvimas, siuvyklos, siuvėjai",75,lauko baldų | gamybos laikas | lovos rėmo
+"Aplinkos tvarkymas, apželdinimas",Trinkelių klojimas,75,trinkelių pagrindo | laiptus iš trinkelių | bortelių įrengimas | paruošti pagrinda
+Automobilių nuoma,Statybinės technikos nuoma,75,dviem dienom | nuomos laikotarpis | nuomos terminas | dviems dienoms
+Mobilaus kubilo nuoma,Pramogos vaikams,74,šiam šeštadieniui | ojo gimtadienio proga
+Buhalterinės apskaitos paslaugos,"Šokiai, šokių pamokos",73,looking for
+"3D modeliavimas, vizualizacijų kūrimas",Grafikos dizaineriai,73,aukštos kokybės | prisegu pavyzdžius
+Statybos dokumentų tvarkymas,Vidaus apdailos darbai,73,statybos metai | nau žiūrėti | nuasmeninta namas | atliktiems darbams
+Matematikos korepetitoriai,"Šokiai, šokių pamokos",73,padėtų pasiruošti | pamokos gyvai | lankstus grafikas
+Djs,Fotografai,73,asmeninei šventei | birželio 13d | vyks rugsėjo | sausio 17d
+"Muzikantai, dainininkai, grupės",Vidaus apdailos darbai,73,rašyti iškart | ieskomas zmogus | reiktų šiek | lapkričio 29d | žmonės galintys
+"Aplinkos tvarkymas, apželdinimas",Meistrai į namus,73,tris metus | nupjauti seną | jas sudėti | oro sąlygų | šiltnamio remontas
+Buhalterinės apskaitos paslaugos,Interneto svetainių kūrimas,73,ieško patikimo | patikimo partnerio | statybų įmonei | pagrindinė veikla | naujai atidaromai
+Logopedai,Matematikos korepetitoriai,72,sunkiai sekasi | pageidaujamas laikas | vakariniai laikai
+Grafikos dizaineriai,Rinkodara (marketingas),72,prekės ženklo | prekės ženklą | prekinį ženklą
+"Medžio darbai, staliai",Reklamos gamyba,72,gamyba ieškau kas gali | dvieju pusiu | abiejų šonų | vnt dydis | gamyba ieškau kas gali pagaminti
+Fotografai,Valymo paslaugos,71,antroje dienos | galimi laikai | tvarkyti nereikia | vienas objektas
+"Roletai, žaliuzės, romanetės",Užuolaidų siuvimas,71,dviems langams | lango plotis | vienam langui | lango ilgis
+Statybos darbai,"Tvoros, vartai, montavimas",70,segmentinei tvorai | tamsiai pilkos spalvos | miesto centro | tvorą ilgis
+Griovimo darbai,Statybos darbai,70,namo remonto | asbestinio šiferio | betoninius tvoros | šalia antavilių | šiukšlių konteinerių
+"Kapų tvarkymas, priežiūra",Statybos darbai,69,pamatų betonavimas
+Interneto svetainių kūrimas,Reklamos paslaugos,69,patyrusio specialisto | elektroninei parduotuvei | specialisto kuris galėtų sukurti
+Interneto svetainių kūrimas,Video klipų kūrimas,69,lietuvių ir anglų | foto video | lietuvių ir anglų kalbomis
+"Vestuvių, švenčių dekoravimas",Šventinės įrangos nuoma,68,įrangos nuoma | nuoma reikalingos | stalai ir kėdės
+Rašto darbų konsultantai,Redaktoriai,68,pagal reikalavimus | darbą pagal
+Pagalbiniai darbininkai,Valymo paslaugos,68,darbo trukmė | dienos puseje | paimti iš namų | mokėti dirbti
+"Dujų įvedimas, pajungimas",Meistrai į namus,67,atjungti sena | dujinę kaitlentę | elektrine orkaite | keitimas virtuvėje
+"Aplinkos tvarkymas, apželdinimas",Srautinis valymas,66,kiemo trinkelių | kiemo trinkeles | išvalymas reikia išvalyti | trinkelių plytelių
+"Maitinimas, maistas šventėms",Vidaus apdailos darbai,66,tiekėjo galinčio | link molėtų | iškart rašykite | pagaminti ir pristatyti | netoli elektrėnų
+Baldų gamyba,"Kalviai, kalvystės darbai",66,tokio stiliaus | stalo kojos | pagamintu tokia | pridėtą brėžinį | pagal pridėtą brėžinį
+Meistrai į namus,"Roletai, žaliuzės, romanetės",66,pakabinti karnizus | žaliuzių remontas | užuolaidų pakabinimas | pakabinti karnizą | lubinius karnizus
+Automobilių nuoma,"Ekskursijos, gidai",65,žmonių grupei | planuojame kelionę | zmoniu grupei
+Graviravimo paslaugos,Vidaus apdailos darbai,65,5mm storio | kiti miestai | brėžinį prisegu
+Reklamos gamyba,"Tentai, tentų gamyba",64,tentų gamyba
+"Barmenai, gėrimai renginiams",Statybos darbai,64,veiksmas vyktų | 2025 m rugsėjo | kitiems metams
+Interjero dizaineriai,"Maitinimas, maistas šventėms",63,tokias paslaugas | pagrindinis poreikis
+Renginių organizavimas,"Restoranai, kavinės, barai, salės",63,salės nuoma | patalpų nuomos | baby shower | 2025 m gruodžio
+Internetinio verslo konsultantai,Reklamos paslaugos,63,internete kūrimas | mokamos reklamos | reklamos internete | google facebook | reklama google
+Dirbtinio intelekto sprendimai,Rašto darbų konsultantai,62,dirbtinio intelekto
+Interneto svetainių kūrimas,Pardavimų vadybininkai,62,laisvai samdomo | lietuvos rinkoje
+Logopedai,Sodybos nuomai,62,kuo arčiau | laisvų vietų
+Fotografai,Interneto svetainių administratoriai,61,socialiniuose tinkluose
+"Muzikantai, dainininkai, grupės",Sodybos nuomai,61,giminės susitikimui | praleisti laiką | spalio 12d | naujųjų metų sutikimui
+"Elektrikai, elektros darbai",Reklamos gamyba,61,lauko sąlygomis | kitų miestų | laiko užtrunka | reiktų turėti
+Renginių vedėjai,Vidaus apdailos darbai,60,gruodžio mėnesį | kuriame buvo | tikrai nereikia | kainas pateikti
+Automobilių nuoma,Automobilių supirkimas,60,techniškai tvarkingas | benzinas automatas | dyzelis automatas | puikiai tinka
+Baldų gamyba,"Kapų tvarkymas, priežiūra",60,kazko panasaus | panašiai kaip nuotraukoje | šviesiai pilkos | kitoje nuotraukoje
+"Katilų montavimas, remontas",Srautinis valymas,59,valymas ir priežiūra
+"Aplinkos tvarkymas, apželdinimas",Interneto svetainių kūrimas,59,pagrindinis tikslas | žmogaus kuris išmano | priežiūros darbams
+"Autoservisai, automobilių remontas",Sodybos nuomai,59,aplink vilniu | 50km spinduliu | geriausia aplink
+"Elektrikai, elektros darbai",Programuotojai,59,valandinį įkainį | galinčio profesionaliai | vieną bendrą
+Interneto svetainių kūrimas,Virtualūs asistentai,59,teikiamas paslaugas | kalba eina | duomenų bazės
+Pramogos vaikams,Vidaus apdailos darbai,59,com watch | youtube com watch | visus variantus | gegužės pabaigoje
+Fotografai,"Vestuvių, švenčių dekoravimas",58,pirmojo gimtadienio | vestuvėms 2025 | padaryti foto | val renginys
+"Betonavimo darbai, betonavimas","Medžio darbai, staliai",58,betoniniu laiptu | laiptai betoniniai | laiptus laiptai | laiptų aukštis | vienos pakopos
+Baldų gamyba,"Betonavimo darbai, betonavimas",58,sienelės aukštis | 60cm aukščio | atnaujinti senus | ilgio aukštis
+Baldų gamyba,"Odininkai, odos gaminiai",57,gamyba pagal
+"Muzikantai, dainininkai, grupės","Restoranai, kavinės, barai, salės",57,gyva muzika | vyks kovo
+Buhalterinės apskaitos paslaugos,Komunikacijos specialistai,57,šioje srityje | paslaugų įmonei
+Griovimo darbai,"Žemės kasimas, lyginimas",57,kubinių metrų | kubinius metrus | kitas šiukšles
+Mobilios pirties nuoma,Sodybos nuomai,57,pirtis ir kubilas | naujiesiems metams | kubilas ir pirtis
+"Maitinimas, maistas šventėms",Šventinės įrangos nuoma,57,čiai žmonių | liepos 12 dienai | žmonių taip pat | žmonių šventei
+"Barmenai, gėrimai renginiams","Muzikantai, dainininkai, grupės",56,zmoniu skaicius | rugsėjo 14d | vyks renginys
+Buitinės technikos remontas,"Ventiliacija, vėdinimo sistemos",56,remontas nustojo | garsiai dirba | galiu atvezti
+"Apšiltinimas, šiltinimas","Elektrikai, elektros darbai",56,reiktų patikrinti | namas žiūrėti | dvieju aukštu | namas paprastas
+Meistrai į namus,Pagalbiniai darbininkai,56,kambario į kitą | darbo max | vieno kambario į kitą | maždaug kartą
+Projektų ir dokumentų rengėjai,Verslo konsultantai,55,verslo konsultantai
+"Aplinkos tvarkymas, apželdinimas","Malkos: gamyba, pristatymas",55,beržinių malkų | skaldytų malkų
+Statybos darbų vadovai,Statybos dokumentų tvarkymas,55,statybos darbų vadovas | statybos darbų vadovo | atestuoto statybos
+Projektų ir dokumentų rengėjai,"Santechnikai, santechnikos darbai",55,žmogaus turinčio | pakeisti bute | vandentiekio ir nuotekų šalinimo
+Nuotekų valymo įrenginiai,"Santechnikai, santechnikos darbai",55,kanalizacijos šulinio | nuotekų šulinio | kanalizacijos nuotekų
+"Medžio darbai, staliai",Pagalbiniai darbininkai,55,likusia informacja | kitą kambarį | reikės surinkti
+"Restoranai, kavinės, barai, salės",Sodybos nuomai,55,švęsti gimtadienį | šventei gegužės | aplink šiaulius | gimtadienio šventimui
+"Matininkai, geodezininkai",Valymo paslaugos,54,buvo atliktas | kambarių skaičius | bute po remonto
+"Santechnikai, santechnikos darbai",Srautinis valymas,54,prieš 3 metus | aukštu slėgiu | vanduo teka
+Automobilių supirkimas,Metalo laužo supirkimas,53,supirkimas parduodu | pasiimti patiems
+Fotografai,Meistrai į namus,53,rašykite iškart | padaryti keletą
+Baldų gamyba,Interneto svetainių kūrimas,53,panašaus dizaino | kuo labiau | pat planuojame | projektą kuriame
+"Stiklų, veidrodžių gamyba, keitimas","Vandens filtrai: montavimas, keitimas",52,gamyba keitimas | arkos formos
+Apsaugininkai,Vidaus apdailos darbai,52,pagal susitarima | objektas sodo
+Graviravimo paslaugos,Metalo apdirbimas,52,metalo pjovimas | metalo pjovimas lazeriu
+Automobilių pirkimo-pardavimo konsultantai,"Autoservisai, automobilių remontas",52,prieš pirkimą | patikra prieš | automobilio patikra
+"Muzikantai, dainininkai, grupės","Pasirodymai, šou renginiams",52,mečio proga | pasirodymo trukmė | padaryti staigmeną
+Buhalterinės apskaitos paslaugos,"Santechnikai, santechnikos darbai",52,pat reikia sutvarkyti | pirmas kartas | keletą nedidelių
+Buhalterinės apskaitos paslaugos,Rinkodara (marketingas),52,paslaugų įmonė | paslaugas teikianti | teikianti įmonė | paslaugas teikianti įmonė
+Baldų gamyba,"Roletai, žaliuzės, romanetės",52,medžio imitacijos | 100 cm aukštis | išmatuoti pagaminti ir sumontuoti | preliminarius išmatavimus
+Automobilių nuoma,Įvairios technikos nuoma,52,nuoma vienai | penktadienio vakaro | nuomos laikas | rytojaus ryto
+"3D modeliavimas, vizualizacijų kūrimas",Statybos darbai,52,namo eksterjero | pagal juos | pagal pateiktus reikalavimus | pateiktus reikalavimus | virš įėjimo durų
+Automobilių nuoma,Renginių organizavimas,51,2025 m rugpjūčio | 2026 m balandžio | nuoma gimtadieniui
+Medienos gaminiai,Statybos darbai,51,klijuotos medienos | kalibruota mediena | 5cm pločio
+"Aplinkos tvarkymas, apželdinimas",Sniego valymas,51,stovėjimo aikštelėje | namo kiemas | važiuojamosios dalies
+Automobilių nuoma,"Medžio darbai, staliai",50,ekonominės klasės | galiu pasiimti
+"Elektrikai, elektros darbai","Vejos priežiūra, įrengimas",50,sklype sklypas | sklype kuriame | kartą buvo
+"Autoservisai, automobilių remontas",Plėvelės klijavimas,50,jeep grand | grand cherokee | jeep grand cherokee
+"Elektrikai, elektros darbai",Nekilnojamo turto brokeriai,50,ūkiniu pastatu | senesnės statybos | arų namų | atskiras įėjimas
+Muitinės tarpininkai,Statybos darbai,49,fizinis asmuo
+Slaugytojai,Socialiniai darbuotojai,49,senyvo amžiaus | padėti prižiūrėti
+Grafikos dizaineriai,Spaudos paslaugos,49,įmonės logotipą | pvz prisegu
+"Autoservisai, automobilių remontas","Stogdengiai, stogo darbai",49,remontas leidžia | problema gali | keitimas naujais
+"Elektrikai, elektros darbai",Šiukšlių išvežimas: statybinių ir kt.,49,kuriuo laiku | cokolinis aukštas | pageidautina šią
+Buhalterinės apskaitos paslaugos,Logopedai,48,patirties dirbant
+"Siuvimas, siuvyklos, siuvėjai",Vidaus apdailos darbai,48,pagal pavyzdį | liepos pradžioje
+"Vestuvių, švenčių dekoravimas",Vidaus apdailos darbai,48,foto sienos | pat papildomai
+Mobiliųjų aplikacijų kūrimas,Vidaus apdailos darbai,48,bent vieną | galbūt reikės | pat būtų puiku
+Graviravimo paslaugos,"Kapų tvarkymas, priežiūra",48,esamo paminklo | varda pavarde | mirties metus
+"Barmenai, gėrimai renginiams",Sodybos nuomai,48,2025 m birželio | pasirūpinti patys | šventei 2026
+Djs,Vidaus apdailos darbai,48,nereikia tiesiog | svarbu gera | galimos datos
+"Maitinimas, maistas šventėms",Statybos darbai,48,atviri pasiūlymams | kviečiame prisijungti | 2025 rugsėjo
+Meistrai į namus,Rašto darbų konsultantai,47,žmogaus kuris galėtų padėti
+Užuolaidų siuvimas,Valymo paslaugos,47,dienines užuolaidas | pakabinti dienines
+"Elektrikai, elektros darbai",Grafikos dizaineriai,47,pdf formatu | galinčio dirbti
+Nuotekų valymo įrenginiai,Šiukšlių išvežimas: statybinių ir kt.,47,išvežimas reiktų | išvežimas sveiki reikia isvezti | išvežimas reikia išvalyti
+Buitinės technikos remontas,Krovinių pervežimas,47,siuvimo mašina | mašina džiovyklė | skalbimo mašina džiovyklė | skalbykle dziovykle
+"Krosnys, krosnių meistrai",Vidaus apdailos darbai,47,500 eurų | pajungti krosnelę | meistras turėtų | remontas ieškomas meistras
+"Aplinkos tvarkymas, apželdinimas","Tvoros, vartai, montavimas",47,ilgis apie 30 metrų | tiesia linija | betoniniai borteliai | ilgis 25m
+"Autoservisai, automobilių remontas",Srautinis valymas,46,aukšto slėgio
+Grafikos dizaineriai,Sodybos nuomai,46,didelis privalumas
+Automobilių supirkimas,Vidaus apdailos darbai,46,geros būklės | dešinę pusę
+Krovinių pervežimas,Renginių vedėjai,46,darbo dienos | iškarto su kainom
+Fotografai,Interneto svetainių kūrimas,46,asmuo galintis | internetinėje svetainėje | galinčio ios
+Fotografai,Krovinių pervežimas,46,antroje dienos pusėje | biudžetas 150 | biudžetas 50 eur
+"3D modeliavimas, vizualizacijų kūrimas",Interjero dizaineriai,46,interjero vizualizacijas | buto vizualizacija | santechnikos planai | vizualizacijas pagal
+Interjero dizaineriai,Programuotojai,45,tikslas sukurti | projektas apima
+"Metalo gaminiai, suvirintojai",Srautinis valymas,45,nudažyti milteliniu | nudažyti milteliniu būdu
+Fotografai,Keleivių pervežimas,45,kelių valandų | gegužės 23d | data kovo
+Kelių tiesimas,Sportinių dangų sistemos,44,aikštelės įrengimas
+"Roletai, žaliuzės, romanetės",Valymo paslaugos,44,trys langai
+Renginių organizavimas,Vidaus apdailos darbai,44,sausio mėnesį | vasario pradžioje | 2025 m lapkričio
+"Matininkai, geodezininkai",Statybos dokumentų tvarkymas,43,namo pridavimui
+"Langai, durys: gamyba, montavimas",Restauravimas,43,durų atnaujinimas | pakeisti rankenas
+Djs,Interneto svetainių kūrimas,43,1000 eur | tam tikra
+"Aplinkos tvarkymas, apželdinimas",Buhalterinės apskaitos paslaugos,43,kiekis nedidelis | pagalba tvarkant | žmogaus ar įmonės galinčios
+Fotografai verslui,Renginių vedėjai,43,įmonės darbuotojams | įmonės darbuotojų | įmonės renginys
+"Architektai, projektavimas",Inžinieriai,43,pagal str | dalies parengimas | specialisto kuris galėtų pakonsultuoti | statinio konstrukcijų
+Trinkelių klojimas,Vidaus apdailos darbai,42,senus laiptus | dvejus laiptus
+Statybos darbai,Video klipų kūrimas,42,nieko sudėtingo | nuotra žiūrėti | sumontuoti pagal
+Geologiniai tyrimai,"Matininkai, geodezininkai",42,nuasmeninta palanga | prieš statant | kretingos r sav
+"Maitinimas, maistas šventėms","Restoranai, kavinės, barai, salės",42,planuojamas žmonių skaičius | žmonių gali | skanus maistas
+"Autoservisai, automobilių remontas",Reklamos gamyba,41,fiat ducato | iveco daily
+Automobilių supirkimas,Buitinės technikos remontas,41,veikia puikiai | prieš kelias
+"Kalviai, kalvystės darbai","Medžio darbai, staliai",41,metaliniai turėklai | reikalingos metalinės
+Interneto svetainių kūrimas,Valymo paslaugos,41,patikimo žmogaus | galinčio teikti | valymo paslaugoms
+Baldų gamyba,Grafikos dizaineriai,41,panašaus stiliaus | pagal nurodytus | minimalistinio stiliaus
+Automobilių nuoma,Baldų gamyba,41,blogiausiu atveju | gali kisti | ekonomines klases
+"Vertėjai, vertimų biurai",Video klipų kūrimas,40,anglų kalbomis
+"Maitinimas, maistas šventėms","Stiklo konstrukcijos, montavimas",40,esame atviri | esame atviri pasiūlymams
+Automobilių nuoma,Meistrai į namus,40,tinka visi | labiausiai tiktų
+Alternatyvi energija,Vidaus apdailos darbai,40,požeminiame garaže | privaciame name
+"Aplinkos tvarkymas, apželdinimas",Vaismedžių genėjimas,40,genėjimas reikia nugenėti | nupjauti dvi | senos obelys
+Braižytojai,"Elektrikai, elektros darbai",40,planą pagal | turintys patirties | ilgis 40m
+IT specialistai,Programuotojai,40,programinės įrangos | valdymo sistemą | duomenų bazę
+"Baseinų, jacuzzi įrengimas, priežiūra",Valymo paslaugos,39,kartą per mėnesį
+IT specialistai,Rinkodara (marketingas),39,specialisto kuris padėtų
+Djs,"Restoranai, kavinės, barai, salės",39,įmonės vakarėliui
+Keleivių pervežimas,Vidaus apdailos darbai,39,tuos pačius | iškart su kaina ačiū
+Baldų gamyba,Užuolaidų siuvimas,39,ilgis 250 | dramblio kaulo | esame išsirinkę
+Rašto darbų konsultantai,Vidaus apdailos darbai,39,pat domintu | gruodžio vidurio | pus žiūrėti
+"Aplinkos tvarkymas, apželdinimas","Langai, durys: gamyba, montavimas",39,ilgis maždaug | juos išvežti | namų savininkų
+Programuotojai,Tekstų kūrėjai,39,ieškomas asmuo | patirties kuriant | interneto svetainei
+Sniego valymas,Vidaus apdailos darbai,39,mechanizuotu būdu | sausio vasario mėn | pagal oro
+"Elektrikai, elektros darbai","Langai, durys: gamyba, montavimas",39,durys atsidaro | balkono įstiklinimo | balkono stiklinimui
+Nekilnojamo turto nuoma,Valymo paslaugos,38,komercinių patalpų
+Kelių tiesimas,"Skalda, smėlis, žvyras, juodžemis",38,frezuotas asfaltas | frezuotu asfaltu
+Nekilnojamo turto brokeriai,Statybos dokumentų tvarkymas,38,namo pardavimui | parduoti namą
+Pagalbiniai darbininkai,"Žemės kasimas, lyginimas",38,darbo dienai | darbo manau
+"Psichologai, psichoterapeutai",Statybos darbai,38,galimas ilgalaikis | galimas ilgalaikis bendradarbiavimas
+Renginių vedėjai,"Restoranai, kavinės, barai, salės",38,įmonės kalėdiniam | žmonių data
+Grafikos dizaineriai,Reklamos paslaugos,38,meta reklamos | sukurti facebook | prekių parduotuvei
+"Betonavimo darbai, betonavimas","Elektrikai, elektros darbai",38,dvi naujas | norime juos | atraminei sienai
+"Maitinimas, maistas šventėms",Valymo paslaugos,37,vienam žmogui | kavos arbatos
+"Architektai, projektavimas",Valymo paslaugos,37,buvo darytas | namo 100
+Meistrai į namus,Šiukšlių išvežimas: statybinių ir kt.,37,virtuvines spinteles | dvi senas
+"Autoservisai, automobilių remontas",Krovinių pervežimas,37,land rover | dodge durango
+Vidaus apdailos darbai,liejimas,37,epoksidinė danga | epoksidiniai laiptai | aplink juos
+Interneto svetainių kūrimas,Tekstų kūrėjai,37,internetinei svetainei | sukurti kelis | valandiniu įkainiu
+"Architektai, projektavimas","Metalo gaminiai, suvirintojai",36,metalinių konstrukcijų
+Pardavimų vadybininkai,SEO paslaugos,36,naujų klientų
+Interjero dizaineriai,Sodybos nuomai,36,poilsio zona | viena bendra
+"Pasirodymai, šou renginiams",Renginių vedėjai,36,val trukmės | kalėdinį vakarėlį
+"Autoservisai, automobilių remontas","Dviračių, paspirtukų remontas",36,galinio rato | priekinio rato
+Krovinių pervežimas,Šventinės įrangos nuoma,36,stalai kėdės | baltoji vokė
+Nekilnojamo turto brokeriai,Statybos darbai,36,gamybinio pastato | ilgam laikui | namas sklypas
+Muzikos mokytojai,"Šokiai, šokių pamokos",36,pamokos suaugusiam | pamokos noriu išmokti | mokytojo jos
+"Elektrikai, elektros darbai",Geologiniai tyrimai,35,namo projektavimui
+Sniego valymas,Valymo paslaugos,35,valymas reikia nuvalyti
+Projektų ir dokumentų rengėjai,Rašto darbų konsultantai,35,padėti parengti | pagalba rengiant
+Techninė pagalba kelyje,Vidaus apdailos darbai,35,atsakymo ačiū | galbūt kas nors
+Matematikos korepetitoriai,Pradinių klasių mokytoja,34,namų darbais | pagilinti žinias
+Interneto svetainių administratoriai,Interneto svetainių kūrimas,34,specialisto kuris galėtų padėti | svetainės priežiūra
+"Autoservisai, automobilių remontas","Medžio darbai, staliai",34,visos detalės | kairė pusė
+"Santechnikai, santechnikos darbai",Statybos dokumentų tvarkymas,34,šildymas oras vanduo | techninę priežiūrą
+"Katilų montavimas, remontas",Statybos darbai,34,kamino remontas | virš stogo
+Statybos darbų vadovai,Statybos projektų valdymas,34,statybos vadovo | statybos vadovas
+"Architektai, projektavimas",Projektų ir dokumentų rengėjai,34,techninio darbo | techninio darbo projekto
+Projektų ir dokumentų rengėjai,Valymo paslaugos,34,asmens įmonės | įmonės ar asmens
+Buitinės technikos remontas,Mobiliųjų telefonų remontas,34,ekranas veikia | pakeisti samsung | remontas sudužo
+"Maitinimas, maistas šventėms",Renginių organizavimas,34,2025 m gegužės | 150 žmonių | komandos formavimo
+Buitinės technikos remontas,Matematikos korepetitoriai,33,atvyktų į namus
+Kelių tiesimas,"Santechnikai, santechnikos darbai",33,namų kvartale
+"Advokatai, teisininkai","Psichologai, psichoterapeutai",33,nuotoliniu budu
+Fotografai,"Matininkai, geodezininkai",33,padaryti sklypo | lokacija netoli
+"Pirtys, pirčių įrengimas",Statybos darbai,33,siūlykite variantus | pirties namelio
+"Elektrikai, elektros darbai",Statybos darbų vadovai,33,ūkio būdu | projekto dalys
+"Elektrikai, elektros darbai",Matematikos korepetitoriai,33,aplinkiniuose rajonuose | rasyti sms
+Mobilaus kubilo nuoma,Mobilios pirties nuoma,33,nuoma gruodžio | visam savaitgaliui
+"Elektrikai, elektros darbai",Pramogos vaikams,33,norime pasiteirauti | karto su kainom
+"Garažo vartai, montavimas",Statybos darbai,33,garažo vartams | pakeisti garažo
+"Akmens masės, marmuro, granito darbai",Statybos darbai,33,akmens kilimas | akmens kilimu | terminas prisegu
+"Elektrikai, elektros darbai",Inžinieriai,33,galinčio pakonsultuoti | konstruktoriaus galinčio | paveldo objekto
+Meistrai į namus,"Stiklo konstrukcijos, montavimas",33,sienelės gamyba | dušo sienelių | stiklo storis
+"Elektrikai, elektros darbai","Metalo gaminiai, suvirintojai",33,metalo karkasas | meistro kuris galėtų atvykti | norime pasikonsultuoti
+Nekilnojamo turto nuoma,Renginių organizavimas,33,reikalingos patalpos | ieškomos patalpos | patalpos nuomai
+"Medžio darbai, staliai",Šiukšlių išvežimas: statybinių ir kt.,33,seną spintą | surinkti nauja | baldų išardymas
+Automobilių pirkimo-pardavimo konsultantai,Programuotojai,32,būtina patirtis
+"Aplinkos tvarkymas, apželdinimas",Rašto darbų konsultantai,32,žmogaus galinčio padėti
+Sąmatininkai: sąmatų skaičiavimas,Vidaus apdailos darbai,32,sąskaitą faktūra | kiekių žiniaraštį
+Chemijos korepetitoriai,Matematikos korepetitoriai,32,korepetitoriai esu | brandos egzaminui
+"Medžio darbai, staliai","Stogdengiai, stogo darbai",32,terasos stogas | lietaus surinkimo sistema
+Statybinių medžiagų gamintojai,Statybos darbai,32,armatūros karkasai | armaturos karkasai
+Automobilių nuoma,"Ventiliacija, vėdinimo sistemos",32,kuo pigesnis | premium klasės
+Interneto svetainių kūrimas,Rinkodara (marketingas),32,partnerio galinčio | parduotuvę nuasmeninta
+Metalo apdirbimas,Vidaus apdailos darbai,32,3mm storio | 2mm storio
+"Kapų tvarkymas, priežiūra",Vidaus apdailos darbai,32,plyteles aplink | senus pamatus
+"Betonavimo darbai, betonavimas","Matininkai, geodezininkai",32,prieš keletą | padaryti naujus
+Automobilių nuoma,Video klipų kūrimas,32,visos dienos | pusei dienos
+IT specialistai,Virtualūs asistentai,32,virtualaus asistento | virtualus asistentas
+Matematikos korepetitoriai,Muzikos mokytojai,32,pamokos vyktų | esu baigusi | individualių pamokų
+Rinkodara (marketingas),Tekstų kūrėjai,32,email marketingas | visame pasaulyje | email marketing
+Statybos darbai,"Ventiliacija, vėdinimo sistemos",32,išgręžti dvi skyles | mokėtojas įmonė | daugiabutis 5 aukštas
+Logopedai,Vidaus apdailos darbai,31,tinkamas laikas
+Pramogos vaikams,Šventinės įrangos nuoma,31,birželio 14d | gruodžio 21d
+"Elektrikai, elektros darbai",Renginių vedėjai,31,kaimo sodyboje | įmonės patalpose
+Fotografai verslui,"Maitinimas, maistas šventėms",31,veiksmas vyks | greito maisto
+"Aplinkos tvarkymas, apželdinimas",Baldų gamyba,31,pridėta foto | nuot žiūrėti
+"Garažo vartai, montavimas","Langai, durys: gamyba, montavimas",31,sunkiai atsidaro | mechanizmo remontas
+"Aplinkos tvarkymas, apželdinimas","Metalo gaminiai, suvirintojai",31,įėjimo laiptus | trinkeles atgal
+Rašto darbų konsultantai,"Šokiai, šokių pamokos",31,mokymai kursai | kursai kalbos | mokymai kursai kalbos
+"Ekskursijos, gidai","Maitinimas, maistas šventėms",30,data gegužės
+Fotografai,Slaugytojai,30,kelias valandas
+Matematikos korepetitoriai,Vairavimo mokyklos,30,reikalingos papildomos
+"Psichologai, psichoterapeutai",Renginių vedėjai,30,rusu kalba
+"Maitinimas, maistas šventėms",Mobilaus kubilo nuoma,30,birželio 23d | birželio 7 dienai
+Interneto svetainių kūrimas,"Siuvimas, siuvyklos, siuvėjai",30,skirtingų dydžių | keletą pavyzdžių
+Statybos dokumentų tvarkymas,Statybos projektų valdymas,30,statybos projektų | statybos eksperto
+Matematikos korepetitoriai,"Psichologai, psichoterapeutai",30,gyvi susitikimai | gyviems susitikimams
+Avarinis atrakinimas,Raktų gamyba,30,pamesti raktai | pamestas raktas
+Grafikos dizaineriai,Internetinio verslo konsultantai,30,prekės ženklas | prekinio ženklo
+"Advokatai, teisininkai",Keleivių pervežimas,30,vienam asmeniui | vienas asmuo
+Laiptinių remontas,Vidaus apdailos darbai,30,aliejiniais dažais | aukštu name | lubos dažytos
+Braižytojai,"Matininkai, geodezininkai",29,dwg formatu
+Pagalbiniai darbininkai,"Santechnikai, santechnikos darbai",29,gali atvykti
+"Langai, durys: gamyba, montavimas","Matininkai, geodezininkai",29,sužinoti kainas
+Grafikos dizaineriai,"Siuvimas, siuvyklos, siuvėjai",29,galinčios padėti | prekiniam ženklui
+Reklamos paslaugos,Rinkodara (marketingas),29,meta google | facebook google
+Nekilnojamo turto nuoma,Statybos darbai,29,rugsėjo mėnesio | 150 eurų
+Buitinės technikos remontas,"Stogdengiai, stogo darbai",29,praleidzia vandeni | remontas leidžia vandenį
+Griovimo darbai,Nuotekų valymo įrenginiai,29,sodų 4 oji | privaziavimas prie pat
+Internetinio verslo konsultantai,Rinkodara (marketingas),29,marketingo specialistas | prekinis ženklas
+Ventiliuojami fasadai,Vidaus apdailos darbai,29,pradžia rugsėjo | apdaila plytelės
+Iliustruotojai,Krovinių pervežimas,29,vieno žmogaus | reiktu pagalbos
+Pradinių klasių mokytoja,"Šokiai, šokių pamokos",29,laikas darbo | laikas darbo dienomis
+"Advokatai, teisininkai",Valymo paslaugos,29,šias paslaugas | nuolatinis bendradarbiavimas
+Renginių vedėjai,"Vestuvių, švenčių dekoravimas",28,vestuvių šventės
+"Muzikantai, dainininkai, grupės",Statybos darbai,28,biudžetas 500 | neturime tad
+Grafikos dizaineriai,Programuotojai,28,naujam projektui | šis projektas
+"Skalda, smėlis, žvyras, juodžemis",Vidaus apdailos darbai,28,kiekis apie 100 | viename kampe
+Rinkodara (marketingas),Vidaus apdailos darbai,28,montuoti nereikia | žmogaus dirbančio
+Pastatų sandarumo bandymai,Vidaus apdailos darbai,28,namas renovuotas | klasės namui
+Projektų ir dokumentų rengėjai,Statybos darbai,28,vidaus lauko | reikalingų dokumentų
+"Langai, durys: gamyba, montavimas","Metalo gaminiai, suvirintojai",28,daugiabučio namo lauko | metrai aukstis
+Interneto svetainių kūrimas,Krovinių pervežimas,27,google maps
+Interjero dekoravimas,Vidaus apdailos darbai,27,kambario sienos
+Vidaus apdailos darbai,Šventinės įrangos nuoma,27,panašaus dydžio
+Automobilių pirkimo-pardavimo konsultantai,"Elektrikai, elektros darbai",27,prieš perkant
+Tekstų kūrėjai,Virtualūs asistentai,27,tekstų rašymas
+"Aplinkos tvarkymas, apželdinimas",Fotografai,27,visų pusių
+Fotografai verslui,Nekilnojamo turto brokeriai,27,buto pardavimui | buto pardavimo
+"Elektrikai, elektros darbai","Siuvimas, siuvyklos, siuvėjai",27,terminai taip pat | pagal seną
+"Elektrikai, elektros darbai",Rašto darbų konsultantai,27,patirties šioje | patirties šioje srityje
+Rinkodara (marketingas),Video klipų kūrimas,27,reels video | prisijungti prie mūsų komandos
+Automobilių nuoma,"Restoranai, kavinės, barai, salės",27,šventės vietos | žmonių 2025
+"Aplinkos tvarkymas, apželdinimas","Kapų tvarkymas, priežiūra",27,aplink kapavietę | tvarkymas sutvarkyti
+Renginių organizavimas,Renginių vedėjai,27,jubiliejaus šventė | kalėdinis vakarėlis
+Krovinių pervežimas,"Matininkai, geodezininkai",27,pramonės g nuasmeninta | tame paciame
+Automobilių nuoma,Fotografai verslui,26,2026 m gegužės
+Kineziterapeutai,"Kirpyklos, kirpėjai, stilistai",26,atvykti i namus
+"Medžio darbai, staliai","Roletai, žaliuzės, romanetės",26,reikalingos medinės
+Automobilių nuoma,"Santechnikai, santechnikos darbai",26,tiksliai nežinau
+"Siuvimas, siuvyklos, siuvėjai",Suknelių nuoma,26,vestuvinių suknelių
+"Smėliavimas, dažymas",Statybos darbai,26,nusmėliuoti ir nudažyti | smėliavimas ir dažymas
+Automobilių nuoma,Renginių vedėjai,26,vestuvėms ieškomas | sausio 16d
+Pramogos vaikams,Statybos darbai,26,žaidimų aikštelė | kairėnų botanikos
+Grafikos dizaineriai,"Šokiai, šokių pamokos",26,are looking | are looking for
+Interjero dizaineriai,Renginių vedėjai,25,biudžetas ribotas
+Lietuvių kalbos korepetitoriai,"Vokiečių kalbos kursai, pamokos",25,kalbos mokymas
+"Odininkai, odos gaminiai",Vidaus apdailos darbai,25,natūralios odos
+Interneto svetainių kūrimas,Rankdarbių kūrėjai,25,rankų darbo
+"Advokatai, teisininkai","Žemės kasimas, lyginimas",25,sklypo dalį
+Logopedai,Pramogos vaikams,25,turite laisvų
+Video klipų kūrimas,"Žemės kasimas, lyginimas",25,šiam penktadieniui
+Automobilių plovyklos,Vidaus apdailos darbai,25,galit padaryti | kur bėga
+"Muzikantai, dainininkai, grupės",Šventinės įrangos nuoma,25,lauksime jūsų žinutės | nuoma renginiui
+Aukštalipiai,Vidaus apdailos darbai,25,reiktų demontuoti | remontui namas
+"Architektai, projektavimas",Interjero dizaineriai,25,statome namą | dvi atskiras
+Fotografai,Grafikos dizaineriai,25,dovanų kupono | nuolatiniam darbui
+"3D modeliavimas, vizualizacijų kūrimas","Elektrikai, elektros darbai",25,dwg failą | komercinio pastato
+Nekilnojamo turto brokeriai,Statybos projektų valdymas,25,norime pirkti | įvertinti namo
+Mikroautobusų nuoma,Valymo paslaugos,25,trumpalaikė nuoma | penktadienį vakare
+"Advokatai, teisininkai",Buitinės technikos remontas,24,laiko trunka
+"Apšiltinimas, šiltinimas",Nekilnojamo turto brokeriai,24,privatus asmuo
+Perkraustymo paslaugos,Vidaus apdailos darbai,24,privatų namą
+"Architektai, projektavimas","Stogdengiai, stogo darbai",24,senos sodybos
+Krovinių pervežimas,"Metalo gaminiai, suvirintojai",24,metalo gaminius | armatūros karkasus
+Automobilių nuoma,Interneto svetainių kūrimas,24,automobilių nuomos | spalio 31d
+Meistrai į namus,Užuolaidų siuvimas,24,bėgelių montavimas | pakabinti užuolaidas
+Pramogų organizatoriai,Renginių vedėjai,24,eglutės įžiebimo | komandiniai žaidimai
+"Baseinų, jacuzzi įrengimas, priežiūra",Vidaus apdailos darbai,24,meistrų kurie gali | atviras pasiūlymams
+"Signalizacijos, kameros, apsaugos sistemos",Vidaus apdailos darbai,24,montavimas sugedo | gamybinė įmonė
+Matematikos korepetitoriai,Rašto darbų konsultantai,24,pagalba ruošiant | pagalba atliekant
+Matematikos korepetitoriai,Vidaus apdailos darbai,24,turėtų vykti | lauksi žiūrėti
+Krovinių pervežimas,Plėvelės klijavimas,24,100 cm plotis | 80cm aukštis
+Sportinių dangų sistemos,Vidaus apdailos darbai,24,dangos storis | pilnai atnaujinti
+"Dujų įvedimas, pajungimas","Katilų montavimas, remontas",24,dujos atvestos | namo šildymui
+"Santechnikai, santechnikos darbai",Statybinės technikos nuoma,24,kar žiūrėti | pat namo
+"Langai, durys: gamyba, montavimas","Roletai, žaliuzės, romanetės",24,langų stiklo | remontas užstrigo
+Nekilnojamo turto nuoma,Sodybos nuomai,24,patalpų nuomai | šeima ieško
+Darbo saugos paslaugos,Statybos darbai,23,dokumentų parengimas
+"Kalviai, kalvystės darbai",Reklamos gamyba,23,pagaminti tokius
+Renginių organizavimas,Video klipų kūrimas,23,planuojame vestuves
+"Architektai, projektavimas","Vejos priežiūra, įrengimas",23,sklypas tuščias
+"Maitinimas, maistas šventėms",Slaugytojai,23,maisto gaminimas | maisto paruošimas
+Meistrai į namus,"Stogdengiai, stogo darbai",23,sumontavimas reikia sumontuoti | pažiūrėti ir sutvarkyti
+Komunikacijos specialistai,Sodybos nuomai,23,vaikų vasaros | šeimos su vaikais
+Griovimo darbai,"Santechnikai, santechnikos darbai",23,špižinė vonia | padaryti kuo
+Interneto svetainių kūrimas,LinkedIn strategijų kūrimas,23,žmogaus kuris sukurtų | įmonės veiklą
+"Elektrikai, elektros darbai",Mikroautobusų nuoma,23,žmonių su negalia | sen elektrėnų sav
+Automobilių nuoma,Techninė pagalba kelyje,23,mechanine pavaru deze | lengvo automobilio
+Reklamos paslaugos,Vidaus apdailos darbai,23,pagarbiai saulius | paslaugų paketą
+"Advokatai, teisininkai",Pagalbiniai darbininkai,23,pačiame pastate | tame pačiame pastate
+Buitinės technikos remontas,Statybos darbai,23,profesionalios pagalbos | vienoj pusėj
+"Architektai, projektavimas","Žemės kasimas, lyginimas",23,sklypo teritorijoje | elektrenu sav
+HR specialistas,Vidaus apdailos darbai,22,dirbti pagal
+"Maitinimas, maistas šventėms",Rašto darbų konsultantai,22,dvi dienas
+"Architektai, projektavimas",Krovinių pervežimas,22,ilgalaikio bendradarbiavimo
+"Elektrikai, elektros darbai","Restoranai, kavinės, barai, salės",22,kur galėčiau
+"Kenkėjų naikinimas, prevencija",Valymo paslaugos,22,niekas negyvena
+"Aplinkos tvarkymas, apželdinimas",Nuotekų valymo įrenginiai,22,oji g nuasmeninta
+"Kenkėjų naikinimas, prevencija",Lektoriai,22,pravesti mokymus
+"Barmenai, gėrimai renginiams",Djs,22,renginio pradžia
+Medienos gaminiai,Šiukšlių išvežimas: statybinių ir kt.,22,statybinės medienos
+Buhalterinės apskaitos paslaugos,"Psichologai, psichoterapeutai",22,susitikti gyvai
+Interjero dizaineriai,"Vejos priežiūra, įrengimas",22,tur žiūrėti
+"Baseinų, jacuzzi įrengimas, priežiūra","Žemės kasimas, lyginimas",22,užpilti skalda
+Automobilių plovyklos,Krovinių pervežimas,22,šeštadienį arba sekmadienį
+"Stogdengiai, stogo darbai",Valymo paslaugos,22,aukštų daugiabučiui | namas 3 aukštų
+Permanentinis makiažas,Vidaus apdailos darbai,22,darytas prieš | kada greiciausiai
+"Muzikantai, dainininkai, grupės",Valymo paslaugos,22,dviejų asmenų | mažų vaikų
+"Medžio darbai, staliai",Plėvelės klijavimas,22,langų plotis | tris langus
+"Dujų įvedimas, pajungimas",Vidaus apdailos darbai,22,paskutinis aukštas | nebrangaus meistro
+Aukštalipiai,Reklamos gamyba,22,reklaminės iškabos | reklaminį stendą
+Valymo paslaugos,"Vertėjai, vertimų biurai",22,for someone | looking for someone
+"Santechnikai, santechnikos darbai",Video klipų kūrimas,22,kelių sekundžių | projektavimas gamyba
+"Aplinkos tvarkymas, apželdinimas","Stogdengiai, stogo darbai",22,namas statomas | įrengti lietaus vandens
+Pramogos vaikams,Sodybos nuomai,22,nuoma gimtadienio | nuomai vienai
+"Architektai, projektavimas",Nekilnojamo turto brokeriai,21,administracinės paskirties
+"Ekskursijos, gidai",Vidaus apdailos darbai,21,antra pusė
+Fotografai verslui,Interjero dizaineriai,21,buto interjero
+"Advokatai, teisininkai",Nekilnojamo turto nuoma,21,buto nuomos
+"Autoservisai, automobilių remontas",Mobiliųjų telefonų remontas,21,galinio stiklo
+Renginių vedėjai,"Žemės kasimas, lyginimas",21,keliom valandom
+Baldų gamyba,Frezavimas (CNC),21,mdf plokštės
+Automobilių plovyklos,Automobilių supirkimas,21,odinis salonas
+"Langai, durys: gamyba, montavimas","Stiklo konstrukcijos, montavimas",21,stiklas skaidrus
+"Elektrikai, elektros darbai",Keleivių pervežimas,21,teikiate tokią
+Lektoriai,Virtualūs asistentai,21,vesti mokymus
+Automobilių plovyklos,"Elektrikai, elektros darbai",21,viršaus ir apačios
+"Elektrikai, elektros darbai",SEO paslaugos,21,viskas tvarkoje
+Kompiuterių remontas,Vidaus apdailos darbai,21,ikeliu foto | niekur nieko
+Programuotojai,Vidaus apdailos darbai,21,lauks žiūrėti | projektą nuasmeninta
+Baldų gamyba,Fotografai,21,norėtųsi kuo | tinkamas naudoti
+Baldų gamyba,Raktų gamyba,21,pagaminti nauja | gamyba sveiki reikėtų pagaminti
+"Kalviai, kalvystės darbai",Statybos darbai,21,prisegtą brėžinį | pagal prisegtą brėžinį
+Buhalterinės apskaitos paslaugos,Rašto darbų konsultantai,20,2026 metais
+Nekilnojamo turto brokeriai,Valymo paslaugos,20,butą prieš
+Pardavimų vadybininkai,Valymo paslaugos,20,darbo grafikas
+Djs,"Ekskursijos, gidai",20,data rugsėjo
+"Metalo gaminiai, suvirintojai",Renginių vedėjai,20,galbūt turite
+"Elektrikai, elektros darbai","Muzikantai, dainininkai, grupės",20,galinčio atvykti
+Interjero dizaineriai,Interneto svetainių administratoriai,20,interjero dizainerė
+"Elektrikai, elektros darbai",Siuvinėjimas,20,laiko padarytumėte
+Krovinių pervežimas,"Vejos priežiūra, įrengimas",20,miesto ribose
+"Elektrikai, elektros darbai",Interneto svetainių administratoriai,20,pagal visus
+Grafikos dizaineriai,SEO paslaugos,20,reklamos kūrimas
+Pastatų sandarumo bandymai,Statybos dokumentų tvarkymas,20,sandarumo testa
+Dirbtinio intelekto sprendimai,SEO paslaugos,20,specialisto turinčio
+Fotografai,Pagalbiniai darbininkai,20,svarbu turėti
+"Kapų tvarkymas, priežiūra",Privatūs detektyvai,20,vardas pavardė
+Keleivių pervežimas,Sodybos nuomai,20,vienas vaikas
+"Advokatai, teisininkai",Fotografai,20,2025 sausio | gegužės 25d
+Projektų ir dokumentų rengėjai,Vidaus apdailos darbai,20,atlikt žiūrėti | informacijos suteiksiu
+"Aplinkos tvarkymas, apželdinimas",Projektų ir dokumentų rengėjai,20,finansavimui gauti | žmogus ar komanda
+Statybos darbai,Šiukšlių išvežimas: statybinių ir kt.,20,kart su kainom | reikės atvežti
+"Advokatai, teisininkai","Vertėjai, vertimų biurai",20,pirkimo pardavimo sutartį | vaiko gimimo
+"Psichologai, psichoterapeutai",Slaugytojai,20,sveikatos problemų | val darbo dienomis
+"Architektai, projektavimas",Geologiniai tyrimai,20,vienbutį gyvenamąjį | vienbutį gyvenamąjį namą
+Sodybos nuomai,Šventinės įrangos nuoma,19,asmenų skaičius
+"Paminklai kapams, antkapiai",Užuolaidų siuvimas,19,dėkoju pagarbiai
+Automobilių nuoma,Slaugytojai,19,galiu atvykti
+"Autoservisai, automobilių remontas",Interneto svetainių kūrimas,19,laiko uztruktu
+Statybos darbai,Užuolaidų siuvimas,19,lauko terasai
+Perkraustymo paslaugos,Statybos darbai,19,pateikti preliminarų
+"Metalo gaminiai, suvirintojai",Valymo paslaugos,19,tad norime
+Automobilių nuoma,Buhalterinės apskaitos paslaugos,19,transporto priemonių
+"Elektrikai, elektros darbai",Srautinis valymas,19,vienas namas
+Iliustruotojai,Keleivių pervežimas,19,vieno asmens
+"Matininkai, geodezininkai",Statybinės technikos nuoma,19,vieno sklypo
+"Advokatai, teisininkai","Šokiai, šokių pamokos",19,would like
+"Barmenai, gėrimai renginiams",Video klipų kūrimas,18,2025 liepos
+Kineziterapeutai,Statybos darbai,18,apatinės dalies
+Interjero dizaineriai,Krovinių pervežimas,18,darbo vietų
+"Barmenai, gėrimai renginiams","Restoranai, kavinės, barai, salės",18,gimtadienio vakarėliui
+Grafikos dizaineriai,LinkedIn strategijų kūrimas,18,ieško žmogaus
+Krovinių pervežimas,"Tvoros, vartai, montavimas",18,ilgis 200
+"Aplinkos tvarkymas, apželdinimas",Automobilių nuoma,18,keliom dienom
+"Advokatai, teisininkai",Logopedai,18,kelis mėnesius
+Kitos įvairios paslaugos,Šiukšlių išvežimas: statybinių ir kt.,18,kitos įvairios
+Logopedai,"Muzikantai, dainininkai, grupės",18,lenku kalba
+Alternatyvi energija,Meistrai į namus,18,montavimas ant sienos
+Alternatyvi energija,"Medžio darbai, staliai",18,objekto duomenys
+Mikroautobusų nuoma,"Vertėjai, vertimų biurai",18,pasiūlymo pagarbiai
+"Stogdengiai, stogo darbai","Ventiliacija, vėdinimo sistemos",18,remontas problema
+Pagalbiniai darbininkai,Sniego valymas,18,sniego kasimas
+Buhalterinės apskaitos paslaugos,"Žemės kasimas, lyginimas",18,sodininkų bendrijos
+"Autoservisai, automobilių remontas",Stiklų tamsinimas,18,stiklų tamsinimas
+Apsaugininkai,Buhalterinės apskaitos paslaugos,18,verslo liudijimu
+"Barmenai, gėrimai renginiams",Fotografai,18,vestuvėms 2026
+Automobilių nuoma,Spaudos paslaugos,18,šio penktadienio
+Kelių tiesimas,"Stogdengiai, stogo darbai",17,esamos dangos
+Automobilių nuoma,"Barmenai, gėrimai renginiams",17,gruodžio 13d
+"Aplinkos tvarkymas, apželdinimas",Statybinės technikos nuoma,17,ilgis 10m
+Vidaus apdailos darbai,"Šunų, kačių kirpyklos",17,kito miesto
+Interneto svetainių administratoriai,Vidaus apdailos darbai,17,kruopštaus ir atsakingo
+Buhalterinės apskaitos paslaugos,Konsultacijos mokesčių klausimais,17,mokesčių klausimais
+Muzikos mokytojai,"Šunų, kačių kirpyklos",17,mus namuose
+Mikroautobusų nuoma,Reklamos gamyba,17,opel vivaro
+"Aplinkos tvarkymas, apželdinimas","Dainavimo, vokalo pamokos",17,padėti paruošti
+Krovinių pervežimas,Medienos gaminiai,17,plotis 10cm
+"Elektrikai, elektros darbai","Šunų, kačių kirpyklos",17,turite laiko
+Asmeniniai treneriai,Logopedai,17,vakarais arba savaitgaliais
+"Barmenai, gėrimai renginiams",Renginių vedėjai,17,val žmonių
+"Aplinkos tvarkymas, apželdinimas",Nekilnojamo turto nuoma,17,žalingų įpročių
+Pradinių klasių mokytoja,Pramogos vaikams,16,amžiaus vaikams
+Interjero dizaineriai,"Matininkai, geodezininkai",16,butui butas
+Automobilių nuoma,Pramogų organizatoriai,16,gegužės 30d
+Buhalterinės apskaitos paslaugos,Nekilnojamo turto brokeriai,16,grožio salonas
+Meistrai į namus,"Stiklų, veidrodžių gamyba, keitimas",16,grudinto stiklo
+Rašto darbų konsultantai,Statybos darbai,16,išmanančio žmogaus
+Iliustruotojai,"Muzikantai, dainininkai, grupės",16,jubiliejaus šventėje
+Plėvelės klijavimas,"Smėliavimas, dažymas",16,juoda matine
+Vidaus apdailos darbai,Vizažistės,16,juos sutvarkyti
+"Aplinkos tvarkymas, apželdinimas","Ventiliacija, vėdinimo sistemos",16,kokiu būdu
+Baldų gamyba,Graviravimo paslaugos,16,organinio stiklo
+Baldų gamyba,Betranšėjės technologijos,16,padaryti tokį
+Projektų ir dokumentų rengėjai,"Roletai, žaliuzės, romanetės",16,pagal žemiau
+"Vandens filtrai: montavimas, keitimas",Vidaus apdailos darbai,16,pagrindinė problema
+Fotografai,Statybinės technikos nuoma,16,pora valandų
+"Automobilių poliravimas, priežiūra","Elektrikai, elektros darbai",16,priekinių žibintų
+Baldų gamyba,"Žemės kasimas, lyginimas",16,pristatymo terminas
+"Aplinkos tvarkymas, apželdinimas","Roletai, žaliuzės, romanetės",16,remontas nutrūko
+"Medžio darbai, staliai","Stiklo konstrukcijos, montavimas",16,skaidraus stiklo
+Logopedai,Muzikos mokytojai,16,suaugusiam žmogui
+Statybos darbai,Statybos darbų vadovai,16,susisieksiu asmeniškai
+Automobilių pirkimo-pardavimo konsultantai,Nekilnojamo turto brokeriai,16,vertės nustatymas
+"Muzikantai, dainininkai, grupės",Video klipų kūrimas,16,vestuvėms rugpjūčio
+"Metalo gaminiai, suvirintojai",Pakuočių gamyba,16,vieno šono
+"Kapų tvarkymas, priežiūra",Rinkodara (marketingas),16,žmogaus su patirtimi
+Automobilių nuoma,Pardavimų vadybininkai,15,agentūra ieško
+Nekilnojamo turto nuoma,"Psichologai, psichoterapeutai",15,antra puse
+Baidarių nuoma,Stovyklavietės,15,baidarių nuomos
+Fotografai,"Medžio darbai, staliai",15,biudžetas nėra didelis
+Automobilių supirkimas,Dujų įrangos montavimas,15,dujų įranga
+Krovinių pervežimas,"Ventiliacija, vėdinimo sistemos",15,dvi vietas
+Fotografai verslui,"Kapų tvarkymas, priežiūra",15,dviems žmonėms
+"Advokatai, teisininkai","Autoservisai, automobilių remontas",15,eismo įvykio
+Darbo saugos paslaugos,"Elektrikai, elektros darbai",15,gaisrinės saugos
+Video klipų kūrimas,Įvairios paslaugos vestuvėms,15,galime pateikti
+"Elektrikai, elektros darbai","Maitinimas, maistas šventėms",15,galintis paruošti
+Lektoriai,Microsoft Office Excel specialistai,15,ieškomas lektorius
+Metalo laužo supirkimas,Šiukšlių išvežimas: statybinių ir kt.,15,išsivežti patiems
+Buitinės technikos remontas,Video klipų kūrimas,15,kelių minučių
+Kompiuterių remontas,Krovinių pervežimas,15,kitu atveju
+Mikroautobusų nuoma,Techninė pagalba kelyje,15,krovininį mikroautobusą
+"Autoservisai, automobilių remontas",Logopedai,15,kuo arciau
+Laivo nuoma,Vidaus apdailos darbai,15,labiausiai domintų
+Buhalterinės apskaitos paslaugos,"Vejos priežiūra, įrengimas",15,metais buvo
+Griovimo darbai,"Muzikantai, dainininkai, grupės",15,miesto centras
+Statybos darbai,Vandens gręžiniai,15,mini grežinys
+Plėvelės klijavimas,"Santechnikai, santechnikos darbai",15,namas šalia
+Avarinis atrakinimas,Vidaus apdailos darbai,15,namo durų
+"Aplinkos tvarkymas, apželdinimas","Apšiltinimas, šiltinimas",15,namą taip pat
+"Elektrikai, elektros darbai",Internetinio verslo konsultantai,15,norime padidinti
+Interneto svetainių kūrimas,"Vertėjai, vertimų biurai",15,nuasmeninta lauksime
+"Elektrikai, elektros darbai",Reklamos paslaugos,15,nuasmeninta norime
+Kineziterapeutai,Masažo paslaugos,15,nugaros masažas
+Buhalterinės apskaitos paslaugos,Internetinio verslo konsultantai,15,pagal darbo
+Grafikos dizaineriai,"Restoranai, kavinės, barai, salės",15,panašaus pobūdžio
+Interneto svetainių administratoriai,Valymo paslaugos,15,pat svarbu
+"Langai, durys: gamyba, montavimas","Stogdengiai, stogo darbai",15,reiktų suremontuoti
+Restauravimas,"Santechnikai, santechnikos darbai",15,restauravimas reikia atnaujinti
+Buitinės technikos remontas,Šiukšlių išvežimas: statybinių ir kt.,15,siuvimo mašiną
+"Baseinų, jacuzzi įrengimas, priežiūra",Sodybos nuomai,15,spinduliu aplink
+Interneto svetainių kūrimas,"Psichologai, psichoterapeutai",15,tam tikrais
+Logopedai,"Šokiai, šokių pamokos",15,tinkamiausias laikas
+"Siuvimas, siuvyklos, siuvėjai",Video klipų kūrimas,15,turimos medžiagos
+Krovinių pervežimas,Video klipų kūrimas,15,val biudžetas
+Fotografai,"Pasirodymai, šou renginiams",15,valandos laiko
+"Apšiltinimas, šiltinimas",Griovimo darbai,15,viskas kas matosi
+Verslo konsultantai,Vidaus apdailos darbai,15,įmonė dirbanti
+Alternatyvi energija,Statybos darbai,15,įrengimas daugiabučio
+"Santechnikai, santechnikos darbai",Sniego valymas,15,žiemos sezonui
+Komunikacijos specialistai,Vidaus apdailos darbai,15,žmogaus kuris turi patirties
+"Santechnikai, santechnikos darbai",Sodybos nuomai,14,2000 eur
+Fotografai,Muzikos mokytojai,14,atvykti pas mus
+Pramogos vaikams,"Restoranai, kavinės, barai, salės",14,data balandžio
+Fotografai,Techninė pagalba kelyje,14,data derinama
+"Elektrikai, elektros darbai",Lektoriai,14,gali pravesti
+Lektoriai,Renginių vedėjai,14,galinčio vesti
+Komunikacijos specialistai,Manikiūras,14,ilgalaikei draugystei
+"Barmenai, gėrimai renginiams","Pasirodymai, šou renginiams",14,iškart su kainomis ačiū
+Fotografai verslui,Valymo paslaugos,14,kamb butą
+Interjero dizaineriai,Reklamos gamyba,14,kelis pvz
+Alternatyvi energija,IT saugos auditas,14,kibernetinio saugumo
+"Pasirodymai, šou renginiams",Vidaus apdailos darbai,14,kovo 15d
+Automobilių nuoma,Vairavimo mokyklos,14,mechanine pavaru
+"Medžio darbai, staliai",Statybos dokumentų tvarkymas,14,mediniam namui
+Krautuvų nuoma,"Žemės kasimas, lyginimas",14,mini krautuvas
+Graviravimo paslaugos,Spaudos paslaugos,14,minimalus kiekis
+Automobilių nuoma,Grafikos dizaineriai,14,mėn laikotarpiui
+Meistrai į namus,Sandėliavimo paslaugos,14,namų ūkio
+Valymo paslaugos,Video klipų kūrimas,14,nuasmeninta žiūrėti
+Baldų gamyba,"Stogdengiai, stogo darbai",14,pagal ismatavimus
+Inžinieriai,Tekstų kūrėjai,14,pagal kuriuos
+Meistrai į namus,"Ventiliacija, vėdinimo sistemos",14,parinkti tinkamą
+Biologijos korepetitoriai,Matematikos korepetitoriai,14,pasiruošti egzaminui
+"Aplinkos tvarkymas, apželdinimas",Grafikos dizaineriai,14,pridedama foto
+"Santechnikai, santechnikos darbai",Sąmatininkai: sąmatų skaičiavimas,14,projektą atsiųsiu
+Fotografai verslui,"Medžio darbai, staliai",14,reikalingos kokybiškos
+Alternatyvi energija,Krovinių pervežimas,14,saskaitos fakturos
+"Metalo gaminiai, suvirintojai","Stiklų, veidrodžių gamyba, keitimas",14,stikliniai turėklai
+"Medžių genėjimas, pjovimas","Žemės kasimas, lyginimas",14,stovi namas
+Automobilių nuoma,"Vandens filtrai: montavimas, keitimas",14,suauge 2 vaikai
+Buitinės technikos remontas,Slaugytojai,14,tris kartus
+"Kalviai, kalvystės darbai",Meistrai į namus,14,tvirtinimas prie sienos
+Aukštalipiai,Spaudos paslaugos,14,užklijuoti naują
+Interneto svetainių administratoriai,Virtualūs asistentai,14,užtikrinti sklandų
+"Pirtys, pirčių įrengimas",Vidaus apdailos darbai,14,vanduo elektra
+Statybos darbai,Įvairios technikos nuoma,14,vibro plokšte
+"3D modeliavimas, vizualizacijų kūrimas",Griovimo darbai,14,vidinio kiemo
+Buhalterinės apskaitos paslaugos,Keleivių pervežimas,14,vieną žmogų
+"Langai, durys: gamyba, montavimas","Ventiliacija, vėdinimo sistemos",14,virš balkono
+Keleivių pervežimas,Mikroautobusų nuoma,14,vėlai vakare
+"Elektrikai, elektros darbai",Pagalbiniai darbininkai,14,įvairiems darbams
+Griovimo darbai,Meistrai į namus,14,šalia sudervės
+IT specialistai,Video klipų kūrimas,14,žmogus kuris gali
+"Betonavimo darbai, betonavimas","Žemės kasimas, lyginimas",13,60m ilgio
+"Advokatai, teisininkai","Medžio darbai, staliai",13,darbo dienas
+"Betonavimo darbai, betonavimas","Juvelyrai, juvelyriniai dirbiniai",13,darbo specifika
+Nekilnojamo turto brokeriai,"Stogdengiai, stogo darbai",13,daugiabutis 5 aukštų
+"3D modeliavimas, vizualizacijų kūrimas",Vidaus apdailos darbai,13,gali tai padaryti
+Interneto svetainių kūrimas,Mobiliųjų aplikacijų kūrimas,13,galinčių sukurti
+Nekilnojamo turto brokeriai,"Psichologai, psichoterapeutai",13,gyvenu užsienyje
+Grafikos dizaineriai,Socialiniai darbuotojai,13,individualios priežiūros
+"Akmens masės, marmuro, granito darbai","Maitinimas, maistas šventėms",13,kamado bono
+Asmeniniai treneriai,Matematikos korepetitoriai,13,kažkur aplink
+Krautuvų nuoma,Statybinės technikos nuoma,13,keliamoji galia
+Interneto svetainių kūrimas,Redaktoriai,13,klaidų taisymas
+Interneto svetainių kūrimas,"Muzikantai, dainininkai, grupės",13,komandos kuri galėtų sukurti
+Sodybos nuomai,Sportinių dangų sistemos,13,krepšinio aikštelė
+Griovimo darbai,Mikroautobusų nuoma,13,kuo didesnis
+Automobilių plovyklos,Techninė pagalba kelyje,13,lengvajam automobiliui
+"3D spausdinimas, skenavimas",Vidaus apdailos darbai,13,lygus paviršius
+"Autoservisai, automobilių remontas",Prekyba įvairiomis prekėmis,13,mini cooper
+"Skalda, smėlis, žvyras, juodžemis",Statybos darbai,13,molis priemolis
+"Garažo vartai, montavimas","Medžio darbai, staliai",13,montavimu ir be montavimo
+Inžinieriai,Statybos projektų valdymas,13,namo būklę
+Fotografai,"Žemės kasimas, lyginimas",13,netoli palangos
+Automobilių nuoma,"Elektrikai, elektros darbai",13,norėjau sužinoti
+Interneto svetainių kūrimas,"Šokiai, šokių pamokos",13,pagal pasirinktą
+"Apšiltinimas, šiltinimas",Rašto darbų konsultantai,13,pagalba sutvarkyti
+Buhalterinės apskaitos paslaugos,Video klipų kūrimas,13,pastovus bendradarbiavimas
+"Maitinimas, maistas šventėms","Medžio darbai, staliai",13,pat norėčiau sužinoti
+Fotografai,"Psichologai, psichoterapeutai",13,pat tiesiog
+"Krosnys, krosnių meistrai",Reklamos gamyba,13,patalpos viduje
+Paveikslų restauracija,Restauravimas,13,paveikslų restauracija
+"Garažo vartai, montavimas",Valymo paslaugos,13,požeminį parkingą
+Vaismedžių genėjimas,Vidaus apdailos darbai,13,prieš du metus
+Griovimo darbai,Kelių tiesimas,13,privataus kiemo
+Internetinio verslo konsultantai,"Psichologai, psichoterapeutai",13,rasti žmogų
+Kompiuterių remontas,Spaudos paslaugos,13,raudonos spalvos
+Buitinės technikos remontas,"Garažo vartai, montavimas",13,remontas neatsidaro
+"Barmenai, gėrimai renginiams",Pramogos vaikams,13,rugpjūčio 22d
+"Maitinimas, maistas šventėms","Vestuvių, švenčių dekoravimas",13,rugsėjo 12d
+Interjero dizaineriai,"Psichologai, psichoterapeutai",13,specialisto pagalbos
+Dirbtinio intelekto sprendimai,Vidaus apdailos darbai,13,specialisto turinčio patirties
+Grafikos dizaineriai,Stilistai,13,specialisto įmonės
+Asmeniniai treneriai,Vidaus apdailos darbai,13,sporto salėje
+"Autoservisai, automobilių remontas",Statybos dokumentų tvarkymas,13,techninės apžiūros
+Buhalterinės apskaitos paslaugos,Pardavimų vadybininkai,13,teikiamų paslaugų
+"Medžio darbai, staliai",Trinkelių klojimas,13,tokių pačių
+Komunikacijos specialistai,Virtualūs asistentai,13,turinio kūrėjo
+Fotografai verslui,Video klipų kūrimas,13,vaizdo įrašo
+Statybos darbai,"Vandens filtrai: montavimas, keitimas",13,valymo sistema
+Krovinių pervežimas,"Stogdengiai, stogo darbai",13,važiuojant link
+"Aplinkos tvarkymas, apželdinimas",Įvairios technikos nuoma,13,vejos robotas
+"Kirpyklos, kirpėjai, stilistai",Vizažistės,13,vidutinio ilgio
+Mobilios pirties nuoma,Renginių vedėjai,13,vienam vakarui
+"Kapų tvarkymas, priežiūra","Santechnikai, santechnikos darbai",13,viskas turėtų
+"Autoservisai, automobilių remontas","Langai, durys: gamyba, montavimas",13,visos durys
+Rašto darbų konsultantai,Tekstų kūrėjai,13,šia tema
+Reklamos gamyba,"Siuvimas, siuvyklos, siuvėjai",12,1000 vnt
+Kelių tiesimas,Statybinės technikos nuoma,12,500 metrų
+"Autoservisai, automobilių remontas","Motociklų, motorolerių remontas",12,alkūninio veleno
+Plėvelės klijavimas,"Roletai, žaliuzės, romanetės",12,apsauga nuo saulės
+Asmeniniai treneriai,Laivo nuoma,12,asmenų grupė
+Buitinės technikos remontas,Logopedai,12,atvykimu į namus
+Automobilių nuoma,Laivo nuoma,12,birželio 22d
+Asmeniniai vairuotojai,Vidaus apdailos darbai,12,būtina sąlyga
+"Advokatai, teisininkai",Interneto svetainių administratoriai,12,duomenų apsaugos
+"Medžio darbai, staliai",Video aptarnavimas,12,dviejų kamerų
+Frezavimas (CNC),"Žemės kasimas, lyginimas",12,frezavimas reikia išfrezuoti
+Fotografai,"Restoranai, kavinės, barai, salės",12,galime atvykti
+Pramogos vaikams,"Vestuvių, švenčių dekoravimas",12,gegužės 24d
+Grafikos dizaineriai,Sandėliavimo paslaugos,12,ilgalaikio partnerio
+Nekilnojamo turto brokeriai,"Santechnikai, santechnikos darbai",12,inžinerinius tinklus
+Krovinių pervežimas,Vaismedžių genėjimas,12,karačiūnų sodų
+Chemijos korepetitoriai,Lietuvių kalbos korepetitoriai,12,klasės mokiniai
+Mikroautobusų nuoma,Statybos darbai,12,krovininio automobilio
+Krovinių pervežimas,"Maitinimas, maistas šventėms",12,laikas nesvarbus
+Medienos gaminiai,Vidaus apdailos darbai,12,lauko dailylenčių
+Lenkų kalbos mokytojai,"Vertėjai, vertimų biurai",12,lenkų kalbos
+Buitinės technikos remontas,Techninė pagalba kelyje,12,liepų g nuasmeninta
+"Medžio darbai, staliai",Restauravimas,12,mediniu langu
+Graviravimo paslaugos,"Metalo gaminiai, suvirintojai",12,metalo storis
+Kitos įvairios paslaugos,Krovinių pervežimas,12,min kelio
+Ūkio technikos remontas,"Žemės kasimas, lyginimas",12,mini krautuvo
+Automobilių nuoma,Rinkodara (marketingas),12,mėn biudžetas
+"Aplinkos tvarkymas, apželdinimas",Interjero dizaineriai,12,namas jau pastatytas
+"Aplinkos tvarkymas, apželdinimas",Fotografai verslui,12,naujai įrengtą
+Automobilių nuoma,Viešųjų pirkimų konsultantai,12,nesvarbu svarbu
+Vandens pristatymas,"Žemės kasimas, lyginimas",12,netoli sudervės
+Internetinio verslo konsultantai,Video klipų kūrimas,12,norėtų prisidėti
+"Aplinkos tvarkymas, apželdinimas","Baseinų, jacuzzi įrengimas, priežiūra",12,nuolatinė priežiūra
+Renginių organizavimas,Šventinės įrangos nuoma,12,nuoma šventei
+"3D modeliavimas, vizualizacijų kūrimas","Metalo gaminiai, suvirintojai",12,padaryti kelis
+Aukštalipiai,IT specialistai,12,padėti šiuo klausimu
+"Aplinkos tvarkymas, apželdinimas",Reklamos paslaugos,12,pagalba sutvarkant
+"Krosnys, krosnių meistrai",Statybinės technikos nuoma,12,papilvio kaimas
+Drabužių valymas,Valymo paslaugos,12,patalynės ir rankšluosčių
+"Dviračių, paspirtukų remontas","Santechnikai, santechnikos darbai",12,patikrinti ar viskas
+Vidaus apdailos darbai,Įvairios technikos nuoma,12,pociūnėliai radviliškio
+"Advokatai, teisininkai","Ventiliacija, vėdinimo sistemos",12,pries metus
+Medienos gaminiai,Pakuočių gamyba,12,pristatymas į vilnių
+"Architektai, projektavimas",Programuotojai,12,proj žiūrėti
+Programuotojai,Projektų ir dokumentų rengėjai,12,projekto tikslas
+Statybos projektų valdymas,Vidaus apdailos darbai,12,projekto vadovas
+Buitinės technikos remontas,"Roletai, žaliuzės, romanetės",12,remontas sugedęs
+"Baseinų, jacuzzi įrengimas, priežiūra",Slaugytojai,12,ryte ir vakare
+Automobilių nuoma,"Siuvimas, siuvyklos, siuvėjai",12,rytojaus vakaro
+"Restoranai, kavinės, barai, salės",Vidaus apdailos darbai,12,sausio pradžioje
+"Automobilių poliravimas, priežiūra",Automobilių supirkimas,12,skoda fabia
+Mikroautobusų nuoma,"Muzikantai, dainininkai, grupės",12,sodyba nuasmeninta
+Automobilių nuoma,"Garažo vartai, montavimas",12,spalva nesvarbu
+"3D modeliavimas, vizualizacijų kūrimas",Video klipų kūrimas,12,sukurti video
+Archyvarai,Buhalterinės apskaitos paslaugos,12,sutvarkyti įmonės
+"Advokatai, teisininkai",Automobilių nuoma,12,sveikatos priežiūros
+Rašto darbų konsultantai,Reklamos gamyba,12,terminas gegužės
+Nekilnojamo turto nuoma,Vidaus apdailos darbai,12,tipo patalpos
+"3D spausdinimas, skenavimas","Metalo gaminiai, suvirintojai",12,tokią detalę
+Komunikacijos specialistai,SEO paslaugos,12,turinio kūrimui
+Fotografai verslui,"Muzikantai, dainininkai, grupės",12,val liepos
+"Architektai, projektavimas",Statybinės technikos nuoma,12,vasario 16 osios
+"Advokatai, teisininkai",Pramogos vaikams,12,video nuasmeninta
+Matematikos korepetitoriai,Valymo paslaugos,12,vienam kartui
+Grafikos dizaineriai,"Vertėjai, vertimų biurai",12,vienas puslapis
+Baldų gamyba,Braižytojai,12,visi matmenys
+"Aplinkos tvarkymas, apželdinimas",Sodybos nuomai,12,viskas vienoje
+"Vertėjai, vertimų biurai","Vokiečių kalbos kursai, pamokos",12,vokieciu kalba
+Grafikos dizaineriai,Pramogos vaikams,12,įmonės logotipas
+"Matininkai, geodezininkai",Nuotekų valymo įrenginiai,12,šalia molėtų
+Fotografai,Šventinės įrangos nuoma,12,šiam ketvirtadieniui
+Buhalterinės apskaitos paslaugos,"Krosnys, krosnių meistrai",12,šios srities
+"Matininkai, geodezininkai","Stogdengiai, stogo darbai",12,ūkinių pastatų
+Buhalterinės apskaitos paslaugos,Djs,11,2026 m sausio
+Renginių organizavimas,Statybos darbai,11,2026 sausio
+Interneto svetainių kūrimas,"Stiklų, veidrodžių gamyba, keitimas",11,abiejų variantų
+"Medžio darbai, staliai",Ventiliuojami fasadai,11,aliuminio karkasas
+Slaugytojai,Vizažistės,11,amžiaus moteriai
+Baldų gamyba,"Restoranai, kavinės, barai, salės",11,atsi žiūrėti
+Frezavimas (CNC),"Vestuvių, švenčių dekoravimas",11,aukso spalvos
+Interneto svetainių kūrimas,Renginių vedėjai,11,biudžetas iki 1000
+"Autoservisai, automobilių remontas","Kapų tvarkymas, priežiūra",11,buvo blogai
+Fotografai,"Vertėjai, vertimų biurai",11,civilinės metrikacijos
+"Apšvietimo, įgarsinimo paslaugos",Automobilių nuoma,11,dienos vakarui
+Statybos projektų valdymas,"Stogdengiai, stogo darbai",11,dnsb ieško
+"Apšiltinimas, šiltinimas",Geologiniai tyrimai,11,domintų kaina ir terminas
+"Odininkai, odos gaminiai",Statybos darbai,11,dvi spalvos
+Lektoriai,Statybos darbai,11,eksperto galinčio
+"3D modeliavimas, vizualizacijų kūrimas",Interneto svetainių administratoriai,11,esu interjero
+Pradinių klasių mokytoja,Spaudos paslaugos,11,galime pristatyti
+"Maitinimas, maistas šventėms",Video klipų kūrimas,11,galinčio pasirūpinti
+Buitinės technikos remontas,Renginių organizavimas,11,garso kolonėlės
+"Architektai, projektavimas","Psichologai, psichoterapeutai",11,gauti konsultaciją
+"Akmens masės, marmuro, granito darbai","Aplinkos tvarkymas, apželdinimas",11,granito trinkelių
+Kelių tiesimas,"Matininkai, geodezininkai",11,gretimo sklypo
+Djs,Pramogos vaikams,11,gruodžio 12d
+Nekilnojamo turto brokeriai,"Šokiai, šokių pamokos",11,hello i am looking
+Interneto svetainių kūrimas,"Vitražai, stiklo interjero detalės",11,interjero detalės
+"Elektrikai, elektros darbai",Telekomunikacijų įrangos montuotojai,11,kabelių tiesimas
+Lektoriai,Lietuvių kalbos korepetitoriai,11,kalba anglų
+Lietuvių kalbos korepetitoriai,Logopedai,11,kalba lietuviškai
+Betranšėjės technologijos,"Santechnikai, santechnikos darbai",11,kanalizacijos vamzdi
+Automobilių nuoma,"Draudimas, draudimo agentai",11,kasko draudimas
+"Advokatai, teisininkai",Mobiliųjų telefonų remontas,11,kelios dienos
+Buhalterinės apskaitos paslaugos,"Vandens filtrai: montavimas, keitimas",11,kiekvienais metais
+"Elektrikai, elektros darbai","Psichologai, psichoterapeutai",11,kokių nors
+Mobiliųjų aplikacijų kūrimas,Programuotojai,11,komandos galinčios sukurti
+Nuotekų valymo įrenginiai,"Vejos priežiūra, įrengimas",11,krakiškių sodų
+"Betonavimo darbai, betonavimas",Trinkelių klojimas,11,laiptų įrengimui
+Pramogos vaikams,Valymo paslaugos,11,laisvų laikų
+Pakuočių gamyba,Valymo paslaugos,11,lipnios juostos
+Renginių vedėjai,Statybos darbai,11,lopšelio darželio
+Grafikos dizaineriai,"Žemės kasimas, lyginimas",11,lopšeliui darželiui
+"Metalo gaminiai, suvirintojai",Statybinės technikos nuoma,11,metalinis rėmas
+Kelių tiesimas,Mobilaus kubilo nuoma,11,nemenčinės sen
+Automobilių nuoma,Griovimo darbai,11,nuoma sveiki norime
+"Advokatai, teisininkai",SEO paslaugos,11,padėti susitvarkyti
+Interneto svetainių kūrimas,Tekstų surinkėjai,11,pagal kurias
+Slaugytojai,Vidaus apdailos darbai,11,pagal nurodytą
+Fotografai,Pardavimų vadybininkai,11,pagal sutartą
+"Advokatai, teisininkai",Rašto darbų konsultantai,11,pagalbos rengiant
+"Priekabų, puspriekabių remontas","Ventiliacija, vėdinimo sistemos",11,pakeisti kitu
+"Anglų kalbos kursai, pamokos",Muzikos mokytojai,11,pamokos esu
+Lietuvių kalbos korepetitoriai,Vairavimo mokyklos,11,papildomos pamokos
+Buhalterinės apskaitos paslaugos,Renginių vedėjai,11,paskutinius metus
+"Santechnikai, santechnikos darbai","Stiklo konstrukcijos, montavimas",11,pavedimu pagal sąskaitą
+Permanentinis makiažas,"Šokiai, šokių pamokos",11,permanentinio makiažo
+"Pirtys, pirčių įrengimas","Santechnikai, santechnikos darbai",11,pirties patalpos
+Dietologai,Interjero dizaineriai,11,plano sudarymas
+Spaudos paslaugos,Vidaus apdailos darbai,11,prabangos nereikia
+Baldų gamyba,Rinkodara (marketingas),11,pradžios iki pabaigos
+"3D modeliavimas, vizualizacijų kūrimas",Meistrai į namus,11,prašom pateikti
+Interjero dizaineriai,"Medžio darbai, staliai",11,prid žiūrėti
+Metalo pjovimas lazeriu,Vidaus apdailos darbai,11,prisegu brezini
+"Aplinkos tvarkymas, apželdinimas","Floristai, gėlių salonai",11,pristatymu į namus
+Komunikacijos specialistai,Pardavimų vadybininkai,11,pritraukti naujų
+Aukštalipiai,Meistrai į namus,11,reiktų pakabinti
+Renginių vedėjai,"Ventiliacija, vėdinimo sistemos",11,reiktų pravesti
+Automobilių nuoma,Tekstų kūrėjai,11,reklamos agentūra
+"Autoservisai, automobilių remontas","Metalo gaminiai, suvirintojai",11,remontas kas gali
+Kompiuterių remontas,"Roletai, žaliuzės, romanetės",11,remontas reikia remonto
+Aukštalipiai,Plėvelės klijavimas,11,saulės spindulių
+"Kirpyklos, kirpėjai, stilistai",Slaugytojai,11,senyvo amziaus
+"Langai, durys: gamyba, montavimas",Mobiliųjų telefonų remontas,11,stiklo keitimo
+"Aplinkos tvarkymas, apželdinimas","Paminklai kapams, antkapiai",11,sutvarkyti apleista
+Statybos darbai,"Tentai, tentų gamyba",11,terasai terasos
+Meistrai į namus,Video klipų kūrimas,11,tie žiūrėti
+"Metalo gaminiai, suvirintojai","Santechnikai, santechnikos darbai",11,tokio paties
+Interneto svetainių kūrimas,Projektų ir dokumentų rengėjai,11,trumpai apie projektą
+"Architektai, projektavimas",Buhalterinės apskaitos paslaugos,11,tvarkyti dokumentus
+Djs,"Pasirodymai, šou renginiams",11,vakarėliui gruodžio
+Renginių vedėjai,"Vertėjai, vertimų biurai",11,val dalyvių
+Nekilnojamo turto nuoma,Renginių vedėjai,11,val žmonių skaičius
+"Santechnikai, santechnikos darbai","Tekintojai, frezuotojai",11,vamzdžio ilgis
+Fotografai,Mikroautobusų nuoma,11,vasario 15d
+Kaligrafijos meistrai,Vestuvių planuotojai,11,vestuvių data
+"Elektrikai, elektros darbai","Tvoros, vartai, montavimas",11,vieno stulpo
+"Restoranai, kavinės, barai, salės","Santechnikai, santechnikos darbai",11,vietos žiūrėti
+Buitinės technikos remontas,Frezavimas (CNC),11,viršutinėje dalyje
+"Aplinkos tvarkymas, apželdinimas","Skalda, smėlis, žvyras, juodžemis",11,visada galiu
+Komunikacijos specialistai,"Muzikantai, dainininkai, grupės",11,viskas tinka
+Iliustruotojai,Vidaus apdailos darbai,11,vnt matmenys
+Buitinės technikos remontas,Pagalbiniai darbininkai,11,vėl atsiranda
+Buhalterinės apskaitos paslaugos,Viešųjų pirkimų konsultantai,11,všį nuasmeninta
+Keleivių pervežimas,"Maitinimas, maistas šventėms",11,įmonės šventė
+Interneto svetainių kūrimas,"Roletai, žaliuzės, romanetės",11,šiuos reikalavimus
+"Kapų tvarkymas, priežiūra","Medžio darbai, staliai",11,šviesiai pilkos spalvos
+Interjero dekoravimas,Statybos projektų valdymas,11,žmogaus kuris galėtų atvykti
+"Santechnikai, santechnikos darbai","Tvoros, vartai, montavimas",10,50m ilgio
+Lektoriai,"Šokiai, šokių pamokos",10,akad val
+Buitinės technikos remontas,Kompiuterių remontas,10,apžiūrėti ir sutvarkyti
+Statybos darbai,Vaismedžių genėjimas,10,asmeniškai ačiū
+Pelėsio naikinimas,Vidaus apdailos darbai,10,atsirado pelėsis
+Buitinės technikos remontas,Manikiūras,10,atvykimas į namus
+"Santechnikai, santechnikos darbai",Šiukšlių išvežimas: statybinių ir kt.,10,aukšte esančio
+Automobilių nuoma,Sniego valymas,10,balandžio 30d
+Meistrai į namus,Renginių organizavimas,10,bent viena
+"Autoservisai, automobilių remontas",Šventinės įrangos nuoma,10,biudžetas iki 150
+Statybos dokumentų tvarkymas,Valymo paslaugos,10,butas dviejų
+Interneto svetainių kūrimas,"Matininkai, geodezininkai",10,buvo daryti
+"Stogdengiai, stogo darbai",Video klipų kūrimas,10,darbo patirties
+Darbo saugos paslaugos,Priešgaisrinės saugos specialistai,10,darbuotojų saugos
+Statybinės technikos nuoma,Techninė pagalba kelyje,10,dariaus ir gireno
+"Elektrikai, elektros darbai","Kenkėjų naikinimas, prevencija",10,daugiabučio namui
+Statybos darbai,Sąmatininkai: sąmatų skaičiavimas,10,daugiabučių renovacijai
+Automobilių dažymas,"Autoservisai, automobilių remontas",10,dažymas audi
+"Elektrikai, elektros darbai",Kineziterapeutai,10,detalesnės informacijos susisiekite
+Baldų gamyba,Stilistai,10,drabužių spintos
+Baldų gamyba,Sąmatininkai: sąmatų skaičiavimas,10,draudiminio įvykio
+Meistrai į namus,Įvairios technikos nuoma,10,dulkių siurblį
+Krovinių pervežimas,"Paminklai kapams, antkapiai",10,dydis ilgis
+Fotografai,SEO paslaugos,10,esame nauja
+Grafikos dizaineriai,Interneto svetainių administratoriai,10,esu interjero dizainerė
+Baldų gamyba,"Garažo vartai, montavimas",10,gali būti naudoti
+Djs,Statybos darbai,10,gali būti vienas
+Statybos darbai,"Stiklų, veidrodžių gamyba, keitimas",10,gali išpjauti
+Renginių vedėjai,"Santechnikai, santechnikos darbai",10,galintis atvykti
+"Advokatai, teisininkai",Dailininkai,10,galiu gauti
+Baldų gamyba,Pynimas,10,galėčiau atvežti
+Inžinieriai,Video klipų kūrimas,10,gamybinius brėžinius
+"Matininkai, geodezininkai",Projektų ir dokumentų rengėjai,10,garažų bendrijos
+Nekilnojamo turto brokeriai,Verslo konsultantai,10,gauti paskolą
+"Kirpyklos, kirpėjai, stilistai",Valymo paslaugos,10,geriausias laikas
+Interjero dizaineriai,Internetinio verslo konsultantai,10,grožio paslaugų
+Video klipų kūrimas,"Šokiai, šokių pamokos",10,hello i am looking for
+Aukštalipiai,Pagalbiniai darbininkai,10,ieško paslaugų
+"Architektai, projektavimas",Interneto svetainių kūrimas,10,ieškomas specialistas galintis
+Matematikos korepetitoriai,"Šunų, kačių kirpyklos",10,ilgai draugystei
+"Elektrikai, elektros darbai",Tekstų kūrėjai,10,ilgesniam bendradarbiavimui
+Statybinių medžiagų gamintojai,Valymo paslaugos,10,išorė ir vidus
+"Dujų įvedimas, pajungimas","Medžio darbai, staliai",10,kada galėtumėt padaryti
+Keleivių pervežimas,Statybos darbai,10,kaimas kaišiadorių
+"Apšvietimo, įgarsinimo paslaugos",Renginių vedėjai,10,kaimo bendruomenė
+Raktų gamyba,Sportinių dangų sistemos,10,kainuoti ačiū
+"Autoservisai, automobilių remontas",Valymo paslaugos,10,kapitaliai išvalyti
+Krovinių pervežimas,Pakuočių gamyba,10,kartoninių dėžių
+Krovinių pervežimas,Renginių organizavimas,10,kazlu rudos
+Lektoriai,Matematikos korepetitoriai,10,kiekvieną darbo
+Interjero dizaineriai,Pardavimų vadybininkai,10,klientų paieškai
+Djs,"Vestuvių, švenčių dekoravimas",10,kovo 22d
+"Autoservisai, automobilių remontas","Ventiliacija, vėdinimo sistemos",10,kuo pigesnis variantas
+"Elektrikai, elektros darbai",Nuotekų valymo įrenginiai,10,lauko tualetas
+Pakuočių gamyba,Vidaus apdailos darbai,10,lauksime jūsų atsakymo
+Automobilių nuoma,Vizažistės,10,liepos 10d
+Automobilių stiklų keitimas,Statybos darbai,10,lietaus daviklis
+Pramogų organizatoriai,Renginių organizavimas,10,mafijos žaidimas
+"Maitinimas, maistas šventėms","Tortai, desertai",10,maistas konditerija
+Pakuočių gamyba,Rašto darbų konsultantai,10,maisto produktų
+"Autoservisai, automobilių remontas",Djs,10,manau reiktų
+Interneto svetainių kūrimas,"Medžio darbai, staliai",10,mandro nereikia
+"Medžio darbai, staliai",Srautinis valymas,10,medines terasos
+"Smėliavimas, dažymas",Vidaus apdailos darbai,10,medini nama
+Restauravimas,Statybos darbai,10,meistras ar įmonė
+Internetinio verslo konsultantai,Statybos darbai,10,metus tačiau
+Techninė pagalba kelyje,"Žemės kasimas, lyginimas",10,mini ekskavatorių
+"Ispanų kalbos kursai, pamokos","Vokiečių kalbos kursai, pamokos",10,mokymas grupėje
+Kaminų valymas,Vidaus apdailos darbai,10,montavimas reikalinga pagaminti
+"Roletai, žaliuzės, romanetės","Santechnikai, santechnikos darbai",10,montavimas reikia pakabinti
+Muzikos mokytojai,"Restoranai, kavinės, barai, salės",10,muzikos mokyklos
+"Architektai, projektavimas",Perkraustymo paslaugos,10,namo 1 aukšto
+"Santechnikai, santechnikos darbai","Signalizacijos, kameros, apsaugos sistemos",10,namo atstumas
+"Santechnikai, santechnikos darbai","Skalda, smėlis, žvyras, juodžemis",10,netoli garliavos
+Matematikos korepetitoriai,"Santechnikai, santechnikos darbai",10,nežinau nuo ko pradėti
+Djs,Programuotojai,10,norėtų prisijungti
+Automobilių nuoma,Muitinės tarpininkai,10,nuosavas automobilis
+Automobilių supirkimas,"Elektrikai, elektros darbai",10,opel signum
+"Apšiltinimas, šiltinimas",Sniego valymas,10,oro sąlygas
+"Garažo vartai, montavimas",Programuotojai,10,padėti ačiū
+Buhalterinės apskaitos paslaugos,Matematikos korepetitoriai,10,padėti suprasti
+Baldų gamyba,"Tekintojai, frezuotojai",10,pagaminti 2 vnt
+"Apšiltinimas, šiltinimas","Žemės kasimas, lyginimas",10,pamato atkasimas
+Restauravimas,Valymo paslaugos,10,paruošti naujam
+Rinkodara (marketingas),Spaudos paslaugos,10,patikimų partnerių
+Fotografai,Reklamos gamyba,10,pavyktų padaryti
+Alternatyvi energija,"Santechnikai, santechnikos darbai",10,perdavimo priėmimo
+Interneto svetainių kūrimas,Pagalbiniai darbininkai,10,pilnu etatu
+Interjero dizaineriai,Kelių tiesimas,10,pilną projektą
+Graviravimo paslaugos,"Muzikantai, dainininkai, grupės",10,porą valandų
+Automobilių nuoma,Pradinių klasių mokytoja,10,pradinės mokyklos
+"Anglų kalbos kursai, pamokos",Chemijos korepetitoriai,10,pradėti mokytis
+"Garažo vartai, montavimas","Santechnikai, santechnikos darbai",10,prastai veikia
+"Baseinų, jacuzzi įrengimas, priežiūra",Permanentinis makiažas,10,prieš tris metus
+Programuotojai,Sąmatininkai: sąmatų skaičiavimas,10,projekto trukmė
+"3D spausdinimas, skenavimas",Statybos darbai,10,pvm sąskaitą
+Baldų gamyba,Šventinės įrangos nuoma,10,reikalingos tokios
+"Aplinkos tvarkymas, apželdinimas",Tekstų kūrėjai,10,reiktų juos
+Krovinių pervežimas,"Stiklo konstrukcijos, montavimas",10,reikės dviejų
+Buitinės technikos remontas,"Vandens filtrai: montavimas, keitimas",10,remontas vandens
+Interneto svetainių kūrimas,"Maitinimas, maistas šventėms",10,renginių organizavimo
+Keleivių pervežimas,Įvairios paslaugos vestuvėms,10,rugsėjo 26d
+Nekilnojamo turto nuoma,"Restoranai, kavinės, barai, salės",10,salės nuomos
+Interneto svetainių kūrimas,"Pasirodymai, šou renginiams",10,socialinių paslaugų
+Srautinis valymas,Statybos dokumentų tvarkymas,10,socialinės globos
+"Elektrikai, elektros darbai",Vaismedžių genėjimas,10,sodų gatvėje
+Baldų gamyba,"Tvoros, vartai, montavimas",10,spalvos aukštis
+Baldų gamyba,Plėvelės klijavimas,10,spalvos keitimas
+Internetinio verslo konsultantai,SEO paslaugos,10,specialisto ilgalaikiam
+Interjero dizaineriai,Šunų dresuotojai,10,specialisto konsultacija
+Buhalterinės apskaitos paslaugos,Muitinės tarpininkai,10,statybinėmis medžiagomis
+"Matininkai, geodezininkai",Pagalbiniai darbininkai,10,statyti namo
+Dujų įrangos montavimas,"Katilų montavimas, remontas",10,sumontuoti dujų
+Interjero dizaineriai,Video klipų kūrimas,10,suprojektuoti baldus
+Projektų ir dokumentų rengėjai,Reklamos gamyba,10,susisiekus asmeniškai
+Vandens gręžiniai,"Žemės kasimas, lyginimas",10,sužinoti orientacinę
+Buhalterinės apskaitos paslaugos,Meistrai į namus,10,sąskaitas faktūras
+Buitinės technikos remontas,Virtualūs asistentai,10,tad norėtųsi
+Automobilių supirkimas,"Santechnikai, santechnikos darbai",10,techniniai duomenys
+Drabužių konstravimas,Interjero dizaineriai,10,techninį brėžinį
+Projektų ir dokumentų rengėjai,Statybos dokumentų tvarkymas,10,teikti paraišką
+"Advokatai, teisininkai",Reklamos paslaugos,10,the following
+"3D spausdinimas, skenavimas",Automobilių nuoma,10,tinka ir kiti miestai
+Telekomunikacijų įrangos montuotojai,Vidaus apdailos darbai,10,tinklo įrengimas
+Interneto svetainių administratoriai,Rinkodara (marketingas),10,tinklų komunikacija
+Komunikacijos specialistai,Tekstų kūrėjai,10,tinklų turinio
+"Tortai, desertai",Vidaus apdailos darbai,10,toks kaip nuotraukoje
+"Kirpyklos, kirpėjai, stilistai",Vidaus apdailos darbai,10,tos pačios spalvos
+Buhalterinės apskaitos paslaugos,HR specialistas,10,trečiųjų šalių
+Automobilių nuoma,"Baseinų, jacuzzi įrengimas, priežiūra",10,trims dienoms
+Fotografai,Lektoriai,10,trukmė 1 2 val
+"Advokatai, teisininkai",Vairavimo mokyklos,10,vairuotojo pažymėjimą
+Krovinių pervežimas,"Restoranai, kavinės, barai, salės",10,val gali
+"Maitinimas, maistas šventėms",Matematikos korepetitoriai,10,val ir vėliau
+Mobilaus kubilo nuoma,"Žemės kasimas, lyginimas",10,varėnos r sav
+"Juvelyrai, juvelyriniai dirbiniai",Valymo paslaugos,10,vidines puses
+Auklės,"Elektrikai, elektros darbai",10,viduje ir lauke
+Frezavimas (CNC),"Vertėjai, vertimų biurai",10,vieno lapo
+Baldų gamyba,"Matininkai, geodezininkai",10,vienoje puseje
+Lektoriai,Socialiniai darbuotojai,10,vieną iš šių
+Interneto svetainių kūrimas,"Santechnikai, santechnikos darbai",10,viską aptarti
+Metalo apdirbimas,"Santechnikai, santechnikos darbai",10,vnt prisegu
+"Maitinimas, maistas šventėms","Stogdengiai, stogo darbai",10,vnt vieno
+Statybos darbai,Ventiliuojami fasadai,10,vėjo izoliacija
+Buhalterinės apskaitos paslaugos,Reklamos paslaugos,10,įmonė teikia
+"Apšiltinimas, šiltinimas","Medžio darbai, staliai",10,šilumos laidumo
+Keleivių pervežimas,Šventinės įrangos nuoma,10,žmonių birželio

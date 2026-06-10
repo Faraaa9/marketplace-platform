@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-10 19:52 — Claude
+
+**Commit:** `0e38936` — chore(data): commit routing eval datasets + gitignore python pycache · lokalus
+
+**Pakeitimai:** 7 files changed, 1323572 insertions(+)
+
+**Failai:**
+- .gitignore
+- data/routing/category-intelligence/category_confusions.csv
+- data/routing/category-intelligence/category_phrase_summary.json
+- data/routing/category-intelligence/phrase_category_stats.json
+- data/routing/eval/golden_eval_300_labeled.jsonl
+- data/routing/eval/requests_sample_10000.parquet
+- data/routing/taxonomy/taxonomy_flat.jsonl
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-10 19:39 — Claude
 
 **Commit:** `e32d0e0` — chore(lint): zero warnings — real fixes + documented per-line disables

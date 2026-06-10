@@ -22,6 +22,10 @@ yarn.lock
 .DS_Store
 *.pem
 
+# python tooling (scripts/ai-routing offline eval)
+__pycache__/
+*.pyc
+
 # debug
 npm-debug.log*
 yarn-debug.log*
