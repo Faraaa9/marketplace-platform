@@ -959,3 +959,54 @@ model RoutingDecisionLog {
   @@index([routingVersion, createdAt])
   @@map("routing_decision_logs")
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Routing Review Queue — human-in-the-loop corrections (MVP)
+// ═══════════════════════════════════════════════════════════════════════
+// One row per (request, routingVersion) holding the routed request snapshot,
+// the AI routing decision, and the human review outcome. Reviewed rows are
+// exportable as eval data in the `golden_eval_*` JSONL shape
+// (data/routing/eval/golden_eval_300_labeled.jsonl): suggested_* = AI decision,
+// gold_* = human label. Like RoutingDecisionLog, deliberately NO FK to
+// ServiceRequest — purely additive observation surface; `requestId` joins.
+model RoutingReviewItem {
+  id             String  @id @default(cuid())
+  requestId      String
+  decisionLogId  String? // optional link to the RoutingDecisionLog row that spawned this
+  routingVersion String  @default("multi-routing-v4")
+
+  // ── Routed request snapshot (denormalized so eval export needs no joins) ──
+  title         String
+  description   String  @db.Text
+  city          String  @default("")
+  requestStatus String?
+
+  // ── AI routing decision ──
+  aiPrimaryCategoryId   String?
+  aiPrimaryCategoryName String?
+  aiCategoryIds         String[] @default([])
+  aiCategoryNames       String[] @default([])
+  aiConfidence          Float?
+  aiModel               String? // LLM model id when applicable; null for rule-based v4
+
+  // ── Review state ──
+  status     String    @default("PENDING") // PENDING | APPROVED | CORRECTED
+  reviewerId String?
+  reviewedAt DateTime?
+
+  // ── Human correction (only when status = CORRECTED) ──
+  correctedPrimaryCategoryId   String?
+  correctedPrimaryCategoryName String?
+  correctedCategoryIds         String[] @default([])
+  correctedCategoryNames       String[] @default([])
+  correctedIsAmbiguous         Boolean?
+  correctionNotes              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requestId, routingVersion])
+  @@index([status, createdAt])
+  @@index([reviewedAt])
+  @@map("routing_review_items")
+}

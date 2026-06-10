@@ -20,6 +20,7 @@
     "seo:check": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/seo-check.ts",
     "shadow:smoke": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/shadow-routing-smoke.ts",
     "routing:identity": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/identity.test.ts",
+    "test:routing-review": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/review-queue.test.ts",
     "test:category-rules": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-selection-rules.test.ts"
   },
   "dependencies": {

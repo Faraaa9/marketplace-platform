@@ -19,6 +19,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { classifyMultiRouting, ROUTING_VERSION, fold, type RoutingCandidate } from "./multi-routing-v4";
+import { enqueueRoutingReview, isRoutingReviewEnabled } from "./review-queue";
 import {
   buildCategoryNameIndex,
   mapNamesToCategoryIds,
@@ -164,7 +165,7 @@ export async function runShadowRouting(input: ShadowRoutingInput): Promise<void>
       );
     }
 
-    await prisma.routingDecisionLog.create({
+    const log = await prisma.routingDecisionLog.create({
       data: {
         requestId: input.requestId,
         routingVersion: ROUTING_VERSION,
@@ -181,6 +182,30 @@ export async function runShadowRouting(input: ShadowRoutingInput): Promise<void>
       },
       select: { id: true },
     });
+
+    // ── Routing Review Queue enqueue hook ─────────────────────────────────
+    // Gated by ROUTING_REVIEW_QUEUE_ENABLED (default OFF) on top of the shadow
+    // flag — the v4 decision is only computed here. Idempotent per
+    // (requestId, routingVersion) and error-isolated inside enqueueRoutingReview,
+    // so it can never affect the decision log write above or request creation.
+    if (isRoutingReviewEnabled()) {
+      await enqueueRoutingReview({
+        requestId: input.requestId,
+        decisionLogId: log.id,
+        routingVersion: ROUTING_VERSION,
+        title: input.title,
+        description: input.description,
+        city: input.city,
+        requestStatus: input.status ?? null,
+        aiPrimaryCategoryId: v4CategoryIds[0] ?? null,
+        aiPrimaryCategoryName: v4CategoryNames[0] ?? null,
+        aiCategoryIds: v4CategoryIds,
+        aiCategoryNames: v4CategoryNames,
+        aiConfidence: v4.routingConfidence,
+        // v4 is deterministic/rule-based — no LLM model id to record.
+        aiModel: null,
+      });
+    }
   } catch (error) {
     // Shadow must NEVER affect request creation.
     console.error("[shadow-routing] failed (ignored):", error);
