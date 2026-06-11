@@ -6,6 +6,7 @@ import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile, WifiOff } 
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 
 /** Shape of a row from the `messages` table delivered by Supabase Realtime. */
@@ -287,18 +288,19 @@ export default function ThreadChat({
   // We await a signed JWT first so RLS on `messages` resolves the viewer to a
   // thread participant; without it the broker drops every payload.
   useEffect(() => {
-    const supabase = getSupabaseBrowser();
-    if (!supabase) return;
-
     const filterColumn = threadKind === "response" ? "responseId" : "directInquiryId";
     const viewerKey =
       viewerRole === "provider"
         ? `provider:${providerId}`
         : `client:${realtimeTrackingToken || threadId}`;
     let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // supabase-js loads lazily here so it stays out of the shared bundle.
+    let supabase: SupabaseClient | null = null;
+    let channel: RealtimeChannel | null = null;
 
     (async () => {
+      supabase = await getSupabaseBrowser();
+      if (!supabase || cancelled) return;
       await authenticateRealtime({
         threadKind,
         threadId,
@@ -404,7 +406,7 @@ export default function ThreadChat({
       setIsOtherTyping(false);
       setIsOtherOnline(false);
       if (remoteTypingTimeoutRef.current) clearTimeout(remoteTypingTimeoutRef.current);
-      if (channel) supabase.removeChannel(channel);
+      if (channel && supabase) supabase.removeChannel(channel);
     };
   }, [threadId, threadKind, providerId, viewerRole, realtimeTrackingToken, otherParticipantImage, appendMessageIfNew, reconnectNonce]);
 

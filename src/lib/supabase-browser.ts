@@ -1,9 +1,13 @@
 "use client";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Singleton browser-side Supabase client used ONLY for Realtime subscriptions
 // on the `messages` and `notifications` tables.
+//
+// @supabase/supabase-js is ~60KB compressed and only needed by signed-in
+// users with live threads/notifications, so it's loaded via dynamic import —
+// keeping it out of the shared first-load bundle every visitor downloads.
 //
 // Authorization model: the server mints a short-lived JWT signed with
 // SUPABASE_JWT_SECRET via /api/realtime/token; we apply it with
@@ -15,9 +19,11 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // never inserts/updates DB rows directly.
 
 let client: SupabaseClient | null = null;
+let clientPromise: Promise<SupabaseClient | null> | null = null;
 
-export function getSupabaseBrowser(): SupabaseClient | null {
+export async function getSupabaseBrowser(): Promise<SupabaseClient | null> {
   if (client) return client;
+  if (clientPromise) return clientPromise;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -31,12 +37,15 @@ export function getSupabaseBrowser(): SupabaseClient | null {
     return null;
   }
 
-  client = createClient(url, anonKey, {
-    auth: { persistSession: false },
-    realtime: { params: { eventsPerSecond: 5 } },
+  clientPromise = import("@supabase/supabase-js").then(({ createClient }) => {
+    client = createClient(url, anonKey, {
+      auth: { persistSession: false },
+      realtime: { params: { eventsPerSecond: 5 } },
+    });
+    return client;
   });
 
-  return client;
+  return clientPromise;
 }
 
 let realtimeAuthPromise: Promise<boolean> | null = null;
@@ -102,11 +111,10 @@ export function authenticateRealtime(scope?: RealtimeAuthScope): Promise<boolean
     if (cached) return cached;
   }
 
-  const supabase = getSupabaseBrowser();
-  if (!supabase) return Promise.resolve(false);
-
   const promise = (async () => {
     try {
+      const supabase = await getSupabaseBrowser();
+      if (!supabase) return false;
       const res = await fetch(authTokenUrl(scope), { credentials: "include" });
       if (!res.ok) {
         scopedRealtimeAuthFailedUntil.set(key, Date.now() + FAILED_AUTH_RETRY_MS);

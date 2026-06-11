@@ -7,6 +7,7 @@ import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 
 interface Notification {
   id: string;
@@ -163,12 +164,14 @@ export default function NotificationBell() {
     document.addEventListener("visibilitychange", handleVisibility);
 
     // 3. Open a Realtime channel scoped to this user (after JWT auth).
-    const supabase = getSupabaseBrowser();
+    // supabase-js loads lazily here so it stays out of the shared bundle.
     let cancelled = false;
-    let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null = null;
+    let supabase: SupabaseClient | null = null;
+    let channel: RealtimeChannel | null = null;
 
     (async () => {
-      if (!supabase) return;
+      supabase = await getSupabaseBrowser();
+      if (!supabase || cancelled) return;
       await authenticateRealtime();
       if (cancelled) return;
 

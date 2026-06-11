@@ -23,10 +23,14 @@ const inter = Inter({
   fallback: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
+// preload: false — Lora is a decorative serif used on a handful of pages
+// (uzklausos listing cards etc.), not in the homepage hero. Preloading it
+// put ~85KB of font bytes in every page's critical path and delayed LCP.
 const lora = Lora({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-serif",
+  preload: false,
 });
 
 export const metadata: Metadata = {

@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-11 12:57 — Claude
+
+**Commit:** `993a2cb` — perf: cut homepage critical path - lazy supabase-js, defer GA, fix CLS
+
+**Pakeitimai:** 7 files changed, 65 insertions(+), 32 deletions(-)
+
+**Failai:**
+- src/app/(auth)/registruotis/page.tsx
+- src/app/layout.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+- src/components/analytics/GoogleAnalytics.tsx
+- src/components/layout/NotificationBell.tsx
+- src/components/messaging/ThreadChat.tsx
+- src/lib/supabase-browser.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-11 12:32 — Claude
 
 **Commit:** `ac07bce` — fix(infra): clear Supabase advisor alerts + mount Speed Insights

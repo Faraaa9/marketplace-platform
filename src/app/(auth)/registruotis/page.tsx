@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
@@ -24,9 +24,7 @@ export default function RegisterPage() {
               Pateikite užklausas arba tapkite tiekėju
             </p>
           </div>
-          <Suspense>
-            <RegisterForm />
-          </Suspense>
+          <RegisterForm />
         </div>
       </div>
     </div>
@@ -35,13 +33,23 @@ export default function RegisterPage() {
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const emailParam = searchParams.get("email") || "";
-  const intent = searchParams.get("intent") || "";
   const { data: session, status } = useSession();
-  const [form, setForm] = useState({ name: "", email: emailParam, password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [intent, setIntent] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // URL params are read after mount instead of via useSearchParams: that hook
+  // suspends during prerender, so the form popped in after hydration and
+  // shifted the whole card (CLS 0.208 on the Core Web Vitals audit).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get("email");
+    const intentParam = params.get("intent");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL prefill on mount
+    if (emailParam) setForm((prev) => ({ ...prev, email: emailParam }));
+    if (intentParam) setIntent(intentParam);
+  }, []);
 
   useEffect(() => {
     if (status === "authenticated") {

@@ -21,6 +21,7 @@ import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/Re
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 
 type Conversation = {
   type: "request" | "direct";
@@ -475,11 +476,12 @@ export default function ProviderInboxClient() {
   }, [loadConversation, loadConversations, selectConversation, sortConversations]);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowser();
-    if (!supabase || !session?.user?.id) return;
+    if (!session?.user?.id) return;
 
     let cancelled = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // supabase-js loads lazily here so it stays out of the shared bundle.
+    let supabase: SupabaseClient | null = null;
+    let channel: RealtimeChannel | null = null;
 
     const refreshConversation = (threadId: string) => {
       const existing = conversationsRef.current.find((item) => toThreadId(item) === threadId);
@@ -509,6 +511,8 @@ export default function ProviderInboxClient() {
     };
 
     (async () => {
+      supabase = await getSupabaseBrowser();
+      if (!supabase || cancelled) return;
       const authenticated = await authenticateRealtime();
       if (cancelled || !authenticated) return;
 
@@ -559,7 +563,7 @@ export default function ProviderInboxClient() {
         window.clearTimeout(timer);
       }
       threadRefreshTimers.clear();
-      if (channel) supabase.removeChannel(channel);
+      if (channel && supabase) supabase.removeChannel(channel);
     };
   }, [loadConversation, session?.user?.id]);
 
