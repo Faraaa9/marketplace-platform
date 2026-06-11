@@ -58,6 +58,7 @@ export default function Footer() {
               <li><FooterLink href="/paslaugos/stogo-dengimas-kaune">Stogo dengimas Kaune</FooterLink></li>
               <li><FooterLink href="/paslaugos/kondicionieriu-montavimas-kaune">Kondicionierių montavimas Kaune</FooterLink></li>
               <li><FooterLink href="/paslaugos/apdailos-darbai-kaune">Apdailos darbai Kaune</FooterLink></li>
+              <li><FooterLink href="/paslaugos">Visos paslaugos</FooterLink></li>
             </ul>
           </div>
 

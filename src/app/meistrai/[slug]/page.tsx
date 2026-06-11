@@ -785,6 +785,7 @@ async function getProviderProfileUncached(
         lastSeenAt: true,
         providerProfile: {
           select: {
+            displayName: true,
             description: true,
             headline: true,
             services: true,
@@ -855,7 +856,9 @@ async function getProviderProfileUncached(
 
   return {
     id: provider.id,
-    name: provider.name || "Tiekėjas",
+    // Public display name first — User.name is the internal account name and
+    // must not leak into visible copy (wa.me prefill, gallery alts, CTAs).
+    name: profile.displayName || provider.name || "Tiekėjas",
     image: getSafeProviderImageUrl(images[0] || provider.image),
     images,
     description: profile.description,
