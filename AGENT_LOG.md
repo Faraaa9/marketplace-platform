@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-11 12:32 — Claude
+
+**Commit:** `ac07bce` — fix(infra): clear Supabase advisor alerts + mount Speed Insights
+
+**Pakeitimai:** 3 files changed, 30 insertions(+)
+
+**Failai:**
+- NOTES.md
+- prisma/schema.prisma
+- src/app/layout.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-11 09:22 — Claude
 
 **Commit:** `a463bba` — feat(routing): v4.1 keep-direction fixes + core unit tests + golden-300 eval harness

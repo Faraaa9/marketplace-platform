@@ -69,6 +69,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -228,6 +229,7 @@ model ServiceRequest {
   @@index([categoryId])
   @@index([location])
   @@index([moderationStatus, createdAt])
+  @@index([clientId])
   @@map("service_requests")
 }
 
@@ -242,6 +244,7 @@ model RequestView {
 
   @@unique([requestId, providerId])
   @@index([requestId])
+  @@index([providerId])
   @@map("request_views")
 }
 
@@ -266,6 +269,7 @@ model Response {
   reviews  Review[]
 
   @@index([providerId, lastMessageAt])
+  @@index([requestId])
   @@map("responses")
 }
 
@@ -288,6 +292,7 @@ model Message {
   @@index([directInquiryId, createdAt])
   @@index([directInquiryId, senderId, createdAt])
   @@index([responseId, senderId, createdAt])
+  @@index([senderId])
   @@map("messages")
 }
 
@@ -335,6 +340,7 @@ model PasswordResetToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("password_reset_tokens")
 }
 
@@ -347,6 +353,7 @@ model EmailVerificationToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("email_verification_tokens")
 }
 
@@ -389,6 +396,8 @@ model Review {
   @@unique([requestId, responseId])
   @@index([providerId])
   @@index([moderationStatus])
+  @@index([clientId])
+  @@index([responseId])
   @@map("reviews")
 }
 
@@ -551,6 +560,7 @@ model StoryReaction {
 
   @@unique([storyId, dedupeKey])
   @@index([storyId])
+  @@index([viewerId])
   @@map("story_reactions")
 }
 
@@ -706,6 +716,8 @@ model ClaimRequest {
   @@index([status])
   @@index([requestedByEmail])
   @@index([expiresAt])
+  @@index([requestedByUserId])
+  @@index([reviewedByUserId])
   @@map("claim_requests")
 }
 

@@ -720,3 +720,16 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
   projektams (only-v4 223 vs both 62). Jei tag'ą naudosim UI/notifikacijoms — peržiūrėti semantiką.
 - Recall lubos: 89 gold label'iai iš golden-300 iš viso nėra tarp kandidatų — v4 Phase 1 tik filtruoja, nepri-
   deda. Tai Phase 2 (name→id mapping jau paruoštas taxonomy-map.ts) scope'as.
+
+## Supabase advisors + Speed Insights (2026-06-11)
+- Security advisors 38→0: RLS įjungtas telegram_login_tokens / routing_decision_logs / webhook_events;
+  visoms server-only lentelėms pridėta explicit deny policy `server_only_no_client_access`
+  (restrictive, anon+authenticated, false) — elgsenos nekeičia, Prisma (owner) RLS apeina.
+- SVARBU: nauja lentelė schema'oje (pvz. routing_review_items šioje šakoje) po `db push` gaus
+  RLS-disabled ERROR alertą — po push paleisti: `alter table ... enable row level security;`
+  + tą pačią deny policy. Realtime lentelėms (messages/notifications/responses/direct_inquiries)
+  deny policy NEdėti — jos turi tikras SELECT policies.
+- Performance: 12 FK indeksų sukurta (Prisma vardais, @@index suvesta į schema.prisma).
+- Liko ~37 "unused index" INFO — advisory; dalis nauji (ką tik sukurti), dalis naujų feature'ų.
+  Peržiūrėti po ~4 sav. realios apkrovos; kandidatas drop'ui: request_views_requestId_idx
+  (dubliuoja @@unique([requestId, providerId]) leading stulpelį).
