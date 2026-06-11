@@ -17,6 +17,24 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-11 09:22 — Claude
+
+**Commit:** `a463bba` — feat(routing): v4.1 keep-direction fixes + core unit tests + golden-300 eval harness
+
+**Pakeitimai:** 7 files changed, 782 insertions(+), 23 deletions(-)
+
+**Failai:**
+- NOTES.md
+- package.json
+- scripts/routing-eval-golden.ts
+- scripts/shadow-routing-smoke.ts
+- src/lib/routing/__tests__/multi-routing-v4.test.ts
+- src/lib/routing/__tests__/taxonomy-map.test.ts
+- src/lib/routing/multi-routing-v4.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-10 20:36 — Claude
 
 **Commit:** `30f5ddd` — feat(routing): routing review queue MVP — schema + admin API + eval export

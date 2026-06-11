@@ -709,3 +709,14 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
 - "Tapti meistru" nebekuria tuščio ProviderProfile ir nebeflipina rolės — rolė PROVIDER + starter kreditai dabar suteikiami tik realiai sukūrus profilį (ai-generate / profile-complete create šakoje). Route /api/tiekejas/tapti pašalinta.
 - Dashboard /tiekejas rodo NoProviderProfile, kai nėra profilio ARBA profilis tuščias (be description ir be enrichedAt) — laikina apsauga seniems prod klientams su tuščiomis eilutėmis.
 - TODO (DB cleanup): vienkartinis skriptas išvalyti senas tuščias ProviderProfile eilutes (description IS NULL AND enrichedAt IS NULL AND images = '{}') + grąžinti tuos userius į role=CLIENT, jei jie nieko nesukūrė. Atsargiai — realūs duomenys.
+
+## Routing v4.1 + golden eval (2026-06-11)
+- `pnpm test:routing-all` — visa routing testų grandinė (7 rinkiniai, įsk. golden eval per 300 labeled).
+- Golden eval likutis (5 harmful drops, bound ≤5 `scripts/routing-eval-golden.ts`): visi už teksto įrodymo ribų
+  (2× įrodymas tik prieduose: 3601992, 3409111; 3× semantinė inferencija "smulkus darbas"/"fasado gretimybė":
+  4041708, 2762303, 4042312). Tai Category Intelligence review-signalo darbas — kai bus TS portas, pajungti kaip
+  review prioritetą, NE kaip selektorių.
+- `reikia_kelių_specialistų` tag'as: v4 emituoja mechaniškai (≥2 kategorijos), žmogus — tik tikriems multi-trade
+  projektams (only-v4 223 vs both 62). Jei tag'ą naudosim UI/notifikacijoms — peržiūrėti semantiką.
+- Recall lubos: 89 gold label'iai iš golden-300 iš viso nėra tarp kandidatų — v4 Phase 1 tik filtruoja, nepri-
+  deda. Tai Phase 2 (name→id mapping jau paruoštas taxonomy-map.ts) scope'as.

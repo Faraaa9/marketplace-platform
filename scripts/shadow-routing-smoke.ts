@@ -77,7 +77,7 @@ const SAMPLES: Sample[] = [
       "Elektrikai, elektros darbai",
       "Santechnikai, santechnikos darbai",
     ],
-    note: "catch-all 'Statybos darbai' suppressed (no text evidence) + project_type",
+    note: "project_type detected → suppression skipped, catch-all kept (v4.1)",
   },
   {
     id: "req_3",
@@ -166,7 +166,9 @@ function main(): number {
 
     // Behavioural assertions per sample (the contract the shadow log must reflect).
     if (s.id === "req_2") {
-      check(!v4Names.includes("Statybos darbai"), "req_2: 'Statybos darbai' must be suppressed");
+      // v4.1: detected project scope disables suppression — a "namo renovacija
+      // po raktu" request legitimately keeps the broad catch-all trade.
+      check(v4Names.includes("Statybos darbai"), "req_2: project scope keeps 'Statybos darbai' (v4.1)");
       check(
         v4Ids.includes("cat_elektrikai") && v4Ids.includes("cat_santechnika"),
         "req_2: surviving categories keep their ORIGINAL ids (carried)",

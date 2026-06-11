@@ -1,10 +1,19 @@
 /**
- * Faithful TypeScript port of the offline multi-routing **v4** classifier
+ * TypeScript port of the offline multi-routing **v4** classifier
  * (`~/Documents/KATEGORIJOS + 200K-uzklausu/scripts/ai-routing/`
  * `multi_routing_classifier.py` → `classify()`).
  *
  * Deterministic, dependency-free, NO LLM. See
  * `docs/ai-routing/marketplace-platform-routing-integration-audit.md` §9.
+ *
+ * v4.1 diverges from the Python reference in two KEEP-direction-only ways,
+ * both driven by the golden-300 human labels (`pnpm routing:eval-golden`):
+ *   1. catch-all text evidence is prefix-tolerant (a prefixed verb like
+ *      "perdažyti" now counts as evidence for "dažymas"), and
+ *   2. suppression is skipped entirely when a project type is detected —
+ *      whole-project requests legitimately span broad catch-all trades.
+ * Suppression still only ever REMOVES candidates, so v4.1 can only keep
+ * MORE than v4 — never route to anything v4 wouldn't have.
  *
  * Phase 1 uses this in SHADOW mode only — its output is logged for comparison
  * and never affects provider notifications, lead visibility, or payments.
@@ -17,7 +26,7 @@
  * DISTINCT_TAX duplicates). See docs/ai-routing/phase-a2-routing-contract-plan.md.
  */
 
-export const ROUTING_VERSION = "multi-routing-v4";
+export const ROUTING_VERSION = "multi-routing-v4.1";
 
 // Lithuanian diacritic folding (self-contained; matches the Python `_DIA`).
 const DIA: Record<string, string> = {
@@ -47,8 +56,10 @@ const PROJECT_RULES: Array<[RegExp, string]> = [
   [/buto (remont|irengim|apdail|renovacij|tvarkym)/, "Buto remontas"],
   [/namo (irengim|statyb|apdail|pastatym|pridavim)/, "Namo įrengimas"],
 ];
+// v4.1: "kompleksin" added — "kompleksiniai darbai" is an explicit whole-project
+// marker the Python "kompleksisk" (kompleksiškai) variant missed (golden 3959338).
 const PROJECT_SCOPE =
-  /po raktu|visus darbus|visi darbai|visus statyb|rangov|generalin|nuo a iki z|kompleksisk|visa projekt|pilna apdail|pilnas remont/;
+  /po raktu|visus darbus|visi darbai|visus statyb|rangov|generalin|nuo a iki z|kompleksisk|kompleksin|visa projekt|pilna apdail|pilnas remont/;
 
 export function detectProjectType(textFolded: string): string | null {
   for (const [rx, label] of PROJECT_RULES) {
@@ -88,18 +99,57 @@ function isSuppressibleCatchAll(cat: string): boolean {
   return SUPPRESSIBLE_CATCH_ALL.some((p) => p.test(f));
 }
 
-function stem(t: string): string {
-  return t.length > 5 ? t.slice(0, 5) : t;
+// Common Lithuanian verb prefixes (longest first; reflexive -si- forms before
+// their bases). Stripping them lets a prefixed infinitive ("perdažyti") count
+// as evidence for the trade noun it derives from ("dažymas"). Only words
+// ending in "-ti" are stripped: request grammar is dominated by "reikia
+// X-ti", and stripping nouns invents false roots ("pastato" → "stato" would
+// fake evidence for "statybinių").
+const VERB_PREFIXES = [
+  "persi", "nusi", "issi", "apsi", "atsi", "uzsi", "prisi", "susi", "pasi",
+  "par", "per", "nu", "is", "ap", "at", "uz", "pri", "su", "pa",
+];
+
+function sharedPrefixLen(a: string, b: string): number {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a[i] === b[i]) i += 1;
+  return i;
 }
 
-function textStemSet(text: string): Set<string> {
-  const set = new Set<string>();
-  for (const w of text.match(/\w+/g) ?? []) set.add(stem(w));
-  return set;
+interface TextEvidence {
+  words: string[];
+  strippedVerbs: string[];
 }
 
-function catchAllHasTextEvidence(cat: string, textStems: Set<string>): boolean {
-  return distinctiveTokens(cat).some((t) => textStems.has(stem(t)));
+function textEvidenceWords(text: string): TextEvidence {
+  const words: string[] = [];
+  const strippedVerbs: string[] = [];
+  for (const w of text.match(/\w+/g) ?? []) {
+    words.push(w);
+    if (!w.endsWith("ti")) continue;
+    for (const p of VERB_PREFIXES) {
+      if (w.startsWith(p) && w.length - p.length >= 4) {
+        strippedVerbs.push(w.slice(p.length));
+        break;
+      }
+    }
+  }
+  return { words, strippedVerbs };
+}
+
+// Plain words match on a ≥5-char shared prefix (or the whole 4-char word) —
+// equivalent to the old 5-char stems but declension-tolerant. Stripped
+// infinitives get a 4-char threshold so a verb root can reach its trade noun
+// ("dažyti" ~ "dažymas" share only 4); plain words stay at 5 to keep
+// near-misses like "išvengti" ~ "išvežimas" from faking evidence.
+function catchAllHasTextEvidence(cat: string, ev: TextEvidence): boolean {
+  return distinctiveTokens(cat).some(
+    (t) =>
+      ev.words.some(
+        (w) => w.length >= 4 && sharedPrefixLen(t, w) >= Math.min(5, t.length, w.length),
+      ) || ev.strippedVerbs.some((w) => sharedPrefixLen(t, w) >= 4),
+  );
 }
 
 const ACTIVE_STATUS = new Set([
@@ -162,18 +212,21 @@ export function classifyMultiRouting(input: MultiRoutingInput): MultiRoutingResu
 
   let routing = [...cands]; // v1 baseline: route to all candidate trades
 
-  // Drop a suppressible catch-all only when (a) at least one truly specific
-  // (non-catch-all) category survives AND (b) the catch-all has no stem-level
-  // evidence in the request text. Conservative subset only. Suppression only ever
-  // REMOVES candidates — it never re-maps, so kept categories keep their id.
-  if (routing.some((c) => !isListedCatchAll(c.categoryName))) {
-    const ts = textStemSet(text);
+  const projectType = detectProjectType(text);
+
+  // Drop a suppressible catch-all only when (a) no project scope was detected —
+  // a whole-project request legitimately needs broad trades (golden-300:
+  // suppression there contradicted the human label), (b) at least one truly
+  // specific (non-catch-all) category survives AND (c) the catch-all has no
+  // prefix-level evidence in the request text. Conservative subset only.
+  // Suppression only ever REMOVES candidates — it never re-maps, so kept
+  // categories keep their id.
+  if (!projectType && routing.some((c) => !isListedCatchAll(c.categoryName))) {
+    const ev = textEvidenceWords(text);
     routing = routing.filter(
-      (c) => !isSuppressibleCatchAll(c.categoryName) || catchAllHasTextEvidence(c.categoryName, ts),
+      (c) => !isSuppressibleCatchAll(c.categoryName) || catchAllHasTextEvidence(c.categoryName, ev),
     );
   }
-
-  const projectType = detectProjectType(text);
 
   // confidence = how grounded the routing is in the request text, nudged by a
   // detected project scope. Bounded to [0, 1].
