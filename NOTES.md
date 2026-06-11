@@ -733,3 +733,8 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
 - Liko ~37 "unused index" INFO — advisory; dalis nauji (ką tik sukurti), dalis naujų feature'ų.
   Peržiūrėti po ~4 sav. realios apkrovos; kandidatas drop'ui: request_views_requestId_idx
   (dubliuoja @@unique([requestId, providerId]) leading stulpelį).
+- Perf po Semrush CWV audito (0% Good): supabase-js -> dynamic import (tik realtime
+  vartotojams), gtag -> lazyOnload, Lora preload:false, Inter display:optional
+  (LCP fiksavosi font-swap momentu), /registruotis CLS 0.208 -> 0 (Suspense be
+  fallback). Lighthouse devtools-throttled: home 98/100, LCP 2.2s. NEGRAZINTI
+  static supabase-js importu i client komponentus - tai +60KB visiems puslapiams.

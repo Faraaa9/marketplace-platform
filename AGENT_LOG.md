@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-11 13:01 — Claude
+
+**Commit:** `2ece62b` — perf(fonts): Inter display optional - font swap repaint was the LCP event
+
+**Pakeitimai:** 2 files changed, 10 insertions(+), 1 deletion(-)
+
+**Failai:**
+- NOTES.md
+- src/app/layout.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-11 12:57 — Claude
 
 **Commit:** `993a2cb` — perf: cut homepage critical path - lazy supabase-js, defer GA, fix CLS

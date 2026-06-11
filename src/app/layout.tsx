@@ -17,9 +17,13 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 // only the `latin` subset, so those characters fell back to the system font —
 // visibly mismatched. next/font self-hosts the files at build time (no runtime
 // request), so this keeps the same performance profile.
+// display: "optional" — the font-swap repaint was the LCP event (text pages
+// re-largest-paint when Inter arrives), pushing lab LCP from ~1.4s to 3.3s+.
+// With optional, slow first visits keep the metric-matched system fallback;
+// cached/repeat visits always render Inter.
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
-  display: "swap",
+  display: "optional",
   fallback: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
