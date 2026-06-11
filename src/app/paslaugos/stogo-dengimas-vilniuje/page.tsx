@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Vilnius",
   categorySlug: "pr-statybos-apdaila--stogdengiai-stogo-darbai",
   serviceType: "Stogdengių paslaugos",
-  seoTitle: "Stogo dengimas Vilniuje — gaukite pasiūlymus iš stogdengių",
+  seoTitle: "Stogo dengimas Vilniuje — gaukite pasiūlymus",
   seoDescription:
     "Reikia uždengti ar suremontuoti stogą Vilniuje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų stogdengių. Čerpė, skarda, bituminė danga, remontas, latakai.",
   heroBadge: "Stogo darbai Vilniuje",

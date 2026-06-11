@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-statybos-apdaila--stogdengiai-stogo-darbai",
   serviceType: "Stogdengių paslaugos",
-  seoTitle: "Stogo dengimas Kaune — gaukite pasiūlymus iš stogdengių",
+  seoTitle: "Stogo dengimas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia uždengti ar suremontuoti stogą Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų stogdengių. Metalo čerpė, bituminė danga, remontas, latakai.",
   heroBadge: "Stogo darbai Kaune",

@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Vilnius",
   categorySlug: "pr-statybos-apdaila--santechnikai-santechnikos-darbai",
   serviceType: "Santechnikos paslaugos",
-  seoTitle: "Santechnikas Vilniuje — gaukite pasiūlymus iš patikimų specialistų",
+  seoTitle: "Santechnikas Vilniuje — gaukite pasiūlymus",
   seoDescription:
     "Reikia santechniko Vilniuje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų santechnikų. Maišytuvai, vamzdynai, protėkiai, kanalizacija, skubus iškvietimas.",
   heroBadge: "Santechnikos paslaugos Vilniuje",

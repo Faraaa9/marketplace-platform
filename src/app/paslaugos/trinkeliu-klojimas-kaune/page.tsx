@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-aplinka-sodas--trinkeliu-klojimas",
   serviceType: "Trinkelių klojimo paslaugos",
-  seoTitle: "Trinkelių klojimas Kaune — gaukite pasiūlymus ir kainas",
+  seoTitle: "Trinkelių klojimas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia pakloti trinkeles Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų meistrų. Kiemų, takų, įvažiavimų trinkelių klojimas su pagrindo paruošimu.",
   heroBadge: "Trinkelių klojimas Kaune",

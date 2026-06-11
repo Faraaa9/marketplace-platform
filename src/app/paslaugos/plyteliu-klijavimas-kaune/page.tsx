@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-statybos-apdaila--vidaus-apdailos-darbai--plyteliu-klijavimas",
   serviceType: "Plytelių klijavimo paslaugos",
-  seoTitle: "Plytelių klijavimas Kaune — gaukite pasiūlymus ir kainas",
+  seoTitle: "Plytelių klijavimas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia paklijuoti plyteles Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų plytelių klojėjų. Vonios, virtuvės, grindų plytelės, mozaika.",
   heroBadge: "Plytelių klijavimas Kaune",

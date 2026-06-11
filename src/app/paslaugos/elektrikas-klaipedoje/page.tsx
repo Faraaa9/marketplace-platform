@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Klaipėda",
   categorySlug: "pr-statybos-apdaila--elektrikai-elektros-darbai",
   serviceType: "Elektriko paslaugos",
-  seoTitle: "Elektrikas Klaipėdoje — gaukite pasiūlymus iš specialistų",
+  seoTitle: "Elektrikas Klaipėdoje — gaukite pasiūlymus",
   seoDescription:
     "Reikia elektriko Klaipėdoje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų elektrikų. Instaliacija, rozetės, įkrovimo stotelės, gedimai, skubus iškvietimas.",
   heroBadge: "Elektros paslaugos Klaipėdoje",

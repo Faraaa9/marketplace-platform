@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildPageSeo, BASE_URL } from "@/lib/seo/page-seo";
+import {
+  CITY_LOCATIVE,
+  relatedLandings,
+  type LandingCity,
+} from "@/lib/seo-landings";
 
 /**
  * Config-driven template for keyword-targeted service landing pages
@@ -84,6 +89,14 @@ const WHY_US: { icon: LucideIcon; title: string; text: string }[] = [
 export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
   const { city } = config;
   const url = `${BASE_URL}${config.path}`;
+
+  // Cross-links to sibling landings so no page is left with a single incoming
+  // internal link (Semrush #213). Full mesh within the city + same service
+  // elsewhere — every landing thus receives links from all its siblings.
+  const slug = config.path.replace(/^\/paslaugos\//, "");
+  const related = relatedLandings(slug);
+  const cityLocative =
+    CITY_LOCATIVE[city as LandingCity] ?? `${city}e`;
 
   const requestHref =
     `/uzklausos/nauja?title=${encodeURIComponent(config.request.title)}` +
@@ -309,6 +322,59 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
           </div>
         </div>
       </section>
+
+      {/* Related landings — internal linking mesh */}
+      {(related.sameCity.length > 0 || related.sameService.length > 0) && (
+        <section className="border-t border-surface-100 dark:border-surface-800">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
+            <div className="grid gap-10 sm:grid-cols-2">
+              {related.sameCity.length > 0 && (
+                <div>
+                  <h2 className="text-body font-semibold text-surface-900 dark:text-white">
+                    Kitos paslaugos {cityLocative}
+                  </h2>
+                  <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5">
+                    {related.sameCity.map((l) => (
+                      <li key={l.slug}>
+                        <Link
+                          href={`/paslaugos/${l.slug}`}
+                          className="text-body-sm text-surface-600 transition-colors hover:text-brand-600 dark:text-surface-300 dark:hover:text-brand-400"
+                        >
+                          {l.label} {cityLocative}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {related.sameService.length > 0 && (
+                <div>
+                  <h2 className="text-body font-semibold text-surface-900 dark:text-white">
+                    {config.serviceType} kituose miestuose
+                  </h2>
+                  <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5">
+                    {related.sameService.map((l) => (
+                      <li key={l.slug}>
+                        <Link
+                          href={`/paslaugos/${l.slug}`}
+                          className="text-body-sm text-surface-600 transition-colors hover:text-brand-600 dark:text-surface-300 dark:hover:text-brand-400"
+                        >
+                          {l.label} {CITY_LOCATIVE[l.city]}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <p className="mt-8 text-body-sm text-surface-500 dark:text-surface-400">
+              <Link href="/paslaugos" className="font-medium text-brand-600 hover:underline dark:text-brand-400">
+                Visos paslaugos pagal miestą
+              </Link>
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Final CTA */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-20">

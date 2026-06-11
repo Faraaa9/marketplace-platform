@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Kaunas",
   categorySlug: "pr-statybos-apdaila--betonavimo-darbai-betonavimas",
   serviceType: "Grindų betonavimo paslaugos",
-  seoTitle: "Grindų betonavimas Kaune — gaukite pasiūlymus ir kainas",
+  seoTitle: "Grindų betonavimas Kaune — gaukite pasiūlymus",
   seoDescription:
     "Reikia išbetonuoti grindis Kaune? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų meistrų. Buto, garažo, pramoninių grindų betonavimas ir išlyginimas.",
   heroBadge: "Betonavimo darbai Kaune",

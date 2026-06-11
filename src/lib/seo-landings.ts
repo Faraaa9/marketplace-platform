@@ -69,6 +69,41 @@ export const LANDING_CITIES: LandingCity[] = [
   "Panevėžys",
 ];
 
+// Locative ("-e/-je") forms for link/heading copy. Shared by the hub page and
+// the per-landing cross-link section so the two never drift apart.
+export const CITY_LOCATIVE: Record<LandingCity, string> = {
+  Kaunas: "Kaune",
+  Vilnius: "Vilniuje",
+  "Klaipėda": "Klaipėdoje",
+  "Šiauliai": "Šiauliuose",
+  "Panevėžys": "Panevėžyje",
+};
+
 export function landingsByCity(city: LandingCity): SeoLanding[] {
   return SEO_LANDINGS.filter((l) => l.city === city);
+}
+
+export function landingBySlug(slug: string): SeoLanding | undefined {
+  return SEO_LANDINGS.find((l) => l.slug === slug);
+}
+
+/**
+ * Internal-linking helper for the landing template. Returns siblings to link to
+ * so no landing is left with a single incoming link (Semrush #213): a full mesh
+ * within the same city + the same service in other cities.
+ */
+export function relatedLandings(slug: string): {
+  sameCity: SeoLanding[];
+  sameService: SeoLanding[];
+} {
+  const current = landingBySlug(slug);
+  if (!current) return { sameCity: [], sameService: [] };
+  return {
+    sameCity: SEO_LANDINGS.filter(
+      (l) => l.city === current.city && l.slug !== slug,
+    ),
+    sameService: SEO_LANDINGS.filter(
+      (l) => l.label === current.label && l.slug !== slug,
+    ),
+  };
 }

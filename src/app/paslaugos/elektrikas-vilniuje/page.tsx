@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Vilnius",
   categorySlug: "pr-statybos-apdaila--elektrikai-elektros-darbai",
   serviceType: "Elektriko paslaugos",
-  seoTitle: "Elektrikas Vilniuje — gaukite pasiūlymus iš patikimų specialistų",
+  seoTitle: "Elektrikas Vilniuje — gaukite pasiūlymus",
   seoDescription:
     "Reikia elektriko Vilniuje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų elektrikų. Instaliacija, rozetės, gedimai, šviestuvai, skubus iškvietimas.",
   heroBadge: "Elektros paslaugos Vilniuje",

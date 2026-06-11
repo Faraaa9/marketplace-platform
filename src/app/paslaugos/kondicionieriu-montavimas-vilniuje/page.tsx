@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Vilnius",
   categorySlug: "pr-statybos-apdaila--ventiliacija-vedinimo-sistemos--kondicionieriu-montavimas",
   serviceType: "Kondicionierių montavimo paslaugos",
-  seoTitle: "Kondicionierių montavimas Vilniuje — gaukite pasiūlymus",
+  seoTitle: "Kondicionierių montavimas Vilniuje — pasiūlymai",
   seoDescription:
     "Reikia sumontuoti kondicionierių Vilniuje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų specialistų. Split sistemos, priežiūra, valymas, remontas.",
   heroBadge: "Kondicionavimas Vilniuje",

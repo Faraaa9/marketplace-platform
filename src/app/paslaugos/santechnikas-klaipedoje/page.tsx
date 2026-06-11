@@ -10,7 +10,7 @@ const config: ServiceLandingConfig = {
   city: "Klaipėda",
   categorySlug: "pr-statybos-apdaila--santechnikai-santechnikos-darbai",
   serviceType: "Santechnikos paslaugos",
-  seoTitle: "Santechnikas Klaipėdoje — gaukite pasiūlymus iš specialistų",
+  seoTitle: "Santechnikas Klaipėdoje — gaukite pasiūlymus",
   seoDescription:
     "Reikia santechniko Klaipėdoje? Aprašykite darbą ir nemokamai gaukite pasiūlymus iš patikrintų santechnikų. Maišytuvai, vamzdynai, protėkiai, kanalizacija, skubus iškvietimas.",
   heroBadge: "Santechnikos paslaugos Klaipėdoje",

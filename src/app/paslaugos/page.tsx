@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  CITY_LOCATIVE,
   LANDING_CITIES,
   landingsByCity,
-  type LandingCity,
 } from "@/lib/seo-landings";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
@@ -16,14 +16,6 @@ export const metadata: Metadata = {
   description:
     "Raskite patikrintus meistrus pagal miestą: elektrikai, santechnikai, stogdengiai, apdailininkai Kaune, Vilniuje, Klaipėdoje. Gaukite pasiūlymus nemokamai.",
   alternates: { canonical: `${BASE_URL}/paslaugos` },
-};
-
-const CITY_LOCATIVE: Record<LandingCity, string> = {
-  Kaunas: "Kaune",
-  Vilnius: "Vilniuje",
-  "Klaipėda": "Klaipėdoje",
-  "Šiauliai": "Šiauliuose",
-  "Panevėžys": "Panevėžyje",
 };
 
 export default function PaslaugosHubPage() {
