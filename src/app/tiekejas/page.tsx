@@ -3,37 +3,11 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { SessionGate } from "@/components/auth/SessionGate";
 import { prisma } from "@/lib/prisma";
-import {
-  AccountCardSkeleton,
-  StatsGridSkeleton,
-  ProfileCompletenessSkeleton,
-  FollowUpsSkeleton,
-} from "@/components/ui/skeletons";
-import { AccountCard } from "./sections/AccountCard";
-import { StatsGrid } from "./sections/StatsGrid";
-import { ProfileCompletenessCard } from "./sections/ProfileCompletenessCard";
-import { FollowUpsCard } from "./sections/FollowUpsCard";
-import { QuickLinksGrid } from "./sections/QuickLinksGrid";
+import { ProviderWorkCenter } from "./sections/ProviderWorkCenter";
 
 export default function ProviderDashboardPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-      {/* Static header — paints with the prerendered shell (C1). */}
-      <header className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-body-sm font-medium text-surface-500 dark:text-surface-400">
-            Tiekėjo darbo centras
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
-            Valdymo panelė
-          </h1>
-        </div>
-        <p className="max-w-xl text-body-sm leading-relaxed text-surface-500 dark:text-surface-400">
-          Čia sudėti svarbiausi dienos veiksmai: profilis, naujos užklausos,
-          pokalbiai ir kreditai.
-        </p>
-      </header>
-
+    <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
       <Suspense fallback={null}>
         <SessionGate requireRole="PROVIDER" callbackUrl="/tiekejas">
           {(userId) => <DashboardBody userId={userId} />}
@@ -54,29 +28,7 @@ async function DashboardBody({ userId }: { userId: string }) {
 
   if (!profile) return <NoProviderProfile />;
 
-  return (
-    <>
-      <Suspense fallback={<AccountCardSkeleton />}>
-        <AccountCard userId={userId} />
-      </Suspense>
-
-      <Suspense fallback={<StatsGridSkeleton />}>
-        <StatsGrid userId={userId} />
-      </Suspense>
-
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Suspense fallback={<ProfileCompletenessSkeleton />}>
-          <ProfileCompletenessCard userId={userId} />
-        </Suspense>
-
-        <Suspense fallback={<FollowUpsSkeleton />}>
-          <FollowUpsCard userId={userId} />
-        </Suspense>
-      </div>
-
-      <QuickLinksGrid userId={userId} slug={profile.slug} />
-    </>
-  );
+  return <ProviderWorkCenter userId={userId} slug={profile.slug} />;
 }
 
 function NoProviderProfile() {
