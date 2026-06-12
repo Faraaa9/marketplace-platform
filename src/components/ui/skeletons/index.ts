@@ -19,6 +19,5 @@ export { ConversationListSkeleton } from "./ConversationListSkeleton";
 export { default as InquiriesListSkeleton } from "./InquiriesListSkeleton";
 export { default as MyRequestsListSkeleton } from "./MyRequestsListSkeleton";
 export { AccountCardSkeleton } from "./AccountCardSkeleton";
-export { StatsGridSkeleton } from "./StatsGridSkeleton";
 export { ProfileCompletenessSkeleton } from "./ProfileCompletenessSkeleton";
 export { FollowUpsSkeleton } from "./FollowUpsSkeleton";
