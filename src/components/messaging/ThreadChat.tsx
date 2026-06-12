@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Fragment, useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from "react";
 import Image from "next/image";
 import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile, WifiOff } from "lucide-react";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
@@ -85,6 +85,21 @@ interface MessageGroup {
 }
 
 const GROUP_BREAK_MS = 5 * 60 * 1000;
+const OWN_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#8A6653",
+  borderColor: "#7B5D49",
+  color: "#FFFFFF",
+};
+const OTHER_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#F1ECE4",
+  borderColor: "#E5D9C8",
+  color: "#111827",
+};
+const FAILED_BUBBLE_STYLE: CSSProperties = {
+  backgroundColor: "#FEF2F2",
+  borderColor: "#FECACA",
+  color: "#991B1B",
+};
 
 /**
  * A message is the provider's iff its senderId equals the thread's providerId.
@@ -186,7 +201,7 @@ function ParticipantAvatar({
         <span
           className={cn(
             "grid h-full w-full place-items-center font-semibold",
-            size === "sm" ? "text-micro" : "text-caption",
+            size === "sm" ? "text-[10px]" : "text-caption",
           )}
         >
           {avatarInitial(name)}
@@ -640,7 +655,7 @@ export default function ThreadChat({
                 type="button"
                 onClick={handleLoadOlder}
                 disabled={isLoadingOlder}
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-surface-200 bg-surface-50 px-4 text-caption font-semibold text-surface-500 shadow-md transition hover:border-surface-400/60 hover:text-surface-800 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#D9C9B8] bg-[#FFFDF8] px-4 text-caption font-semibold text-[#6F5646] shadow-[0_4px_14px_rgba(93,70,54,0.08)] transition hover:border-[#A7826D]/60 hover:text-[#3B2D24] disabled:cursor-wait disabled:opacity-60"
               >
                 <ChevronUp className={cn("h-3.5 w-3.5", isLoadingOlder && "animate-pulse")} />
                 {isLoadingOlder ? "Įkeliama..." : "Įkelti ankstesnes"}
@@ -695,12 +710,13 @@ export default function ThreadChat({
                         <div key={msg.id} className="flex max-w-full flex-col items-end gap-1">
                           <div
                             className={cn(
-                              "max-w-full rounded-2xl border border-danger-soft bg-danger-soft px-3.5 py-2.5 text-body-sm text-danger-strong whitespace-pre-wrap break-words dark:border-red-800 dark:bg-red-500/10 dark:text-red-300",
+                              "max-w-full rounded-2xl border px-3.5 py-2.5 text-body-sm whitespace-pre-wrap break-words dark:border-red-800 dark:bg-red-500/10 dark:text-red-300",
                               tail,
                             )}
+                            style={FAILED_BUBBLE_STYLE}
                             title={formatChatTimestamp(msg.createdAt)}
                           >
-                            <span className="text-danger-strong">{decodeHtmlEntities(msg.content)}</span>
+                            <span style={{ color: FAILED_BUBBLE_STYLE.color }}>{decodeHtmlEntities(msg.content)}</span>
                           </div>
                           <div className="flex flex-wrap items-center justify-end gap-2 px-1">
                             <span className="flex items-center gap-1 text-micro text-red-600 dark:text-red-400">
@@ -739,23 +755,27 @@ export default function ThreadChat({
                         <div className={cn("flex max-w-full flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
                           <div
                             className={cn(
-                            "block max-w-full whitespace-pre-wrap break-words border px-4 py-2.5 text-body-sm leading-relaxed antialiased sm:px-5 sm:py-3",
+                            "block max-w-full whitespace-pre-wrap break-words border px-4 py-2.5 text-[15px] leading-relaxed antialiased sm:px-5 sm:py-3",
                             group.isOwn
-                                  ? "rounded-2xl rounded-tr-md border-surface-700 bg-brand-800 text-white shadow-sm"
-                                  : "rounded-2xl rounded-tl-md border-surface-100 bg-surface-50 text-surface-950 shadow-sm",
+                                  ? "rounded-2xl rounded-tr-md shadow-[0_1px_2px_rgba(93,70,54,0.16)]"
+                                  : "rounded-2xl rounded-tl-md shadow-[0_1px_2px_rgba(93,70,54,0.08)]",
                               tail,
                               msg.status === "sending" && "ring-1 ring-inset ring-white/30",
                             )}
+                            style={group.isOwn ? OWN_BUBBLE_STYLE : OTHER_BUBBLE_STYLE}
                             title={formatChatTimestamp(msg.createdAt)}
                           >
-                            <span className="block min-w-0">
+                            <span
+                              className="block min-w-0"
+                              style={{ color: group.isOwn ? OWN_BUBBLE_STYLE.color : OTHER_BUBBLE_STYLE.color }}
+                            >
                               {decodeHtmlEntities(msg.content)}
                             </span>
                           </div>
                           <time
                             dateTime={msg.createdAt}
                             className={cn(
-                              "flex items-center gap-1.5 px-1 text-micro font-medium leading-none text-surface-500 dark:text-surface-500",
+                              "flex items-center gap-1.5 px-1 text-[11px] font-medium leading-none text-[#7B746D] dark:text-surface-500",
                               group.isOwn ? "text-right" : "text-left",
                             )}
                           >
@@ -783,7 +803,7 @@ export default function ThreadChat({
           );
         })}
         {isOtherTyping && (
-          <div className="flex items-center gap-2 px-1 text-caption font-medium text-surface-500">
+          <div className="flex items-center gap-2 px-1 text-caption font-medium text-[#6B6760]">
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             {otherDisplayName} rašo...
           </div>
@@ -794,7 +814,7 @@ export default function ThreadChat({
       {/* Composer */}
       {!disabled && (
         <div
-          className="mt-5 shrink-0 rounded-2xl border border-surface-100 bg-surface-100 p-3 shadow-lg dark:border-surface-700 dark:bg-surface-900"
+          className="mt-5 shrink-0 rounded-2xl border border-[#E1D4C4] bg-[#EFE4D5] p-3 shadow-[0_16px_34px_rgba(93,70,54,0.12)] dark:border-surface-700 dark:bg-surface-900"
         >
           {quickReplies.length > 0 && (
             <div className="mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-1 sm:pl-[5.5rem] sm:pr-14">
@@ -803,7 +823,7 @@ export default function ThreadChat({
                   key={reply}
                   type="button"
                   onClick={() => setInputValue(reply)}
-                    className="min-h-9 shrink-0 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 text-sm font-medium text-surface-800 transition-all hover:border-surface-400/60 hover:bg-white dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
+                    className="min-h-9 shrink-0 rounded-xl border border-[#D7C7B6] bg-[#F8F2EA] px-4 py-2 text-sm font-medium text-[#3B2D24] transition-all hover:border-[#A7826D]/60 hover:bg-white dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200"
                 >
                   {decodeHtmlEntities(reply)}
                 </button>
@@ -811,11 +831,11 @@ export default function ThreadChat({
             </div>
           )}
           <div className="relative">
-            <div className="absolute left-2 top-1/2 z-10 flex -translate-y-1/2 gap-1 text-surface-500">
-              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl transition hover:bg-surface-100 hover:text-surface-800" aria-label="Prisegti failą">
+            <div className="absolute left-2 top-1/2 z-10 flex -translate-y-1/2 gap-1 text-[#8A796B]">
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl transition hover:bg-[#F1E7DA] hover:text-[#3B2D24]" aria-label="Prisegti failą">
                 <Paperclip className="h-4 w-4" />
               </button>
-              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl transition hover:bg-surface-100 hover:text-surface-800" aria-label="Emoji">
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl transition hover:bg-[#F1E7DA] hover:text-[#3B2D24]" aria-label="Emoji">
                 <Smile className="h-4 w-4" />
               </button>
             </div>
@@ -839,7 +859,7 @@ export default function ThreadChat({
                   handleSend();
                 }
               }}
-              className="min-h-[52px] w-full resize-none rounded-2xl border border-surface-200 bg-surface-50 py-3 pl-[5.5rem] pr-14 text-body-sm text-surface-900 shadow-sm ring-1 ring-transparent transition-all placeholder:text-surface-500 focus:border-surface-400/70 focus:bg-white focus:outline-none focus:ring-surface-400/15 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:focus:bg-surface-900"
+              className="min-h-[52px] w-full resize-none rounded-2xl border border-[#D7C7B6] bg-[#FFFDF8] py-3 pl-[5.5rem] pr-14 text-body-sm text-[#25221e] shadow-[inset_0_1px_2px_rgba(93,70,54,0.05)] ring-1 ring-transparent transition-all placeholder:text-[#8A796B] focus:border-[#A7826D]/70 focus:bg-white focus:outline-none focus:ring-[#A7826D]/15 dark:border-surface-700 dark:bg-surface-900 dark:text-white dark:focus:bg-surface-900"
             />
             {isOtherOnline && (
               <span className="mt-2 inline-flex items-center gap-1.5 pl-1 text-micro font-medium text-emerald-600">
@@ -852,7 +872,7 @@ export default function ThreadChat({
               onClick={handleSend}
               disabled={!inputValue.trim()}
               aria-label="Siųsti žinutę"
-              className="absolute right-1.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl bg-surface-100 text-surface-700 transition hover:bg-surface-400 hover:text-white disabled:cursor-not-allowed disabled:bg-surface-0 disabled:text-surface-400 dark:disabled:bg-surface-700"
+              className="absolute right-1.5 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl bg-[#E6D9C7] text-[#7B5D49] transition hover:bg-[#A7826D] hover:text-white disabled:cursor-not-allowed disabled:bg-[#EFE8DD] disabled:text-[#A79A8F] dark:disabled:bg-surface-700"
             >
               <Send className="h-4 w-4" />
             </button>

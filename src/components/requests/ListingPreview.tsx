@@ -54,7 +54,7 @@ export default function ListingPreview({
               {labels.map((label) => (
                 <span
                   key={label}
-                  className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-caption font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
+                  className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
                 >
                   {label}
                 </span>
@@ -62,18 +62,18 @@ export default function ListingPreview({
             </div>
           )}
           <h3
-            className={`${hasLabels ? "mt-3.5" : ""} font-serif text-heading-2 font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]`}
+            className={`${hasLabels ? "mt-3.5" : ""} font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]`}
           >
             {title.trim() || (
               <span className="text-surface-300 dark:text-surface-600">Skelbimo pavadinimas</span>
             )}
             {showNewBadge && (
-              <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-micro font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
+              <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
                 Nauja
               </span>
             )}
           </h3>
-          <p className="mt-2 whitespace-pre-wrap text-body-sm leading-relaxed text-surface-600 dark:text-surface-300">
+          <p className="mt-2 whitespace-pre-wrap text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
             {description.trim() || (
               <span className="text-surface-300 dark:text-surface-600">
                 Aprašymas dar neįrašytas…
@@ -96,7 +96,7 @@ export default function ListingPreview({
                   />
                 </div>
               ))}
-              <span className="inline-flex items-center gap-1 text-caption text-surface-500 dark:text-surface-400">
+              <span className="inline-flex items-center gap-1 text-[0.78rem] text-surface-500 dark:text-surface-400">
                 <Paperclip className="h-3.5 w-3.5" />
                 {attachmentUrls.length === 1
                   ? "1 nuotrauka"

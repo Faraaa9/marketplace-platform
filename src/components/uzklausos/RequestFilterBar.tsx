@@ -178,7 +178,7 @@ function RequestFilterBarInner({
             placeholder="Ieškoti užklausos..."
             value={searchValue}
             onChange={(event) => handleSearch(event.target.value)}
-            className="h-11 w-full rounded-lg border border-surface-200 bg-surface-50 pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
+            className="h-11 w-full rounded-lg border border-[#cdc09f] bg-[#fbfaf6] pl-10 pr-4 text-body-sm text-surface-900 placeholder:text-surface-400 transition-all duration-150 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/25 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
           />
         </div>
         <CityFilter cities={cities} activeLocation={activeLocation} />
@@ -192,7 +192,7 @@ function RequestFilterBarInner({
             className={`relative flex h-11 shrink-0 items-center gap-2 rounded-lg border px-4 text-body-sm font-medium transition-all duration-150 ${
               isOpen || activeFilterCount > 0
                 ? "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
-                : "border-surface-200 bg-surface-50 text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                : "border-[#cdc09f] bg-[#fbfaf6] text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
             }`}
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -208,7 +208,7 @@ function RequestFilterBarInner({
           {isOpen && (
             <div
               ref={panelRef}
-              className="absolute right-0 top-full z-50 mt-2 hidden max-h-[72vh] w-96 overflow-y-auto overscroll-contain rounded-xl border border-surface-200 bg-surface-50 shadow-lg dark:border-surface-700 dark:bg-surface-900 sm:block"
+              className="absolute right-0 top-full z-50 mt-2 hidden max-h-[72vh] w-96 overflow-y-auto overscroll-contain rounded-xl border border-[#d2c5a1] bg-[#fbfaf6] shadow-lg dark:border-surface-700 dark:bg-surface-900 sm:block"
             >
               <CategoryFilter
                 categoryGroups={groups ?? []}
@@ -229,7 +229,7 @@ function RequestFilterBarInner({
           />
           <div
             ref={sheetRef}
-            className="fixed inset-x-0 bottom-0 z-50 flex h-[85vh] flex-col rounded-t-2xl border-t border-surface-200 bg-surface-50 shadow-2xl animate-in slide-in-from-bottom duration-200 dark:border-surface-700 dark:bg-surface-900 sm:hidden"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[85vh] flex-col rounded-t-2xl border-t border-[#d2c5a1] bg-[#fbfaf6] shadow-2xl animate-in slide-in-from-bottom duration-200 dark:border-surface-700 dark:bg-surface-900 sm:hidden"
           >
             <div className="flex justify-center pb-1 pt-3">
               <div className="h-1 w-10 rounded-full bg-surface-200 dark:bg-surface-700" />
@@ -313,7 +313,7 @@ function RequestFilterBarInner({
                   onClick={() => handleSort(opt.value)}
                   className={`whitespace-nowrap rounded-lg px-3 py-1.5 font-serif text-caption transition-all ${
                     activeSort === opt.value
-                      ? "bg-surface-50 font-semibold text-surface-900 shadow-sm ring-1 ring-inset ring-surface-200 dark:bg-surface-800 dark:text-white dark:ring-surface-600"
+                      ? "bg-[#fbfaf6] font-semibold text-surface-900 shadow-sm ring-1 ring-inset ring-[#cdc09f] dark:bg-surface-800 dark:text-white dark:ring-surface-600"
                       : "font-medium text-surface-500 hover:bg-surface-50/70 hover:text-surface-800 dark:hover:bg-surface-800"
                   }`}
                 >

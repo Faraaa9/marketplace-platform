@@ -41,7 +41,7 @@ export default function Header() {
       className={cn(
         "sticky top-0 z-50 transition-colors duration-300",
         solid
-          ? "border-b border-surface-200 bg-surface-0/85 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/85"
+          ? "border-b border-[#DBD6CB] bg-[#ECE9E2]/85 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/85"
           : "border-b border-transparent bg-transparent"
       )}
     >
@@ -58,7 +58,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-body-sm text-surface-600 transition-colors hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-100"
+                className="text-[15px] text-[#57534C] transition-colors hover:text-[#26231F] dark:text-surface-400 dark:hover:text-surface-100"
               >
                 {item.label}
               </Link>
@@ -72,13 +72,13 @@ export default function Header() {
               <>
                 <Link
                   href="/prisijungti"
-                  className="hidden rounded-full border border-surface-200 bg-surface-50/70 px-4 py-2 text-sm font-medium text-surface-900 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-100 dark:hover:bg-surface-700 sm:inline-flex"
+                  className="hidden rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 px-4 py-2 text-sm font-medium text-[#26231F] transition-colors hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-100 dark:hover:bg-surface-700 sm:inline-flex"
                 >
                   Prisijungti
                 </Link>
                 <Link
                   href="/registruotis"
-                  className="inline-flex rounded-full bg-surface-900 px-4 py-2 text-sm font-medium text-surface-50 transition-colors hover:bg-surface-800 dark:bg-surface-100 dark:text-surface-900 dark:hover:bg-white"
+                  className="inline-flex rounded-full bg-[#2A2723] px-4 py-2 text-sm font-medium text-[#F2EFE8] transition-colors hover:bg-[#3A3631] dark:bg-surface-100 dark:text-surface-900 dark:hover:bg-white"
                 >
                   Registruotis
                 </Link>
@@ -91,7 +91,7 @@ export default function Header() {
             )}
 
             <button
-              className="rounded-lg p-2 text-surface-600 transition-colors hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800 md:hidden"
+              className="rounded-lg p-2 text-[#57534C] transition-colors hover:bg-[#E2DDD2] dark:text-surface-400 dark:hover:bg-surface-800 md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Meniu"
             >
@@ -102,32 +102,32 @@ export default function Header() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="border-t border-surface-200 py-3 dark:border-surface-800 md:hidden">
+          <div className="border-t border-[#DBD6CB] py-3 dark:border-surface-800 md:hidden">
             <div className="flex flex-col gap-0.5">
               {NAV_LINKS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-surface-900 hover:bg-surface-100 dark:text-surface-100 dark:hover:bg-surface-800"
+                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="my-1.5 h-px bg-surface-200 dark:bg-surface-800" />
+              <div className="my-1.5 h-px bg-[#DBD6CB] dark:bg-surface-800" />
               {!session ? (
                 <>
                   <Link
                     href="/prisijungti"
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-surface-900 hover:bg-surface-100 dark:text-surface-100 dark:hover:bg-surface-800"
+                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                   >
                     Prisijungti
                   </Link>
                   <Link
                     href="/registruotis"
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-brand-500 hover:bg-surface-100 dark:text-brand-400 dark:hover:bg-surface-800"
+                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#C25E3A] hover:bg-[#E2DDD2] dark:text-brand-400 dark:hover:bg-surface-800"
                   >
                     Registruotis
                   </Link>
@@ -135,7 +135,7 @@ export default function Header() {
               ) : (
                 <>
                   <div className="px-3 py-2">
-                    <p className="truncate text-sm font-normal text-surface-900 dark:text-surface-100">
+                    <p className="truncate text-sm font-normal text-[#26231F] dark:text-surface-100">
                       {userEmail || "Paskyra"}
                     </p>
                   </div>
@@ -144,7 +144,7 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-xl px-3 py-2.5 text-sm font-medium text-surface-900 hover:bg-surface-100 dark:text-surface-100 dark:hover:bg-surface-800"
+                      className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                     >
                       {link.label}
                     </Link>
@@ -154,7 +154,7 @@ export default function Header() {
                       signOut({ callbackUrl: "/" });
                       setMobileOpen(false);
                     }}
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-surface-900 hover:bg-surface-100 dark:text-surface-100 dark:hover:bg-surface-800"
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
                   >
                     Atsijungti
                     <LogOut className="h-4 w-4" />

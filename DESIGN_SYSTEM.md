@@ -1,6 +1,6 @@
 # Design System — paslaugurinka.lt
 
-Status: **Steps 1–4 complete (2026-06-12).** Tokens added (Step 2), components migrated (Step 3), docs + `CLAUDE.md` rule written (Step 4). Build + typecheck pass. Prompts 2 (H1 fonts) and 3 (CTA rotation) intentionally not started — see §7.
+Status: **Step 1 approved (2026-06-12).** Category (b) token set approved; decisions D1/D2/D3/D5 ruled. Proceeding to Step 2.
 
 **Approved decisions:**
 - **(b) tokens:** full set approved (3 semantic colors + `--surface-paper` + warm `shadow.sm/md/lg` + motion + `--font-display` alias).
@@ -151,47 +151,8 @@ Minimal, one-per-role. Nothing here duplicates a `brand`/`surface` value (table 
 
 ---
 
-## 5. Final token set (the source of truth)
+## 5. Pending (after approval)
 
-Defined in [`tailwind.config.ts`](tailwind.config.ts) + [`src/app/globals.css`](src/app/globals.css). **Use these; never hardcode.**
-
-### Color
-| Token | Value | Usage rule |
-|---|---|---|
-| `brand-50…950` | terracotta scale, `brand-500 #c25e3a` | The single accent. CTAs, links, active/selected, brand marks. |
-| `surface-0…950` | warm cream→charcoal, `surface-0 #ece9e2` … `surface-950 #1a1813` | All neutral bg/text/border. Cool greys retired here (D1). |
-| `danger` `.soft`/`DEFAULT #dc2626`/`.strong` | red | Destructive/error only. |
-| `success` `.soft`/`DEFAULT #16a34a`/`.strong` | green | Positive/verified status only. |
-| `warning` `.soft`/`DEFAULT #d9920b`/`.strong` | amber | Caution status only. |
-| `bg-paper` | `var(--surface-paper)` `#fbfaf6` (dark `#2b2720`) | Užklausų lenta paper sheet. |
-
-### Radius · Shadow · Motion · Type
-| Concern | Tokens | Rule |
-|---|---|---|
-| Radius | `rounded-lg` (8px), `rounded-2xl` (16px), `rounded-full` | inputs/buttons → `lg`; cards → `2xl`; pills/avatars → `full`. No arbitrary radii. |
-| Shadow | `shadow-sm` / `shadow-md` / `shadow-lg` | warm `rgba(93,70,54)` hue (brand). No ad-hoc `shadow-[…]`. |
-| Motion | `duration-base` (150ms), `ease-standard` | one duration, one easing. |
-| Spacing | Tailwind 4px grid (`1=4 … 16=64`) | no arbitrary px/rem spacing. |
-| Type | `text-micro…display-xl` scale; `font-sans` (Inter) default; `font-display` (= Lora) | H1 → `font-display`; everything else → Inter. (Visual H1 application = Prompt 2.) |
-
-## 6. Allowed hex exceptions (cannot be Tailwind classes)
-
-After migration, a hex search over component files matches **only** these documented, intentional cases — never plain styling:
-
-| Category | Files | Why exempt |
-|---|---|---|
-| **CTA color rotation** | `uzklausos/page.tsx` `CTA_TONES`, `InlineListingCard.tsx` `AI_BUTTON_VARIANTS` | Handled deliberately in **Prompt 3**, left untouched here. |
-| **Board paper-note theme** | `uzklausos/page.tsx`, `InlineListingCard.tsx`, `ListingPreview.tsx` | Intentional decorative theme (competition chips, gold chips, paper CTA shadows, pins/stamp). |
-| **Third-party brand marks** | `GoogleSignInButton.tsx` (Google), `prisijungti/page.tsx` (Telegram) | External logo colors — not ours to tokenize. |
-| **Canvas / inline-gradient** | `magicui/particles.tsx`, `border-beam.tsx`, `shine-border.tsx` | `ctx.fillStyle` / gradient strings need a literal; defaults set to brand. |
-| **CSS custom-property values** | `ProviderListingClient.tsx`, `TokenClient.tsx`, `SentInquiriesView.tsx`, `StoryAvatarButton.tsx` | `[--presence-cutout-bg:#fff]` matches the parent bg; arbitrary-property syntax can't take a token name. |
-| **Browser metadata** | `layout.tsx` `themeColor` | Next.js `Viewport` requires a literal hex (kept in sync with `--background`). |
-| **Inline-style data** | `page.tsx` sample-avatar `color` array | Decorative per-avatar identity colors passed to `style={{}}`. |
-
-Everything else in component files now references tokens. Acceptance verified: `next build` passes, `tsc --noEmit` clean.
-
-## 7. Status / next
-
-- Step 1 (mapping + approval) ✅ · Step 2 (tokens) ✅ `a226e5f` · Step 3 (migration + chat-preview delete) ✅ `306cc8e` · Step 4 (docs) — this file + `CLAUDE.md` rule.
-- **Prompt 2** (not done here): apply `font-display` to H1s app-wide.
-- **Prompt 3** (not done here): resolve the `CTA_TONES` / `AI_BUTTON_VARIANTS` color rotation.
+- Step 2 — add category (b) tokens to `tailwind.config.ts` + `globals.css`; enforce radius/spacing/shadow/motion/type.
+- Step 3 — migrate file-by-file per §2 (logical commits); leave CTA rotation; resolve D5.
+- Step 4 — finalize this doc's token reference + add the enforcement rule to `CLAUDE.md`.

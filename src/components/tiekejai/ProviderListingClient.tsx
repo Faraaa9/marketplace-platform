@@ -761,7 +761,7 @@ export default function ProviderListingClient({
                 onClick={(e) => handleCardClick(e, p.id)}
               >
                 <article
-                  className={`h-full overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_4px_10px_rgba(0,0,0,0.13),0_16px_36px_rgba(0,0,0,0.26)] dark:bg-surface-900 dark:ring-white/[0.08] flex flex-col ${
+                  className={`h-full overflow-hidden rounded-[28px] bg-white ring-1 ring-black/[0.06] transition-shadow duration-200 hover:shadow-[0_4px_10px_rgba(0,0,0,0.13),0_16px_36px_rgba(0,0,0,0.26)] dark:bg-surface-900 dark:ring-white/[0.08] flex flex-col ${
                     sheetProviderId === p.id
                       ? "ring-2 ring-brand-500 shadow-[0_4px_10px_rgba(0,0,0,0.13),0_16px_36px_rgba(0,0,0,0.26)]"
                       : "shadow-[0_1px_2px_rgba(0,0,0,0.06),0_3px_10px_rgba(0,0,0,0.08)]"
@@ -881,7 +881,7 @@ export default function ProviderListingClient({
         )
       ) : (
         /* ── Empty state ── */
-        <div className="rounded-2xl border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">
+        <div className="rounded-[28px] border border-dashed border-surface-300 bg-white p-12 text-center dark:border-surface-700 dark:bg-surface-900">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
             <Search className="h-6 w-6 text-surface-400" />
           </div>

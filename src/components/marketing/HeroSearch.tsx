@@ -169,10 +169,10 @@ export default function HeroSearch() {
     <div className="w-full max-w-2xl">
       <div
         {...photoDropHandlers}
-        className={`relative rounded-2xl border bg-surface-50 shadow-lg transition-colors focus-within:border-surface-300 dark:bg-surface-900 dark:focus-within:border-surface-600 ${
+        className={`relative rounded-[1.75rem] border bg-[#FBFAF6] shadow-[0_18px_48px_-20px_rgba(40,35,30,0.28)] transition-colors focus-within:border-[#C5B7A4] dark:bg-surface-900 dark:focus-within:border-surface-600 ${
           photoDragOver
-            ? "border-brand-500 ring-2 ring-brand-500/30"
-            : "border-surface-200 dark:border-surface-700"
+            ? "border-[#C25E3A] ring-2 ring-[#C25E3A]/30"
+            : "border-[#D8D2C6] dark:border-surface-700"
         }`}
       >
         <textarea
@@ -190,17 +190,17 @@ export default function HeroSearch() {
                 ? "Atpažįstu, ką pasakei..."
                 : "Pvz. Reikia patikimo santechniko vonios remontui Vilniuje. Biudžetas iki 800 €, darbus norėčiau pradėti kitą savaitę."
           }
-          className="w-full resize-none rounded-2xl bg-transparent px-6 pt-5 pb-16 text-body-lg leading-relaxed text-surface-900 outline-none placeholder:text-surface-400 dark:text-surface-100 dark:placeholder:text-surface-500"
+          className="w-full resize-none rounded-[1.75rem] bg-transparent px-6 pt-5 pb-16 text-[1.0625rem] leading-relaxed text-[#26231F] outline-none placeholder:text-[#9A958B] dark:text-surface-100 dark:placeholder:text-surface-500"
         />
 
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-surface-50 from-[70%] to-transparent dark:from-surface-900"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-[1.75rem] bg-gradient-to-t from-[#FBFAF6] from-[70%] to-transparent dark:from-surface-900"
         />
 
         {photoDragOver && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-surface-50/95 dark:bg-surface-900/95">
-            <div className="flex items-center gap-2 text-body font-medium text-brand-500 dark:text-brand-400">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[1.75rem] bg-[#FBFAF6]/95 dark:bg-surface-900/95">
+            <div className="flex items-center gap-2 text-body font-medium text-[#C25E3A] dark:text-brand-400">
               <ImagePlus className="h-6 w-6" /> Įmesk nuotraukas čia
             </div>
           </div>
@@ -221,14 +221,14 @@ export default function HeroSearch() {
             aria-pressed={status === "recording"}
             className={`absolute bottom-4 left-4 grid h-10 w-10 place-items-center rounded-full transition-all hover:scale-105 active:scale-95 disabled:cursor-default disabled:hover:scale-100 ${
               status === "recording"
-                ? "bg-danger text-white shadow-sm"
-                : "border border-surface-200 bg-surface-50 text-brand-500 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
+                ? "bg-[#DC2626] text-white shadow-sm"
+                : "border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
             }`}
           >
             {status === "recording" && (
               <span
                 aria-hidden
-                className="absolute inset-0 rounded-full bg-danger/40 motion-safe:animate-ping"
+                className="absolute inset-0 rounded-full bg-[#DC2626]/40 motion-safe:animate-ping"
               />
             )}
             {status === "transcribing" ? (
@@ -244,7 +244,7 @@ export default function HeroSearch() {
           onClick={() => fileInputRef.current?.click()}
           disabled={photosUploading || attachments.length >= 5}
           aria-label="Pridėti nuotraukų"
-          className={`absolute bottom-4 grid h-10 w-10 place-items-center rounded-full border border-surface-200 bg-surface-50 text-brand-500 transition-all hover:scale-105 hover:bg-surface-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700 ${
+          className={`absolute bottom-4 grid h-10 w-10 place-items-center rounded-full border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] transition-all hover:scale-105 hover:bg-[#E9E4D9] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700 ${
             isSupported ? "left-16" : "left-4"
           }`}
         >
@@ -272,7 +272,7 @@ export default function HeroSearch() {
           onClick={submit}
           aria-label={waitingForTranscript ? "Laukiu atpažinimo" : "Tęsti"}
           aria-busy={waitingForTranscript}
-          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-brand-500 text-white shadow-sm transition-all hover:scale-105 hover:bg-brand-600 active:scale-95 disabled:hover:scale-100"
+          className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-[#C25E3A] text-white shadow-sm transition-all hover:scale-105 hover:bg-[#A84E2E] active:scale-95 disabled:hover:scale-100"
         >
           {waitingForTranscript ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -287,7 +287,7 @@ export default function HeroSearch() {
           {attachments.map((url, i) => (
             <div
               key={url}
-              className="group relative h-16 w-16 overflow-hidden rounded-lg border border-surface-200 dark:border-surface-700"
+              className="group relative h-16 w-16 overflow-hidden rounded-lg border border-[#D8D2C6] dark:border-surface-700"
             >
               <Image
                 src={optimizeCloudinaryUrl(url, { width: 128, height: 128, crop: "fill" })}
@@ -309,18 +309,18 @@ export default function HeroSearch() {
         </div>
       )}
 
-      <p className="mt-2 px-1 text-xs text-surface-400 dark:text-surface-500">
+      <p className="mt-2 px-1 text-xs text-[#9A958B] dark:text-surface-500">
         Patarimas: nuotraukas gali pertempti tiesiai į šį langą. Iki 5, kiekviena iki 25 MB.
       </p>
 
       {photoError && (
-        <p role="alert" className="mt-1 px-1 text-sm text-brand-600 dark:text-red-400">
+        <p role="alert" className="mt-1 px-1 text-sm text-[#B4451F] dark:text-red-400">
           {photoError}
         </p>
       )}
 
       {error && (
-        <p role="alert" className="mt-2 px-1 text-sm text-brand-600 dark:text-red-400">
+        <p role="alert" className="mt-2 px-1 text-sm text-[#B4451F] dark:text-red-400">
           {error === "denied"
             ? "Mikrofonas užblokuotas. Leiskite jį naršyklės nustatymuose ir bandykite dar kartą."
             : error === "unavailable"
@@ -332,9 +332,9 @@ export default function HeroSearch() {
       <div className="mt-4 flex items-center justify-between gap-3">
         <Link
           href="/meistrai"
-          className="inline-flex items-center gap-2 rounded-full border border-surface-200 bg-surface-50/70 px-4 py-2 text-sm font-medium text-surface-600 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-300 dark:hover:bg-surface-700"
+          className="inline-flex items-center gap-2 rounded-full border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-sm font-medium text-[#57534C] transition-colors hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800/70 dark:text-surface-300 dark:hover:bg-surface-700"
         >
-          <Users className="h-4 w-4 text-brand-500 dark:text-brand-400" />
+          <Users className="h-4 w-4 text-[#C25E3A] dark:text-brand-400" />
           Žiūrėti tiekėjus
         </Link>
         <ImproveDescriptionButton

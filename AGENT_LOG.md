@@ -17,42 +17,6 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
-## 2026-06-12 17:58 — Claude
-
-**Commit:** `f595aad` — docs(design-system): finalize token reference + enforce rule (Step 4) · lokalus
-
-**Pakeitimai:** 2 files changed, 55 insertions(+), 5 deletions(-)
-
-**Failai:**
-- CLAUDE.md
-- DESIGN_SYSTEM.md
-
-**Toliau:** _(papildyk ranka kai aišku)_
-
-
-## 2026-06-12 17:57 — Claude
-
-**Commit:** `306cc8e` — refactor(design-system): migrate hardcoded colors to tokens (Step 3) · lokalus
-
-**Pakeitimai:** 33 files changed, 309 insertions(+), 1199 deletions(-)
-
-**Failai:**
-- src/app/chat-preview/page.tsx
-- src/app/layout.tsx
-- src/app/page.tsx
-- src/app/paslaugos/page.tsx
-- src/app/tiekejas/zinutes/ConversationList.tsx
-- src/app/tiekejas/zinutes/InboxFilterShell.tsx
-- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
-- src/app/tiekejas/zinutes/[id]/ThreadView.tsx
-- src/app/uzklausos/page.tsx
-- src/components/ai/ImproveDescriptionButton.tsx
-- src/components/landing/ServiceLanding.tsx
-- src/components/layout/Footer.tsx
-
-**Toliau:** _(papildyk ranka kai aišku)_
-
-
 ## 2026-06-12 17:27 — Claude
 
 **Commit:** `5cb8bd1` — feat(design-system): add semantic/shadow/motion/paper tokens (Step 1-2) · lokalus

@@ -15,7 +15,7 @@ export function BorderBeam({
   size = 200,
   duration = 6,
   delay = 0,
-  color = "#c25e3a", // brand-500 default (was off-brand indigo); inline-gradient value, must be a literal
+  color = "#6366f1",
 }: BorderBeamProps) {
   return (
     <div

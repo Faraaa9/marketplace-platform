@@ -29,10 +29,10 @@ function ChatParticipantAvatar({
 }) {
   return (
     <span
-      className="relative inline-flex h-11 w-11 shrink-0 rounded-full text-surface-800 dark:text-brand-300"
+      className="relative inline-flex h-11 w-11 shrink-0 rounded-full text-[#3D3A35] dark:text-brand-300"
       title={presenceLabel || undefined}
     >
-      <span className="relative h-full w-full overflow-hidden rounded-full bg-surface-0/40 ring-1 ring-surface-0 dark:bg-brand-500/10">
+      <span className="relative h-full w-full overflow-hidden rounded-full bg-[#ece9e2]/40 ring-1 ring-[#ece9e2] dark:bg-brand-500/10">
         {image ? (
           <Image src={image} alt="" fill sizes="44px" className="object-cover" />
         ) : (
@@ -44,7 +44,7 @@ function ChatParticipantAvatar({
       {presenceLevel && (
         <span
           className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-            presenceLevel === "online" ? "bg-emerald-500" : "bg-brand-300"
+            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
           }`}
           aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
         />
@@ -164,7 +164,7 @@ export async function ThreadView({
 
     return (
       <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
-        <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-surface-0 bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
+        <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
           <div className="flex min-w-0 items-center gap-3">
             {inboxLayout && (
               <ChatParticipantAvatar
@@ -181,10 +181,10 @@ export async function ThreadView({
                   {response.request.status === "OPEN" ? "Atidaryta" : response.request.status === "IN_PROGRESS" ? "Vykdoma" : "Uždaryta"}
                 </Badge>
               </div>
-              <h1 className={inboxLayout ? "truncate text-body font-semibold text-surface-900 dark:text-white" : "mt-2 text-heading-1 font-bold text-surface-900 dark:text-white"}>
+              <h1 className={inboxLayout ? "truncate text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
                 {response.request.title}
               </h1>
-              <p className="mt-1 truncate text-body-sm text-surface-500">
+              <p className="mt-1 truncate text-body-sm text-[#6B6760]">
                 {response.request.clientName}
               </p>
             </div>
@@ -192,7 +192,7 @@ export async function ThreadView({
         </div>
 
         <div
-          className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-surface-0 px-5 py-4" : "rounded-2xl border border-surface-0 bg-surface-0 p-6 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/50"}
+          className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#ece9e2] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
         >
           <ResponseThread
             responseId={response.id}
@@ -286,7 +286,7 @@ export async function ThreadView({
 
   return (
       <div className={inboxLayout ? "flex h-full min-h-0 flex-col" : undefined}>
-      <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-surface-0 bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
+      <div className={inboxLayout ? "flex min-h-[72px] items-center justify-between gap-3 border-b border-[#ece9e2] bg-white px-5 dark:border-surface-700/60" : "mb-6 flex items-start justify-between gap-3"}>
         <div className="flex min-w-0 items-center gap-3">
           {inboxLayout && (
             <ChatParticipantAvatar
@@ -301,10 +301,10 @@ export async function ThreadView({
               <Badge variant="brand">Klientas</Badge>
               {isArchived && <Badge variant="default">Archyvuota</Badge>}
             </div>
-            <h1 className={inboxLayout ? "truncate text-body font-semibold text-surface-900 dark:text-white" : "mt-2 text-heading-1 font-bold text-surface-900 dark:text-white"}>
+            <h1 className={inboxLayout ? "truncate text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>
               {senderDisplay}
             </h1>
-            <p className="mt-1 truncate text-body-sm text-surface-500">
+            <p className="mt-1 truncate text-body-sm text-[#6B6760]">
               {formatRelativeDate(inquiry.createdAt)}
             </p>
           </div>
@@ -322,7 +322,7 @@ export async function ThreadView({
           </span>
           <a
             href={`mailto:${inquiry.senderEmail}`}
-            className="flex items-center gap-1.5 text-brand-300 hover:text-surface-900 dark:text-brand-400"
+            className="flex items-center gap-1.5 text-[#C29B74] hover:text-[#1E1B18] dark:text-brand-400"
           >
             <Mail className="h-4 w-4" />
             {inquiry.senderEmail}
@@ -330,7 +330,7 @@ export async function ThreadView({
           {inquiry.senderPhone && (
             <a
               href={`tel:${inquiry.senderPhone}`}
-              className="flex items-center gap-1.5 text-brand-300 hover:text-surface-900 dark:text-brand-400"
+              className="flex items-center gap-1.5 text-[#C29B74] hover:text-[#1E1B18] dark:text-brand-400"
             >
               <Phone className="h-4 w-4" />
               {inquiry.senderPhone}
@@ -347,9 +347,9 @@ export async function ThreadView({
 
       {/* Conversation */}
       <div
-        className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-surface-0 px-5 py-4" : "rounded-2xl border border-surface-0 bg-surface-0 p-6 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/50"}
+        className={inboxLayout ? "flex min-h-0 flex-1 flex-col bg-[#ece9e2] px-5 py-4" : "rounded-2xl border border-[#ece9e2] bg-[#ece9e2] p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50"}
       >
-        {!inboxLayout && <div className="mb-4 flex items-center gap-3 border-b border-surface-0 pb-4 dark:border-surface-700">
+        {!inboxLayout && <div className="mb-4 flex items-center gap-3 border-b border-[#ece9e2] pb-4 dark:border-surface-700">
           <ChatParticipantAvatar
             name={senderDisplay}
             image={senderImage}
@@ -357,14 +357,14 @@ export async function ThreadView({
             presenceLabel={presenceLabel}
           />
           <div className="min-w-0">
-            <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
+            <p className="truncate text-body font-semibold text-[#1E1B18] dark:text-white">
               {senderDisplay}
             </p>
             <p
               className={`text-micro ${
                 presenceLevel === "online"
-                  ? "text-brand-300 dark:text-brand-400"
-                  : "text-surface-500 dark:text-surface-400"
+                  ? "text-[#C29B74] dark:text-brand-400"
+                  : "text-[#6B6760] dark:text-surface-400"
               }`}
             >
               {presenceLabel ?? "Klientas"}

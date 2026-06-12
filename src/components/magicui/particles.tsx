@@ -14,7 +14,7 @@ interface ParticlesProps {
 export function Particles({
   className,
   quantity = 40,
-  color = "#c25e3a", // brand-500 default (was off-brand indigo); canvas fillStyle, must be a literal
+  color = "#6366f1",
   size = 1.5,
   speed = 0.3,
 }: ParticlesProps) {

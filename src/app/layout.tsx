@@ -70,9 +70,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Matches the warm app background (surface-0). Browser-chrome metadata must be
-  // a literal hex; keep it in sync with --background in globals.css.
-  themeColor: "#ece9e2",
+  themeColor: "#6366f1",
 };
 
 export default function RootLayout({

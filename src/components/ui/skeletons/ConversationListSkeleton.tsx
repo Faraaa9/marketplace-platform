@@ -11,7 +11,7 @@ export function ConversationListSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="rounded-xl border border-surface-0 bg-white p-3 dark:border-surface-700/50 dark:bg-surface-900/50"
+          className="rounded-xl border border-[#EFECE6] bg-white p-3 dark:border-surface-700/50 dark:bg-surface-900/50"
         >
           <div className="flex items-start gap-3.5">
             <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
