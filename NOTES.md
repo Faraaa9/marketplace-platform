@@ -83,6 +83,10 @@ Konvencija:
       užklausa"). Be naujų — be badge'o, rami juostelė.
       Vizualas: `mockups/nauja-uzklausa-su-nuoroda.html` (ten pat parodyta
       #1 supaprastinta kortelė ir #2 neutralus stepper'is kartu).
+- [x] **Tiekėjo „Reikia dėmesio" — užklausos sulietos su žinutėmis** (56b5053).
+      Pateiktos užklausos rodomos tame pačiame sąraše su tagu „Užklausa",
+      burbulas: Visos | Žinutės | Užklausos (`?rodyti=`). Plytelių skaičiai
+      liko tik žinučių.
 
 ---
 

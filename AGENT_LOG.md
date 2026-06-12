@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 01:41 — Claude
+
+**Commit:** `09ce237` — chore(notes): record work-queue merge darbukas · lokalus
+
+**Pakeitimai:** 1 file changed, 4 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 00:04 — Claude
 
 **Commit:** `832f715` — chore(notes): mark uzklausu UX darbukai done + add hierarchy/strip mockups · lokalus
