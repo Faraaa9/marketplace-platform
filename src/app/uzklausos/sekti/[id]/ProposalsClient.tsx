@@ -16,6 +16,7 @@ import {
   type SortMode,
   type FilterMode,
   isAwaitingClientReply,
+  isUnreadByClient,
   lastActivityAt,
   comparePrice,
 } from "./components/types";
@@ -94,6 +95,11 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
 
   const awaitingCount = useMemo(
     () => request.responses.filter(isAwaitingClientReply).length,
+    [request.responses],
+  );
+
+  const unreadIds = useMemo(
+    () => new Set(request.responses.filter(isUnreadByClient).map((r) => r.id)),
     [request.responses],
   );
 
@@ -288,8 +294,12 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {displayedResponses.map((resp) => (
+            (() => {
+              const unreadDisplayed = displayedResponses.filter((r) => unreadIds.has(r.id));
+              const readDisplayed = displayedResponses.filter((r) => !unreadIds.has(r.id));
+              const showGroups =
+                filterMode === "all" && unreadDisplayed.length > 0 && readDisplayed.length > 0;
+              const renderCard = (resp: (typeof displayedResponses)[number]) => (
                 <ProposalCard
                   key={resp.id}
                   resp={resp}
@@ -309,8 +319,27 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
                   sendMessage={sendTrackingMessage}
                   onReviewSubmitted={() => router.refresh()}
                 />
-              ))}
-            </div>
+              );
+              return (
+                <div className="space-y-3">
+                  {showGroups && (
+                    <p className="flex items-center gap-2 text-caption font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+                      Nauji
+                      <span className="inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold normal-case text-white">
+                        {unreadDisplayed.length}
+                      </span>
+                    </p>
+                  )}
+                  {unreadDisplayed.map(renderCard)}
+                  {showGroups && (
+                    <p className="pt-2 text-caption font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+                      Peržiūrėti
+                    </p>
+                  )}
+                  {readDisplayed.map(renderCard)}
+                </div>
+              );
+            })()
           )}
         </>
       )}

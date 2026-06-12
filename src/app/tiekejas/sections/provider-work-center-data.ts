@@ -50,7 +50,7 @@ export function sortWorkQueue(conversations: WorkConversation[]) {
 
 export async function getProviderWorkCenterData(userId: string) {
   const timer = createServerTimer("provider-work-center");
-  const [user, profile, responses, inquiries] = await Promise.all([
+  const [user, profile, responses, inquiries, myRequests] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, email: true, emailVerified: true },
@@ -127,6 +127,17 @@ export async function getProviderWorkCenterData(userId: string) {
         },
       },
     }),
+    // Requests this user submitted as a client — the dashboard tile links to
+    // /paskyra/uzklausos where the full list lives.
+    prisma.serviceRequest.findMany({
+      where: {
+        clientId: userId,
+        status: { in: ["OPEN", "PENDING_CONFIRMATION"] },
+      },
+      select: {
+        responses: { select: { lastMessageAt: true, clientLastReadAt: true } },
+      },
+    }),
   ]);
   // Logs e.g. `[perf:provider-work-center] userId=… threads=8 inquiries=3 total=42ms`.
   // Measures only the 4 parallel queries; check this before optimizing the query layer.
@@ -196,6 +207,15 @@ export async function getProviderWorkCenterData(userId: string) {
     { label: "Telefonas", done: !!profile?.phone, href: "/tiekejas/profilis#phone" },
   ];
 
+  const myRequestsUnreadCount = myRequests.reduce(
+    (sum, request) =>
+      sum +
+      request.responses.filter(
+        (r) => !r.clientLastReadAt || r.lastMessageAt > r.clientLastReadAt,
+      ).length,
+    0,
+  );
+
   return {
     user,
     profile,
@@ -203,6 +223,8 @@ export async function getProviderWorkCenterData(userId: string) {
     workQueue: conversations.slice(0, WORK_QUEUE_LIMIT),
     unreadCount: conversations.filter((conversation) => conversation.unread).length,
     activeCount: conversations.length,
+    myRequestsActiveCount: myRequests.length,
+    myRequestsUnreadCount,
     acceptedCount: responseConversations.filter((conversation) => conversation.stateLabel === "Priimta").length,
     creditBalance,
     completeness,

@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/layout/NotificationBell";
+import MyRequestsNavLink from "@/components/layout/MyRequestsNavLink";
 import UserMenu from "@/components/layout/UserMenu";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import GlobalStoriesStrip from "@/components/stories/GlobalStoriesStrip";
@@ -63,6 +64,7 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <MyRequestsNavLink className="text-[15px] text-[#57534C] transition-colors hover:text-[#26231F] dark:text-surface-400 dark:hover:text-surface-100" />
           </nav>
 
           {/* Right actions */}
@@ -114,6 +116,10 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
+              <MyRequestsNavLink
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#26231F] hover:bg-[#E2DDD2] dark:text-surface-100 dark:hover:bg-surface-800"
+              />
               <div className="my-1.5 h-px bg-[#DBD6CB] dark:bg-surface-800" />
               {!session ? (
                 <>

@@ -67,7 +67,16 @@ export async function ProviderWorkCenter({
       </header>
 
       <section className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryTile value={data.unreadCount} suffix="naujos" label="Žinutės laukia atsakymo" href="/tiekejas/zinutes?tab=unread" />
+        <SummaryTile
+          value={data.myRequestsActiveCount}
+          suffix={data.myRequestsActiveCount === 1 ? "aktyvi" : "aktyvios"}
+          label={
+            data.myRequestsUnreadCount > 0
+              ? `Pateiktos užklausos - ${data.myRequestsUnreadCount} nauj${data.myRequestsUnreadCount === 1 ? "as atsakymas" : "i atsakymai"}`
+              : "Pateiktos užklausos"
+          }
+          href="/paskyra/uzklausos"
+        />
         <SummaryTile value={data.activeCount} suffix="aktyvūs" label="Pokalbiai su klientais" href="/tiekejas/zinutes" />
         <SummaryTile value={`${data.completeness}%`} label="Profilio paruošimas" href="/tiekejas/profilis" />
         <SummaryTile value={data.creditBalance} label="Kreditai atsakymams" href="/tiekejas/planai" />

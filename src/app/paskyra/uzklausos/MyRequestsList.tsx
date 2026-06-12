@@ -5,13 +5,29 @@ import {
   Clock,
   MessageSquare,
   ChevronRight,
-  Bell,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
+
+function pasiulymaiLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} pasiūlymas`;
+  if (mod10 >= 2 && mod10 <= 9 && (mod100 < 11 || mod100 > 19)) {
+    return `${count} pasiūlymai`;
+  }
+  return `${count} pasiūlymų`;
+}
+
+function naujiLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} naujas`;
+  return `${count} nauji`;
+}
 
 type StatusFilter =
   | "ALL"
@@ -70,18 +86,27 @@ export default async function MyRequestsList({
       createdAt: true,
       _count: { select: { responses: true } },
       responses: {
-        select: { createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 1,
+        select: { lastMessageAt: true, clientLastReadAt: true },
       },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  const data = requests.map(({ responses, ...rest }) => ({
-    ...rest,
-    lastResponseAt: responses[0]?.createdAt ?? null,
-  }));
+  // Unread = a proposal thread moved since the client's last visit to the
+  // request page (read receipts are stamped there). Rows sort by the latest
+  // activity anywhere in the request, so "something new" floats to the top.
+  const data = requests
+    .map(({ responses, ...rest }) => {
+      const unreadCount = responses.filter(
+        (r) => !r.clientLastReadAt || r.lastMessageAt > r.clientLastReadAt,
+      ).length;
+      const lastActivityAt = responses.reduce(
+        (max, r) => (r.lastMessageAt > max ? r.lastMessageAt : max),
+        rest.createdAt,
+      );
+      return { ...rest, unreadCount, lastActivityAt };
+    })
+    .sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime());
 
   if (data.length === 0) {
     return (
@@ -100,8 +125,6 @@ export default async function MyRequestsList({
 
   const filtered =
     active === "ALL" ? data : data.filter((r) => r.status === active);
-  // eslint-disable-next-line react-hooks/purity -- relative-time labels; a per-render timestamp is the intended behavior
-  const now = Date.now();
 
   return (
     <>
@@ -151,10 +174,7 @@ export default async function MyRequestsList({
           {filtered.map((req) => {
             const status = STATUS_MAP[req.status] || STATUS_MAP.OPEN;
             const categoryName = req.categoryRef?.name;
-            const hasNewResponse =
-              req.lastResponseAt &&
-              now - new Date(req.lastResponseAt).getTime() <
-                24 * 60 * 60 * 1000;
+            const hasUnread = req.unreadCount > 0;
 
             return (
               <Link
@@ -164,7 +184,7 @@ export default async function MyRequestsList({
               >
                 <article
                   className={`relative rounded-2xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card dark:bg-surface-900 ${
-                    hasNewResponse
+                    hasUnread
                       ? "border-brand-200 dark:border-brand-800/60"
                       : "border-surface-200/60 dark:border-surface-700/50"
                   }`}
@@ -174,7 +194,17 @@ export default async function MyRequestsList({
                     <h3 className="text-body font-semibold leading-snug text-surface-900 transition-colors group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-400">
                       {req.title}
                     </h3>
-                    <Badge variant={status.variant}>{status.label}</Badge>
+                    {req.status === "OPEN" ? (
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-caption font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                        <span
+                          aria-hidden
+                          className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse"
+                        />
+                        Gyvai
+                      </span>
+                    ) : (
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    )}
                   </div>
 
                   {/* Meta */}
@@ -200,18 +230,16 @@ export default async function MyRequestsList({
                       <span
                         className={`inline-flex items-center gap-1 text-micro font-medium ${
                           req._count.responses > 0
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-surface-600 dark:text-surface-300"
                             : "text-surface-400"
                         }`}
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
-                        {req._count.responses}{" "}
-                        {req._count.responses === 1 ? "pasiūlymas" : "pasiūlymai"}
+                        {pasiulymaiLabel(req._count.responses)}
                       </span>
-                      {hasNewResponse && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-micro font-semibold text-brand-600 dark:bg-brand-950 dark:text-brand-400">
-                          <Bell className="h-3 w-3" />
-                          Naujas!
+                      {hasUnread && (
+                        <span className="inline-flex items-center rounded-full bg-brand-600 px-2 py-0.5 text-micro font-bold text-white">
+                          {naujiLabel(req.unreadCount)}
                         </span>
                       )}
                     </div>
