@@ -24,6 +24,7 @@ import AiSuggestionsStrip, {
   type AiSuggestion,
   type AiSuggestionChoice,
 } from "@/components/uzklausos-v2/AiSuggestionsStrip";
+import ActiveRequestsStrip from "@/components/uzklausos-v2/ActiveRequestsStrip";
 import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
 
 export default function NewRequestV2Page() {
@@ -70,7 +71,6 @@ interface FormState {
 const MAX_CATEGORIES = 3;
 
 type AiStatus = "idle" | "running" | "done" | "error";
-type AiField = "title" | "description" | "category" | "location" | "budget" | "deadline";
 
 function NewRequestV2Form() {
   const router = useRouter();
@@ -111,7 +111,6 @@ function NewRequestV2Form() {
   const [pendingAiCategorySlugs, setPendingAiCategorySlugs] = useState<string[]>(
     initialCategorySlug ? [initialCategorySlug] : [],
   );
-  const [aiFields, setAiFields] = useState<Set<AiField>>(new Set());
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiStatus, setAiStatus] = useState<AiStatus>(cameFromHero ? "running" : "idle");
   const [aiError, setAiError] = useState<string | null>(null);
@@ -181,17 +180,8 @@ function NewRequestV2Form() {
     [categoryIdBySlug],
   );
 
-  // ── Field setters that strip the "from AI" mark when user edits ──
-  function setField<K extends keyof FormState>(key: K, value: FormState[K], field?: AiField) {
+  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
-    if (field) {
-      setAiFields((current) => {
-        if (!current.has(field)) return current;
-        const next = new Set(current);
-        next.delete(field);
-        return next;
-      });
-    }
   }
 
   // Persist the listing across OAuth redirects. The draft schema still stores
@@ -244,11 +234,6 @@ function NewRequestV2Form() {
               ? current
               : { ...current, categoryIds: [resolved] },
           );
-          setAiFields((prev) => {
-            const next = new Set(prev);
-            next.add("category");
-            return next;
-          });
         } else {
           setPendingAiCategorySlugs([topSlug]);
         }
@@ -310,14 +295,6 @@ function NewRequestV2Form() {
           else if (!id) unresolvedSlugs.push(slug);
         }
 
-        const filled = new Set<AiField>();
-        if (result.improvedDescription) filled.add("description");
-        if (result.title) filled.add("title");
-        if (result.location) filled.add("location");
-        if (result.budget) filled.add("budget");
-        if (result.deadline) filled.add("deadline");
-        if (resolvedIds.length > 0) filled.add("category");
-
         setForm((current) => ({
           ...current,
           description: result.improvedDescription || current.description,
@@ -328,7 +305,6 @@ function NewRequestV2Form() {
           categoryIds:
             resolvedIds.length > 0 ? resolvedIds.slice(0, MAX_CATEGORIES) : current.categoryIds,
         }));
-        setAiFields(filled);
         setAiSuggestions(
           Array.isArray(result.recommendations)
             ? result.recommendations
@@ -454,11 +430,6 @@ function NewRequestV2Form() {
           ? f
           : { ...f, categoryIds: ids.slice(0, MAX_CATEGORIES) },
       );
-      setAiFields((current) => {
-        const next = new Set(current);
-        next.add("category");
-        return next;
-      });
     }
     setPendingAiCategorySlugs([]);
   }, [pendingAiCategorySlugs, categoryGroups, resolveCategorySlug]);
@@ -529,12 +500,6 @@ function NewRequestV2Form() {
     setForm((f) => {
       const sep = f.description.length === 0 || f.description.endsWith("\n") ? "" : "\n";
       return { ...f, description: `${f.description}${sep}- ${answer}` };
-    });
-    setAiFields((current) => {
-      if (!current.has("description")) return current;
-      const next = new Set(current);
-      next.delete("description");
-      return next;
     });
   }
 
@@ -650,12 +615,6 @@ function NewRequestV2Form() {
       if (current.categoryIds.length >= MAX_CATEGORIES) return current;
       return { ...current, categoryIds: [...current.categoryIds, id] };
     });
-    setAiFields((prev) => {
-      if (!prev.has("category")) return prev;
-      const next = new Set(prev);
-      next.delete("category");
-      return next;
-    });
   }
 
   function removeCategoryId(id: string) {
@@ -663,12 +622,6 @@ function NewRequestV2Form() {
       ...current,
       categoryIds: current.categoryIds.filter((existing) => existing !== id),
     }));
-    setAiFields((prev) => {
-      if (!prev.has("category")) return prev;
-      const next = new Set(prev);
-      next.delete("category");
-      return next;
-    });
   }
 
   return (
@@ -681,6 +634,8 @@ function NewRequestV2Form() {
           ? "AI ruošia tvarkingą užklausą. Iškart galėsi pakoreguoti ir paskelbti."
           : "Aprašyk darbą, patvirtink kontaktą ir gauk pasiūlymus viename puslapyje."}
       </p>
+
+      <ActiveRequestsStrip />
 
       <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl border border-surface-200/60 bg-white p-2 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
         {flowSteps.map((step, index) => {
@@ -728,9 +683,9 @@ function NewRequestV2Form() {
           <div className="mt-6">
             <InlineListingCard
               title={form.title}
-              onTitleChange={(value) => setField("title", value, "title")}
+              onTitleChange={(value) => setField("title", value)}
               description={form.description}
-              onDescriptionChange={(value) => setField("description", value, "description")}
+              onDescriptionChange={(value) => setField("description", value)}
               attachmentUrls={form.attachmentUrls}
               onRemovePhoto={removePhoto}
               onUploadFiles={uploadPhotos}
@@ -741,18 +696,14 @@ function NewRequestV2Form() {
               selectedCategories={selectedCategories}
               maxCategories={MAX_CATEGORIES}
               categoryGroups={categoryGroups}
-              categoryFromAi={aiFields.has("category")}
               onAddCategory={addCategoryId}
               onRemoveCategory={removeCategoryId}
               location={form.location}
-              locationFromAi={aiFields.has("location")}
-              onLocationChange={(value) => setField("location", value, "location")}
+              onLocationChange={(value) => setField("location", value)}
               budget={form.budget}
-              budgetFromAi={aiFields.has("budget")}
-              onBudgetChange={(value) => setField("budget", value, "budget")}
+              onBudgetChange={(value) => setField("budget", value)}
               deadline={form.deadline}
-              deadlineFromAi={aiFields.has("deadline")}
-              onDeadlineChange={(value) => setField("deadline", value, "deadline")}
+              onDeadlineChange={(value) => setField("deadline", value)}
               titleError={showErrors && !titleOk ? "Bent 5 simboliai" : undefined}
               descriptionError={
                 showErrors && !descOk ? "Bent 20 simbolių" : undefined

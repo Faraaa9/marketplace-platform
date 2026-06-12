@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 23:52 — Claude
+
+**Commit:** `b92b1e8` — feat(uzklausos): simplify new-request card + active requests strip · lokalus
+
+**Pakeitimai:** 5 files changed, 238 insertions(+), 237 deletions(-)
+
+**Failai:**
+- src/app/api/requests/mine/summary/route.ts
+- src/app/uzklausos/nauja/page.tsx
+- src/components/layout/Header.tsx
+- src/components/uzklausos-v2/ActiveRequestsStrip.tsx
+- src/components/uzklausos-v2/InlineListingCard.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-12 22:34 — Claude
 
 **Commit:** `9788d93` — chore(dashboard): remove dead StatsGrid + skeleton · lokalus

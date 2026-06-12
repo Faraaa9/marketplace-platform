@@ -13,7 +13,7 @@ import { getUserMenuLinks } from "@/lib/redirects";
 
 const NAV_LINKS = [
   { href: "/meistrai", label: "Meistrai" },
-  { href: "/uzklausos", label: "Užklausos" },
+  { href: "/uzklausos", label: "Užklausų lenta" },
   { href: "/uzklausos/nauja", label: "Pateikti užklausą" },
 ];
 
