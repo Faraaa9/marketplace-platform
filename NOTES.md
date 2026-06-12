@@ -87,6 +87,18 @@ Konvencija:
       Pateiktos užklausos rodomos tame pačiame sąraše su tagu „Užklausa",
       burbulas: Visos | Žinutės | Užklausos (`?rodyti=`). Plytelių skaičiai
       liko tik žinučių.
+- [ ] **Užklausos sekimo puslapį (`/uzklausos/sekti/[id]`) PAŠALINTI visai.**
+      (2026-06-13) Aptarta: atskiro užklausos lango nebereikia — užklausa ir
+      pokalbiai su tiekėjais dabar gyvena žinučių inbox'e (`/tiekejas/zinutes`
+      eilutė su išskleidimu) ir `/paskyra/uzklausos` sąraše. Prieš šalinant
+      išspręsti: (a) svečių magic-link srautas — el. laiškai veda į
+      /uzklausos/sekti/<token>, svečiai be paskyros kito kelio neturi;
+      (b) redagavimo puslapis `/uzklausos/sekti/[id]/redaguoti` ir
+      Redaguoti/Uždaryti/Ištrinti veiksmai — kur jie persikels;
+      (c) post-publish redirect iš /uzklausos/nauja (dabar → sekti puslapį);
+      (d) pokalbio UI klientui inbox'e (dabar pasiūlymo paspaudimas iš
+      inbox'o veda į sekti puslapį — reikės chat'o pačiame inbox'e).
+      Kol neišspręsta — puslapis lieka, bet jo UI nebeplėtoti.
 
 ---
 

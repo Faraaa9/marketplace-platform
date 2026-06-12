@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 02:08 — Claude
+
+**Commit:** `bc83c32` — chore(notes): record decision to retire /uzklausos/sekti tracker page · lokalus
+
+**Pakeitimai:** 1 file changed, 12 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 02:00 — Claude
 
 **Commit:** `52cd6c0` — style(paskyra): request list rows match hierarchy mockup · lokalus
