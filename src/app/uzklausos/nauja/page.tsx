@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ArrowRight, Check, AlertCircle, Pencil, Loader2 } from "lucide-react";
@@ -12,6 +12,7 @@ import {
   clearListingDraft,
 } from "@/lib/listing-draft";
 import { useImageUpload } from "@/lib/use-image-upload";
+import { trackEvent } from "@/lib/analytics-events";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -124,6 +125,8 @@ function NewRequestV2Form() {
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState("");
   const [contactsEditorOpen, setContactsEditorOpen] = useState(false);
+  const formStartedTracked = useRef(false);
+  const contactsViewedTracked = useRef(false);
 
   const isLoggedIn = sessionStatus === "authenticated" && !!session?.user;
 
@@ -506,6 +509,15 @@ function NewRequestV2Form() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (formStartedTracked.current) return;
+    if (form.title.trim().length === 0 && form.description.trim().length === 0) return;
+    formStartedTracked.current = true;
+    trackEvent("request_form_started", {
+      source: cameFromHero ? "hero" : isPrefilled ? "landing" : "direct",
+    });
+  }, [cameFromHero, form.description, form.title, isPrefilled]);
+
   // ── Suggestion → description append ──
   // User picks TAIP or NE on an AI recommendation; we append the matching
   // pre-written answer to the description so they don't have to type anything.
@@ -538,6 +550,7 @@ function NewRequestV2Form() {
   const listingComplete = titleOk && descOk && categoryOk;
   const contactsComplete = isLoggedIn && nameOk && hasContact;
   const showContactsEditor = contactsEditorOpen || !contactsComplete;
+  const canShowContactsSection = listingComplete || attemptedPublish || contactsEditorOpen;
 
   const ready = listingComplete && nameOk && hasContact;
   const showErrors = attemptedPublish;
@@ -553,8 +566,23 @@ function NewRequestV2Form() {
     return "";
   })();
 
+  useEffect(() => {
+    if (!canShowContactsSection || !showContactsEditor || contactsViewedTracked.current) return;
+    contactsViewedTracked.current = true;
+    trackEvent("request_contact_step_viewed", {
+      logged_in: isLoggedIn,
+      listing_complete: listingComplete,
+    });
+  }, [canShowContactsSection, isLoggedIn, listingComplete, showContactsEditor]);
+
   async function handlePublish() {
     setAttemptedPublish(true);
+    trackEvent("request_publish_attempted", {
+      ready,
+      listing_complete: listingComplete,
+      contact_ready: nameOk && hasContact,
+      logged_in: isLoggedIn,
+    });
     if (!ready || publishing) return;
     setPublishing(true);
     setPublishError("");
@@ -566,6 +594,12 @@ function NewRequestV2Form() {
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success && data.data?.trackingToken) {
+        trackEvent("request_publish_succeeded", {
+          logged_in: isLoggedIn,
+          categories: form.categoryIds.length,
+          has_phone: form.clientPhone.trim().length > 0,
+          has_photos: form.attachmentUrls.length > 0,
+        });
         if (!isLoggedIn) saveGuestRequest(data.data.trackingToken, form.title);
         clearListingDraft();
         // ?created=1 triggers the success banner on the tracker page — the
@@ -573,10 +607,18 @@ function NewRequestV2Form() {
         // and wondering whether the submit actually went through.
         router.push(`/uzklausos/sekti/${data.data.trackingToken}?created=1`);
       } else {
+        trackEvent("request_publish_failed", {
+          reason: data?.error || "unknown",
+          logged_in: isLoggedIn,
+        });
         setPublishError(data?.error || "Nepavyko paskelbti skelbimo");
         setPublishing(false);
       }
     } catch {
+      trackEvent("request_publish_failed", {
+        reason: "network",
+        logged_in: isLoggedIn,
+      });
       setPublishError("Nepavyko paskelbti. Bandyk dar kartą.");
       setPublishing(false);
     }
@@ -595,6 +637,11 @@ function NewRequestV2Form() {
     label: categoryNameById.get(id) || "",
   }));
   const aiIsRunning = aiStatus === "running";
+  const flowSteps = [
+    { label: "Darbas", done: titleOk && descOk },
+    { label: "Detalės", done: categoryOk },
+    { label: "Pasiūlymai", done: nameOk && hasContact },
+  ];
 
   function addCategoryId(id: string) {
     if (!id) return;
@@ -627,13 +674,38 @@ function NewRequestV2Form() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-        Tavo skelbimas
+        Gauk tiekėjų pasiūlymus
       </h1>
       <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400">
         {aiIsRunning
-          ? "AI ruošia tvarkingą versiją. Iškart galėsi pakoreguoti ir paskelbti."
-          : "Patikrink, paredaguok ir paskelbk."}
+          ? "AI ruošia tvarkingą užklausą. Iškart galėsi pakoreguoti ir paskelbti."
+          : "Aprašyk darbą, patvirtink kontaktą ir gauk pasiūlymus viename puslapyje."}
       </p>
+
+      <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl border border-surface-200/60 bg-white p-2 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+        {flowSteps.map((step, index) => {
+          const active =
+            step.done ||
+            (index === 0 && !flowSteps[0].done) ||
+            (index === 1 && flowSteps[0].done && !flowSteps[1].done) ||
+            (index === 2 && flowSteps[0].done && flowSteps[1].done);
+          return (
+            <div
+              key={step.label}
+              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-2 text-caption font-semibold transition-colors ${
+                step.done
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : active
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300"
+                    : "bg-surface-50 text-surface-500 dark:bg-surface-800/60 dark:text-surface-400"
+              }`}
+            >
+              {step.done ? <Check className="h-3.5 w-3.5" /> : <span>{index + 1}</span>}
+              <span className="truncate">{step.label}</span>
+            </div>
+          );
+        })}
+      </div>
 
       {aiStatus === "error" && aiError && (
         <div className="mt-6 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
@@ -694,11 +766,27 @@ function NewRequestV2Form() {
       )}
 
       {/* ── Contacts (same pattern as v1) ── */}
-      {!showContactsEditor ? (
+      {!canShowContactsSection ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-surface-200 bg-surface-50 px-5 py-4 text-body-sm text-surface-500 dark:border-surface-700 dark:bg-surface-900/40 dark:text-surface-400">
+          <div className="flex items-start gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-100 text-caption font-bold text-surface-500 dark:bg-surface-800 dark:text-surface-300">
+              3
+            </span>
+            <div>
+              <p className="font-semibold text-surface-800 dark:text-surface-100">
+                Pasiūlymų kontaktas bus kitas žingsnis
+              </p>
+              <p className="mt-1">
+                Pirmiausia užpildykite darbo aprašymą, kategoriją ir vietą, kad tiekėjai suprastų, kokį pasiūlymą siųsti.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : !showContactsEditor ? (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200/60 bg-white px-5 py-4 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
           <div className="flex min-w-0 flex-col gap-1">
             <span className="flex items-center gap-1.5 text-body-sm font-medium text-emerald-700 dark:text-emerald-400">
-              <Check className="h-4 w-4 shrink-0" /> Kontaktai paruošti
+              <Check className="h-4 w-4 shrink-0" /> Pasiūlymai pasieks jus
             </span>
             {form.clientPhone.trim() ? (
               <span className="text-micro text-surface-500 dark:text-surface-400">
@@ -722,8 +810,11 @@ function NewRequestV2Form() {
       ) : (
         <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
           <h2 className="mb-4 text-body-sm font-semibold text-surface-900 dark:text-white">
-            Kontaktai
+            Kur siųsti tiekėjų pasiūlymus?
           </h2>
+          <p className="-mt-2 mb-4 text-body-sm text-surface-500 dark:text-surface-400">
+            Kontaktą naudojame tik šiai užklausai ir žinutėms apie tiekėjų atsakymus.
+          </p>
           <div className="space-y-4">
             {isLoggedIn ? (
               <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 dark:border-emerald-700 dark:bg-emerald-500/10">
@@ -745,7 +836,7 @@ function NewRequestV2Form() {
                   onBeforeSignIn={persistDraft}
                 />
                 <p className="mt-1.5 text-micro text-surface-400">
-                  Google iškart patvirtina el. paštą. Telefonas – neprivalomas.
+                  Google iškart patvirtina, kur siųsti pasiūlymus. Telefonas neprivalomas.
                 </p>
                 <div className="mt-3">
                   <PhoneVerification
@@ -757,8 +848,8 @@ function NewRequestV2Form() {
                       setAccountPhone(verifiedPhone);
                       setAccountPhoneVerifiedAt(verifiedAt);
                     }}
-                    helper="Telefonas neprivalomas."
-                    error={showErrors && !hasContact ? "Įvesk el. paštą arba telefoną" : undefined}
+                    helper="Jei nori greitesnio tiekėjų kontakto, gali palikti telefoną."
+                    error={showErrors && !hasContact ? "Įvesk el. paštą arba telefoną pasiūlymams gauti" : undefined}
                   />
                 </div>
                 <div className="my-4 flex items-center gap-3">
@@ -794,8 +885,8 @@ function NewRequestV2Form() {
                   setAccountPhone(verifiedPhone);
                   setAccountPhoneVerifiedAt(verifiedAt);
                 }}
-                helper="Telefonas neprivalomas."
-                error={showErrors && !hasContact ? "Įvesk telefoną" : undefined}
+                helper="Telefonas neprivalomas, bet padeda greičiau suderinti detales."
+                error={showErrors && !hasContact ? "Įvesk telefoną pasiūlymams gauti" : undefined}
               />
             )}
             <input
@@ -818,6 +909,7 @@ function NewRequestV2Form() {
         </div>
       )}
 
+      {canShowContactsSection && (
       <div className="mt-6">
         <Button
           type="button"
@@ -830,15 +922,16 @@ function NewRequestV2Form() {
         >
           {!publishing &&
             (aiIsRunning ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />)}
-          {aiIsRunning ? "AI dirba…" : "Paskelbti skelbimą"}
+          {aiIsRunning ? "AI dirba…" : "Paskelbti ir gauti pasiūlymus"}
         </Button>
         {!publishing && publishHint && !aiIsRunning && (
           <p className="mt-2 text-center text-micro text-surface-400">{publishHint}</p>
         )}
         <p className="mt-3 text-center text-micro text-surface-400">
-          Paskelbus, skelbimą iškart matys tiekėjai ir netrukus gausi pasiūlymų.
+          Po paskelbimo matysi statusą, peržiūras ir visus tiekėjų pasiūlymus vienoje vietoje.
         </p>
       </div>
+      )}
     </div>
   );
 }

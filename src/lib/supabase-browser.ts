@@ -1,6 +1,29 @@
 "use client";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+type RealtimePayload = {
+  new: unknown;
+  old?: unknown;
+  payload?: Record<string, unknown>;
+};
+
+export interface RealtimeChannelLike {
+  on(
+    type: "postgres_changes" | "broadcast" | "presence",
+    filter: Record<string, unknown>,
+    callback: (payload: RealtimePayload) => void,
+  ): RealtimeChannelLike;
+  subscribe(callback?: (status: string) => void): RealtimeChannelLike;
+  unsubscribe(): Promise<unknown>;
+  presenceState(): Record<string, unknown[]>;
+  send(args: { type: "broadcast"; event: string; payload: Record<string, unknown> }): Promise<unknown>;
+  track(payload: Record<string, unknown>): Promise<unknown>;
+}
+
+export interface SupabaseBrowserClient {
+  realtime: { setAuth(token: string): void };
+  channel(name: string, options?: Record<string, unknown>): RealtimeChannelLike;
+  removeChannel(channel: RealtimeChannelLike): Promise<unknown>;
+}
 
 // Singleton browser-side Supabase client used ONLY for Realtime subscriptions
 // on the `messages` and `notifications` tables.
@@ -18,10 +41,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Writes still go through Next.js API routes (session-gated) — the browser
 // never inserts/updates DB rows directly.
 
-let client: SupabaseClient | null = null;
-let clientPromise: Promise<SupabaseClient | null> | null = null;
+let client: SupabaseBrowserClient | null = null;
+let clientPromise: Promise<SupabaseBrowserClient | null> | null = null;
 
-export async function getSupabaseBrowser(): Promise<SupabaseClient | null> {
+export async function getSupabaseBrowser(): Promise<SupabaseBrowserClient | null> {
   if (client) return client;
   if (clientPromise) return clientPromise;
 
@@ -41,7 +64,7 @@ export async function getSupabaseBrowser(): Promise<SupabaseClient | null> {
     client = createClient(url, anonKey, {
       auth: { persistSession: false },
       realtime: { params: { eventsPerSecond: 5 } },
-    });
+    }) as SupabaseBrowserClient;
     return client;
   });
 

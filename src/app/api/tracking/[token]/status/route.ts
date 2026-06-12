@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
           type: "RESPONSE_ACCEPTED",
           title: "Pasiūlymas priimtas!",
           body: "Klientas priėmė jūsų pasiūlymą.",
-          link: `/tiekejas/uzklausos/${request.id}`,
+          link: `/tiekejas/uzklausa/${request.id}`,
         },
       });
 

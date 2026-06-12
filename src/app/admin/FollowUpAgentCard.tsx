@@ -29,7 +29,7 @@ const BUCKET_LABELS: Record<FollowUpBucket, string> = {
   provider_replied_client_silent: "Klientas tyli",
   client_open_no_provider_replies: "Užkl. be atsakymų",
   provider_no_reply_to_lead: "Tiekėjas neatsako",
-  client_inquiry_provider_silent: "Tiesioginė be atsakymo",
+  client_inquiry_provider_silent: "Žinutė be atsakymo",
 };
 
 export default function FollowUpAgentCard({

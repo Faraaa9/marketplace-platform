@@ -1,5 +1,5 @@
 /* PaslaugųRinka service worker */
-const CACHE_NAME = "paslaugurinka-v1";
+const CACHE_NAME = "paslaugurinka-v2";
 const PRECACHE_URLS = ["/", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -26,14 +26,19 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
 
-  // Skip API and dynamic Next.js data routes
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/data/")) {
+  // Skip API, Next.js data routes and JS/CSS chunks. Next chunks are already
+  // content-hashed in production, and caching dev chunks can serve stale module
+  // factories after Turbopack/HMR updates.
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_next/data/") ||
+    url.pathname.startsWith("/_next/static/")
+  ) {
     return;
   }
 
-  // Stale-while-revalidate for static assets, icons, fonts
+  // Stale-while-revalidate for app-owned static assets, icons, fonts
   if (
-    url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/fonts/")
   ) {

@@ -83,7 +83,7 @@ export default function ProviderFollowUpsCard({
 
       {total > top.length && (
         <p className="mt-3 text-micro text-surface-500 dark:text-surface-400">
-          Dar {total - top.length} signal(ai) inbox&apos;e ir užklausų sąraše.
+          Dar {total - top.length} signal(ai) žinutėse.
         </p>
       )}
     </Card>

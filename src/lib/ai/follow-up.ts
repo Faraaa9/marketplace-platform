@@ -61,7 +61,7 @@ const ACTION_BY_BUCKET: Record<FollowUpBucket, { recipient: FollowUpActor; actio
   client_inquiry_provider_silent: {
     recipient: "provider",
     actionLabel: "Priminti tiekėjui apie tiesioginę žinutę",
-    reason: "Tiesioginė užklausa be tiekėjo atsakymo.",
+    reason: "Kliento žinutė be tiekėjo atsakymo.",
   },
 };
 
@@ -117,7 +117,7 @@ export interface FollowUpThread {
   id: string;
   /**
    * For `type === "response"` this is the parent ServiceRequest ID. The
-   * provider-facing detail lives at `/tiekejas/uzklausos/{requestId}`, not
+   * provider-facing detail lives at `/tiekejas/uzklausa/{requestId}`, not
    * `/tiekejas/zinutes/{responseId}` (that route is for DirectInquiry IDs).
    * Undefined for direct inquiries — their `id` already lines up with the
    * `/tiekejas/zinutes/{id}` route.
@@ -275,7 +275,7 @@ export function classifyDirectInquiries(
       providerId: inquiry.providerId,
       // Title is intentionally generic — we don't pull the inquiry body so
       // private text doesn't leak through this advisory feed.
-      title: "Tiesioginė užklausa",
+      title: "Žinutė",
       ageDays,
       daysSinceActivity,
       suggestion: makeSuggestion("client_inquiry_provider_silent"),

@@ -10,6 +10,9 @@ import {
   Search as SearchIcon,
   Handshake,
   ArrowUpRight,
+  Pencil,
+  ImagePlus,
+  Wallet,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import TelegramSourceBadge from "@/components/TelegramSourceBadge";
@@ -143,6 +146,97 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
       )}
 
       <StatusTimeline status={request.status} responseCount={request.responseCount} />
+
+      {isApproved && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+              <SearchIcon className="h-4.5 w-4.5" />
+            </div>
+            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
+              Matomumas
+            </p>
+            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
+              {request.moderationStatus === "PENDING"
+                ? "Laukia peržiūros"
+                : isOpen
+                  ? "Rodoma tiekėjams"
+                  : "Užklausa nebeaktyvi"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <Eye className="h-4.5 w-4.5" />
+            </div>
+            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
+              Peržiūros
+            </p>
+            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
+              {request.viewCount > 0
+                ? `${request.viewCount} tiekėjų peržiūrėjo`
+                : "Pirmųjų peržiūrų laukiama"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+              <MessageCircle className="h-4.5 w-4.5" />
+            </div>
+            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
+              Kitas veiksmas
+            </p>
+            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
+              {request.responseCount > 0
+                ? "Peržiūrėti pasiūlymus"
+                : "Palaukti arba papildyti užklausą"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isOpen && isApproved && request.responseCount === 0 && (
+        <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-body-sm font-semibold text-brand-900 dark:text-brand-100">
+                Padidinkite šansą gauti pirmą pasiūlymą
+              </p>
+              <p className="mt-1 text-body-sm text-brand-800/80 dark:text-brand-200/80">
+                Geriausiai veikia aiškus aprašymas, orientacinis biudžetas ir kelios nuotraukos.
+              </p>
+            </div>
+            <Link
+              href={`/uzklausos/sekti/${id}/redaguoti#description`}
+              className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700"
+            >
+              <Pencil className="h-4 w-4" />
+              Pagerinti užklausą
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <Link
+              href={`/uzklausos/sekti/${id}/redaguoti#photos`}
+              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
+            >
+              <ImagePlus className="h-4 w-4 shrink-0" />
+              Pridėti nuotraukų
+            </Link>
+            <Link
+              href={`/uzklausos/sekti/${id}/redaguoti#budget`}
+              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
+            >
+              <Wallet className="h-4 w-4 shrink-0" />
+              Patikslinti biudžetą
+            </Link>
+            <Link
+              href={`/uzklausos/sekti/${id}/redaguoti#category`}
+              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
+            >
+              <SearchIcon className="h-4 w-4 shrink-0" />
+              Patikrinti kategoriją
+            </Link>
+          </div>
+        </div>
+      )}
 
       {isOpen && isApproved && (
         <div className="mb-6 flex items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">

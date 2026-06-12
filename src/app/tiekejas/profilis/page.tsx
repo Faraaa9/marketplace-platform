@@ -587,7 +587,7 @@ export default function ProviderProfilePage() {
               )}
             </div>
 
-            <div>
+            <div id="categories">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-body-sm font-medium text-surface-700 dark:text-surface-300">
                   Veiklos sritys
@@ -722,6 +722,7 @@ export default function ProviderProfilePage() {
         </Card>
 
         {/* Section 2: Services & Experience */}
+        <div id="images">
         <Card>
           <SectionHeader icon={<Wrench className="h-4 w-4" />} title="Paslaugos ir patirtis" step={2} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
           <div className="space-y-4">
@@ -797,6 +798,7 @@ export default function ProviderProfilePage() {
             </div>
           </div>
         </Card>
+        </div>
 
         {/* Section 3: Photos */}
         <Card>

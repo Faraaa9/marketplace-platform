@@ -4,7 +4,8 @@ import { requireActiveProvider } from "@/lib/provider-guard";
 
 /**
  * Every request this provider has responded to, with the outcome of each
- * offer derived from its parent request. Powers the "Mano atsakymai" page.
+ * offer derived from its parent request. Kept for compatibility; the product
+ * flow now sends providers to the unified messages inbox.
  */
 export async function GET() {
   await connection();

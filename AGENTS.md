@@ -40,6 +40,7 @@ Focus: Mobile-first consistency and a premium product feel.
 
 Directives:
 
+ All styling MUST use tokens from DESIGN_SYSTEM.md. Never hardcode colors, spacing, radii, shadows, or font sizes
 - Ensure all touch targets are at least 44x44 px.
 - Use Tailwind classes consistently; avoid custom CSS unless needed for complex
   animations or framework limitations.

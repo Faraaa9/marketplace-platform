@@ -19,9 +19,7 @@ export function getUserMenuLinks(role?: string): UserMenuLink[] {
   if (role === "PROVIDER") {
     return [
       { href: "/tiekejas", label: "Valdymo panelė" },
-      { href: "/tiekejas/uzklausos", label: "Užklausos" },
       { href: "/tiekejas/zinutes", label: "Žinutės" },
-      { href: "/tiekejas/atsakymai", label: "Mano atsakymai" },
       { href: "/tiekejas/profilis", label: "Teikėjo profilis" },
       { href: "/tiekejas/planai", label: "Kreditai" },
       { href: "/paskyra/profilis", label: "Paskyros nustatymai" },

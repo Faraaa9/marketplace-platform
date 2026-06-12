@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 17:05 — Claude
+
+**Commit:** `d179c14` — chore: route provider request page to /tiekejas/uzklausa, add design audit · lokalus
+
+**Pakeitimai:** 58 files changed, 1020 insertions(+), 1817 deletions(-)
+
+**Failai:**
+- AGENTS.md
+- DESIGN_AUDIT.md
+- next.config.mjs
+- public/sw.js
+- src/app/(auth)/prisijungti/page.tsx
+- src/app/admin/FollowUpAgentCard.tsx
+- src/app/api/tiekejas/atsakymai/route.ts
+- src/app/api/tiekejas/follow-ups/route.ts
+- src/app/api/tracking/[token]/messages/route.ts
+- src/app/api/tracking/[token]/status/route.ts
+- src/app/chat-preview/page.tsx
+- src/app/meistrai/[slug]/components/DirectInquiryWidget.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-11 13:01 — Claude
 
 **Commit:** `2ece62b` — perf(fonts): Inter display optional - font swap repaint was the LCP event

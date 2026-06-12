@@ -10,8 +10,8 @@ import { prisma } from "@/lib/prisma";
 import { getServiceCategoryGroups, getServiceCategoryNameMap, resolveCategoryParam } from "@/lib/service-categories";
 import type { ServiceCategoryItem } from "@/lib/service-categories";
 import { buildPageSeo } from "@/lib/seo/page-seo";
-import { expandToMatchSet } from "@/lib/category-matching";
-import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp } from "lucide-react";
+import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
+import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp, Check } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 import PinnedRequestPhotos from "@/components/requests/PinnedRequestPhotos";
 
@@ -23,6 +23,7 @@ interface PageProps {
     search?: string;
     sort?: string;
     open?: string;
+    fit?: string;
   }>;
 }
 
@@ -69,7 +70,10 @@ export async function generateMetadata({
 async function getBoardListing(
   page: number,
   perPage: number,
-  filters: { category: string; location: string; search: string }
+  filters: { category: string; location: string; search: string },
+  // Provider "fit" filter: pre-expanded category match set. Part of the cache
+  // key, so providers sharing the same category set share a cache entry.
+  matchIds?: string[]
 ) {
   "use cache";
   cacheLife({ revalidate: 30 });
@@ -88,6 +92,9 @@ async function getBoardListing(
         ],
       },
     ];
+    if (matchIds) {
+      conditions.push({ categoryId: { in: matchIds } });
+    }
     if (filters.search) {
       conditions.push({
         OR: [
@@ -209,6 +216,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const search = params.search || "";
   const sort = params.sort || "newest";
   const openRequestId = params.open || "";
+  const fitActive = userRole === "PROVIDER" && params.fit === "1";
   const perPage = 20;
 
   const now = new Date();
@@ -224,9 +232,22 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     redirect(`/uzklausos${qs ? `?${qs}` : ""}`);
   }
 
+  // "Tik man tinkamos" — expand the provider's active categories into the
+  // match set once, outside the cached listing (sorted so providers with the
+  // same categories hit the same cache entry).
+  let fitMatchIds: string[] | undefined;
+  if (fitActive && currentUserId) {
+    const profile = await prisma.providerProfile.findUnique({
+      where: { userId: currentUserId },
+      select: { categories: { where: activeCategoryFilter(), select: { categoryId: true } } },
+    });
+    const categoryIds = profile?.categories.map((c) => c.categoryId) ?? [];
+    fitMatchIds = (await expandToMatchSet(categoryIds)).sort();
+  }
+
   const [{ requests, total }, { totalActive, newToday, totalProviderResponses }] =
     await Promise.all([
-      getBoardListing(page, perPage, { category, location, search }),
+      getBoardListing(page, perPage, { category, location, search }, fitMatchIds),
       getBoardStats(),
     ]);
 
@@ -249,7 +270,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
-  const hasFilters = category || location || search;
+  const hasFilters = category || location || search || fitActive;
 
   function buildUrl(overrides: Record<string, string>) {
     const p = new URLSearchParams();
@@ -257,11 +278,13 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     const newLocation = overrides.location ?? location;
     const newSearch = overrides.search ?? search;
     const newSort = overrides.sort ?? sort;
+    const newFit = overrides.fit ?? (fitActive ? "1" : "");
     const newPage = overrides.page ?? "1";
     if (newCategory) p.set("category", newCategory);
     if (newLocation) p.set("location", newLocation);
     if (newSearch) p.set("search", newSearch);
     if (newSort && newSort !== "newest") p.set("sort", newSort);
+    if (newFit) p.set("fit", newFit);
     if (newPage !== "1") p.set("page", newPage);
     const qs = p.toString();
     return `/uzklausos${qs ? `?${qs}` : ""}`;
@@ -365,6 +388,22 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           sortOptions={SORT_OPTIONS}
           totalResults={total}
         />
+        {userRole === "PROVIDER" && (
+          <div className="mt-2.5">
+            <Link
+              href={buildUrl({ fit: fitActive ? "" : "1" })}
+              aria-pressed={fitActive}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors ${
+                fitActive
+                  ? "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
+                  : "border-[#cdc09f] bg-[#fbfaf6] text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+              }`}
+            >
+              {fitActive && <Check className="h-3.5 w-3.5" />}
+              Tik man tinkamos
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ── Pinned notes ── */}
@@ -379,10 +418,10 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
               const ctaHref = isOwnRequest
                 ? `/uzklausos/sekti/${r.trackingToken}`
                 : userRole === "PROVIDER"
-                  ? `/tiekejas/uzklausos/${r.id}`
+                  ? `/tiekejas/uzklausa/${r.id}`
                   : userRole
                     ? `/tapti-tiekeju`
-                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausos/${r.id}`)}`;
+                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausa/${r.id}`)}`;
               const ctaLabel = isOwnRequest ? "Valdyti užklausą" : "Pateikti pasiūlymą";
               const ctaTone = isOwnRequest
                 ? "bg-[#ebe3cc] text-[#6c5d3c] hover:bg-[#e1d8bd] shadow-[0_2.5px_0_#c7ba92]"

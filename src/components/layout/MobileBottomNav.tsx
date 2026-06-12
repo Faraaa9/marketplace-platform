@@ -17,7 +17,6 @@ type NavItem = {
 
 const PROVIDER_ITEMS: NavItem[] = [
   { href: "/tiekejas", label: "Panelė", icon: LayoutDashboard, matchPrefix: "/tiekejas" },
-  { href: "/tiekejas/uzklausos", label: "Užklausos", icon: ClipboardList, matchPrefix: "/tiekejas/uzklausos" },
   { href: "/tiekejas/zinutes", label: "Žinutės", icon: MessageCircle, matchPrefix: "/tiekejas/zinutes", badgeKey: "messages" },
   { href: "/tiekejas/profilis", label: "Profilis", icon: User, matchPrefix: "/tiekejas/profilis" },
 ];
@@ -32,7 +31,7 @@ const CUSTOMER_ITEMS: NavItem[] = [
 const HIDDEN_PREFIXES = ["/admin", "/prisijungti", "/registruotis", "/zinutes/", "/tiekejas/zinutes"];
 
 function isActive(pathname: string, item: NavItem, allItems: NavItem[]) {
-  // For nested routes like /tiekejas/uzklausos, prefer the more specific match
+  // For nested routes like /tiekejas/zinutes, prefer the more specific match
   // over the parent /tiekejas, so only one tab highlights at a time.
   const matches = allItems.filter((i) =>
     i.href === "/tiekejas"

@@ -15,7 +15,7 @@ export default function ProviderRequestDetailPage({ params }: PageProps) {
     <div className="mx-auto max-w-3xl px-4 py-10">
       {/* Static back link — paints with the prerendered shell, outside the gate. */}
       <Link
-        href="/tiekejas/uzklausos"
+        href="/uzklausos"
         className="mb-4 inline-flex items-center gap-1.5 text-body-sm text-surface-500 hover:text-surface-700 transition-colors dark:text-surface-400 dark:hover:text-surface-200"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -26,7 +26,7 @@ export default function ProviderRequestDetailPage({ params }: PageProps) {
           lives inside a Suspense. It redirects unauthorized / non-PROVIDER users
           before any section streams, so they never see partial UI. */}
       <Suspense fallback={null}>
-        <SessionGate requireRole="PROVIDER" callbackUrl="/tiekejas/uzklausos">
+        <SessionGate requireRole="PROVIDER" callbackUrl="/uzklausos">
           {() => (
             <>
               {/* Header → body → response stream in reading order; each section

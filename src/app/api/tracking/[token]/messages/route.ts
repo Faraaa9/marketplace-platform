@@ -111,7 +111,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     // Notify the provider of the new client message — best-effort.
     await createMessageNotification({
       userId: response.providerId,
-      link: `/tiekejas/uzklausos/${request.id}`,
+      link: `/tiekejas/uzklausa/${request.id}`,
       contextLabel: request.title,
     });
 

@@ -67,7 +67,7 @@ export async function notifyRelevantProviders(
         type: "NEW_REQUEST",
         title: "Nauja užklausa",
         body: `Nauja užklausa „${title}" kategorijoje „${categoryLabel}"`,
-        link: "/tiekejas/uzklausos",
+        link: "/uzklausos",
       },
     });
   }

@@ -36,6 +36,25 @@ const REQUEST_STATUS: Record<
   CLOSED: { label: "Uždaryta", variant: "default" },
 };
 
+function isSenderDirectConversation(conversation: ConversationItem) {
+  return conversation.type === "direct" && conversation.href.startsWith("/zinutes/");
+}
+
+function conversationRoleLabel(conversation: ConversationItem) {
+  return isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+}
+
+function conversationBadgeLabel(conversation: ConversationItem) {
+  if (conversation.archived) return "Archyvas";
+  if (conversation.unread) return "Nauja žinutė";
+  if (conversation.type === "request") {
+    if (conversation.status === "IN_PROGRESS") return "Priimta";
+    if (conversation.status === "CLOSED") return "Archyvas";
+    return "Pasiūlymas";
+  }
+  return null;
+}
+
 function shouldShowSubtitle(title: string, subtitle: string) {
   if (!subtitle) return false;
   return !(title && subtitle.includes("@"));
@@ -301,11 +320,10 @@ export async function ConversationList({
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      {reqStatus ? (
-                        <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
-                      ) : (
-                        <Badge variant="brand">Tiesioginė</Badge>
-                      )}
+                      <Badge variant="default">{conversationRoleLabel(c)}</Badge>
+                      {conversationBadgeLabel(c) ? (
+                        <Badge variant={reqStatus?.variant ?? "brand"}>{conversationBadgeLabel(c)}</Badge>
+                      ) : null}
                     </div>
                   </div>
                   <p

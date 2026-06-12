@@ -180,7 +180,7 @@ async function fetchByType(
     type,
     typeLabel: TYPE_LABELS.inquiry,
     id: r.id,
-    title: "Tiesioginė užklausa",
+    title: "Žinutė",
     excerpt: r.description,
     moderationStatus: r.moderationStatus,
     moderationReason: r.moderationReason,

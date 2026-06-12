@@ -51,7 +51,12 @@ export default function ResponseForm({ requestId, totalResponses }: ResponseForm
 
   return (
     <Card className="mb-8">
-      <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1">Pateikti pasiūlymą</h3>
+      <h3 className="text-heading-3 font-semibold text-surface-900 dark:text-white mb-1">
+        2. Pateikite trumpą pasiūlymą
+      </h3>
+      <p className="mb-3 text-body-sm text-surface-500 dark:text-surface-400">
+        Aiški kaina, terminas ir pirmas klausimas klientui padeda greičiau pradėti pokalbį.
+      </p>
       {totalResponses != null && (
         <p className={`text-micro mb-4 ${
           totalResponses === 0
@@ -71,7 +76,7 @@ export default function ResponseForm({ requestId, totalResponses }: ResponseForm
           <Textarea
             id="response"
             label="Jūsų pasiūlymas"
-            placeholder="Aprašykite ką galite pasiūlyti, terminus, sąlygas..."
+            placeholder="Pvz. galiu atvykti šią savaitę, darbų kaina nuo..., reikėtų patikslinti..."
             value={responseMessage}
             onChange={(e) => setResponseMessage(e.target.value)}
             autoResize
@@ -96,14 +101,14 @@ export default function ResponseForm({ requestId, totalResponses }: ResponseForm
         </div>
         <Input
           id="price"
-          label="Kaina, € (neprivaloma)"
+          label="Orientacinė kaina, € (neprivaloma)"
           type="number"
           placeholder="Pvz.: 150"
           value={responsePrice}
           onChange={(e) => setResponsePrice(e.target.value)}
         />
         <Button onClick={handleSubmitResponse} isLoading={submitting} disabled={responseMessage.length < 10}>
-          <Send className="h-4 w-4 mr-2" /> Siųsti pasiūlymą
+          <Send className="h-4 w-4 mr-2" /> Siųsti ir pradėti pokalbį
         </Button>
       </div>
     </Card>

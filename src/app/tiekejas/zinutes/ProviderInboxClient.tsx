@@ -20,8 +20,12 @@ import ThreadChat from "@/components/messaging/ThreadChat";
 import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
-import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
-import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import {
+  authenticateRealtime,
+  getSupabaseBrowser,
+  type RealtimeChannelLike,
+  type SupabaseBrowserClient,
+} from "@/lib/supabase-browser";
 
 type Conversation = {
   type: "request" | "direct";
@@ -133,6 +137,34 @@ function isSenderDirectConversation(conversation: Conversation) {
   return conversation.type === "direct" && conversation.href.startsWith("/zinutes/");
 }
 
+function conversationRoleLabel(conversation: Conversation) {
+  return isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+}
+
+function conversationBadgeLabel(conversation: Conversation) {
+  if (conversation.archived) return "Archyvas";
+  if (conversation.unread) return "Nauja žinutė";
+  if (conversation.type === "request") {
+    if (conversation.status === "IN_PROGRESS") return "Priimta";
+    if (conversation.status === "CLOSED") return "Archyvas";
+    return "Pasiūlymas";
+  }
+  return null;
+}
+
+function conversationBadgeClass(label: string) {
+  switch (label) {
+    case "Nauja žinutė":
+      return "bg-[#166FE5] text-white";
+    case "Priimta":
+      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300";
+    case "Archyvas":
+      return "bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400";
+    default:
+      return "bg-[#EFE7DB] text-[#6F6258] dark:bg-surface-800 dark:text-surface-300";
+  }
+}
+
 function initials(name: string) {
   return name.trim().slice(0, 1).toUpperCase() || "?";
 }
@@ -198,9 +230,9 @@ function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
     otherParticipantReadAt: data.clientLastReadAt ?? null,
     hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
-      title: "Tiesioginė užklausa",
+      title: "Žinutė",
       description: data.description,
-      categoryLabel: "Tiesioginė žinutė",
+      categoryLabel: "Klientas",
       budget: data.budget,
       createdAt: data.createdAt,
     },
@@ -233,9 +265,9 @@ function normalizeSenderDirectThread(data: SenderDirectThreadResponse, trackingT
     otherParticipantReadAt: data.providerLastReadAt ?? null,
     hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
-      title: "Tiesioginė užklausa",
+      title: "Žinutė",
       description: data.description,
-      categoryLabel: "Tiesioginė žinutė",
+      categoryLabel: "Tiekėjas",
       budget: data.budget,
       createdAt: data.createdAt,
     },
@@ -258,7 +290,9 @@ const REQUEST_STATUS: Record<string, { label: string; color: string }> = {
 };
 
 function conversationStatusLabel(thread: ThreadData, conversation: Conversation | null) {
-  if (conversation?.type === "direct" || thread.type === "direct") return "Tiesioginė užklausa";
+  if (conversation?.type === "direct" || thread.type === "direct") {
+    return conversation && isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+  }
   return REQUEST_STATUS[thread.status ?? ""]?.label ?? "Užklausa";
 }
 
@@ -480,8 +514,8 @@ export default function ProviderInboxClient() {
 
     let cancelled = false;
     // supabase-js loads lazily here so it stays out of the shared bundle.
-    let supabase: SupabaseClient | null = null;
-    let channel: RealtimeChannel | null = null;
+    let supabase: SupabaseBrowserClient | null = null;
+    let channel: RealtimeChannelLike | null = null;
 
     const refreshConversation = (threadId: string) => {
       const existing = conversationsRef.current.find((item) => toThreadId(item) === threadId);
@@ -744,18 +778,19 @@ export default function ProviderInboxClient() {
                   {filteredConversations.map((c) => {
                     const id = toThreadId(c);
                     const active = id === selectedId;
-                    const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
+                    const roleLabel = conversationRoleLabel(c);
+                    const badgeLabel = conversationBadgeLabel(c);
                     return (
                       <button key={`${c.type}-${c.id}`} onClick={() => selectConversation(c)} className="group block w-full text-left">
-                        <article className={`relative border-b border-[#DDD3C5] p-3 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
+                        <article className={`relative border-b border-[#DDD3C5] px-3 py-3.5 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
                           active
                             ? "rounded-xl border border-[#A7826D] bg-[#F1E7DA] shadow-[0_6px_18px_rgba(93,70,54,0.10)] dark:bg-surface-800/70"
                             : c.unread
-                              ? "bg-[#F7F1E8] dark:bg-surface-800/40"
+                              ? "bg-[#FFFDF8] dark:bg-surface-900/70"
                               : "bg-[#FFFDF8] dark:bg-surface-950/40"
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
-                          <div className="flex items-start gap-3.5">
+                          <div className="flex items-center gap-3.5">
                             <ConversationAvatar
                               name={c.title}
                               image={c.avatarImage}
@@ -763,31 +798,47 @@ export default function ProviderInboxClient() {
                               presenceLabel={c.presenceLabel}
                             />
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-start gap-2">
-                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
+                              <div className="flex items-center gap-2">
+                                <h3 className={`min-w-0 flex-1 truncate text-body-sm ${
+                                  c.unread ? "font-bold text-[#111827]" : "font-semibold text-[#1E1B18]"
+                                } dark:text-white`}>
                                   {decodeHtmlEntities(c.title)}
                                 </h3>
-                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6F6258]" dateTime={c.lastMessageAt}>
+                                <time
+                                  className={`ml-auto shrink-0 text-right text-[11px] leading-5 ${
+                                    c.unread ? "font-semibold text-[#111827]" : "font-medium text-[#6F6258]"
+                                  } dark:text-surface-400`}
+                                  dateTime={c.lastMessageAt}
+                                >
                                   {formatRelativeDate(new Date(c.lastMessageAt))}
                                 </time>
                               </div>
                               <div className="mt-0.5 flex items-center gap-2">
-                                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" />}
-                                {c.subtitle && !(c.title && c.subtitle.includes("@")) && (
-                                  <p className="min-w-0 flex-1 truncate text-micro text-[#6B6760]">
-                                    {decodeHtmlEntities(c.subtitle)}
-                                  </p>
-                                )}
-                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258]">
-                                  {status && <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />}
-                                  {status ? status.label : "Tiesioginė"}
+                                <span className="inline-flex shrink-0 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258] dark:bg-surface-800 dark:text-surface-300">
+                                  {roleLabel}
                                 </span>
+                                {badgeLabel && (
+                                  <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 ${conversationBadgeClass(badgeLabel)}`}>
+                                    {badgeLabel}
+                                  </span>
+                                )}
                               </div>
-                              <div className="mt-1.5 flex items-start gap-2">
-                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6B6760]">
-                                  {c.fromProvider && <span>Jūs: </span>}
-                                  {decodeHtmlEntities(c.preview)}
+                              <div className="mt-1 flex items-center gap-2">
+                                <p className={`min-w-0 flex-1 line-clamp-1 text-body-sm ${
+                                  c.unread ? "font-semibold text-[#1E1B18]" : "font-normal text-[#6B6760]"
+                                } dark:text-surface-300`}>
+                                  {c.unread ? (
+                                    "Nauja žinutė"
+                                  ) : (
+                                    <>
+                                      {c.fromProvider && <span>Jūs: </span>}
+                                      {decodeHtmlEntities(c.preview)}
+                                    </>
+                                  )}
                                 </p>
+                                {c.unread && (
+                                  <span className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-[#166FE5]" aria-label="Nauja žinutė" />
+                                )}
                               </div>
                             </div>
                           </div>
@@ -848,7 +899,7 @@ export default function ProviderInboxClient() {
                       <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" aria-hidden="true" />
                       <p className="truncate text-body font-semibold text-[#1E1B18]">{decodeHtmlEntities(thread.title)}</p>
                       <span className="rounded-full bg-[#F5F3EF] px-2 py-0.5 text-micro font-medium text-[#6B6760]">
-                        {selectedConversation?.type === "direct" ? "Tiesioginė" : "Užklausa"}
+                        {selectedConversation ? conversationRoleLabel(selectedConversation) : "Pokalbis"}
                       </span>
                     </div>
                     {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{decodeHtmlEntities(thread.subtitle)}</p>}

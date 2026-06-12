@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { MessageCircle, XCircle, Pencil, Trash2 } from "lucide-react";
+import { MessageCircle, XCircle, Pencil, Trash2, ImagePlus, Wallet, Search } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import EmptyState from "@/components/ui/EmptyState";
 import { clearGuestRequest } from "@/lib/guest-request";
+import { trackEvent } from "@/lib/analytics-events";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import ProposalCard from "./components/ProposalCard";
 import { FilterChip } from "./components/TrackingHelpers";
@@ -199,7 +201,10 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(`/uzklausos/sekti/${trackingToken}/redaguoti`)}
+              onClick={() => {
+                trackEvent("request_tracker_edit_clicked", { source: "toolbar" });
+                router.push(`/uzklausos/sekti/${trackingToken}/redaguoti`);
+              }}
             >
               <Pencil className="h-4 w-4 mr-1.5" />
               Redaguoti
@@ -238,11 +243,41 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
       </h2>
 
       {request.responses.length === 0 ? (
-        <EmptyState
-          title="Kol kas pasiūlymų nėra"
-          description="Tiekėjai netrukus peržiūrės jūsų užklausą ir atsiųs pasiūlymus."
-          icon={<MessageCircle className="h-12 w-12" />}
-        />
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <EmptyState
+            title="Kol kas pasiūlymų nėra"
+            description="Tiekėjai netrukus peržiūrės jūsų užklausą. Jei norite pagreitinti atsakymus, patikslinkite svarbiausias detales."
+            icon={<MessageCircle className="h-12 w-12" />}
+          />
+          {isOpen && (
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              <Link
+                href={`/uzklausos/sekti/${trackingToken}/redaguoti#photos`}
+                onClick={() => trackEvent("request_tracker_improve_clicked", { target: "photos" })}
+                className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-body-sm font-semibold text-surface-700 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-200"
+              >
+                <ImagePlus className="h-4 w-4" />
+                Nuotraukos
+              </Link>
+              <Link
+                href={`/uzklausos/sekti/${trackingToken}/redaguoti#budget`}
+                onClick={() => trackEvent("request_tracker_improve_clicked", { target: "budget" })}
+                className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-body-sm font-semibold text-surface-700 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-200"
+              >
+                <Wallet className="h-4 w-4" />
+                Biudžetas
+              </Link>
+              <Link
+                href={`/uzklausos/sekti/${trackingToken}/redaguoti#category`}
+                onClick={() => trackEvent("request_tracker_improve_clicked", { target: "category" })}
+                className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-body-sm font-semibold text-surface-700 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-200"
+              >
+                <Search className="h-4 w-4" />
+                Kategorija
+              </Link>
+            </div>
+          )}
+        </div>
       ) : (
         <>
           {showToolbar && (

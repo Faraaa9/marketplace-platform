@@ -96,7 +96,7 @@ export async function GET() {
       id: r.id,
       providerId: r.providerId,
       // requestId is also used downstream to build the provider-facing URL
-      // /tiekejas/uzklausos/{requestId} — never link to /tiekejas/zinutes/{id}
+      // /tiekejas/uzklausa/{requestId} — never link to /tiekejas/zinutes/{id}
       // here, since that route is reserved for DirectInquiry IDs.
       requestId: r.request.id,
       requestStatus: r.request.status,
