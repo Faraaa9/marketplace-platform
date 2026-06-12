@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 21:24 — Codex
+
+**Commit:** `f64bf37` — feat(provider): redesign dashboard work center · lokalus
+
+**Pakeitimai:** 5 files changed, 2258 insertions(+), 51 deletions(-)
+
+**Failai:**
+- provider-dashboard-preview-clean.html
+- provider-dashboard-preview.html
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/app/tiekejas/sections/provider-work-center-data.ts
+
+**Toliau:** Patikrinti `/tiekejas` prisijungus kaip tiekėjas; dashboardo buildas praėjo, bet vizualus authenticated QA dar liko.
+
+
 ## 2026-06-12 17:05 — Claude
 
 **Commit:** `d179c14` — chore: route provider request page to /tiekejas/uzklausa, add design audit · lokalus
