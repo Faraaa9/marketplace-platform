@@ -4,11 +4,12 @@ import { Sparkles } from "lucide-react";
 import { SessionGate } from "@/components/auth/SessionGate";
 import { prisma } from "@/lib/prisma";
 import { ProviderWorkCenter } from "./sections/ProviderWorkCenter";
+import { ProviderWorkCenterSkeleton } from "./sections/ProviderWorkCenterSkeleton";
 
 export default function ProviderDashboardPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
-      <Suspense fallback={null}>
+      <Suspense fallback={<ProviderWorkCenterSkeleton />}>
         <SessionGate requireRole="PROVIDER" callbackUrl="/tiekejas">
           {(userId) => <DashboardBody userId={userId} />}
         </SessionGate>
