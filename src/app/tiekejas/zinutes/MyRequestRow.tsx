@@ -47,11 +47,12 @@ function offerInitials(name: string) {
     .toUpperCase();
 }
 
-function OfferRow({ offer, trackingToken }: { offer: MyRequestOffer; trackingToken: string }) {
+function OfferRow({ offer, onOpen }: { offer: MyRequestOffer; onOpen: () => void }) {
   return (
-    <Link
-      href={`/uzklausos/sekti/${trackingToken}`}
-      className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors hover:bg-[#F1E7DA] dark:hover:bg-surface-800 ${
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-[#F1E7DA] dark:hover:bg-surface-800 ${
         offer.unread ? "bg-[#FDF6EC] dark:bg-surface-800/60" : ""
       }`}
     >
@@ -98,7 +99,7 @@ function OfferRow({ offer, trackingToken }: { offer: MyRequestOffer; trackingTok
       {offer.unread && (
         <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-[#A84E2E]" />
       )}
-    </Link>
+    </button>
   );
 }
 
@@ -110,10 +111,12 @@ export default function MyRequestRow({
   request,
   expanded,
   onToggle,
+  onOpenOffer,
 }: {
   request: MyRequestItem;
   expanded: boolean;
   onToggle: () => void;
+  onOpenOffer: (request: MyRequestItem, offer: MyRequestOffer) => void;
 }) {
   const unreadOffers = request.offers.filter((o) => o.unread);
   const readOffers = request.offers.filter((o) => !o.unread);
@@ -180,7 +183,7 @@ export default function MyRequestRow({
                 </p>
               )}
               {unreadOffers.map((offer) => (
-                <OfferRow key={offer.id} offer={offer} trackingToken={request.trackingToken} />
+                <OfferRow key={offer.id} offer={offer} onOpen={() => onOpenOffer(request, offer)} />
               ))}
               {showGroups && (
                 <p className="px-2.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#9A917F]">
@@ -188,16 +191,16 @@ export default function MyRequestRow({
                 </p>
               )}
               {readOffers.map((offer) => (
-                <OfferRow key={offer.id} offer={offer} trackingToken={request.trackingToken} />
+                <OfferRow key={offer.id} offer={offer} onOpen={() => onOpenOffer(request, offer)} />
               ))}
-              <Link
-                href={`/uzklausos/sekti/${request.trackingToken}`}
-                className="block px-2.5 pt-1 text-[12px] font-medium text-[#A84E2E] hover:underline"
-              >
-                Atidaryti visą užklausą →
-              </Link>
             </>
           )}
+          <Link
+            href={`/uzklausos/sekti/${request.trackingToken}/redaguoti`}
+            className="block px-2.5 pt-1 text-[12px] font-medium text-[#A84E2E] hover:underline"
+          >
+            Redaguoti užklausą →
+          </Link>
         </div>
       )}
     </div>

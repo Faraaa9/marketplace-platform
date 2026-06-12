@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import RequestHeader from "./sections/RequestHeader";
 import RequestBody from "./sections/RequestBody";
 import ProposalsSection from "./sections/ProposalsSection";
-import CreatedToast from "./components/CreatedToast";
+import CreatedToast from "@/components/ui/CreatedToast";
 import {
   RequestHeaderSkeleton,
   RequestBodySkeleton,

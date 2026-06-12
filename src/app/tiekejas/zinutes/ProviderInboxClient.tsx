@@ -27,7 +27,7 @@ import {
   type SupabaseBrowserClient,
 } from "@/lib/supabase-browser";
 import RequestOfferComposer from "./RequestOfferComposer";
-import MyRequestRow, { type MyRequestItem } from "./MyRequestRow";
+import MyRequestRow, { type MyRequestItem, type MyRequestOffer } from "./MyRequestRow";
 
 type Conversation = {
   type: "request" | "direct";
@@ -721,8 +721,13 @@ export default function ProviderInboxClient() {
 
   const sendMessage = useCallback(async (threadId: string, content: string): Promise<ThreadMessage> => {
     if (!thread) throw new Error("Nėra pokalbio");
-    const url =
-      thread.type === "response"
+    // Client side of an own-request proposal goes through the tracking API;
+    // everything else keeps the provider/direct endpoints.
+    const isOwnRequestThread =
+      thread.type === "response" && thread.viewerRole === "client" && !!thread.realtimeTrackingToken;
+    const url = isOwnRequestThread
+      ? `/api/tracking/${thread.realtimeTrackingToken}/messages`
+      : thread.type === "response"
         ? `/api/requests/${threadId}/messages`
         : thread.viewerRole === "client" && thread.realtimeTrackingToken
           ? `/api/zinutes/${thread.realtimeTrackingToken}/messages`
@@ -730,7 +735,9 @@ export default function ProviderInboxClient() {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(
+        isOwnRequestThread ? { responseId: thread.id, content } : { content },
+      ),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || "Klaida");
@@ -772,6 +779,80 @@ export default function ProviderInboxClient() {
       };
     },
     [thread],
+  );
+
+  // Open the client side of an own-request proposal in the inbox chat pane —
+  // this replaces navigating to the retired /uzklausos/sekti tracker page.
+  // Fetching /api/requests/[token] also stamps clientLastReadAt server-side,
+  // so the local unread state is cleared to match.
+  const openRequestOffer = useCallback(
+    async (request: MyRequestItem, offer: MyRequestOffer) => {
+      setDraftRequestId(null);
+      setSelectedId(`offer-${offer.id}`);
+      setLoadingThread(true);
+      setThreadError("");
+      window.history.replaceState(null, "", "/tiekejas/zinutes");
+      try {
+        const res = await fetch(`/api/requests/${encodeURIComponent(request.trackingToken)}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Klaida");
+        const responses = data.data.responses as Array<{
+          id: string;
+          providerId: string;
+          providerLastReadAt?: string | null;
+          provider?: { name?: string | null; image?: string | null };
+          messages: ApiThreadMessage[];
+        }>;
+        const resp = responses.find((r) => r.id === offer.id);
+        if (!resp) throw new Error("Pasiūlymas nerastas");
+        setThread({
+          type: "response",
+          id: resp.id,
+          providerId: resp.providerId,
+          viewerRole: "client",
+          realtimeTrackingToken: request.trackingToken,
+          title: resp.provider?.name || offer.providerName,
+          subtitle: request.title,
+          otherParticipantName: resp.provider?.name || offer.providerName,
+          otherParticipantImage: resp.provider?.image ?? offer.providerImage,
+          otherParticipantReadAt: resp.providerLastReadAt ?? null,
+          requestBrief: {
+            title: data.data.title ?? request.title,
+            description: data.data.description ?? "",
+            categoryLabel: data.data.category || "Užklausa",
+            budget: data.data.budget ?? null,
+            createdAt: data.data.createdAt ?? null,
+          },
+          hasMoreMessages: false,
+          initialMessages: resp.messages.map((m) => ({
+            id: m.id,
+            content: m.content,
+            createdAt: m.createdAt,
+            senderId: m.senderId,
+            senderName: m.senderName ?? m.sender?.name ?? null,
+            sender: m.sender,
+            status: "sent" as const,
+          })),
+        });
+        setMyRequests((items) =>
+          items.map((r) =>
+            r.id === request.id
+              ? {
+                  ...r,
+                  unreadCount: 0,
+                  offers: r.offers.map((o) => ({ ...o, unread: false })),
+                }
+              : r,
+          ),
+        );
+      } catch {
+        setThread(null);
+        setThreadError("Nepavyko įkelti pokalbio.");
+      } finally {
+        setLoadingThread(false);
+      }
+    },
+    [],
   );
 
   const openResponseThread = useCallback(
@@ -868,6 +949,7 @@ export default function ProviderInboxClient() {
                               current === item.request.id ? null : item.request.id,
                             )
                           }
+                          onOpenOffer={openRequestOffer}
                         />
                       );
                     }

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }
 
 // Cache Components: the shell prerenders, then the auth gate streams in. Both
@@ -43,7 +43,7 @@ async function MyRequestsView({
   searchParams,
 }: {
   userId: string;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isProvider = session?.user?.role === "PROVIDER";

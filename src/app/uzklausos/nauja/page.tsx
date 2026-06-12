@@ -567,10 +567,16 @@ function NewRequestV2Form() {
         });
         if (!isLoggedIn) saveGuestRequest(data.data.trackingToken, form.title);
         clearListingDraft();
-        // ?created=1 triggers the success banner on the tracker page — the
-        // user sees "Užklausa paskelbta" instead of landing on a quiet view
-        // and wondering whether the submit actually went through.
-        router.push(`/uzklausos/sekti/${data.data.trackingToken}?created=1`);
+        // ?created=1 fires the short "Užklausa paskelbta" toast on the target
+        // page. Logged-in users land where their requests live (the tracker
+        // page is being retired); guests have no inbox, so the tracker page
+        // with its magic-link flow remains their destination.
+        const target = !isLoggedIn
+          ? `/uzklausos/sekti/${data.data.trackingToken}?created=1`
+          : session?.user?.role === "PROVIDER"
+            ? "/tiekejas/zinutes?created=1"
+            : "/paskyra/uzklausos?created=1";
+        router.push(target);
       } else {
         trackEvent("request_publish_failed", {
           reason: data?.error || "unknown",

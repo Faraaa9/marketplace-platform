@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import CreatedToast from "@/components/ui/CreatedToast";
 import EmptyState from "@/components/ui/EmptyState";
 
 function pasiulymaiLabel(count: number): string {
@@ -51,7 +52,7 @@ function resolveStatus(raw?: string): StatusFilter {
 
 interface MyRequestsListProps {
   userId: string;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }
 
 export default async function MyRequestsList({
@@ -118,6 +119,7 @@ export default async function MyRequestsList({
 
   return (
     <>
+      {sp.created === "1" && <CreatedToast />}
       {/* Filter tabs — URL-driven, so each is a server-navigable Link */}
       <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
         {FILTER_TABS.map((tab) => {
