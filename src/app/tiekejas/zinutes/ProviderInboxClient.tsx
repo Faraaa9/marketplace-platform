@@ -27,6 +27,7 @@ import {
   type SupabaseBrowserClient,
 } from "@/lib/supabase-browser";
 import RequestOfferComposer from "./RequestOfferComposer";
+import MyRequestRow, { type MyRequestItem } from "./MyRequestRow";
 
 type Conversation = {
   type: "request" | "direct";
@@ -303,6 +304,9 @@ function orderSummaryTitle(thread: ThreadData) {
 export default function ProviderInboxClient() {
   const { data: session } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [myRequests, setMyRequests] = useState<MyRequestItem[]>([]);
+  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const didAutoExpandRef = useRef(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreConversations, setHasMoreConversations] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -421,6 +425,25 @@ export default function ProviderInboxClient() {
     return promise;
   }, [removeConversation, upsertConversation]);
 
+  // Own submitted requests join the inbox as expandable rows — a request is
+  // also a conversation, it just fans out into one thread per provider.
+  const loadMyRequests = useCallback(async () => {
+    try {
+      const res = await fetch("/api/requests/mine/list", { cache: "no-store" });
+      const data = (await res.json().catch(() => null)) as
+        | { success?: boolean; data?: MyRequestItem[] }
+        | null;
+      if (!res.ok || !data?.success || !Array.isArray(data.data)) return;
+      setMyRequests(data.data);
+      if (!didAutoExpandRef.current && data.data.length === 1) {
+        didAutoExpandRef.current = true;
+        setExpandedRequestId(data.data[0].id);
+      }
+    } catch {
+      // Request rows are an addition to the inbox — never block the list.
+    }
+  }, []);
+
   const loadMoreConversations = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
@@ -478,6 +501,7 @@ export default function ProviderInboxClient() {
         }
       }
     }
+    void loadMyRequests();
     loadConversations()
       .then((loadedConversations) => {
         if (cancelled) return;
@@ -508,6 +532,7 @@ export default function ProviderInboxClient() {
 
     const interval = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
+      void loadMyRequests();
       void loadConversations().catch(() => {
         // Keep the current list visible; the next poll can recover.
       });
@@ -517,7 +542,7 @@ export default function ProviderInboxClient() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [loadConversation, loadConversations, selectConversation, sortConversations]);
+  }, [loadConversation, loadConversations, loadMyRequests, selectConversation, sortConversations]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -625,6 +650,32 @@ export default function ProviderInboxClient() {
         .some((value) => decodeHtmlEntities(value ?? "").toLocaleLowerCase("lt-LT").includes(query)),
     );
   }, [conversations, searchQuery]);
+
+  type InboxListItem =
+    | { kind: "conversation"; activityAt: number; conversation: Conversation }
+    | { kind: "request"; activityAt: number; request: MyRequestItem };
+
+  // Conversations and own requests interleave by latest activity, so the
+  // inbox stays one chronological stream.
+  const listItems = useMemo<InboxListItem[]>(() => {
+    const query = searchQuery.trim().toLocaleLowerCase("lt-LT");
+    const requestItems = (query
+      ? myRequests.filter((r) =>
+          decodeHtmlEntities(r.title).toLocaleLowerCase("lt-LT").includes(query),
+        )
+      : myRequests
+    ).map((request) => ({
+      kind: "request" as const,
+      activityAt: new Date(request.lastActivityAt).getTime(),
+      request,
+    }));
+    const conversationItems = filteredConversations.map((conversation) => ({
+      kind: "conversation" as const,
+      activityAt: new Date(conversation.lastMessageAt).getTime(),
+      conversation,
+    }));
+    return [...requestItems, ...conversationItems].sort((a, b) => b.activityAt - a.activityAt);
+  }, [filteredConversations, myRequests, searchQuery]);
 
   const copyConversationLink = useCallback(async () => {
     if (!selectedConversation || typeof window === "undefined") return;
@@ -799,13 +850,28 @@ export default function ProviderInboxClient() {
                     </div>
                   ))}
                 </div>
-              ) : conversations.length === 0 ? (
+              ) : conversations.length === 0 && myRequests.length === 0 ? (
                 <EmptyState title={listError || "Žinučių dar nėra"} icon={<MessageCircle className="h-12 w-12" />} />
-              ) : filteredConversations.length === 0 ? (
+              ) : listItems.length === 0 ? (
                 <EmptyState title="Pokalbių nerasta" description="Pabandykite kitą vardą arba žinutės tekstą." icon={<Search className="h-12 w-12" />} />
               ) : (
                 <div>
-                  {filteredConversations.map((c) => {
+                  {listItems.map((item) => {
+                    if (item.kind === "request") {
+                      return (
+                        <MyRequestRow
+                          key={`myrequest-${item.request.id}`}
+                          request={item.request}
+                          expanded={expandedRequestId === item.request.id}
+                          onToggle={() =>
+                            setExpandedRequestId((current) =>
+                              current === item.request.id ? null : item.request.id,
+                            )
+                          }
+                        />
+                      );
+                    }
+                    const c = item.conversation;
                     const id = toThreadId(c);
                     const active = id === selectedId;
                     const roleLabel = conversationRoleLabel(c);

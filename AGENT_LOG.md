@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 01:58 — Claude
+
+**Commit:** `5d4ba47` — feat(zinutes): merge own requests into inbox as expandable rows · lokalus
+
+**Pakeitimai:** 3 files changed, 383 insertions(+), 4 deletions(-)
+
+**Failai:**
+- src/app/api/requests/mine/list/route.ts
+- src/app/tiekejas/zinutes/MyRequestRow.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 01:41 — Claude
 
 **Commit:** `09ce237` — chore(notes): record work-queue merge darbukas · lokalus
