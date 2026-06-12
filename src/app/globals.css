@@ -6,8 +6,17 @@
   :root {
     --background: #ece9e2;
     --foreground: #1e1b18;
-    --brand: #c29b74;
+    /* D4: aligned to brand-500 (was #c29b74, a gold that diverged from the
+       terracotta scale and produced a second accent). */
+    --brand: #c25e3a;
     --brand-light: #f4efe6;
+    /* Display font = the serif (Lora), aliased so H1s can opt in by name. */
+    --font-display: var(--font-serif);
+    /* Themed board paper surface (Užklausų lenta). */
+    --surface-paper: #fbfaf6;
+    /* Canonical motion. */
+    --duration-base: 150ms;
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
     --surface-muted: #ece9e2;
     --border: #ece9e2;
     --chat-bg: #ece9e2;
@@ -36,6 +45,7 @@
     --brand-light: rgba(194, 94, 58, 0.12);
     --surface-muted: #1f2937;
     --border: rgba(255, 255, 255, 0.06);
+    --surface-paper: #2b2720;
   }
 
   html {

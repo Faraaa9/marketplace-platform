@@ -39,6 +39,27 @@ const config: Config = {
           900: "#25221e",  // Prabangi tamsi (naudok tekstui arba tamsiems burbulams)
           950: "#1a1813",
         },
+        // Semantic roles — ONE per role. Use only for genuine status meaning,
+        // never as decoration (terracotta `brand` is the only accent).
+        danger: {
+          soft: "#fef2f2",
+          DEFAULT: "#dc2626",
+          strong: "#991b1b",
+        },
+        success: {
+          soft: "#ecfdf3",
+          DEFAULT: "#16a34a",
+          strong: "#15803d",
+        },
+        warning: {
+          soft: "#fdf6e3",
+          DEFAULT: "#d9920b",
+          strong: "#a66c08",
+        },
+        // Themed board surface (Užklausų lenta paper sheet)
+        paper: {
+          DEFAULT: "var(--surface-paper)",
+        },
       },
       fontFamily: {
         sans: [
@@ -52,6 +73,15 @@ const config: Config = {
         ],
         serif: [
           "var(--font-serif)",
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "serif",
+        ],
+        // Display = the serif (Lora), aliased. Page-level H1 use this;
+        // all other text uses `sans` (Inter). No new font is introduced.
+        display: [
+          "var(--font-display)",
           "Georgia",
           "Cambria",
           "Times New Roman",
@@ -71,6 +101,11 @@ const config: Config = {
         "micro": ["0.75rem", { lineHeight: "1.4", fontWeight: "500" }],
       },
       boxShadow: {
+        // Canonical 3-step scale — warm brown hue (rgba(93,70,54)) is brand,
+        // kept on purpose. Prefer these over ad-hoc shadow-[...] recipes.
+        "sm": "0 1px 2px rgba(93,70,54,0.08)",
+        "md": "0 4px 14px rgba(93,70,54,0.10)",
+        "lg": "0 16px 36px -12px rgba(93,70,54,0.14)",
         "xs": "0 1px 2px rgba(0,0,0,0.04)",
         "soft": "0 2px 8px -2px rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.04)",
         "card": "0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px -2px rgba(0,0,0,0.08), 0 4px 16px -4px rgba(0,0,0,0.06)",
@@ -84,6 +119,14 @@ const config: Config = {
         "2xl": "1rem",
         "3xl": "1.25rem",
         "4xl": "1.5rem",
+      },
+      // Canonical motion — one duration, one easing. Use `duration-base` /
+      // `ease-standard` for interactive transitions.
+      transitionDuration: {
+        base: "150ms",
+      },
+      transitionTimingFunction: {
+        standard: "cubic-bezier(0.4, 0, 0.2, 1)",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out",

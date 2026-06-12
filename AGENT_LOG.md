@@ -17,6 +17,23 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 17:27 — Claude
+
+**Commit:** `5cb8bd1` — feat(design-system): add semantic/shadow/motion/paper tokens (Step 1-2) · lokalus
+
+**Pakeitimai:** 6 files changed, 216 insertions(+), 5 deletions(-)
+
+**Failai:**
+- DESIGN_SYSTEM.md
+- src/app/fonts/GeistMonoVF.woff
+- src/app/fonts/GeistVF.woff
+- src/app/globals.css
+- src/app/layout.tsx
+- tailwind.config.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-12 17:05 — Claude
 
 **Commit:** `d179c14` — chore: route provider request page to /tiekejas/uzklausa, add design audit · lokalus
