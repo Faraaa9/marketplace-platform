@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 00:04 — Claude
+
+**Commit:** `832f715` — chore(notes): mark uzklausu UX darbukai done + add hierarchy/strip mockups · lokalus
+
+**Pakeitimai:** 3 files changed, 549 insertions(+)
+
+**Failai:**
+- NOTES.md
+- mockups/nauja-uzklausa-su-nuoroda.html
+- mockups/uzklausu-hierarchija.html
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-12 23:52 — Claude
 
 **Commit:** `b92b1e8` — feat(uzklausos): simplify new-request card + active requests strip · lokalus

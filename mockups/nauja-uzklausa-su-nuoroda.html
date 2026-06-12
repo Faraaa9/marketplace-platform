@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavyzdys — nauja užklausa, kai jau turi aktyvią</title>
+<style>
+  :root {
+    --bg: #f7f5f1;
+    --surface: #fdfcfa;
+    --surface-2: #f3f0ea;
+    --border: #e7e2d9;
+    --text: #2b2722;
+    --text-2: #6f675c;
+    --text-3: #9a917f;
+    --accent: #b65c3f;
+    --accent-soft: #f6e9e3;
+    --live: #2f7d4f;
+    --live-soft: #e8f2ec;
+    --shadow: 0 1px 2px rgba(43,39,34,.05), 0 4px 16px rgba(43,39,34,.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Inter", "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    padding-bottom: 96px; -webkit-font-smoothing: antialiased;
+  }
+  .demo-label {
+    max-width: 680px; margin: 48px auto 14px; padding: 0 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .page {
+    max-width: 680px; margin: 0 auto; padding: 0 20px;
+  }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { color: var(--text-2); font-size: 14.5px; margin-top: 6px; }
+
+  /* ---- „Tavo užklausos" juostelė ---- */
+  .mine {
+    margin-top: 18px;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 14px;
+    cursor: pointer; transition: box-shadow .15s;
+    text-decoration: none; color: inherit;
+  }
+  .mine:hover { box-shadow: var(--shadow); }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--live);
+    flex-shrink: 0; animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .mine .txt { font-size: 13.5px; color: var(--text-2); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mine .txt b { color: var(--text); font-weight: 600; }
+  .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 19px; height: 19px; padding: 0 6px; border-radius: 10px;
+    background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .mine .go { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
+
+  /* ---- Stepper (neutralus, be žalios — darbukas #2) ---- */
+  .stepper {
+    margin-top: 14px; display: flex; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 8px; box-shadow: var(--shadow);
+  }
+  .step {
+    flex: 1; text-align: center; padding: 10px 8px;
+    border-radius: 9px; font-size: 13.5px; font-weight: 600;
+  }
+  .step.active { background: var(--accent-soft); color: var(--accent); }
+  .step.idle { background: transparent; color: var(--text-3); font-weight: 500; }
+  .step .n { opacity: .65; margin-right: 5px; font-weight: 700; }
+
+  /* ---- Supaprastinta kortelė (darbukas #1) ---- */
+  .compose {
+    margin-top: 18px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 26px 26px 20px;
+  }
+  .compose h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .compose .hint { font-size: 13.5px; color: var(--text-2); margin-top: 4px; }
+  .compose textarea {
+    width: 100%; margin-top: 16px; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--bg); padding: 14px;
+    font: inherit; font-size: 14.5px; color: var(--text);
+    min-height: 96px; resize: none; outline: none;
+  }
+  .compose textarea::placeholder { color: var(--text-3); }
+  .compose .under {
+    display: flex; align-items: center; margin-top: 8px;
+    font-size: 12.5px; color: var(--text-3);
+  }
+  .compose .under .cta {
+    margin-left: auto; background: var(--accent); color: #fff;
+    border: none; border-radius: 10px; padding: 10px 18px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .extras {
+    display: flex; gap: 18px; margin-top: 18px; padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--text-2);
+  }
+  .extras span { cursor: pointer; }
+  .extras span:hover { color: var(--text); }
+  .extras .plus { color: var(--text-3); margin-right: 3px; font-weight: 600; }
+
+  .note {
+    max-width: 680px; margin: 14px auto 0; padding: 0 20px;
+    font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+  }
+  .note b { color: var(--text); font-weight: 600; }
+  .divider { max-width: 680px; margin: 44px auto 0; border-top: 1px dashed var(--border); }
+</style>
+</head>
+<body>
+
+  <!-- ================= STATE A ================= -->
+  <div class="demo-label">A — turi vieną aktyvią užklausą</div>
+  <div class="page">
+    <h1>Gauk tiekėjų pasiūlymus</h1>
+    <p class="sub">Aprašyk darbą, patvirtink kontaktą ir gauk pasiūlymus viename puslapyje.</p>
+
+    <a class="mine">
+      <span class="live-dot"></span>
+      <span class="txt"><b>Malkinės iškėlimas ir nunešimas</b> - gyvai</span>
+      <span class="badge">3</span>
+      <span class="go">Žiūrėti →</span>
+    </a>
+
+    <div class="stepper">
+      <div class="step active"><span class="n">1</span>Darbas</div>
+      <div class="step idle"><span class="n">2</span>Detalės</div>
+      <div class="step idle"><span class="n">3</span>Pasiūlymai</div>
+    </div>
+
+    <div class="compose">
+      <h2>Ko tau reikia?</h2>
+      <p class="hint">Aprašyk savais žodžiais - kas, kur ir kada.</p>
+      <textarea placeholder="Pvz.: reikia išvežti seną malkinę iš kiemo Kaune, medinė, apie 3×2 m…"></textarea>
+      <div class="under">
+        <span>min. 15 simbolių</span>
+        <button class="cta">Toliau</button>
+      </div>
+      <div class="extras">
+        <span><span class="plus">+</span>miestas</span>
+        <span><span class="plus">+</span>biudžetas</span>
+        <span><span class="plus">+</span>terminas</span>
+        <span><span class="plus">+</span>nuotraukos</span>
+      </div>
+    </div>
+  </div>
+  <p class="note">
+    Juostelė gyvena <b>tarp antraštės ir stepper'io</b>: pirmas žvilgsnis ją pagauna, bet ji
+    vizualiai „tyli" - be fono spalvos triukšmo, vienos eilutės aukščio. Pulsuojantis taškas =
+    užklausa gyva, terracotta badge'as = nauji pasiūlymai, paspaudus - tiesiai į užklausos puslapį.
+  </p>
+
+  <div class="divider"></div>
+
+  <!-- ================= STATE B ================= -->
+  <div class="demo-label" style="margin-top:36px;">B — turi kelias aktyvias užklausas</div>
+  <div class="page">
+    <h1>Gauk tiekėjų pasiūlymus</h1>
+    <p class="sub">Aprašyk darbą, patvirtink kontaktą ir gauk pasiūlymus viename puslapyje.</p>
+
+    <a class="mine">
+      <span class="live-dot"></span>
+      <span class="txt"><b>3 aktyvios užklausos</b> - laukia tavęs</span>
+      <span class="badge">5</span>
+      <span class="go">Mano užklausos →</span>
+    </a>
+
+    <div class="stepper">
+      <div class="step active"><span class="n">1</span>Darbas</div>
+      <div class="step idle"><span class="n">2</span>Detalės</div>
+      <div class="step idle"><span class="n">3</span>Pasiūlymai</div>
+    </div>
+
+    <div class="compose">
+      <h2>Ko tau reikia?</h2>
+      <p class="hint">Aprašyk savais žodžiais - kas, kur ir kada.</p>
+      <textarea placeholder="Pvz.: reikia išvežti seną malkinę iš kiemo Kaune, medinė, apie 3×2 m…"></textarea>
+      <div class="under">
+        <span>min. 15 simbolių</span>
+        <button class="cta">Toliau</button>
+      </div>
+      <div class="extras">
+        <span><span class="plus">+</span>miestas</span>
+        <span><span class="plus">+</span>biudžetas</span>
+        <span><span class="plus">+</span>terminas</span>
+        <span><span class="plus">+</span>nuotraukos</span>
+      </div>
+    </div>
+  </div>
+  <p class="note">
+    Kai užklausa viena - rodom jos pavadinimą (asmeniška, „čia tavo malkinė").
+    Kai kelios - tik skaičius ir suminis naujų badge'as, nuoroda veda į
+    <b>/paskyra/uzklausos</b> sąrašą. Jei naujų pasiūlymų nėra - badge'o nėra,
+    juostelė lieka rami („1 aktyvi užklausa - gyvai").
+  </p>
+
+</body>
+</html>
