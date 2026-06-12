@@ -6,7 +6,22 @@ import { useSession } from "next-auth/react";
 import { getGuestRequest, clearGuestRequest } from "@/lib/guest-request";
 import { ArrowRight, X, FileText } from "lucide-react";
 
+// The banner is client-only by design (localStorage + session gate), so the
+// server output is always null. The mounted gate keeps useSession() out of
+// the server render entirely — the Cache Components prerender pass renders
+// dynamic holes without the layout's SessionProvider context, and next-auth
+// throws there. After mount the provider is guaranteed.
 export default function RecentRequestBanner() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only gate; SSR must render null
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
+  return <RecentRequestBannerInner />;
+}
+
+function RecentRequestBannerInner() {
   const { data: session } = useSession();
   const [request, setRequest] = useState<{ token: string; title: string } | null>(null);
   const [dismissed, setDismissed] = useState(false);

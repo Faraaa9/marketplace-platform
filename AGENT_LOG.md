@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 02:23 — Claude
+
+**Commit:** `1f852ce` — fix(home): stop SSR crash from useSession in RecentRequestBanner · lokalus
+
+**Pakeitimai:** 1 file changed, 15 insertions(+)
+
+**Failai:**
+- src/components/guest/RecentRequestBanner.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 02:18 — Claude
 
 **Commit:** `6dd1a00` — chore(notes): tracker retirement status - what shipped, what remains · lokalus
