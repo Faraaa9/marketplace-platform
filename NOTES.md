@@ -87,18 +87,18 @@ Konvencija:
       Pateiktos užklausos rodomos tame pačiame sąraše su tagu „Užklausa",
       burbulas: Visos | Žinutės | Užklausos (`?rodyti=`). Plytelių skaičiai
       liko tik žinučių.
-- [ ] **Užklausos sekimo puslapį (`/uzklausos/sekti/[id]`) PAŠALINTI visai.**
-      (2026-06-13) Aptarta: atskiro užklausos lango nebereikia — užklausa ir
-      pokalbiai su tiekėjais dabar gyvena žinučių inbox'e (`/tiekejas/zinutes`
-      eilutė su išskleidimu) ir `/paskyra/uzklausos` sąraše. Prieš šalinant
-      išspręsti: (a) svečių magic-link srautas — el. laiškai veda į
-      /uzklausos/sekti/<token>, svečiai be paskyros kito kelio neturi;
-      (b) redagavimo puslapis `/uzklausos/sekti/[id]/redaguoti` ir
-      Redaguoti/Uždaryti/Ištrinti veiksmai — kur jie persikels;
-      (c) post-publish redirect iš /uzklausos/nauja (dabar → sekti puslapį);
-      (d) pokalbio UI klientui inbox'e (dabar pasiūlymo paspaudimas iš
-      inbox'o veda į sekti puslapį — reikės chat'o pačiame inbox'e).
-      Kol neišspręsta — puslapis lieka, bet jo UI nebeplėtoti.
+- [x] **Užklausos sekimo puslapis išimtas iš prisijungusių srautų** (f00a5e9).
+      (b) inbox'o užklausos eilutė turi „Redaguoti užklausą →" tiesiai į
+      `/uzklausos/sekti/[id]/redaguoti`; (c) po paskelbimo PROVIDER →
+      /tiekejas/zinutes, USER → /paskyra/uzklausos, svečiai → sekti puslapis;
+      (d) pasiūlymo paspaudimas inbox'e atidaro pokalbį chat'o panelėje
+      (tracking messages API + realtime per token, skaitymo kvitai žymimi).
+      LIKO: (a) svečiai ir paprasti USER klientai detalei vis dar naudoja
+      /uzklausos/sekti (USER neturi inbox'o — /tiekejas/* tik PROVIDER;
+      /paskyra/zinutes tik direct inquiries). Galutinai trinti puslapį bus
+      galima tik padarius kliento inbox'ą arba atidarius /tiekejas/zinutes
+      visiems. Iki tol sekti puslapio UI nebeplėtoti. Pastaba: „Uždaryti/
+      Ištrinti" veiksmai liko tik sekti puslapyje ir redaguoti flow.
 
 ---
 

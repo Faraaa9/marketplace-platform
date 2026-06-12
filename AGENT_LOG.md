@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 02:18 — Claude
+
+**Commit:** `6dd1a00` — chore(notes): tracker retirement status - what shipped, what remains · lokalus
+
+**Pakeitimai:** 1 file changed, 12 insertions(+), 12 deletions(-)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 02:08 — Claude
 
 **Commit:** `bc83c32` — chore(notes): record decision to retire /uzklausos/sekti tracker page · lokalus
