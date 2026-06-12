@@ -120,7 +120,7 @@ export default function MobileBottomNav() {
                 <span className="relative">
                   <Icon className={cn("h-5 w-5", active && "stroke-[2.25]")} />
                   {showBadge && (
-                    <span className="absolute -right-1.5 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#C25E3A] px-1 text-[10px] font-bold leading-none text-white">
+                    <span className="absolute -right-1.5 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold leading-none text-white">
                       {unreadMessages > 9 ? "9+" : unreadMessages}
                     </span>
                   )}

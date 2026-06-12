@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Check,
@@ -15,7 +16,7 @@ import {
   type WorkConversation,
 } from "./provider-work-center-data";
 
-const ACTION_GREEN = "bg-[#6F7F4B] hover:bg-[#59673C]";
+const ACTION_GREEN = "bg-brand-600 hover:bg-brand-700";
 
 function stateLabelClass(label: WorkConversation["stateLabel"]) {
   if (label === "Nauja žinutė") return "bg-[#E8F1FF] text-[#1769E0]";
@@ -37,7 +38,7 @@ export async function ProviderWorkCenter({
     <>
       <header className="mb-6 grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div>
-          <p className="text-micro font-bold uppercase tracking-[0.14em] text-[#6F7F4B]">
+          <p className="text-micro font-bold uppercase tracking-[0.14em] text-brand-600">
             Tiekėjo darbo centras
           </p>
           <h1 className="mt-2 text-[40px] font-semibold leading-none tracking-normal text-[#24211D] dark:text-white sm:text-[56px]">
@@ -51,7 +52,7 @@ export async function ProviderWorkCenter({
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link
             href={primaryHref}
-            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-body-sm font-semibold text-white shadow-[0_10px_22px_rgba(111,127,75,0.24)] transition-colors ${ACTION_GREEN}`}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-body-sm font-semibold text-white shadow-[0_10px_22px_rgba(55,42,31,0.16)] transition-colors ${ACTION_GREEN}`}
           >
             {primaryLabel}
             <ArrowRight className="h-4 w-4" />
@@ -146,23 +147,6 @@ export async function ProviderWorkCenter({
           />
         </aside>
       </main>
-
-      <nav className="mt-4 flex flex-wrap gap-2" aria-label="Antriniai veiksmai">
-        {[
-          { label: "Žinutės", href: "/tiekejas/zinutes" },
-          { label: "Teikėjo profilis", href: "/tiekejas/profilis" },
-          { label: "Kreditai", href: "/tiekejas/planai" },
-          { label: "Paskyros nustatymai", href: "/paskyra/profilis" },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="inline-flex min-h-10 items-center rounded-full border border-[#DED7CC] bg-white px-4 text-caption font-semibold text-[#6D675F] transition-colors hover:bg-[#F7F5F0] hover:text-[#24211D] dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:bg-surface-800"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
     </>
   );
 }
@@ -181,7 +165,7 @@ function SummaryTile({
   return (
     <Link
       href={href}
-      className="relative min-h-[88px] overflow-hidden rounded-[18px] border border-[#DED7CC]/80 bg-white/80 px-4 py-3.5 shadow-[0_10px_26px_rgba(55,42,31,0.055)] transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[#6F7F4B]/45 hover:bg-white dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
+      className="relative min-h-[88px] overflow-hidden rounded-[18px] border border-[#DED7CC]/80 bg-white/80 px-4 py-3.5 shadow-[0_10px_26px_rgba(55,42,31,0.055)] transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-brand-600/45 hover:bg-white dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
     >
       <div className="flex items-baseline gap-1.5 text-[27px] font-semibold leading-none tracking-normal text-[#24211D] dark:text-white">
         {value}
@@ -206,8 +190,18 @@ function ConversationRow({ conversation }: { conversation: WorkConversation }) {
           conversation.unread ? "bg-[#FFF9ED]" : "bg-[#FFFDF8] dark:bg-surface-900"
         }`}
       >
-        <div className="relative grid h-12 w-12 place-items-center rounded-full bg-[#D1D5DB] text-caption font-bold text-[#4B5563]">
-          {initials(conversation.title)}
+        <div className="relative grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-[#D1D5DB] text-caption font-bold text-[#4B5563]">
+          {conversation.avatarImage ? (
+            <Image
+              src={conversation.avatarImage}
+              alt=""
+              fill
+              sizes="48px"
+              className="object-cover"
+            />
+          ) : (
+            initials(conversation.title)
+          )}
           {conversation.unread && (
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#FFFDF8] bg-[#20B46B] dark:border-surface-900" />
           )}
@@ -285,7 +279,7 @@ function ReadinessCard({
       </p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#E4DED4] dark:bg-surface-700">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#6F7F4B] to-[#8B9A60]"
+          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
           style={{ width: `${completeness}%` }}
         />
       </div>
@@ -337,7 +331,7 @@ function SideCard({
   return (
     <section className="rounded-[20px] border border-[#DED7CC] bg-white p-4 shadow-[0_12px_32px_rgba(55,42,31,0.08)] dark:border-surface-700 dark:bg-surface-900">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-[#6F7F4B]" />
+        <Icon className="h-4 w-4 text-brand-600" />
         <h3 className="text-body-sm font-semibold text-[#24211D] dark:text-white">{title}</h3>
       </div>
       <p className="mt-2 text-caption leading-relaxed text-[#6D675F] dark:text-surface-400">

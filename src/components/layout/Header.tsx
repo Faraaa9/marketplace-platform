@@ -127,7 +127,7 @@ export default function Header() {
                   <Link
                     href="/registruotis"
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#C25E3A] hover:bg-[#E2DDD2] dark:text-brand-400 dark:hover:bg-surface-800"
+                    className="rounded-xl px-3 py-2.5 text-sm font-medium text-brand-600 hover:bg-[#E2DDD2] dark:text-brand-400 dark:hover:bg-surface-800"
                   >
                     Registruotis
                   </Link>

@@ -46,7 +46,7 @@ export default function UserMenu() {
         aria-label="Paskyros meniu"
         className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 transition-colors hover:bg-[#E9E4D9] sm:h-auto sm:w-auto sm:gap-2 sm:py-1 sm:pl-1 sm:pr-2.5"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#C25E3A] text-[12px] font-semibold text-white sm:h-7 sm:w-7">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-[12px] font-semibold text-white sm:h-7 sm:w-7">
           {initial}
         </span>
         <span className="hidden max-w-[140px] truncate text-sm font-medium text-[#26231F] sm:block">

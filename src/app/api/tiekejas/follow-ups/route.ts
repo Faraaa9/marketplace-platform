@@ -95,9 +95,8 @@ export async function GET() {
     const responseInputs: ResponseFollowUpInput[] = responses.map((r) => ({
       id: r.id,
       providerId: r.providerId,
-      // requestId is also used downstream to build the provider-facing URL
-      // /tiekejas/uzklausa/{requestId} — never link to /tiekejas/zinutes/{id}
-      // here, since that route is reserved for DirectInquiry IDs.
+      // requestId remains for context; provider-facing response threads now
+      // open through /tiekejas/zinutes?thread=response-{id}.
       requestId: r.request.id,
       requestStatus: r.request.status,
       requestTitle: r.request.title,

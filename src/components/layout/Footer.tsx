@@ -24,7 +24,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="mb-4 flex items-center gap-2.5">
               <span
-                className="grid h-8 w-8 place-items-center bg-[#C25E3A] text-[13px] font-bold text-white"
+                className="grid h-8 w-8 place-items-center bg-brand-600 text-[13px] font-bold text-white"
                 style={{ clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)" }}
               >
                 P
@@ -107,7 +107,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
   return (
     <Link
       href={href}
-      className="text-sm text-[#6B6760] transition-colors duration-200 hover:text-[#C25E3A] dark:text-surface-400 dark:hover:text-brand-400"
+      className="text-sm text-[#6B6760] transition-colors duration-200 hover:text-brand-600 dark:text-surface-400 dark:hover:text-brand-400"
     >
       {children}
     </Link>

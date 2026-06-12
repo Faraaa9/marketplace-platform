@@ -10,19 +10,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Terracotta — warm primary accent
+        // Runtime brand accent. The actual palette is set through CSS variables
+        // so users can choose one of the approved main colors in account settings.
         brand: {
-          50: "#faeee7",
-          100: "#f3dccd",
-          200: "#e7bfa7",
-          300: "#d89e79",
-          400: "#cb7d53",
-          500: "#c25e3a",
-          600: "#a94e2f",
-          700: "#8a3f26",
-          800: "#6e3220",
-          900: "#5a2a1c",
-          950: "#32150b",
+          50: "rgb(var(--brand-50) / <alpha-value>)",
+          100: "rgb(var(--brand-100) / <alpha-value>)",
+          200: "rgb(var(--brand-200) / <alpha-value>)",
+          300: "rgb(var(--brand-300) / <alpha-value>)",
+          400: "rgb(var(--brand-400) / <alpha-value>)",
+          500: "rgb(var(--brand-500) / <alpha-value>)",
+          600: "rgb(var(--brand-600) / <alpha-value>)",
+          700: "rgb(var(--brand-700) / <alpha-value>)",
+          800: "rgb(var(--brand-800) / <alpha-value>)",
+          900: "rgb(var(--brand-900) / <alpha-value>)",
+          950: "rgb(var(--brand-950) / <alpha-value>)",
         },
         // Warm cream / taupe neutrals - ATSTATYTA GAMYKLINĖ PALETĖ
         surface: {

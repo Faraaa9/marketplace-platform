@@ -27,15 +27,6 @@ type ConversationItem = {
   presenceLabel: string | null;
 };
 
-const REQUEST_STATUS: Record<
-  string,
-  { label: string; variant: "success" | "warning" | "default" }
-> = {
-  OPEN: { label: "Atidaryta", variant: "success" },
-  IN_PROGRESS: { label: "Vykdoma", variant: "warning" },
-  CLOSED: { label: "Uždaryta", variant: "default" },
-};
-
 function isSenderDirectConversation(conversation: ConversationItem) {
   return conversation.type === "direct" && conversation.href.startsWith("/zinutes/");
 }
@@ -265,10 +256,8 @@ export async function ConversationList({
   return (
     <div>
       {filtered.map((c) => {
-        const reqStatus =
-          c.type === "request"
-            ? REQUEST_STATUS[c.status] || REQUEST_STATUS.OPEN
-            : null;
+        const badgeLabel = conversationBadgeLabel(c);
+        const badgeVariant = badgeLabel === "Nauja žinutė" ? "info" : "default";
         const highlight = c.unread && !c.archived;
         return (
           <Link key={`${c.type}-${c.id}`} href={c.href} className="group block">
@@ -293,7 +282,7 @@ export async function ConversationList({
                     presenceLabel={c.presenceLabel}
                   />
                   {highlight && (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C29B74]" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#166FE5]" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -321,8 +310,8 @@ export async function ConversationList({
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       <Badge variant="default">{conversationRoleLabel(c)}</Badge>
-                      {conversationBadgeLabel(c) ? (
-                        <Badge variant={reqStatus?.variant ?? "brand"}>{conversationBadgeLabel(c)}</Badge>
+                      {badgeLabel ? (
+                        <Badge variant={badgeVariant}>{badgeLabel}</Badge>
                       ) : null}
                     </div>
                   </div>

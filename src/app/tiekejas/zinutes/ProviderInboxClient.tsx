@@ -26,6 +26,7 @@ import {
   type RealtimeChannelLike,
   type SupabaseBrowserClient,
 } from "@/lib/supabase-browser";
+import RequestOfferComposer from "./RequestOfferComposer";
 
 type Conversation = {
   type: "request" | "direct";
@@ -157,7 +158,6 @@ function conversationBadgeClass(label: string) {
     case "Nauja žinutė":
       return "bg-[#166FE5] text-white";
     case "Priimta":
-      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300";
     case "Archyvas":
       return "bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400";
     default:
@@ -187,7 +187,7 @@ function ConversationAvatar({
   const badgeSize = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
   return (
     <div className="relative shrink-0" title={presenceLabel || undefined}>
-      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D38331] text-caption font-semibold text-white ring-1 ring-[#D7C7B6] ${dimensions}`}>
+      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D1D5DB] text-caption font-semibold text-[#4B5563] ring-1 ring-[#C7CDD6] ${dimensions}`}>
         {image ? (
           <Image
             src={image}
@@ -306,6 +306,7 @@ export default function ProviderInboxClient() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreConversations, setHasMoreConversations] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draftRequestId, setDraftRequestId] = useState<string | null>(null);
   const [thread, setThread] = useState<ThreadData | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -432,6 +433,7 @@ export default function ProviderInboxClient() {
 
   const selectConversation = useCallback(async (conversation: Conversation) => {
     const id = toThreadId(conversation);
+    setDraftRequestId(null);
     setSelectedId(id);
     setLoadingThread(true);
     setThreadError("");
@@ -479,7 +481,15 @@ export default function ProviderInboxClient() {
     loadConversations()
       .then((loadedConversations) => {
         if (cancelled) return;
-        const initialThread = new URLSearchParams(window.location.search).get("thread");
+        const initialParams = new URLSearchParams(window.location.search);
+        const initialRequest = initialParams.get("request");
+        if (initialRequest) {
+          setDraftRequestId(initialRequest);
+          setSelectedId(null);
+          setThread(null);
+          return;
+        }
+        const initialThread = initialParams.get("thread");
         const initialConversation = loadedConversations.find((c) => toThreadId(c) === initialThread);
         if (initialConversation) {
           void selectConversation(initialConversation);
@@ -713,11 +723,31 @@ export default function ProviderInboxClient() {
     [thread],
   );
 
+  const openResponseThread = useCallback(
+    async (responseId: string) => {
+      const threadId = `response-${responseId}`;
+      setDraftRequestId(null);
+      window.history.replaceState(null, "", `/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`);
+      const conversation = await loadConversation(threadId);
+      if (conversation) {
+        await selectConversation(conversation);
+      }
+    },
+    [loadConversation, selectConversation],
+  );
+
+  const closeDraftRequest = useCallback(() => {
+    setDraftRequestId(null);
+    setThread(null);
+    setSelectedId(null);
+    window.history.replaceState(null, "", "/tiekejas/zinutes");
+  }, []);
+
   return (
     <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#EFECE5] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#DDD3C5] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(93,70,54,0.10)] dark:border-surface-800 dark:bg-surface-900/90">
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
+          <aside className={`${selectedId || draftRequestId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
             <div className="flex min-h-[64px] items-center justify-between border-b border-[#DDD3C5] bg-[#FFFDF8] px-5 py-2.5 dark:border-surface-700/60">
               {searchOpen ? (
                 <label className="min-w-0 flex-1">
@@ -863,8 +893,14 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
-            {threadError ? (
+          <main className={`${selectedId || draftRequestId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
+            {draftRequestId ? (
+              <RequestOfferComposer
+                requestId={draftRequestId}
+                onBack={closeDraftRequest}
+                onCreated={openResponseThread}
+              />
+            ) : threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
               </div>

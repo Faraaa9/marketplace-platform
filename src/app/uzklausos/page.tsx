@@ -265,6 +265,18 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     requests.sort((a, b) => b.responseCount - a.responseCount);
   }
 
+  const visibleRequestIds = requests.map((request) => request.id);
+  const ownResponses =
+    userRole === "PROVIDER" && currentUserId && visibleRequestIds.length > 0
+      ? await prisma.response.findMany({
+          where: { providerId: currentUserId, requestId: { in: visibleRequestIds } },
+          select: { id: true, requestId: true },
+        })
+      : [];
+  const ownResponseByRequest = new Map(
+    ownResponses.map((response) => [response.requestId, response.id]),
+  );
+
   const pages = Math.ceil(total / perPage);
 
   const budgetLabel = (val: string) =>
@@ -335,9 +347,9 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
   ];
 
   const CTA_TONES = [
-    "bg-brand-600 hover:bg-brand-700 shadow-[0_2.5px_0_#793821]",
-    "bg-[#6f7d4d] hover:bg-[#616d43] shadow-[0_2.5px_0_#4a5430]",
-    "bg-[#a17b44] hover:bg-[#8c6a3b] shadow-[0_2.5px_0_#6b5028]",
+    "bg-brand-600 hover:bg-brand-700 shadow-[0_2.5px_0_var(--brand-main-shadow)]",
+    "bg-brand-600 hover:bg-brand-700 shadow-[0_2.5px_0_var(--brand-main-shadow)]",
+    "bg-brand-600 hover:bg-brand-700 shadow-[0_2.5px_0_var(--brand-main-shadow)]",
   ];
 
   const stats = [
@@ -415,16 +427,26 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
               const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const isOpenedRequest = openRequestId === r.id;
+              const ownResponseId = ownResponseByRequest.get(r.id);
+              const hasSentOffer = !!ownResponseId;
               const ctaHref = isOwnRequest
                 ? `/uzklausos/sekti/${r.trackingToken}`
                 : userRole === "PROVIDER"
-                  ? `/tiekejas/uzklausa/${r.id}`
+                  ? hasSentOffer
+                    ? `/tiekejas/zinutes?thread=response-${ownResponseId}`
+                    : `/tiekejas/zinutes?request=${r.id}`
                   : userRole
                     ? `/tapti-tiekeju`
-                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausa/${r.id}`)}`;
-              const ctaLabel = isOwnRequest ? "Valdyti užklausą" : "Pateikti pasiūlymą";
+                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/zinutes?request=${r.id}`)}`;
+              const ctaLabel = isOwnRequest
+                ? "Valdyti užklausą"
+                : hasSentOffer
+                  ? "Atidaryti pokalbį"
+                  : "Pateikti pasiūlymą";
               const ctaTone = isOwnRequest
                 ? "bg-[#ebe3cc] text-[#6c5d3c] hover:bg-[#e1d8bd] shadow-[0_2.5px_0_#c7ba92]"
+                : hasSentOffer
+                  ? "border border-[#d8cda6] bg-white text-[#5f584c] hover:bg-[#f7f3ea] shadow-[0_2.5px_0_#d8cda6]"
                 : `text-white ${CTA_TONES[i % CTA_TONES.length]}`;
 
               return (
@@ -509,9 +531,14 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                             <MessageSquare className="h-3.5 w-3.5 text-surface-400" />
                             {r.responseCount} {offerNoun(r.responseCount)}
                           </span>
+                          {hasSentOffer && (
+                            <span className="inline-flex items-center rounded-md bg-[#ece6d7] px-2 py-0.5 text-[0.72rem] font-semibold text-[#6f6258] ring-1 ring-inset ring-[#d8cda6]">
+                              Pasiūlymas jau išsiųstas
+                            </span>
+                          )}
                         </div>
 
-                        {isMatched && !isOwnRequest ? (
+                        {isMatched && !isOwnRequest && !hasSentOffer ? (
                           <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ece6d7] px-4 py-2 font-serif text-[0.9rem] font-medium text-[#9b8f76] cursor-default dark:bg-surface-800 dark:text-surface-500">
                             Pasiūlymai nepriimami
                           </span>

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { activeCategoryFilter } from "@/lib/category-matching";
 import { computeProfileCompleteness } from "@/lib/provider-completeness";
 import { decodeHtmlEntities } from "@/lib/utils";
+import { getProviderAvatarImage } from "@/lib/provider-image";
+import { createServerTimer } from "@/lib/server-timing";
 
 export type WorkConversation = {
   id: string;
@@ -14,6 +16,7 @@ export type WorkConversation = {
   fromProvider: boolean;
   roleLabel: "Klientas" | "Tiekėjas";
   stateLabel: "Nauja žinutė" | "Vyksta" | "Priimta" | null;
+  avatarImage: string | null;
 };
 
 export type ReadinessStep = {
@@ -46,6 +49,7 @@ export function sortWorkQueue(conversations: WorkConversation[]) {
 }
 
 export async function getProviderWorkCenterData(userId: string) {
+  const timer = createServerTimer("provider-work-center");
   const [user, profile, responses, inquiries] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -80,6 +84,7 @@ export async function getProviderWorkCenterData(userId: string) {
             location: true,
             clientName: true,
             acceptedResponseId: true,
+            client: { select: { image: true } },
           },
         },
         messages: {
@@ -107,7 +112,14 @@ export async function getProviderWorkCenterData(userId: string) {
         lastMessageAt: true,
         providerLastReadAt: true,
         clientLastReadAt: true,
-        provider: { select: { name: true } },
+        provider: {
+          select: {
+            name: true,
+            image: true,
+            providerProfile: { select: { images: true, heroImageUrl: true } },
+          },
+        },
+        sender: { select: { image: true } },
         messages: {
           select: { content: true, senderId: true },
           orderBy: { createdAt: "desc" },
@@ -116,6 +128,9 @@ export async function getProviderWorkCenterData(userId: string) {
       },
     }),
   ]);
+  // Logs e.g. `[perf:provider-work-center] userId=… threads=8 inquiries=3 total=42ms`.
+  // Measures only the 4 parallel queries; check this before optimizing the query layer.
+  timer.end({ userId, threads: responses.length, inquiries: inquiries.length });
 
   const categoryCount = profile?.categories.length ?? 0;
   const creditBalance = profile?.creditBalance ?? 0;
@@ -144,6 +159,7 @@ export async function getProviderWorkCenterData(userId: string) {
       fromProvider: last ? last.senderId === userId : true,
       roleLabel: "Klientas",
       stateLabel: unread ? "Nauja žinutė" : accepted ? "Priimta" : "Vyksta",
+      avatarImage: response.request.client?.image ?? null,
     };
   });
 
@@ -168,6 +184,7 @@ export async function getProviderWorkCenterData(userId: string) {
         fromProvider: last ? last.senderId === userId : !viewerIsProvider,
         roleLabel: viewerIsProvider ? "Klientas" : "Tiekėjas",
         stateLabel: unread ? "Nauja žinutė" : "Vyksta",
+        avatarImage: viewerIsProvider ? inquiry.sender?.image ?? null : getProviderAvatarImage(inquiry.provider),
       };
     });
 

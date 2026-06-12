@@ -17,6 +17,35 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 22:34 — Claude
+
+**Commit:** `9788d93` — chore(dashboard): remove dead StatsGrid + skeleton · lokalus
+
+**Pakeitimai:** 5 files changed, 16 insertions(+), 344 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/components/ui/skeletons/StatsGridSkeleton.tsx
+- src/components/ui/skeletons/index.ts
+- src/lib/provider-completeness.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-12 22:34 — Claude
+
+**Commit:** `d614552` — chore(dashboard): remove dead StatsGrid + skeleton · lokalus
+
+**Pakeitimai:** 2 files changed, 340 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/components/ui/skeletons/StatsGridSkeleton.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-12 21:24 — Codex
 
 **Commit:** `f64bf37` — feat(provider): redesign dashboard work center · lokalus

@@ -117,10 +117,9 @@ export interface FollowUpThread {
   id: string;
   /**
    * For `type === "response"` this is the parent ServiceRequest ID. The
-   * provider-facing detail lives at `/tiekejas/uzklausa/{requestId}`, not
-   * `/tiekejas/zinutes/{responseId}` (that route is for DirectInquiry IDs).
-   * Undefined for direct inquiries — their `id` already lines up with the
-   * `/tiekejas/zinutes/{id}` route.
+   * provider-facing thread opens through `/tiekejas/zinutes?thread=response-{id}`.
+   * Undefined for direct inquiries — their `id` already lines up with the inbox
+   * direct thread id.
    */
   requestId?: string;
   /** Owner provider — used to filter per-provider feeds. */

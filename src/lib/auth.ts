@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { attachIdentityToUserByEmail } from "./imported/supplier-access";
+import { normalizeBrandColor } from "./brand-theme";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -62,6 +63,7 @@ export const authOptions: NextAuthOptions = {
               name: true,
               role: true,
               image: true,
+              brandColor: true,
               blocked: true,
             },
           });
@@ -82,6 +84,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
             image: user.image,
+            brandColor: user.brandColor,
           };
         }
 
@@ -102,6 +105,7 @@ export const authOptions: NextAuthOptions = {
                   name: true,
                   role: true,
                   image: true,
+                  brandColor: true,
                   emailVerified: true,
                   blocked: true,
                 },
@@ -133,6 +137,7 @@ export const authOptions: NextAuthOptions = {
             name: tokenRow.user.name,
             role: tokenRow.user.role,
             image: tokenRow.user.image,
+            brandColor: tokenRow.user.brandColor,
           };
         }
 
@@ -150,6 +155,7 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             image: true,
+            brandColor: true,
             blocked: true,
           },
         });
@@ -173,6 +179,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           image: user.image,
+          brandColor: user.brandColor,
         };
       },
     }),
@@ -212,10 +219,20 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: string }).role;
+        token.brandColor = normalizeBrandColor((user as { brandColor?: string | null }).brandColor);
+      }
+
+      if (trigger === "update") {
+        const nextBrandColor =
+          (session as { brandColor?: string; user?: { brandColor?: string } } | undefined)
+            ?.brandColor ??
+          (session as { brandColor?: string; user?: { brandColor?: string } } | undefined)
+            ?.user?.brandColor;
+        if (nextBrandColor) token.brandColor = normalizeBrandColor(nextBrandColor);
       }
 
       const lastRoleSync = typeof token.roleSyncedAt === "number" ? token.roleSyncedAt : 0;
@@ -227,10 +244,11 @@ export const authOptions: NextAuthOptions = {
       if (shouldSyncRole) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true },
+          select: { role: true, brandColor: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
+          token.brandColor = normalizeBrandColor(dbUser.brandColor);
         }
         token.roleSyncedAt = Date.now();
       }
@@ -257,6 +275,9 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as { id: string }).id = token.id as string;
         (session.user as { role: string }).role = token.role as string;
+        (session.user as { brandColor?: string | null }).brandColor = normalizeBrandColor(
+          token.brandColor,
+        );
       }
       return session;
     },

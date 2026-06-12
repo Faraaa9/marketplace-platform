@@ -42,7 +42,7 @@ export default function GlobalStoriesStrip() {
 
   const logoCircle = (
     <span
-      className={`grid h-8 w-8 place-items-center rounded-full bg-[#C25E3A] text-[13px] font-bold text-white ${
+      className={`grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-[13px] font-bold text-white ${
         hasStories ? "ring-[1.5px] ring-white dark:ring-surface-900" : ""
       }`}
     >

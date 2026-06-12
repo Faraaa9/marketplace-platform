@@ -1,0 +1,2 @@
+ALTER TABLE "users"
+  ADD COLUMN IF NOT EXISTS "brandColor" TEXT NOT NULL DEFAULT 'green';
