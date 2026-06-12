@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 02:00 — Claude
+
+**Commit:** `52cd6c0` — style(paskyra): request list rows match hierarchy mockup · lokalus
+
+**Pakeitimai:** 1 file changed, 43 insertions(+), 121 deletions(-)
+
+**Failai:**
+- src/app/paskyra/uzklausos/MyRequestsList.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 01:58 — Claude
 
 **Commit:** `5d4ba47` — feat(zinutes): merge own requests into inbox as expandable rows · lokalus
