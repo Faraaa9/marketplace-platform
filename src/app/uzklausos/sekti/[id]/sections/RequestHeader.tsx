@@ -5,8 +5,6 @@ import {
   Clock,
   CalendarClock,
   Euro,
-  MessageCircle,
-  Eye,
   Search as SearchIcon,
   Handshake,
   ArrowUpRight,
@@ -17,7 +15,6 @@ import {
 import Badge from "@/components/ui/Badge";
 import TelegramSourceBadge from "@/components/TelegramSourceBadge";
 import { formatRelativeDate } from "@/lib/utils";
-import { StatusTimeline } from "../components/TrackingHelpers";
 import { getTrackedRequestSummary } from "../data";
 
 interface RequestHeaderProps {
@@ -63,7 +60,17 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
+            {isOpen && isApproved ? (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-caption font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse"
+                />
+                Gyvai
+              </span>
+            ) : (
+              <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
+            )}
             {request.source === "telegram" && <TelegramSourceBadge />}
             {categoryLabels.length > 0 && (
               <span className="truncate text-body-sm text-surface-500">
@@ -145,52 +152,10 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
         </div>
       )}
 
-      <StatusTimeline status={request.status} responseCount={request.responseCount} />
-
-      {isApproved && (
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
-              <SearchIcon className="h-4.5 w-4.5" />
-            </div>
-            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
-              Matomumas
-            </p>
-            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
-              {request.moderationStatus === "PENDING"
-                ? "Laukia peržiūros"
-                : isOpen
-                  ? "Rodoma tiekėjams"
-                  : "Užklausa nebeaktyvi"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <Eye className="h-4.5 w-4.5" />
-            </div>
-            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
-              Peržiūros
-            </p>
-            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
-              {request.viewCount > 0
-                ? `${request.viewCount} tiekėjų peržiūrėjo`
-                : "Pirmųjų peržiūrų laukiama"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-surface-200/60 bg-white p-4 shadow-soft dark:border-surface-700/50 dark:bg-surface-900/50">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-              <MessageCircle className="h-4.5 w-4.5" />
-            </div>
-            <p className="text-caption font-semibold uppercase text-surface-400 dark:text-surface-500">
-              Kitas veiksmas
-            </p>
-            <p className="mt-1 text-body-sm font-semibold text-surface-900 dark:text-white">
-              {request.responseCount > 0
-                ? "Peržiūrėti pasiūlymus"
-                : "Palaukti arba papildyti užklausą"}
-            </p>
-          </div>
-        </div>
+      {isOpen && isApproved && request.responseCount === 0 && (
+        <p className="mb-6 text-body-sm text-surface-500 dark:text-surface-400">
+          Tiekėjai mato tavo užklausą - pirmieji pasiūlymai dažniausiai ateina per kelias valandas.
+        </p>
       )}
 
       {isOpen && isApproved && request.responseCount === 0 && (
@@ -235,46 +200,6 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
               Patikrinti kategoriją
             </Link>
           </div>
-        </div>
-      )}
-
-      {isOpen && isApproved && (
-        <div className="mb-6 flex items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">
-          <Eye className="h-4 w-4 shrink-0" />
-          {request.viewCount > 0 ? (
-            <span>
-              Jūsų užklausą peržiūrėjo tiekėjų:{" "}
-              <span className="font-semibold text-surface-700 dark:text-surface-200">{request.viewCount}</span>
-            </span>
-          ) : (
-            <span>Tiekėjai dar neperžiūrėjo — pirmieji peržiūri per kelias valandas.</span>
-          )}
-        </div>
-      )}
-
-      {isOpen && isApproved && request.responseCount === 0 && (
-        <div className="mb-6 rounded-2xl border border-surface-200/60 bg-surface-50 p-5 dark:border-surface-700/50 dark:bg-surface-900/50">
-          <div className="flex items-center gap-2 mb-1">
-            <SearchIcon className="h-4 w-4 text-surface-500 dark:text-surface-400" />
-            <p className="text-body-sm font-semibold text-surface-900 dark:text-white">Užklausa aktyvuota</p>
-          </div>
-          <p className="text-body-sm text-surface-500 dark:text-surface-400">
-            Tiekėjai mato jūsų užklausą ir netrukus pradės siųsti pasiūlymus. Paprastai pirmieji pasiūlymai ateina per kelias valandas.
-          </p>
-        </div>
-      )}
-
-      {isOpen && request.responseCount > 0 && !request.acceptedResponseId && (
-        <div className="mb-6 rounded-2xl border border-emerald-200/60 bg-emerald-50/50 p-5 dark:border-emerald-800/40 dark:bg-emerald-950/30">
-          <div className="flex items-center gap-2 mb-1">
-            <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <p className="text-body-sm font-semibold text-emerald-900 dark:text-emerald-200">
-              Turite {request.responseCount} {request.responseCount === 1 ? "pasiūlymą" : "pasiūlymus"}!
-            </p>
-          </div>
-          <p className="text-body-sm text-emerald-800/80 dark:text-emerald-300/80">
-            Peržiūrėkite pasiūlymus žemiau. Galite rašyti žinutes tiekėjams ir priimti geriausią pasiūlymą.
-          </p>
         </div>
       )}
 
