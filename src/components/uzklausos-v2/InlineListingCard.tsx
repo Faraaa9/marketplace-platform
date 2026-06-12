@@ -236,7 +236,7 @@ export default function InlineListingCard({
               <span
                 key={cat.id}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-caption font-medium transition-colors",
                   showCategoryError
                     ? "border border-red-400 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-500/10 dark:text-red-300"
                     : "bg-[#ebe2cb] text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700",
@@ -266,7 +266,7 @@ export default function InlineListingCard({
                 onClick={() => toggleMetaKey("category")}
                 disabled={categoryLocked}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-caption font-medium transition-colors",
                   categoryLocked &&
                     "cursor-not-allowed border border-dashed border-brand-300/60 bg-brand-50/40 text-brand-500 dark:border-brand-700/60 dark:bg-brand-950/30 dark:text-brand-300",
                   !categoryLocked && !hasCategory && !showCategoryError &&
@@ -292,7 +292,7 @@ export default function InlineListingCard({
 
           {/* ── Title (h3 styled, inline input + NAUJA badge) ── */}
           <div className="mt-3.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h3 className="min-w-0 flex-1 font-serif text-[1.5rem] sm:text-[1.7rem] font-semibold leading-snug text-surface-900 dark:text-white">
+            <h3 className="min-w-0 flex-1 font-serif text-heading-2 sm:text-[1.7rem] font-semibold leading-snug text-surface-900 dark:text-white">
               <input
                 aria-label="Skelbimo pavadinimas"
                 value={title}
@@ -300,7 +300,7 @@ export default function InlineListingCard({
                 disabled={titleLocked}
                 placeholder={titleLocked ? "✨ AI sugalvos pavadinimą" : "Skelbimo pavadinimas"}
                 className={cn(
-                  "block w-full border-0 bg-transparent p-0 font-serif text-[1.5rem] sm:text-[1.7rem] font-semibold leading-snug text-surface-900 outline-none placeholder:text-surface-300 dark:text-white dark:placeholder:text-surface-600",
+                  "block w-full border-0 bg-transparent p-0 font-serif text-heading-2 sm:text-[1.7rem] font-semibold leading-snug text-surface-900 outline-none placeholder:text-surface-300 dark:text-white dark:placeholder:text-surface-600",
                   titleLocked &&
                     "cursor-not-allowed placeholder:text-brand-500/70 dark:placeholder:text-brand-300/60",
                   titleError && "border-b border-red-400",
@@ -308,7 +308,7 @@ export default function InlineListingCard({
                 maxLength={100}
               />
             </h3>
-            <span className="-rotate-3 shrink-0 rounded border border-brand-500/50 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
+            <span className="-rotate-3 shrink-0 rounded border border-brand-500/50 px-1.5 py-0.5 text-micro font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
               Nauja
             </span>
           </div>
@@ -334,7 +334,7 @@ export default function InlineListingCard({
               rows={3}
               maxLength={2000}
               className={cn(
-                "block w-full resize-none border-0 bg-transparent p-0 text-[0.92rem] leading-relaxed text-surface-600 outline-none placeholder:text-surface-300 dark:text-surface-300 dark:placeholder:text-surface-600",
+                "block w-full resize-none border-0 bg-transparent p-0 text-body-sm leading-relaxed text-surface-600 outline-none placeholder:text-surface-300 dark:text-surface-300 dark:placeholder:text-surface-600",
                 "whitespace-pre-wrap",
                 descriptionError && "border-b border-red-400",
               )}
@@ -398,7 +398,7 @@ export default function InlineListingCard({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={photosUploading || attachmentUrls.length >= 5}
-                className="inline-flex items-center gap-1 text-[0.75rem] font-medium text-[#9b8a5f] transition-colors hover:text-[#6f6042] disabled:cursor-not-allowed disabled:opacity-50 dark:text-surface-400 dark:hover:text-surface-200"
+                className="inline-flex items-center gap-1 text-micro font-medium text-[#9b8a5f] transition-colors hover:text-[#6f6042] disabled:cursor-not-allowed disabled:opacity-50 dark:text-surface-400 dark:hover:text-surface-200"
               >
                 <Plus className="h-3 w-3" />
                 Pridėti
@@ -422,14 +422,14 @@ export default function InlineListingCard({
                 className={cn(
                   "relative grid h-10 w-10 place-items-center rounded-full transition-all hover:scale-105 active:scale-95 disabled:cursor-default disabled:hover:scale-100",
                   micStatus === "recording"
-                    ? "bg-[#DC2626] text-white shadow-sm"
-                    : "border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] hover:bg-[#E9E4D9] dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700",
+                    ? "bg-danger text-white shadow-sm"
+                    : "border border-surface-200 bg-surface-100 text-brand-500 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700",
                 )}
               >
                 {micStatus === "recording" && (
                   <span
                     aria-hidden
-                    className="absolute inset-0 rounded-full bg-[#DC2626]/40 motion-safe:animate-ping"
+                    className="absolute inset-0 rounded-full bg-danger/40 motion-safe:animate-ping"
                   />
                 )}
                 {micStatus === "transcribing" ? (
@@ -444,7 +444,7 @@ export default function InlineListingCard({
               onClick={() => fileInputRef.current?.click()}
               disabled={photosUploading || attachmentUrls.length >= 5}
               aria-label="Pridėti nuotraukų"
-              className="grid h-10 w-10 place-items-center rounded-full border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] transition-all hover:scale-105 hover:bg-[#E9E4D9] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
+              className="grid h-10 w-10 place-items-center rounded-full border border-surface-200 bg-surface-100 text-brand-500 transition-all hover:scale-105 hover:bg-surface-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
             >
               {photosUploading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

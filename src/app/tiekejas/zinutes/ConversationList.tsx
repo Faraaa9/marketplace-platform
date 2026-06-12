@@ -77,7 +77,7 @@ function ConversationAvatar({
 }) {
   return (
     <div className="relative shrink-0" title={presenceLabel || undefined}>
-      <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-[#ece9e2]/40 text-caption font-semibold text-[#1E1B18] ring-1 ring-[#ece9e2]">
+      <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-surface-0/40 text-caption font-semibold text-surface-900 ring-1 ring-surface-0">
         {image ? (
           <Image
             src={image}
@@ -94,7 +94,7 @@ function ConversationAvatar({
       {presenceLevel && (
         <span
           className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-            presenceLevel === "online" ? "bg-emerald-500" : "bg-[#C29B74]"
+            presenceLevel === "online" ? "bg-emerald-500" : "bg-brand-300"
           }`}
           aria-label={presenceLabel || (presenceLevel === "online" ? "Prisijungęs" : "Neseniai aktyvus")}
         />
@@ -273,13 +273,13 @@ export async function ConversationList({
         return (
           <Link key={`${c.type}-${c.id}`} href={c.href} className="group block">
             <article
-              className={`relative border-b border-[#EAEAEA] bg-white transition-colors hover:bg-[#faeee7] dark:border-surface-700/60 dark:bg-surface-900/50 dark:hover:bg-surface-800/70 ${
+              className={`relative border-b border-surface-100 bg-white transition-colors hover:bg-brand-50 dark:border-surface-700/60 dark:bg-surface-900/50 dark:hover:bg-surface-800/70 ${
                 compact ? "p-3" : "p-4 sm:p-5"
               } ${
                 activeHref === c.href
-                  ? "bg-[#faeee7] dark:border-surface-700 dark:bg-surface-800/70"
+                  ? "bg-brand-50 dark:border-surface-700 dark:bg-surface-800/70"
                   : highlight
-                  ? "bg-[#ece9e2]/40 dark:border-brand-800/40"
+                  ? "bg-surface-0/40 dark:border-brand-800/40"
                   : "bg-white dark:border-surface-700/50"
               }`}
             >
@@ -293,7 +293,7 @@ export async function ConversationList({
                     presenceLabel={c.presenceLabel}
                   />
                   {highlight && (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C29B74]" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-brand-300" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -301,20 +301,20 @@ export async function ConversationList({
                     <h3
                       className={`min-w-0 flex-1 truncate text-body-sm ${
                         highlight
-                          ? "font-semibold text-[#1E1B18] dark:text-white"
-                          : "font-semibold text-[#1E1B18] dark:text-surface-200"
+                          ? "font-semibold text-surface-900 dark:text-white"
+                          : "font-semibold text-surface-900 dark:text-surface-200"
                       }`}
                     >
                       {decodeHtmlEntities(c.title)}
                     </h3>
-                    <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6B6760]" dateTime={c.lastMessageAt.toISOString()}>
+                    <time className="ml-auto shrink-0 text-right text-micro font-medium leading-5 text-surface-500" dateTime={c.lastMessageAt.toISOString()}>
                       {formatRelativeDate(c.lastMessageAt)}
                     </time>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       {shouldShowSubtitle(c.title, c.subtitle) && (
-                        <p className="truncate text-micro font-normal text-[#6B6760]">
+                        <p className="truncate text-micro font-normal text-surface-500">
                           {decodeHtmlEntities(c.subtitle)}
                         </p>
                       )}
@@ -329,8 +329,8 @@ export async function ConversationList({
                   <p
                     className={`mt-1 line-clamp-1 text-body-sm font-normal ${
                       highlight
-                        ? "text-[#6B6760] dark:text-surface-300"
-                        : "text-[#6B6760] dark:text-surface-400"
+                        ? "text-surface-500 dark:text-surface-300"
+                        : "text-surface-500 dark:text-surface-400"
                     }`}
                   >
                     {c.fromProvider && <span>Jūs: </span>}

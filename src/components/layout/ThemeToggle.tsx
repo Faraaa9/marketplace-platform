@@ -32,7 +32,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={isDark ? "Įjungti šviesų režimą" : "Įjungti tamsų režimą"}
-      className="rounded-lg p-2 text-[#57534C] transition-colors hover:bg-[#E2DDD2] dark:text-surface-300 dark:hover:bg-surface-800"
+      className="rounded-lg p-2 text-surface-600 transition-colors hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
     </button>

@@ -54,7 +54,7 @@ export default function CityFilter({ cities, activeLocation }: CityFilterProps) 
         className={`flex h-11 items-center gap-1.5 rounded-lg border px-3.5 text-body-sm font-medium transition-all duration-150 ${
           activeLocation || open
             ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400"
-            : "border-[#cdc09f] bg-[#fbfaf6] text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+            : "border-surface-200 bg-surface-50 text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
         }`}
       >
         <MapPin className="h-4 w-4 shrink-0" />
@@ -79,7 +79,7 @@ export default function CityFilter({ cities, activeLocation }: CityFilterProps) 
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 max-h-72 w-56 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-[#d2c5a1] bg-[#fbfaf6] p-1.5 shadow-lg dark:border-surface-700 dark:bg-surface-900">
+        <div className="absolute left-0 top-full z-50 mt-2 max-h-72 w-56 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-surface-200 bg-surface-50 p-1.5 shadow-lg dark:border-surface-700 dark:bg-surface-900">
           {cities.map((city) => {
             const isSelected = activeLocation === city;
             return (

@@ -169,7 +169,7 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-body-sm font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-300">
               <BadgeIcon className="h-3.5 w-3.5" /> {config.heroBadge}
             </span>
-            <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-surface-900 sm:text-[44px] sm:leading-[1.05] dark:text-white">
+            <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-surface-900 sm:text-display sm:leading-[1.05] dark:text-white">
               {config.h1}
             </h1>
             <p className="mt-4 max-w-xl text-body text-surface-600 dark:text-surface-300">{config.heroLead}</p>

@@ -16,7 +16,7 @@ export function ThreadViewSkeleton() {
       </div>
 
       {/* Contact card */}
-      <div className="mb-6 rounded-2xl border border-[#EFECE6] bg-white p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50">
+      <div className="mb-6 rounded-2xl border border-surface-0 bg-white p-6 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/50">
         <Skeleton className="mb-3 h-3 w-20" />
         <div className="flex flex-wrap gap-4">
           <Skeleton className="h-4 w-28" />
@@ -26,8 +26,8 @@ export function ThreadViewSkeleton() {
       </div>
 
       {/* Conversation card */}
-      <div className="rounded-2xl border border-[#EFECE6] bg-white p-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700/50 dark:bg-surface-900/50">
-        <div className="mb-4 flex items-center gap-3 border-b border-[#EFECE6] pb-4 dark:border-surface-700">
+      <div className="rounded-2xl border border-surface-0 bg-white p-6 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/50">
+        <div className="mb-4 flex items-center gap-3 border-b border-surface-0 pb-4 dark:border-surface-700">
           <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-32" />

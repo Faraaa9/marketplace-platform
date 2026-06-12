@@ -42,7 +42,7 @@ export default function GlobalStoriesStrip() {
 
   const logoCircle = (
     <span
-      className={`grid h-8 w-8 place-items-center rounded-full bg-[#C25E3A] text-[13px] font-bold text-white ${
+      className={`grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-caption font-bold text-white ${
         hasStories ? "ring-[1.5px] ring-white dark:ring-surface-900" : ""
       }`}
     >
@@ -68,7 +68,7 @@ export default function GlobalStoriesStrip() {
           </button>
           <Link
             href="/"
-            className="text-[17px] font-semibold tracking-tight text-[#26231F] dark:text-surface-50"
+            className="text-body-lg font-semibold tracking-tight text-surface-900 dark:text-surface-50"
           >
             {APP_NAME}
           </Link>
@@ -76,7 +76,7 @@ export default function GlobalStoriesStrip() {
       ) : (
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           {logoCircle}
-          <span className="text-[17px] font-semibold tracking-tight text-[#26231F] dark:text-surface-50">
+          <span className="text-body-lg font-semibold tracking-tight text-surface-900 dark:text-surface-50">
             {APP_NAME}
           </span>
         </Link>

@@ -158,13 +158,13 @@ export default function ImproveDescriptionButton({
   }
 
   const buttonClass = hero
-    ? "border border-[#D8D2C6] bg-[#F1EDE4]/70 px-4 py-2 text-[#57534C] hover:bg-[#E9E4D9]"
+    ? "border border-surface-200 bg-surface-100/70 px-4 py-2 text-surface-600 hover:bg-surface-100"
     : "border border-surface-200 bg-white px-3.5 py-1.5 text-surface-700 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:bg-surface-800";
 
-  const iconClass = hero ? "text-[#C25E3A]" : "text-brand-600 dark:text-brand-400";
+  const iconClass = hero ? "text-brand-500" : "text-brand-600 dark:text-brand-400";
 
   const undoClass = hero
-    ? "text-[#57534C] hover:bg-[#E9E4D9]"
+    ? "text-surface-600 hover:bg-surface-100"
     : "text-surface-500 hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800";
 
   const remaining = recommendations.filter((r) => !addedFields.includes(r.field));
@@ -209,7 +209,7 @@ export default function ImproveDescriptionButton({
       {error && (
         <p
           role="alert"
-          className={cn("text-xs", hero ? "text-[#B4451F]" : "text-red-500 dark:text-red-400")}
+          className={cn("text-xs", hero ? "text-brand-600" : "text-red-500 dark:text-red-400")}
         >
           {error}
         </p>
@@ -220,7 +220,7 @@ export default function ImproveDescriptionButton({
           className={cn(
             "mt-1 rounded-xl border p-3",
             hero
-              ? "border-[#E2DDD2] bg-[#F1EDE4]/80"
+              ? "border-surface-200 bg-surface-100/80"
               : "border-surface-200 bg-surface-50 dark:border-surface-700 dark:bg-surface-800/50",
           )}
         >
@@ -229,7 +229,7 @@ export default function ImproveDescriptionButton({
             <p
               className={cn(
                 "text-xs font-semibold",
-                hero ? "text-[#57534C]" : "text-surface-700 dark:text-surface-200",
+                hero ? "text-surface-600" : "text-surface-700 dark:text-surface-200",
               )}
             >
               Kad tiekėjai galėtų tiksliai įkainoti — spustelėkite ir papildykite:
@@ -250,7 +250,7 @@ export default function ImproveDescriptionButton({
                       added
                         ? "cursor-default opacity-60"
                         : hero
-                          ? "text-[#57534C] hover:bg-[#E9E4D9]"
+                          ? "text-surface-600 hover:bg-surface-100"
                           : "text-surface-600 hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800",
                     )}
                   >
@@ -273,7 +273,7 @@ export default function ImproveDescriptionButton({
               className={cn(
                 "mt-1.5 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition-colors",
                 hero
-                  ? "text-[#C25E3A] hover:bg-[#E9E4D9]"
+                  ? "text-brand-500 hover:bg-surface-100"
                   : "text-brand-600 hover:bg-surface-100 dark:text-brand-400 dark:hover:bg-surface-800",
               )}
             >

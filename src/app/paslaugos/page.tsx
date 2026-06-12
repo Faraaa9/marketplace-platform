@@ -21,10 +21,10 @@ export const metadata: Metadata = {
 export default function PaslaugosHubPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-      <h1 className="text-3xl font-bold tracking-tight text-[#26231F] dark:text-surface-50 sm:text-4xl">
+      <h1 className="text-3xl font-bold tracking-tight text-surface-900 dark:text-surface-50 sm:text-4xl">
         Paslaugos pagal miestą
       </h1>
-      <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#6B6760] dark:text-surface-400">
+      <p className="mt-3 max-w-2xl text-base leading-relaxed text-surface-500 dark:text-surface-400">
         Pasirinkite paslaugą savo mieste — aprašykite darbą ir nemokamai
         gaukite pasiūlymus iš patikrintų meistrų.
       </p>
@@ -37,7 +37,7 @@ export default function PaslaugosHubPage() {
             <section key={city} aria-labelledby={`city-${city}`}>
               <h2
                 id={`city-${city}`}
-                className="text-lg font-semibold text-[#26231F] dark:text-surface-100"
+                className="text-lg font-semibold text-surface-900 dark:text-surface-100"
               >
                 {CITY_LOCATIVE[city]}
               </h2>
@@ -46,7 +46,7 @@ export default function PaslaugosHubPage() {
                   <li key={l.slug}>
                     <Link
                       href={`/paslaugos/${l.slug}`}
-                      className="text-sm text-[#6B6760] transition-colors duration-200 hover:text-[#C25E3A] dark:text-surface-400 dark:hover:text-brand-400"
+                      className="text-sm text-surface-500 transition-colors duration-200 hover:text-brand-500 dark:text-surface-400 dark:hover:text-brand-400"
                     >
                       {l.label} {CITY_LOCATIVE[city]}
                     </Link>
@@ -58,12 +58,12 @@ export default function PaslaugosHubPage() {
         })}
       </div>
 
-      <div className="mt-14 border-t border-[#DBD6CB] pt-8 dark:border-surface-800">
-        <p className="text-sm text-[#6B6760] dark:text-surface-400">
+      <div className="mt-14 border-t border-surface-100 pt-8 dark:border-surface-800">
+        <p className="text-sm text-surface-500 dark:text-surface-400">
           Neradote savo paslaugos ar miesto?{" "}
           <Link
             href="/uzklausos/nauja"
-            className="font-medium text-[#C25E3A] hover:underline dark:text-brand-400"
+            className="font-medium text-brand-500 hover:underline dark:text-brand-400"
           >
             Pateikite užklausą
           </Link>{" "}

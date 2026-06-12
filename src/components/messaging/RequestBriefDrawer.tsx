@@ -38,7 +38,7 @@ export function RequestBriefDrawer({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-[#1E1B18] px-3.5 py-2 text-body-sm font-semibold text-white transition hover:bg-[#C29B74] focus:outline-none focus:ring-2 focus:ring-[#C29B74]/30",
+          "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-surface-900 px-3.5 py-2 text-body-sm font-semibold text-white transition hover:bg-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300/30",
           triggerClassName,
         )}
       >
@@ -73,14 +73,14 @@ export function RequestBriefDrawer({
               <p className="text-micro font-semibold uppercase tracking-wide text-surface-400">
                 Užklausos peržiūra
               </p>
-              <p className="text-body-sm font-semibold text-[#1E1B18] dark:text-white">
+              <p className="text-body-sm font-semibold text-surface-900 dark:text-white">
                 {brief.categoryLabel}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="grid min-h-11 min-w-11 place-items-center rounded-xl text-[#6B6760] transition hover:bg-[#FBF9F4] hover:text-[#1E1B18] dark:hover:bg-surface-800 dark:hover:text-white"
+              className="grid min-h-11 min-w-11 place-items-center rounded-xl text-surface-500 transition hover:bg-surface-50 hover:text-surface-900 dark:hover:bg-surface-800 dark:hover:text-white"
               aria-label="Uždaryti"
             >
               <X className="h-5 w-5" />
@@ -88,11 +88,11 @@ export function RequestBriefDrawer({
           </div>
 
           <div className="p-6 sm:p-8">
-            <div className="relative rounded-2xl border border-[#EFECE6] bg-white p-5 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:border-surface-700 dark:bg-surface-950/40 sm:p-7">
+            <div className="relative rounded-2xl border border-surface-0 bg-white p-5 shadow-lg dark:border-surface-700 dark:bg-surface-950/40 sm:p-7">
               <span className="inline-flex rounded-lg bg-brand-50 px-2.5 py-1 text-micro font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-400">
                 {brief.categoryLabel}
               </span>
-              <h2 className="mt-4 text-heading-2 font-semibold text-[#1E1B18] dark:text-white">
+              <h2 className="mt-4 text-heading-2 font-semibold text-surface-900 dark:text-white">
                 {brief.title}
               </h2>
               <p className="mt-3 whitespace-pre-wrap text-body leading-relaxed text-surface-600 dark:text-surface-300">

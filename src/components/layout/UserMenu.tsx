@@ -44,26 +44,26 @@ export default function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Paskyros meniu"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-[#CFC9BC] bg-[#F2EFE8]/70 transition-colors hover:bg-[#E9E4D9] sm:h-auto sm:w-auto sm:gap-2 sm:py-1 sm:pl-1 sm:pr-2.5"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-surface-200 bg-surface-50/70 transition-colors hover:bg-surface-100 sm:h-auto sm:w-auto sm:gap-2 sm:py-1 sm:pl-1 sm:pr-2.5"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#C25E3A] text-[12px] font-semibold text-white sm:h-7 sm:w-7">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-micro font-semibold text-white sm:h-7 sm:w-7">
           {initial}
         </span>
-        <span className="hidden max-w-[140px] truncate text-sm font-medium text-[#26231F] sm:block">
+        <span className="hidden max-w-[140px] truncate text-sm font-medium text-surface-900 sm:block">
           {name}
         </span>
         <ChevronDown
-          className={cn("hidden h-4 w-4 text-[#57534C] transition-transform sm:block", open && "rotate-180")}
+          className={cn("hidden h-4 w-4 text-surface-600 transition-transform sm:block", open && "rotate-180")}
         />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl border border-[#DBD6CB] bg-white shadow-lg shadow-black/5"
+          className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-lg shadow-black/5"
         >
-          <div className="border-b border-[#EAE6DD] px-4 py-3">
-            <p className="truncate text-sm font-normal text-[#26231F]">
+          <div className="border-b border-surface-100 px-4 py-3">
+            <p className="truncate text-sm font-normal text-surface-900">
               {email || "Paskyra"}
             </p>
           </div>
@@ -74,23 +74,23 @@ export default function UserMenu() {
                 href={link.href}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="flex min-h-[44px] items-center px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
+                className="flex min-h-[44px] items-center px-4 py-2 text-sm text-surface-900 transition-colors hover:bg-surface-50"
               >
                 {link.label}
               </Link>
             ))}
           </div>
-          <div className="border-t border-[#EAE6DD] py-1.5">
+          <div className="border-t border-surface-100 py-1.5">
             <button
               role="menuitem"
               onClick={() => {
                 setOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="flex min-h-[44px] w-full items-center justify-between px-4 py-2 text-sm text-[#26231F] transition-colors hover:bg-[#F2EFE8]"
+              className="flex min-h-[44px] w-full items-center justify-between px-4 py-2 text-sm text-surface-900 transition-colors hover:bg-surface-50"
             >
               Atsijungti
-              <LogOut className="h-4 w-4 text-[#57534C]" />
+              <LogOut className="h-4 w-4 text-surface-600" />
             </button>
           </div>
         </div>

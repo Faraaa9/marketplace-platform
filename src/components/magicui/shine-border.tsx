@@ -16,7 +16,7 @@ export function ShineBorder({
   className,
   borderWidth = 1,
   duration = 8,
-  color = ["#6366f1", "#a855f7", "#ec4899"],
+  color = ["#c25e3a", "#cb7d53", "#a94e2f"], // brand 500/400/600 (was off-brand indigo/purple); inline-gradient values
 }: ShineBorderProps) {
   return (
     <div

@@ -98,7 +98,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Apatinis meniu"
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#DBD6CB] bg-[#ECE9E2]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] dark:border-surface-800 dark:bg-surface-900/95 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-surface-200 bg-surface-0/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] dark:border-surface-800 dark:bg-surface-900/95 md:hidden"
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-around">
         {items.map((item) => {
@@ -111,16 +111,16 @@ export default function MobileBottomNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors",
+                  "relative flex h-14 min-h-[44px] flex-col items-center justify-center gap-0.5 text-micro font-medium transition-colors",
                   active
-                    ? "text-[#26231F] dark:text-surface-100"
-                    : "text-[#7A746A] hover:text-[#26231F] dark:text-surface-400 dark:hover:text-surface-200"
+                    ? "text-surface-900 dark:text-surface-100"
+                    : "text-surface-500 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-200"
                 )}
               >
                 <span className="relative">
                   <Icon className={cn("h-5 w-5", active && "stroke-[2.25]")} />
                   {showBadge && (
-                    <span className="absolute -right-1.5 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#C25E3A] px-1 text-[10px] font-bold leading-none text-white">
+                    <span className="absolute -right-1.5 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-500 px-1 text-micro font-bold leading-none text-white">
                       {unreadMessages > 9 ? "9+" : unreadMessages}
                     </span>
                   )}

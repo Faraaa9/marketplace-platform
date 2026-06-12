@@ -45,7 +45,7 @@ export default function DensityToggle() {
       title={label}
       className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
         isCompact
-          ? "bg-[#fbfaf6] text-surface-900 shadow-sm ring-1 ring-inset ring-[#cdc09f] dark:bg-surface-800 dark:text-white dark:ring-surface-600"
+          ? "bg-surface-50 text-surface-900 shadow-sm ring-1 ring-inset ring-surface-200 dark:bg-surface-800 dark:text-white dark:ring-surface-600"
           : "text-surface-500 hover:bg-surface-50/70 hover:text-surface-800 dark:hover:bg-surface-800"
       }`}
       suppressHydrationWarning

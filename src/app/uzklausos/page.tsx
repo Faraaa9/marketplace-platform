@@ -350,10 +350,10 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     <div className="min-h-screen">
       {/* ── Board header ── */}
       <header className="mx-auto max-w-5xl px-4 pb-6 pt-12 text-center sm:px-6 sm:pt-16">
-        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brand-600 dark:text-brand-400">
+        <p className="text-micro font-semibold uppercase tracking-[0.24em] text-brand-600 dark:text-brand-400">
           PaslaugųRinka
         </p>
-        <h1 className="mt-2.5 font-serif text-[2.35rem] font-semibold leading-[1.08] tracking-tight text-surface-900 dark:text-white sm:text-[3rem]">
+        <h1 className="mt-2.5 font-serif text-display font-semibold leading-[1.08] tracking-tight text-surface-900 dark:text-white sm:text-[3rem]">
           Užklausų lenta
         </h1>
         <p className="mx-auto mt-3 max-w-md font-serif text-[1.05rem] italic text-surface-500 dark:text-surface-300">
@@ -363,12 +363,12 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           {stats.map((s) => (
             <span
               key={s.label}
-              className="inline-flex items-baseline gap-1.5 rounded-md bg-[#efe8d3]/90 px-3 py-1.5 ring-1 ring-inset ring-[#d2c5a1]/70 dark:bg-surface-800/70 dark:ring-surface-700"
+              className="inline-flex items-baseline gap-1.5 rounded-md bg-surface-100/90 px-3 py-1.5 ring-1 ring-inset ring-surface-200/70 dark:bg-surface-800/70 dark:ring-surface-700"
             >
               <span className="font-serif text-[1.05rem] font-semibold text-surface-900 dark:text-white">
                 {s.value}
               </span>
-              <span className="text-[0.72rem] font-medium text-surface-600 dark:text-surface-400">
+              <span className="text-micro font-medium text-surface-600 dark:text-surface-400">
                 {s.label}
               </span>
             </span>
@@ -396,7 +396,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors ${
                 fitActive
                   ? "border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-400 dark:hover:bg-brand-900"
-                  : "border-[#cdc09f] bg-[#fbfaf6] text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                  : "border-surface-200 bg-surface-50 text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
               }`}
             >
               {fitActive && <Check className="h-3.5 w-3.5" />}
@@ -438,7 +438,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                             {r.categoryNames.map((name, categoryIndex) => (
                               <span
                                 key={`${name}-${categoryIndex}`}
-                                className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-[0.78rem] font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
+                                className="inline-flex items-center rounded-md bg-[#ebe2cb] px-2.5 py-1 font-serif text-caption font-medium text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700"
                               >
                                 {name}
                               </span>
@@ -447,7 +447,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                         )}
                         {!isMatched && (
                           <span
-                            className={`uzklausa-card__competition ml-auto inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[0.72rem] font-semibold ring-1 ring-inset ${competition.chip}`}
+                            className={`uzklausa-card__competition ml-auto inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-micro font-semibold ring-1 ring-inset ${competition.chip}`}
                           >
                             {competition.opportunity ? (
                               <Sparkles className="h-3 w-3" />
@@ -461,20 +461,20 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
 
                       {/* title */}
                       <h3
-                        className={`mt-3.5 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]${
+                        className={`mt-3.5 font-serif text-heading-2 font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]${
                           isMatched ? " pr-[96px] sm:pr-[172px]" : ""
                         }`}
                       >
                         {r.title}
                         {isNew(r.createdAt) && !isMatched && (
-                          <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
+                          <span className="ml-2 inline-block -rotate-3 rounded border border-brand-500/50 px-1.5 py-0.5 align-middle text-micro font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
                             Nauja
                           </span>
                         )}
                       </h3>
 
                       {/* description */}
-                      <p className="uzklausa-card__description mt-2 whitespace-pre-wrap text-[0.92rem] leading-relaxed text-surface-600 dark:text-surface-300">
+                      <p className="uzklausa-card__description mt-2 whitespace-pre-wrap text-body-sm leading-relaxed text-surface-600 dark:text-surface-300">
                         {isOpenedRequest ? r.description : truncate(r.description, 150)}
                       </p>
 
@@ -512,7 +512,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                         </div>
 
                         {isMatched && !isOwnRequest ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ece6d7] px-4 py-2 font-serif text-[0.9rem] font-medium text-[#9b8f76] cursor-default dark:bg-surface-800 dark:text-surface-500">
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-0 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-400 cursor-default dark:bg-surface-800 dark:text-surface-500">
                             Pasiūlymai nepriimami
                           </span>
                         ) : (
@@ -585,7 +585,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
             {page > 1 && (
               <Link
                 href={buildUrl({ page: String(page - 1) })}
-                className="rounded-lg bg-[#efe8d3]/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-[#d2c5a1]/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
+                className="rounded-lg bg-surface-100/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-surface-200/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
               >
                 Ankstesnis
               </Link>
@@ -596,7 +596,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
             {page < pages && (
               <Link
                 href={buildUrl({ page: String(page + 1) })}
-                className="rounded-lg bg-[#efe8d3]/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-[#d2c5a1]/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
+                className="rounded-lg bg-surface-100/90 px-4 py-2 font-serif text-[0.9rem] font-medium text-surface-700 ring-1 ring-inset ring-surface-200/70 transition-colors hover:bg-[#e7dec5] dark:bg-surface-800 dark:text-surface-200 dark:ring-surface-700"
               >
                 Kitas
               </Link>
