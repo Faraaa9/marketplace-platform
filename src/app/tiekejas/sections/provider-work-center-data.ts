@@ -7,6 +7,8 @@ import { createServerTimer } from "@/lib/server-timing";
 
 export type WorkConversation = {
   id: string;
+  /** "message" = chat thread (response/inquiry), "request" = own submitted request. */
+  kind: "message" | "request";
   href: string;
   title: string;
   meta: string;
@@ -14,10 +16,20 @@ export type WorkConversation = {
   lastMessageAt: Date;
   unread: boolean;
   fromProvider: boolean;
-  roleLabel: "Klientas" | "Tiekėjas";
-  stateLabel: "Nauja žinutė" | "Vyksta" | "Priimta" | null;
+  roleLabel: "Klientas" | "Tiekėjas" | "Užklausa";
+  stateLabel: "Nauja žinutė" | "Naujas atsakymas" | "Vyksta" | "Priimta" | null;
   avatarImage: string | null;
 };
+
+function pasiulymaiLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} pasiūlymas`;
+  if (mod10 >= 2 && mod10 <= 9 && (mod100 < 11 || mod100 > 19)) {
+    return `${count} pasiūlymai`;
+  }
+  return `${count} pasiūlymų`;
+}
 
 export type ReadinessStep = {
   label: string;
@@ -127,15 +139,34 @@ export async function getProviderWorkCenterData(userId: string) {
         },
       },
     }),
-    // Requests this user submitted as a client — the dashboard tile links to
-    // /paskyra/uzklausos where the full list lives.
+    // Requests this user submitted as a client — merged into the work queue
+    // as "Užklausa" rows; the tile links to /paskyra/uzklausos for the full list.
     prisma.serviceRequest.findMany({
       where: {
         clientId: userId,
         status: { in: ["OPEN", "PENDING_CONFIRMATION"] },
       },
+      orderBy: { createdAt: "desc" },
+      take: DASHBOARD_THREAD_LIMIT,
       select: {
-        responses: { select: { lastMessageAt: true, clientLastReadAt: true } },
+        id: true,
+        trackingToken: true,
+        title: true,
+        location: true,
+        description: true,
+        createdAt: true,
+        responses: {
+          select: {
+            message: true,
+            lastMessageAt: true,
+            clientLastReadAt: true,
+            messages: {
+              select: { content: true, senderId: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+          },
+        },
       },
     }),
   ]);
@@ -161,6 +192,7 @@ export async function getProviderWorkCenterData(userId: string) {
     const accepted = response.request.acceptedResponseId === response.id;
     return {
       id: `response-${response.id}`,
+      kind: "message" as const,
       href: `/tiekejas/zinutes?thread=response-${response.id}`,
       title: response.request.clientName || response.request.title,
       meta: `${response.request.title} · ${response.request.location}`,
@@ -186,6 +218,7 @@ export async function getProviderWorkCenterData(userId: string) {
         : inquiry.provider.name || "Tiekėjas";
       return {
         id: viewerIsProvider ? inquiry.id : inquiry.trackingToken,
+        kind: "message" as const,
         href: `/tiekejas/zinutes?thread=${encodeURIComponent(viewerIsProvider ? inquiry.id : inquiry.trackingToken)}`,
         title,
         meta: viewerIsProvider ? "Žinutė iš profilio" : "Mano išsiųsta žinutė",
@@ -199,7 +232,43 @@ export async function getProviderWorkCenterData(userId: string) {
       };
     });
 
-  const conversations = sortWorkQueue([...responseConversations, ...directConversations]);
+  // Own submitted requests join the queue as "Užklausa" rows — a request is
+  // also a text conversation, it just lives on the tracker page.
+  const requestConversations: WorkConversation[] = myRequests.map((request) => {
+    const unreadCount = request.responses.filter(
+      (r) => !r.clientLastReadAt || r.lastMessageAt > r.clientLastReadAt,
+    ).length;
+    const latest = request.responses.reduce<(typeof request.responses)[number] | null>(
+      (max, r) => (!max || r.lastMessageAt > max.lastMessageAt ? r : max),
+      null,
+    );
+    const lastMessageAt =
+      latest && latest.lastMessageAt > request.createdAt
+        ? latest.lastMessageAt
+        : request.createdAt;
+    const lastMsg = latest?.messages[0] ?? null;
+    return {
+      id: `request-${request.id}`,
+      kind: "request" as const,
+      href: `/uzklausos/sekti/${request.trackingToken}`,
+      title: request.title,
+      meta: `${pasiulymaiLabel(request.responses.length)} · ${request.location}`,
+      preview: lastMsg?.content ?? latest?.message ?? request.description,
+      lastMessageAt,
+      unread: unreadCount > 0,
+      fromProvider: lastMsg ? lastMsg.senderId === userId : false,
+      roleLabel: "Užklausa",
+      stateLabel:
+        unreadCount > 0 ? "Naujas atsakymas" : request.responses.length > 0 ? "Vyksta" : null,
+      avatarImage: null,
+    };
+  });
+
+  const conversations = sortWorkQueue([
+    ...responseConversations,
+    ...directConversations,
+    ...requestConversations,
+  ]);
   const readinessSteps: ReadinessStep[] = [
     { label: "Paskyra patvirtinta", done: !!user?.emailVerified, href: "/patvirtinti" },
     { label: "Profilis aktyvus", done: profile?.isActive ?? false, href: "/tiekejas/profilis" },
@@ -216,13 +285,16 @@ export async function getProviderWorkCenterData(userId: string) {
     0,
   );
 
+  const messageConversations = conversations.filter((c) => c.kind === "message");
+
   return {
     user,
     profile,
     conversations,
     workQueue: conversations.slice(0, WORK_QUEUE_LIMIT),
-    unreadCount: conversations.filter((conversation) => conversation.unread).length,
-    activeCount: conversations.length,
+    workQueueLimit: WORK_QUEUE_LIMIT,
+    unreadCount: messageConversations.filter((conversation) => conversation.unread).length,
+    activeCount: messageConversations.length,
     myRequestsActiveCount: myRequests.length,
     myRequestsUnreadCount,
     acceptedCount: responseConversations.filter((conversation) => conversation.stateLabel === "Priimta").length,

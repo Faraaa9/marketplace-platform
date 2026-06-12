@@ -3,22 +3,36 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { SessionGate } from "@/components/auth/SessionGate";
 import { prisma } from "@/lib/prisma";
-import { ProviderWorkCenter } from "./sections/ProviderWorkCenter";
+import { ProviderWorkCenter, type WorkQueueFilter } from "./sections/ProviderWorkCenter";
 import { ProviderWorkCenterSkeleton } from "./sections/ProviderWorkCenterSkeleton";
 
-export default function ProviderDashboardPage() {
+interface PageProps {
+  searchParams: Promise<{ rodyti?: string }>;
+}
+
+export default function ProviderDashboardPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
       <Suspense fallback={<ProviderWorkCenterSkeleton />}>
         <SessionGate requireRole="PROVIDER" callbackUrl="/tiekejas">
-          {(userId) => <DashboardBody userId={userId} />}
+          {(userId) => <DashboardBody userId={userId} searchParams={searchParams} />}
         </SessionGate>
       </Suspense>
     </div>
   );
 }
 
-async function DashboardBody({ userId }: { userId: string }) {
+async function DashboardBody({
+  userId,
+  searchParams,
+}: {
+  userId: string;
+  searchParams: Promise<{ rodyti?: string }>;
+}) {
+  const { rodyti } = await searchParams;
+  const filter: WorkQueueFilter =
+    rodyti === "zinutes" || rodyti === "uzklausos" ? rodyti : "visos";
+
   // The proxy + gate guarantee role=PROVIDER, but a provider-role user can still
   // lack a profile (mid-onboarding). Without this the sections would render
   // misleading "suspended" state off a null profile.
@@ -29,7 +43,7 @@ async function DashboardBody({ userId }: { userId: string }) {
 
   if (!profile) return <NoProviderProfile />;
 
-  return <ProviderWorkCenter userId={userId} slug={profile.slug} />;
+  return <ProviderWorkCenter userId={userId} slug={profile.slug} filter={filter} />;
 }
 
 function NoProviderProfile() {

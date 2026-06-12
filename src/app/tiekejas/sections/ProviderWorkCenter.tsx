@@ -19,20 +19,39 @@ import {
 const ACTION_GREEN = "bg-brand-600 hover:bg-brand-700";
 
 function stateLabelClass(label: WorkConversation["stateLabel"]) {
-  if (label === "Nauja žinutė") return "bg-[#E8F1FF] text-[#1769E0]";
+  if (label === "Nauja žinutė" || label === "Naujas atsakymas") {
+    return "bg-[#E8F1FF] text-[#1769E0]";
+  }
   return "bg-[#F1EEE8] text-[#6D675F]";
 }
+
+export type WorkQueueFilter = "visos" | "zinutes" | "uzklausos";
+
+const QUEUE_FILTERS: { value: WorkQueueFilter; label: string; href: string }[] = [
+  { value: "visos", label: "Visos", href: "/tiekejas" },
+  { value: "zinutes", label: "Žinutės", href: "/tiekejas?rodyti=zinutes" },
+  { value: "uzklausos", label: "Užklausos", href: "/tiekejas?rodyti=uzklausos" },
+];
 
 export async function ProviderWorkCenter({
   userId,
   slug,
+  filter = "visos",
 }: {
   userId: string;
   slug?: string | null;
+  filter?: WorkQueueFilter;
 }) {
   const data = await getProviderWorkCenterData(userId);
   const primaryLabel = data.missingReadiness ? "Sutvarkyti" : "Atidaryti žinutes";
   const primaryHref = data.missingReadiness?.href ?? "/tiekejas/zinutes";
+  const queueSource =
+    filter === "zinutes"
+      ? data.conversations.filter((c) => c.kind === "message")
+      : filter === "uzklausos"
+        ? data.conversations.filter((c) => c.kind === "request")
+        : data.conversations;
+  const workQueue = queueSource.slice(0, data.workQueueLimit);
 
   return (
     <>
@@ -90,25 +109,30 @@ export async function ProviderWorkCenter({
                 Reikia dėmesio
               </h2>
               <p className="mt-1 text-caption text-[#6D675F] dark:text-surface-400">
-                Pirmiausia rodomi pokalbiai, kur klientas laukia jūsų atsakymo.
+                Žinutės ir pateiktos užklausos kartu - pirmiausia tos, kur kažkas naujo.
               </p>
             </div>
             <div className="flex w-fit rounded-full border border-[#DED7CC] bg-[#F5F1EA] p-1 text-caption font-semibold text-[#6D675F] dark:border-surface-700 dark:bg-surface-800">
-              <span className="rounded-full bg-white px-3 py-1.5 text-[#24211D] shadow-sm dark:bg-surface-700 dark:text-white">
-                Visi
-              </span>
-              <Link href="/tiekejas/zinutes?tab=unread" className="px-3 py-1.5">
-                Nauji
-              </Link>
-              <Link href="/tiekejas/zinutes" className="px-3 py-1.5">
-                Vyksta
-              </Link>
+              {QUEUE_FILTERS.map((item) =>
+                item.value === filter ? (
+                  <span
+                    key={item.value}
+                    className="rounded-full bg-white px-3 py-1.5 text-[#24211D] shadow-sm dark:bg-surface-700 dark:text-white"
+                  >
+                    {item.label}
+                  </span>
+                ) : (
+                  <Link key={item.value} href={item.href} className="px-3 py-1.5">
+                    {item.label}
+                  </Link>
+                ),
+              )}
             </div>
           </div>
 
-          {data.workQueue.length > 0 ? (
+          {workQueue.length > 0 ? (
             <div>
-              {data.workQueue.map((conversation) => (
+              {workQueue.map((conversation) => (
                 <ConversationRow key={conversation.id} conversation={conversation} />
               ))}
             </div>
@@ -119,10 +143,12 @@ export async function ProviderWorkCenter({
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-body font-semibold text-[#24211D] dark:text-white">
-                  Naujų žinučių nėra
+                  {filter === "uzklausos" ? "Aktyvių užklausų nėra" : "Naujų žinučių nėra"}
                 </h3>
                 <p className="mt-1 max-w-sm text-body-sm text-[#6D675F] dark:text-surface-400">
-                  Kai klientas parašys arba atsakys į jūsų pasiūlymą, pokalbis atsiras čia.
+                  {filter === "uzklausos"
+                    ? "Pateik užklausą - ji ir tiekėjų atsakymai atsiras čia."
+                    : "Kai klientas parašys arba atsakys į jūsų pasiūlymą, pokalbis atsiras čia."}
                 </p>
               </div>
             </div>
@@ -225,7 +251,13 @@ function ConversationRow({ conversation }: { conversation: WorkConversation }) {
                 {conversation.stateLabel}
               </span>
             )}
-            <span className="inline-flex min-h-[22px] items-center rounded-full bg-[#F1EEE8] px-2 text-[11px] font-bold text-[#6D675F]">
+            <span
+              className={`inline-flex min-h-[22px] items-center rounded-full px-2 text-[11px] font-bold ${
+                conversation.roleLabel === "Užklausa"
+                  ? "bg-[#F6E9E3] text-[#A84E2E]"
+                  : "bg-[#F1EEE8] text-[#6D675F]"
+              }`}
+            >
               {conversation.roleLabel}
             </span>
           </div>
@@ -248,7 +280,13 @@ function ConversationRow({ conversation }: { conversation: WorkConversation }) {
                 : "border border-[#DED7CC] bg-white text-[#24211D] group-hover:bg-[#F7F5F0] dark:border-surface-700 dark:bg-surface-900 dark:text-white"
             }`}
           >
-            {conversation.unread ? "Atsakyti" : "Atidaryti"}
+            {conversation.kind === "request"
+              ? conversation.unread
+                ? "Peržiūrėti"
+                : "Atidaryti"
+              : conversation.unread
+                ? "Atsakyti"
+                : "Atidaryti"}
           </span>
         </div>
       </article>
