@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-12 17:58 — Claude
+
+**Commit:** `f595aad` — docs(design-system): finalize token reference + enforce rule (Step 4) · lokalus
+
+**Pakeitimai:** 2 files changed, 55 insertions(+), 5 deletions(-)
+
+**Failai:**
+- CLAUDE.md
+- DESIGN_SYSTEM.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-12 17:57 — Claude
 
 **Commit:** `306cc8e` — refactor(design-system): migrate hardcoded colors to tokens (Step 3) · lokalus
