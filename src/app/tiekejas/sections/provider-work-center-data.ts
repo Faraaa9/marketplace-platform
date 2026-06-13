@@ -19,17 +19,12 @@ export type WorkConversation = {
   roleLabel: "Klientas" | "Tiekėjas" | "Užklausa";
   stateLabel: "Nauja žinutė" | "Naujas atsakymas" | "Vyksta" | "Priimta" | null;
   avatarImage: string | null;
+  /** Request rows only: drives the "Gyvai" chip, proposal count, and the
+   *  unread badge (= providers with news, NOT message count). */
+  requestStatus?: string;
+  proposalCount?: number;
+  proposalUnreadCount?: number;
 };
-
-function pasiulymaiLabel(count: number): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return `${count} pasiūlymas`;
-  if (mod10 >= 2 && mod10 <= 9 && (mod100 < 11 || mod100 > 19)) {
-    return `${count} pasiūlymai`;
-  }
-  return `${count} pasiūlymų`;
-}
 
 export type ReadinessStep = {
   label: string;
@@ -152,8 +147,7 @@ export async function getProviderWorkCenterData(userId: string) {
         id: true,
         trackingToken: true,
         title: true,
-        location: true,
-        description: true,
+        status: true,
         createdAt: true,
         responses: {
           select: {
@@ -246,21 +240,24 @@ export async function getProviderWorkCenterData(userId: string) {
       latest && latest.lastMessageAt > request.createdAt
         ? latest.lastMessageAt
         : request.createdAt;
-    const lastMsg = latest?.messages[0] ?? null;
     return {
       id: `request-${request.id}`,
       kind: "request" as const,
-      href: `/uzklausos/sekti/${request.trackingToken}`,
+      // Logged-in flows open the request inside the inbox (expanded), not the
+      // retired tracker page.
+      href: `/tiekejas/zinutes?uzklausa=${request.id}`,
       title: request.title,
-      meta: `${pasiulymaiLabel(request.responses.length)} · ${request.location}`,
-      preview: lastMsg?.content ?? latest?.message ?? request.description,
+      meta: "",
+      preview: "",
       lastMessageAt,
       unread: unreadCount > 0,
-      fromProvider: lastMsg ? lastMsg.senderId === userId : false,
+      fromProvider: false,
       roleLabel: "Užklausa",
-      stateLabel:
-        unreadCount > 0 ? "Naujas atsakymas" : request.responses.length > 0 ? "Vyksta" : null,
+      stateLabel: unreadCount > 0 ? "Naujas atsakymas" : null,
       avatarImage: null,
+      requestStatus: request.status,
+      proposalCount: request.responses.length,
+      proposalUnreadCount: unreadCount,
     };
   });
 

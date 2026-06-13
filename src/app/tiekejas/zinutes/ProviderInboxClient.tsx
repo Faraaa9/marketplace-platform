@@ -506,6 +506,12 @@ export default function ProviderInboxClient() {
       .then((loadedConversations) => {
         if (cancelled) return;
         const initialParams = new URLSearchParams(window.location.search);
+        // Deep-link from the dashboard: expand a specific own-request row.
+        const initialUzklausa = initialParams.get("uzklausa");
+        if (initialUzklausa) {
+          didAutoExpandRef.current = true;
+          setExpandedRequestId(initialUzklausa);
+        }
         const initialRequest = initialParams.get("request");
         if (initialRequest) {
           setDraftRequestId(initialRequest);

@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 09:12 — Claude
+
+**Commit:** `ddadee7` — fix(tiekejas): request rows in dashboard match inbox hierarchy · lokalus
+
+**Pakeitimai:** 3 files changed, 116 insertions(+), 42 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/app/tiekejas/sections/provider-work-center-data.ts
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 02:23 — Claude
 
 **Commit:** `1f852ce` — fix(home): stop SSR crash from useSession in RecentRequestBanner · lokalus

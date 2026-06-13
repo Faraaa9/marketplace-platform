@@ -6,9 +6,20 @@ import {
   Circle,
   Coins,
   Eye,
+  FileText,
   MessageCircle,
 } from "lucide-react";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
+
+function pasiulymaiLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} pasiūlymas`;
+  if (mod10 >= 2 && mod10 <= 9 && (mod100 < 11 || mod100 > 19)) {
+    return `${count} pasiūlymai`;
+  }
+  return `${count} pasiūlymų`;
+}
 import {
   getProviderWorkCenterData,
   initials,
@@ -45,12 +56,17 @@ export async function ProviderWorkCenter({
   const data = await getProviderWorkCenterData(userId);
   const primaryLabel = data.missingReadiness ? "Sutvarkyti" : "Atidaryti žinutes";
   const primaryHref = data.missingReadiness?.href ?? "/tiekejas/zinutes";
+  // "Reikia dėmesio" surfaces only items where something is new / awaiting a
+  // reply (unread). Read-through conversations and idle requests live in the
+  // full lists (/tiekejas/zinutes, /paskyra/uzklausos) — keeping them out here
+  // is the "ekranas lieka ramus" behaviour.
+  const attention = data.conversations.filter((c) => c.unread);
   const queueSource =
     filter === "zinutes"
-      ? data.conversations.filter((c) => c.kind === "message")
+      ? attention.filter((c) => c.kind === "message")
       : filter === "uzklausos"
-        ? data.conversations.filter((c) => c.kind === "request")
-        : data.conversations;
+        ? attention.filter((c) => c.kind === "request")
+        : attention;
   const workQueue = queueSource.slice(0, data.workQueueLimit);
 
   return (
@@ -132,9 +148,13 @@ export async function ProviderWorkCenter({
 
           {workQueue.length > 0 ? (
             <div>
-              {workQueue.map((conversation) => (
-                <ConversationRow key={conversation.id} conversation={conversation} />
-              ))}
+              {workQueue.map((conversation) =>
+                conversation.kind === "request" ? (
+                  <RequestRow key={conversation.id} conversation={conversation} />
+                ) : (
+                  <ConversationRow key={conversation.id} conversation={conversation} />
+                ),
+              )}
             </div>
           ) : (
             <div className="grid min-h-[280px] place-items-center px-6 py-12 text-center">
@@ -143,12 +163,12 @@ export async function ProviderWorkCenter({
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-body font-semibold text-[#24211D] dark:text-white">
-                  {filter === "uzklausos" ? "Aktyvių užklausų nėra" : "Naujų žinučių nėra"}
+                  {filter === "uzklausos" ? "Naujų atsakymų nėra" : "Nieko naujo"}
                 </h3>
                 <p className="mt-1 max-w-sm text-body-sm text-[#6D675F] dark:text-surface-400">
                   {filter === "uzklausos"
-                    ? "Pateik užklausą - ji ir tiekėjų atsakymai atsiras čia."
-                    : "Kai klientas parašys arba atsakys į jūsų pasiūlymą, pokalbis atsiras čia."}
+                    ? "Kai tiekėjas atsakys į tavo užklausą, ji atsiras čia."
+                    : "Kai klientas parašys arba atsakys į tavo pasiūlymą, pokalbis atsiras čia."}
                 </p>
               </div>
             </div>
@@ -251,13 +271,7 @@ function ConversationRow({ conversation }: { conversation: WorkConversation }) {
                 {conversation.stateLabel}
               </span>
             )}
-            <span
-              className={`inline-flex min-h-[22px] items-center rounded-full px-2 text-[11px] font-bold ${
-                conversation.roleLabel === "Užklausa"
-                  ? "bg-[#F6E9E3] text-[#A84E2E]"
-                  : "bg-[#F1EEE8] text-[#6D675F]"
-              }`}
-            >
+            <span className="inline-flex min-h-[22px] items-center rounded-full bg-[#F1EEE8] px-2 text-[11px] font-bold text-[#6D675F]">
               {conversation.roleLabel}
             </span>
           </div>
@@ -280,13 +294,70 @@ function ConversationRow({ conversation }: { conversation: WorkConversation }) {
                 : "border border-[#DED7CC] bg-white text-[#24211D] group-hover:bg-[#F7F5F0] dark:border-surface-700 dark:bg-surface-900 dark:text-white"
             }`}
           >
-            {conversation.kind === "request"
-              ? conversation.unread
-                ? "Peržiūrėti"
-                : "Atidaryti"
-              : conversation.unread
-                ? "Atsakyti"
-                : "Atidaryti"}
+            {conversation.unread ? "Atsakyti" : "Atidaryti"}
+          </span>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+// Own submitted requests render distinctly from chat threads: a file glyph
+// (requests have no avatar — easy to spot), a green "Gyvai" chip when open,
+// "N pasiūlymų · prieš X" meta, and a numeric badge of providers with news.
+// No message preview — that text belongs to the proposal threads inside.
+function RequestRow({ conversation }: { conversation: WorkConversation }) {
+  const isLive = conversation.requestStatus === "OPEN";
+  const proposalCount = conversation.proposalCount ?? 0;
+  const unreadCount = conversation.proposalUnreadCount ?? 0;
+  return (
+    <Link href={conversation.href} className="group block">
+      <article
+        className={`grid min-h-[96px] grid-cols-[48px_minmax(0,1fr)] gap-3 border-b border-[#DED7CC]/70 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-[#F7F5F0] dark:border-surface-700 dark:hover:bg-surface-800 sm:grid-cols-[48px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-5 ${
+          conversation.unread ? "bg-[#FFF9ED]" : "bg-[#FFFDF8] dark:bg-surface-900"
+        }`}
+      >
+        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F6E9E3] text-[#A84E2E]">
+          <FileText className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <h3 className="min-w-0 truncate text-body-sm font-semibold text-[#24211D] dark:text-white">
+              {decodeHtmlEntities(conversation.title)}
+            </h3>
+            <span className="inline-flex min-h-[22px] items-center rounded-full bg-[#F6E9E3] px-2 text-[11px] font-bold text-[#A84E2E]">
+              Užklausa
+            </span>
+            {unreadCount > 0 && (
+              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#A84E2E] px-1.5 text-[11px] font-bold text-white">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-caption text-[#6D675F] dark:text-surface-400">
+            {isLive && (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse"
+                />
+                Gyvai
+              </span>
+            )}
+            <span>{pasiulymaiLabel(proposalCount)}</span>
+            <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-[#C9C1B2]" />
+            <span>{formatRelativeDate(conversation.lastMessageAt)}</span>
+          </div>
+        </div>
+        <div className="col-start-2 flex flex-col gap-2 sm:col-auto sm:items-end">
+          <span
+            className={`inline-flex min-h-9 items-center justify-center rounded-xl px-3 text-caption font-semibold transition-colors ${
+              conversation.unread
+                ? `${ACTION_GREEN} text-white`
+                : "border border-[#DED7CC] bg-white text-[#24211D] group-hover:bg-[#F7F5F0] dark:border-surface-700 dark:bg-surface-900 dark:text-white"
+            }`}
+          >
+            {conversation.unread ? "Peržiūrėti" : "Atidaryti"}
           </span>
         </div>
       </article>
