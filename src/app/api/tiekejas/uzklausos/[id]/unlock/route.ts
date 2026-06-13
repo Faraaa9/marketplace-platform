@@ -25,7 +25,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           id: true,
           status: true,
           clientId: true,
-          categoryRef: { select: { id: true, rootId: true } },
+          categoryRef: { select: { id: true, rootId: true, parentId: true } },
         },
       }),
       prisma.providerProfile.findUnique({
@@ -33,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         select: {
           categories: {
             where: activeCategoryFilter(),
-            select: { category: { select: { id: true, rootId: true } } },
+            select: { category: { select: { id: true, rootId: true, parentId: true } } },
           },
         },
       }),

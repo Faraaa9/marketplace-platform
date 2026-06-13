@@ -39,7 +39,7 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
       clientEmail: true,
       clientPhone: true,
       category: true,
-      categoryRef: { select: { id: true, rootId: true, name: true } },
+      categoryRef: { select: { id: true, rootId: true, parentId: true, name: true } },
       categories: { select: { category: { select: { name: true } } } },
       responses: {
         where: { providerId: guard.userId },
@@ -86,7 +86,7 @@ export async function ResponseSection({ params }: { params: Promise<{ id: string
       select: {
         categories: {
           where: activeCategoryFilter(),
-          select: { category: { select: { id: true, rootId: true } } },
+          select: { category: { select: { id: true, rootId: true, parentId: true } } },
         },
       },
     }),

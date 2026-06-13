@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         description: true,
         category: true,
         categoryId: true,
-        categoryRef: { select: { id: true, rootId: true, name: true } },
+        categoryRef: { select: { id: true, rootId: true, parentId: true, name: true } },
         categories: {
           select: { category: { select: { name: true } } },
           orderBy: { sortOrder: "asc" },
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       prisma.providerProfile.findUnique({
         where: { id: guard.providerProfileId },
         select: {
-          categories: { select: { category: { select: { id: true, rootId: true } } } },
+          categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         },
       }),
       isLeadUnlocked(guard.providerProfileId, id),
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       where: { id },
       select: {
         id: true, category: true, categoryId: true, status: true, clientId: true,
-        categoryRef: { select: { id: true, rootId: true } },
+        categoryRef: { select: { id: true, rootId: true, parentId: true } },
         clientName: true, clientEmail: true, title: true, trackingToken: true,
       },
     });

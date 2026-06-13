@@ -43,7 +43,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           category: true,
           status: true,
           clientId: true,
-          categoryRef: { select: { id: true, rootId: true, name: true } },
+          categoryRef: { select: { id: true, rootId: true, parentId: true, name: true } },
           location: true,
           budget: true,
           deadline: true,
@@ -71,7 +71,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           categories: {
             where: activeCategoryFilter(),
             select: {
-              category: { select: { id: true, rootId: true, name: true } },
+              category: { select: { id: true, rootId: true, parentId: true, name: true } },
             },
             orderBy: { sortOrder: "asc" },
           },
