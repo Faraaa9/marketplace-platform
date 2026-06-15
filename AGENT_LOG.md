@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-15 20:14 — Claude
+
+**Commit:** `17df08a` — fix(categories): make picker search precise and results readable
+
+**Pakeitimai:** 1 file changed, 42 insertions(+), 21 deletions(-)
+
+**Failai:**
+- src/components/categories/GroupedCategoryPicker.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 09:12 — Claude
 
 **Commit:** `ddadee7` — fix(tiekejas): request rows in dashboard match inbox hierarchy · lokalus

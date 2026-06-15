@@ -364,20 +364,37 @@ export function CategoryPickerBody({
 
   const matches = useMemo(() => {
     if (!isSearching) return [];
-    const out: { id: string; name: string; slug: string; group: string; breadcrumb: string; childCount?: number }[] = [];
-    function visit(cat: PickerNode, group: string, parents: string[], groupHit: boolean) {
-      const breadcrumb = [...parents, cat.name].join(" / ");
-      if (groupHit || normalize(cat.name).includes(q) || normalize(breadcrumb).includes(q)) {
-        out.push({ id: cat.id, name: cat.name, slug: cat.slug, group, breadcrumb, childCount: cat.childCount });
+    const out: { id: string; name: string; slug: string; group: string; breadcrumb: string; childCount?: number; rank: number }[] = [];
+    function visit(cat: PickerNode, group: string, parents: string[]) {
+      // Match on the category's OWN name only. Matching the group root or the
+      // full ancestor breadcrumb meant a single common letter (e.g. "b", which
+      // sits inside "Statybos, apdaila") pulled in that root's entire subtree —
+      // 1000+ rows that don't contain the query — burying the real hits. The
+      // breadcrumb is still kept for display so duplicates stay distinguishable.
+      const normalizedName = normalize(cat.name);
+      if (normalizedName.includes(q)) {
+        out.push({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          group,
+          // Ancestor path only — the leaf is already shown as the bold name, so
+          // repeating it here just made the line longer. Lets the full branch
+          // (e.g. "Transportas / Krovinių pervežimas") stay readable.
+          breadcrumb: parents.join(" / "),
+          childCount: cat.childCount,
+          rank: normalizedName.startsWith(q) ? 0 : 1,
+        });
       }
-      for (const child of cat.children ?? []) visit(child, group, [...parents, cat.name], groupHit);
+      for (const child of cat.children ?? []) visit(child, group, [...parents, cat.name]);
     }
     for (const group of groups) {
-      const groupHit = normalize(group.root.name).includes(q);
       for (const cat of group.categories) {
-        visit(cat, group.root.name, [group.root.name], groupHit);
+        visit(cat, group.root.name, [group.root.name]);
       }
     }
+    // Prefix matches first ("bal" -> "Baldų..."), then alphabetical.
+    out.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "lt"));
     return out;
   }, [groups, q, isSearching]);
 
@@ -447,14 +464,14 @@ export function CategoryPickerBody({
                     type="button"
                     onClick={() => toggleGroup(group.root.id)}
                     aria-expanded={isExpanded}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface-50 dark:hover:bg-surface-800"
+                    className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-surface-50 dark:hover:bg-surface-800"
                   >
                     <ChevronDown
-                      className={`h-4 w-4 shrink-0 text-surface-400 transition-transform duration-150 ${
+                      className={`mt-0.5 h-4 w-4 shrink-0 text-surface-400 transition-transform duration-150 ${
                         isExpanded ? "" : "-rotate-90"
                       }`}
                     />
-                    <span className="min-w-0 flex-1 truncate text-caption font-semibold text-surface-700 dark:text-surface-200">
+                    <span className="min-w-0 flex-1 break-words text-caption font-semibold leading-tight text-surface-700 dark:text-surface-200">
                       {group.root.name}
                     </span>
                     {holdsActive && !isExpanded && (
@@ -539,20 +556,24 @@ function CategoryRow({
         type="button"
         onClick={onClick}
         aria-pressed={isSelected}
-        className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors ${
+        className={`flex min-w-0 flex-1 flex-col gap-0.5 rounded-lg px-3 text-left transition-colors ${
           isSelected
             ? "bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400"
             : "text-surface-600 hover:bg-surface-50 dark:text-surface-400 dark:hover:bg-surface-800"
-        } ${compact ? "py-1.5" : "py-2.5"}`}
+        } ${compact ? "py-1.5" : "py-2"}`}
       >
-        <span className="min-w-0 flex-1 truncate text-caption font-medium">{name}</span>
-        {typeof childCount === "number" && childCount > 0 && (
-          <span className="shrink-0 rounded-full bg-surface-100 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-surface-500 dark:bg-surface-800 dark:text-surface-400">
-            {childCount}
-          </span>
-        )}
-        {hint && <span className="min-w-0 max-w-[11rem] truncate text-[0.7rem] text-surface-400">{hint}</span>}
-        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
+        <span className="flex w-full min-w-0 items-start gap-2">
+          <span className="min-w-0 flex-1 break-words text-caption font-medium leading-tight">{name}</span>
+          {typeof childCount === "number" && childCount > 0 && (
+            <span className="shrink-0 rounded-full bg-surface-100 px-1.5 py-0.5 text-[0.65rem] tabular-nums text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+              {childCount}
+            </span>
+          )}
+          {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
+        </span>
+        {/* Breadcrumb (search results only) on its own line, wrapping so the
+            full category branch stays readable instead of being cut off. */}
+        {hint && <span className="w-full whitespace-normal break-words text-[0.7rem] leading-snug text-surface-400">{hint}</span>}
       </button>
       {expandable && onToggle && (
         <button
