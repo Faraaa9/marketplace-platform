@@ -28,7 +28,22 @@
  *     src/lib/__tests__/eligibility-contract.test.ts
  */
 import assert from "node:assert/strict";
+import { Module } from "node:module";
+import * as nodePath from "node:path";
 import { categoriesMatch, type CategoryNode } from "../provider-eligibility";
+
+// Resolve the "@/…" path alias INLINE (no tsconfig-paths dependency, so this runs
+// in plain CI without `-r scripts/_register-paths.js`): category-matching.ts
+// imports "@/lib/prisma", so map "@/" -> src/ here, before that module is required.
+const SRC_ROOT = nodePath.resolve(__dirname, "../..");
+const ModuleAny = Module as unknown as {
+  _resolveFilename: (req: string, ...rest: unknown[]) => string;
+};
+const _origResolveFilename = ModuleAny._resolveFilename;
+ModuleAny._resolveFilename = function (request: string, ...rest: unknown[]) {
+  const mapped = request.startsWith("@/") ? nodePath.join(SRC_ROOT, request.slice(2)) : request;
+  return _origResolveFilename.call(this, mapped, ...rest);
+};
 
 // ── Synthetic 3-level fixture: root → subcategory → service ────────────────
 //   R1 ─┬─ A ─┬─ A1
