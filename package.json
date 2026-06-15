@@ -22,10 +22,15 @@
     "routing:identity": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/identity.test.ts",
     "test:routing-review": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/review-queue.test.ts",
     "test:category-rules": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-selection-rules.test.ts",
+    "test:category-overrides": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-overrides.test.ts",
+    "test:eligibility": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/provider-eligibility.test.ts",
+    "test:eligibility-contract": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/eligibility-contract.test.ts",
+    "test:taxonomy-depth": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/taxonomy-depth-tripwire.test.ts",
+    "verify:taxonomy-depth-db": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-taxonomy-depth-db.ts",
     "test:routing-v4": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/multi-routing-v4.test.ts",
     "test:taxonomy-map": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/taxonomy-map.test.ts",
     "routing:eval-golden": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/routing-eval-golden.ts",
-    "test:routing-all": "pnpm routing:identity && pnpm test:routing-v4 && pnpm test:taxonomy-map && pnpm test:routing-review && pnpm test:category-rules && pnpm shadow:smoke && pnpm routing:eval-golden"
+    "test:routing-all": "pnpm routing:identity && pnpm test:routing-v4 && pnpm test:taxonomy-map && pnpm test:routing-review && pnpm test:category-rules && pnpm test:eligibility-contract && pnpm test:taxonomy-depth && pnpm shadow:smoke && pnpm routing:eval-golden"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

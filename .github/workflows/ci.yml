@@ -49,6 +49,12 @@ jobs:
       - name: Category selection rules (precision + recall)
         run: pnpm test:category-rules
 
+      - name: Eligibility ↔ inbox contract (categoriesMatch vs expandToMatchSet)
+        run: pnpm test:eligibility-contract
+
+      - name: Taxonomy depth tripwire (guards categoriesMatch's ≤3-level assumption)
+        run: pnpm test:taxonomy-depth
+
       - name: Routing identity (multi-routing v4 id carry-through)
         run: pnpm routing:identity
 
