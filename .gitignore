@@ -67,3 +67,20 @@ skills-lock.json
 vercel-env-import.txt
 .gstack/
 .firecrawl/
+
+# Large generated routing artifacts (offline eval / category-intelligence).
+# Tracked inputs kept on purpose: data/routing/eval/golden_eval_300_labeled.jsonl,
+# data/routing/eval/category-selection-baseline.jsonl,
+# data/routing/eval/category-selection-acceptable-sets.json,
+# data/routing/taxonomy/taxonomy_flat.jsonl
+data/routing/category-intelligence/
+data/routing/eval/*.parquet
+data/routing/eval/category-selection-results.json
+data/routing/eval/category-selection-baseline-report.md
+data/routing/eval/_all_raw_queries.json
+data/routing/eval/_partial_raw_queries.json
+data/routing/eval/label-audit.csv
+data/routing/eval/label-audit.md
+
+# Ad-hoc screenshots dropped in the repo root
+/*.png
