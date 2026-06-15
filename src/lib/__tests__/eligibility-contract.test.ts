@@ -75,9 +75,10 @@ require.cache[prismaPath] = {
   },
 } as unknown as NodeModule;
 
-// require (not a top-level import) so the stub is guaranteed cached first.
-const { expandToMatchSet } =
-  require("../category-matching") as typeof import("../category-matching");
+// require (not a top-level import) so the prisma stub above is guaranteed to be
+// cached before the SUT loads. eslint-disable: the deferred load is the whole point.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { expandToMatchSet } = require("../category-matching") as typeof import("../category-matching");
 
 const ID = FIXTURE.map((r) => r.id);
 const node = (id: string): CategoryNode => {
