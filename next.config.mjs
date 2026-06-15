@@ -74,6 +74,20 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // The provider's internal requests board is retired; the work center is
+      // /tiekejas/zinutes. The lead detail/unlock page moved to
+      // /tiekejas/uzklausa/[id] — old per-request links (stored in DB
+      // notifications) redirect there.
+      {
+        source: "/tiekejas/uzklausos",
+        destination: "/tiekejas/zinutes",
+        permanent: false,
+      },
+      {
+        source: "/tiekejas/uzklausos/:id",
+        destination: "/tiekejas/uzklausa/:id",
+        permanent: false,
+      },
       {
         source: "/tiekejai",
         destination: "/meistrai",

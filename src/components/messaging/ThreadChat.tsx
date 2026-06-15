@@ -5,8 +5,12 @@ import Image from "next/image";
 import { ChevronUp, Send, AlertTriangle, RefreshCw, Paperclip, Smile, WifiOff } from "lucide-react";
 import { cn, decodeHtmlEntities } from "@/lib/utils";
 import { useConversationStore, type ThreadMessage } from "@/store/useConversationStore";
-import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
-import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import {
+  authenticateRealtime,
+  getSupabaseBrowser,
+  type RealtimeChannelLike,
+  type SupabaseBrowserClient,
+} from "@/lib/supabase-browser";
 import type { RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 
 /** Shape of a row from the `messages` table delivered by Supabase Realtime. */
@@ -295,8 +299,8 @@ export default function ThreadChat({
         : `client:${realtimeTrackingToken || threadId}`;
     let cancelled = false;
     // supabase-js loads lazily here so it stays out of the shared bundle.
-    let supabase: SupabaseClient | null = null;
-    let channel: RealtimeChannel | null = null;
+    let supabase: SupabaseBrowserClient | null = null;
+    let channel: RealtimeChannelLike | null = null;
 
     (async () => {
       supabase = await getSupabaseBrowser();

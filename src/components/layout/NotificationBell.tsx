@@ -6,8 +6,12 @@ import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { formatRelativeDate } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
-import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
-import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import {
+  authenticateRealtime,
+  getSupabaseBrowser,
+  type RealtimeChannelLike,
+  type SupabaseBrowserClient,
+} from "@/lib/supabase-browser";
 
 interface Notification {
   id: string;
@@ -166,8 +170,8 @@ export default function NotificationBell() {
     // 3. Open a Realtime channel scoped to this user (after JWT auth).
     // supabase-js loads lazily here so it stays out of the shared bundle.
     let cancelled = false;
-    let supabase: SupabaseClient | null = null;
-    let channel: RealtimeChannel | null = null;
+    let supabase: SupabaseBrowserClient | null = null;
+    let channel: RealtimeChannelLike | null = null;
 
     (async () => {
       supabase = await getSupabaseBrowser();

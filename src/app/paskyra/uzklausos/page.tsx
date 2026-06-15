@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }
 
 // Cache Components: the shell prerenders, then the auth gate streams in. Both
@@ -43,7 +43,7 @@ async function MyRequestsView({
   searchParams,
 }: {
   userId: string;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const isProvider = session?.user?.role === "PROVIDER";
@@ -64,7 +64,7 @@ async function MyRequestsView({
       {isProvider && (
         <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
           <Link
-            href="/tiekejas/uzklausos"
+            href="/uzklausos"
             className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 text-body-sm font-medium text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 sm:flex-none"
           >
             Klientų

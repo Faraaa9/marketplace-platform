@@ -310,7 +310,7 @@ function DirectInquiryWidgetInner({
           Žinutė išsiųsta!
         </p>
         <p className="mb-3 text-micro text-emerald-700/70 dark:text-emerald-400/70">
-          Tiekėjas gaus jūsų žinutę. Atsakymą matysite pokalbyje.
+          Tiekėjas gaus jūsų žinutę. Atsakymą matysite šiame pokalbyje.
         </p>
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
           {conversationToken && (
@@ -366,7 +366,7 @@ function DirectInquiryWidgetInner({
             </p>
           </div>
           <p className="text-micro text-surface-500 dark:text-surface-400">
-            Įveskite 6 skaitmenų kodą, išsiųstą adresu <span className="font-medium">{maskedEmail}</span>
+            Įveskite 6 skaitmenų kodą, kad tiekėjo atsakymas saugiai pasiektų <span className="font-medium">{maskedEmail}</span>
           </p>
         </div>
 
@@ -440,7 +440,7 @@ function DirectInquiryWidgetInner({
             </div>
             <div>
               <label className="mb-1 block text-body-sm font-medium text-surface-700 dark:text-surface-300">
-                El. paštas <span className="text-red-500">*</span>
+                Kur siųsti atsakymą? <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -462,7 +462,7 @@ function DirectInquiryWidgetInner({
             value={inquiryForm.description}
             onChange={(e) => setInquiryForm((f) => ({ ...f, description: e.target.value }))}
             rows={isSidebar ? 4 : 4}
-            placeholder="Aprašykite ko jums reikia — kokia paslauga, apimtis, terminai..."
+            placeholder="Aprašykite ko jums reikia — kokia paslauga, apimtis, terminas..."
             required
             minLength={20}
             maxLength={2000}
@@ -490,7 +490,7 @@ function DirectInquiryWidgetInner({
             </div>
             <div>
               <label className="mb-1 block text-body-sm font-medium text-surface-700 dark:text-surface-300">
-                Telefonas
+                Telefonas greitesniam suderinimui
               </label>
               <input
                 type="tel"
@@ -514,20 +514,20 @@ function DirectInquiryWidgetInner({
           {!isSidebar && (
             <p className="max-w-[200px] text-micro text-surface-400 sm:max-w-none">
               {isLoggedIn
-                ? "Tiekėjas gaus jūsų žinutę ir el. paštą"
-                : "Išsiųsime patvirtinimo kodą į jūsų el. paštą"}
+                ? "Tiekėjas gaus jūsų žinutę, o atsakymą matysite pokalbyje"
+                : "Patvirtinsime el. paštą, kad tiekėjo atsakymas pasiektų jus"}
             </p>
           )}
           <Button type="submit" size="sm" isLoading={inquirySending} disabled={inquirySending}>
             <Send className="h-4 w-4" />
-            {isLoggedIn ? "Siųsti" : "Tęsti"}
+            {isLoggedIn ? "Siųsti žinutę" : "Tęsti"}
           </Button>
         </div>
         {isSidebar && (
           <p className="text-micro text-surface-400">
             {isLoggedIn
-              ? "Tiekėjas gaus jūsų žinutę ir el. paštą"
-              : "Išsiųsime patvirtinimo kodą į jūsų el. paštą"}
+              ? "Tiekėjas gaus jūsų žinutę, o atsakymą matysite pokalbyje"
+              : "Patvirtinsime el. paštą, kad tiekėjo atsakymas pasiektų jus"}
           </p>
         )}
       </form>
@@ -550,7 +550,7 @@ function DirectInquiryWidgetInner({
             <div className="mb-3 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-body-sm font-semibold text-surface-900 dark:text-white">
                 <Send className="h-3.5 w-3.5 text-brand-500" />
-                Rašyti žinutę
+                Gauti atsakymą iš tiekėjo
               </h3>
               <button
                 onClick={closeInquiryForm}

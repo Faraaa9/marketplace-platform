@@ -22,6 +22,12 @@ function getSafeCallbackPath(callbackUrl: string | null) {
   }
 }
 
+function normalizeCallbackPath(path: string | null) {
+  if (!path) return null;
+  if (path.startsWith("/tiekejas/atsakymai")) return "/tiekejas/zinutes";
+  return path;
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<LoginShell />}>
@@ -56,6 +62,7 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl");
   const emailParam = searchParams.get("email") || "";
   const { data: session, status } = useSession();
+  const normalizedCallbackUrl = normalizeCallbackPath(getSafeCallbackPath(callbackUrl));
   const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -63,7 +70,7 @@ function LoginForm() {
 
   function getRedirectPath(role?: string) {
     const homePath = getRoleHomePath(role);
-    const safeCallbackPath = getSafeCallbackPath(callbackUrl);
+    const safeCallbackPath = normalizeCallbackPath(getSafeCallbackPath(callbackUrl));
 
     if (!safeCallbackPath) return homePath;
 
@@ -167,14 +174,14 @@ function LoginForm() {
           )}
 
           <TelegramQrLogin
-            callbackUrl={callbackUrl}
+            callbackUrl={normalizedCallbackUrl}
             onError={setError}
             getRedirectPath={getRedirectPath}
             getFreshSessionRole={getFreshSessionRole}
           />
 
           <div className="mb-5 space-y-3">
-            <GoogleSignInButton callbackUrl={callbackUrl} />
+            <GoogleSignInButton callbackUrl={normalizedCallbackUrl} />
           </div>
 
           <div className="relative mb-5 flex items-center">

@@ -130,6 +130,22 @@ export default function EditRequestPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    const target = window.location.hash.replace("#", "");
+    if (!target) return;
+    const element = document.getElementById(target);
+    if (!element) return;
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement ||
+      element instanceof HTMLSelectElement
+    ) {
+      element.focus({ preventScroll: true });
+    }
+  }, [loading]);
+
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
     for (const group of categoryGroups) {
@@ -276,7 +292,7 @@ export default function EditRequestPage() {
               className="mt-2"
             />
           </div>
-          <div>
+          <div id="photos">
             <p className="mb-2 text-body-sm font-medium text-surface-700 dark:text-surface-300">
               Nuotraukos <span className="font-normal text-surface-400">(neprivaloma)</span>
             </p>
@@ -286,7 +302,7 @@ export default function EditRequestPage() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div id="category">
               <CategorySelect
                 id="categoryId"
                 label="Kategorija"

@@ -6,8 +6,22 @@
   :root {
     --background: #ece9e2;
     --foreground: #1e1b18;
-    --brand: #c29b74;
-    --brand-light: #f4efe6;
+    --brand-50: 242 245 234;
+    --brand-100: 229 234 213;
+    --brand-200: 207 217 180;
+    --brand-300: 178 194 139;
+    --brand-400: 145 162 99;
+    --brand-500: 111 127 75;
+    --brand-600: 89 103 60;
+    --brand-700: 74 84 48;
+    --brand-800: 59 68 41;
+    --brand-900: 50 58 37;
+    --brand-950: 27 32 19;
+    --brand: rgb(var(--brand-500));
+    --brand-light: rgb(var(--brand-50));
+    --brand-main: rgb(var(--brand-500));
+    --brand-main-hover: rgb(var(--brand-600));
+    --brand-main-shadow: rgb(var(--brand-800));
     --surface-muted: #ece9e2;
     --border: #ece9e2;
     --chat-bg: #ece9e2;
@@ -19,7 +33,7 @@
     --chat-other-bubble: #ece9e2;
     --chat-other-text: #111827;
     --chat-accent: #1e1b18;
-    --chat-accent-alt: #c29b74;
+    --chat-accent-alt: var(--brand-main);
     --chat-accent-hover: #3d3a35;
     --chat-text: #1e1b18;
     --chat-muted: #6b6760;
@@ -32,8 +46,8 @@
   .dark {
     --background: #0a0d14;
     --foreground: #f4f5f7;
-    --brand: #d89e79;
-    --brand-light: rgba(194, 94, 58, 0.12);
+    --brand: rgb(var(--brand-400));
+    --brand-light: rgb(var(--brand-950) / 0.3);
     --surface-muted: #1f2937;
     --border: rgba(255, 255, 255, 0.06);
   }

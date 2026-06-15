@@ -27,14 +27,24 @@ type ConversationItem = {
   presenceLabel: string | null;
 };
 
-const REQUEST_STATUS: Record<
-  string,
-  { label: string; variant: "success" | "warning" | "default" }
-> = {
-  OPEN: { label: "Atidaryta", variant: "success" },
-  IN_PROGRESS: { label: "Vykdoma", variant: "warning" },
-  CLOSED: { label: "Uždaryta", variant: "default" },
-};
+function isSenderDirectConversation(conversation: ConversationItem) {
+  return conversation.type === "direct" && conversation.href.startsWith("/zinutes/");
+}
+
+function conversationRoleLabel(conversation: ConversationItem) {
+  return isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+}
+
+function conversationBadgeLabel(conversation: ConversationItem) {
+  if (conversation.archived) return "Archyvas";
+  if (conversation.unread) return "Nauja žinutė";
+  if (conversation.type === "request") {
+    if (conversation.status === "IN_PROGRESS") return "Priimta";
+    if (conversation.status === "CLOSED") return "Archyvas";
+    return "Pasiūlymas";
+  }
+  return null;
+}
 
 function shouldShowSubtitle(title: string, subtitle: string) {
   if (!subtitle) return false;
@@ -246,10 +256,8 @@ export async function ConversationList({
   return (
     <div>
       {filtered.map((c) => {
-        const reqStatus =
-          c.type === "request"
-            ? REQUEST_STATUS[c.status] || REQUEST_STATUS.OPEN
-            : null;
+        const badgeLabel = conversationBadgeLabel(c);
+        const badgeVariant = badgeLabel === "Nauja žinutė" ? "info" : "default";
         const highlight = c.unread && !c.archived;
         return (
           <Link key={`${c.type}-${c.id}`} href={c.href} className="group block">
@@ -274,7 +282,7 @@ export async function ConversationList({
                     presenceLabel={c.presenceLabel}
                   />
                   {highlight && (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#C29B74]" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#166FE5]" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -301,11 +309,10 @@ export async function ConversationList({
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      {reqStatus ? (
-                        <Badge variant={reqStatus.variant}>{reqStatus.label}</Badge>
-                      ) : (
-                        <Badge variant="brand">Tiesioginė</Badge>
-                      )}
+                      <Badge variant="default">{conversationRoleLabel(c)}</Badge>
+                      {badgeLabel ? (
+                        <Badge variant={badgeVariant}>{badgeLabel}</Badge>
+                      ) : null}
                     </div>
                   </div>
                   <p

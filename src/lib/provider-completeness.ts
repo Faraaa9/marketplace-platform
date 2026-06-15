@@ -1,8 +1,8 @@
 /**
  * Provider profile completeness — the seven fields the dashboard scores and the
- * progress/missing-items it derives. Shared by the dashboard StatsGrid (drives
- * the next-action CTA) and the ProfileCompleteness section so the two never
- * drift. Previously inlined in the now-removed /api/tiekejas/stats route.
+ * progress/missing-items it derives. Shared by the dashboard work-center data
+ * loader (provider-work-center-data.ts) and the ProfileCompleteness section so
+ * the two never drift. Previously inlined in the now-removed /api/tiekejas/stats route.
  */
 export interface CompletenessProfileInput {
   description: string | null;

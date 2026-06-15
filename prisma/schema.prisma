@@ -17,6 +17,7 @@ model User {
   phone           String?
   phoneVerifiedAt DateTime?
   image           String?
+  brandColor      String    @default("green")
   lastSeenAt      DateTime?
   blocked         Boolean   @default(false)
   blockedAt       DateTime?

@@ -1,17 +1,21 @@
 import Link from "next/link";
-import {
-  FileText,
-  MapPin,
-  Clock,
-  MessageSquare,
-  ChevronRight,
-  Bell,
-} from "lucide-react";
+import { FileText } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatRelativeDate } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import CreatedToast from "@/components/ui/CreatedToast";
 import EmptyState from "@/components/ui/EmptyState";
+
+function pasiulymaiLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} pasiūlymas`;
+  if (mod10 >= 2 && mod10 <= 9 && (mod100 < 11 || mod100 > 19)) {
+    return `${count} pasiūlymai`;
+  }
+  return `${count} pasiūlymų`;
+}
 
 type StatusFilter =
   | "ALL"
@@ -48,7 +52,7 @@ function resolveStatus(raw?: string): StatusFilter {
 
 interface MyRequestsListProps {
   userId: string;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; created?: string }>;
 }
 
 export default async function MyRequestsList({
@@ -64,24 +68,36 @@ export default async function MyRequestsList({
       id: true,
       trackingToken: true,
       title: true,
-      categoryRef: { select: { name: true } },
-      location: true,
       status: true,
       createdAt: true,
       _count: { select: { responses: true } },
       responses: {
-        select: { createdAt: true },
-        orderBy: { createdAt: "desc" },
-        take: 1,
+        select: { lastMessageAt: true, clientLastReadAt: true },
       },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  const data = requests.map(({ responses, ...rest }) => ({
-    ...rest,
-    lastResponseAt: responses[0]?.createdAt ?? null,
-  }));
+  // Unread = a proposal thread moved since the client's last visit to the
+  // request page (read receipts are stamped there). Rows sort by the latest
+  // activity anywhere in the request, so "something new" floats to the top.
+  const data = requests
+    .map(({ responses, ...rest }) => {
+      const unreadCount = responses.filter(
+        (r) => !r.clientLastReadAt || r.lastMessageAt > r.clientLastReadAt,
+      ).length;
+      const lastActivityAt = responses.reduce(
+        (max, r) => (r.lastMessageAt > max ? r.lastMessageAt : max),
+        rest.createdAt,
+      );
+      return { ...rest, unreadCount, lastActivityAt };
+    })
+    // Closed requests sink to the bottom; everything else floats by activity.
+    .sort(
+      (a, b) =>
+        Number(a.status === "CLOSED") - Number(b.status === "CLOSED") ||
+        b.lastActivityAt.getTime() - a.lastActivityAt.getTime(),
+    );
 
   if (data.length === 0) {
     return (
@@ -100,11 +116,10 @@ export default async function MyRequestsList({
 
   const filtered =
     active === "ALL" ? data : data.filter((r) => r.status === active);
-  // eslint-disable-next-line react-hooks/purity -- relative-time labels; a per-render timestamp is the intended behavior
-  const now = Date.now();
 
   return (
     <>
+      {sp.created === "1" && <CreatedToast />}
       {/* Filter tabs — URL-driven, so each is a server-navigable Link */}
       <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
         {FILTER_TABS.map((tab) => {
@@ -147,83 +162,54 @@ export default async function MyRequestsList({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="overflow-hidden rounded-2xl border border-surface-200/60 bg-white shadow-card dark:border-surface-700/50 dark:bg-surface-900">
           {filtered.map((req) => {
             const status = STATUS_MAP[req.status] || STATUS_MAP.OPEN;
-            const categoryName = req.categoryRef?.name;
-            const hasNewResponse =
-              req.lastResponseAt &&
-              now - new Date(req.lastResponseAt).getTime() <
-                24 * 60 * 60 * 1000;
+            const isClosed = req.status === "CLOSED";
 
             return (
               <Link
                 key={req.id}
                 href={`/uzklausos/sekti/${req.trackingToken}`}
-                className="group block"
+                className="relative block border-b border-surface-200/60 px-5 py-4 transition-colors last:border-b-0 hover:bg-surface-50 dark:border-surface-700/50 dark:hover:bg-surface-800/50"
               >
-                <article
-                  className={`relative rounded-2xl border bg-white p-5 transition-shadow duration-200 hover:shadow-card dark:bg-surface-900 ${
-                    hasNewResponse
-                      ? "border-brand-200 dark:border-brand-800/60"
-                      : "border-surface-200/60 dark:border-surface-700/50"
+                {req.unreadCount > 0 && (
+                  <span className="absolute right-5 top-4 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold text-white">
+                    {req.unreadCount}
+                  </span>
+                )}
+                <h3
+                  className={`pr-8 text-body-sm font-semibold leading-snug ${
+                    isClosed
+                      ? "text-surface-400 dark:text-surface-500"
+                      : "text-surface-900 dark:text-white"
                   }`}
                 >
-                  {/* Top: title + status */}
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <h3 className="text-body font-semibold leading-snug text-surface-900 transition-colors group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-400">
-                      {req.title}
-                    </h3>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </div>
-
-                  {/* Meta */}
-                  <div className="flex flex-wrap items-center gap-3 text-micro text-surface-400 dark:text-surface-500">
-                    {categoryName && (
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-0.5 font-medium text-brand-700 dark:bg-brand-950 dark:text-brand-400">
-                        {categoryName}
-                      </span>
-                    )}
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {req.location}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatRelativeDate(req.createdAt)}
-                    </span>
-                  </div>
-
-                  {/* Footer: responses + next action */}
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  {req.title}
+                </h3>
+                <div
+                  className={`mt-1.5 flex flex-wrap items-center gap-2.5 text-[13px] ${
+                    isClosed
+                      ? "text-surface-400 dark:text-surface-500"
+                      : "text-surface-500 dark:text-surface-400"
+                  }`}
+                >
+                  {req.status === "OPEN" ? (
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                       <span
-                        className={`inline-flex items-center gap-1 text-micro font-medium ${
-                          req._count.responses > 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-surface-400"
-                        }`}
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {req._count.responses}{" "}
-                        {req._count.responses === 1 ? "pasiūlymas" : "pasiūlymai"}
-                      </span>
-                      {hasNewResponse && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-micro font-semibold text-brand-600 dark:bg-brand-950 dark:text-brand-400">
-                          <Bell className="h-3 w-3" />
-                          Naujas!
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <NextActionHint
-                        status={req.status}
-                        responseCount={req._count.responses}
+                        aria-hidden
+                        className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse"
                       />
-                      <ChevronRight className="h-4 w-4 text-surface-300 transition-colors group-hover:text-brand-500 dark:text-surface-600" />
-                    </div>
-                  </div>
-                </article>
+                      Gyvai
+                    </span>
+                  ) : (
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  )}
+                  <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-surface-300 dark:bg-surface-600" />
+                  <span>{pasiulymaiLabel(req._count.responses)}</span>
+                  <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-surface-300 dark:bg-surface-600" />
+                  <span>{formatRelativeDate(req.lastActivityAt)}</span>
+                </div>
               </Link>
             );
           })}
@@ -231,38 +217,4 @@ export default async function MyRequestsList({
       )}
     </>
   );
-}
-
-function NextActionHint({
-  status,
-  responseCount,
-}: {
-  status: string;
-  responseCount: number;
-}) {
-  if (status === "PENDING_CONFIRMATION") {
-    return (
-      <span className="text-micro font-medium text-amber-600 dark:text-amber-400">
-        Patvirtinkite el. paštą
-      </span>
-    );
-  }
-  if (status === "OPEN" && responseCount === 0) {
-    return <span className="text-micro text-surface-400">Laukiama pasiūlymų...</span>;
-  }
-  if (status === "OPEN" && responseCount > 0) {
-    return (
-      <span className="text-micro font-medium text-brand-600 dark:text-brand-400">
-        Peržiūrėkite pasiūlymus
-      </span>
-    );
-  }
-  if (status === "IN_PROGRESS") {
-    return (
-      <span className="text-micro font-medium text-brand-600 dark:text-brand-400">
-        Susisiekite su tiekėju
-      </span>
-    );
-  }
-  return null;
 }

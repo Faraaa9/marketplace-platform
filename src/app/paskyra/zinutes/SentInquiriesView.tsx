@@ -225,7 +225,7 @@ export default async function SentInquiriesView({
                         >
                           {decodeHtmlEntities(c.providerName)}
                         </h3>
-                        <Badge variant="brand">Tiesioginė</Badge>
+                        <Badge variant="brand">Tiekėjas</Badge>
                       </div>
                       <p
                         className={`mt-1 line-clamp-1 text-body-sm ${

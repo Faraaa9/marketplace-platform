@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Coins, Eye, MessageCircle, User } from "lucide-react";
+import { Coins, Eye, MessageCircle, User } from "lucide-react";
 import Card, { CardTitle } from "@/components/ui/Card";
 import { InboxUnreadBadge } from "./InboxUnreadBadge";
 
@@ -21,18 +21,6 @@ export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string
         </p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/tiekejas/uzklausos" className="group">
-          <Card hover className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Užklausos</CardTitle>
-                <p className="mt-1 text-body-sm text-surface-500">Naršyti ir atsakyti</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-surface-400 transition-transform group-hover:translate-x-1" />
-            </div>
-          </Card>
-        </Link>
-
       <Link href="/tiekejas/zinutes" className="group">
         <Card hover className="p-4">
           <div className="flex items-center justify-between">
@@ -46,18 +34,6 @@ export function QuickLinksGrid({ userId, slug }: { userId: string; slug?: string
               <p className="mt-1 text-body-sm text-surface-500">Pokalbiai su klientais</p>
             </div>
             <MessageCircle className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
-          </div>
-        </Card>
-      </Link>
-
-      <Link href="/tiekejas/atsakymai" className="group">
-        <Card hover className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Mano atsakymai</CardTitle>
-              <p className="mt-1 text-body-sm text-surface-500">Pasiūlymų būsenos</p>
-            </div>
-            <CheckCircle2 className="h-4 w-4 text-surface-400 transition-transform group-hover:scale-110" />
           </div>
         </Card>
       </Link>

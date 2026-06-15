@@ -10,7 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { ArchiveButton } from "./ArchiveButton";
 import { InquiryThreadChat } from "./InquiryThreadChat";
-import ResponseThread from "../../uzklausos/[id]/ResponseThread";
+import ResponseThread from "../../uzklausa/[id]/ResponseThread";
 
 function avatarInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "?";
@@ -263,9 +263,9 @@ export async function ThreadView({
     inquiry.senderName?.trim() || senderAccountName?.trim() || inquiry.senderEmail;
   const isArchived = inquiry.status === "ARCHIVED";
   const requestBrief = {
-    title: "Tiesioginė užklausa",
+    title: "Žinutė",
     description: inquiry.description,
-    categoryLabel: "Tiesioginė žinutė",
+    categoryLabel: "Klientas",
     budget: inquiry.budget,
     createdAt: inquiry.createdAt.toISOString(),
   };
@@ -298,7 +298,7 @@ export async function ThreadView({
           )}
           <div className="min-w-0">
             <div className="mb-1 flex items-center gap-2">
-              <Badge variant="brand">Tiesioginė žinutė</Badge>
+              <Badge variant="brand">Klientas</Badge>
               {isArchived && <Badge variant="default">Archyvuota</Badge>}
             </div>
             <h1 className={inboxLayout ? "truncate text-body font-semibold text-[#1E1B18] dark:text-white" : "mt-2 text-heading-1 font-bold text-[#1E1B18] dark:text-white"}>

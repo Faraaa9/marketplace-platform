@@ -17,6 +17,192 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-13 09:12 — Claude
+
+**Commit:** `ddadee7` — fix(tiekejas): request rows in dashboard match inbox hierarchy · lokalus
+
+**Pakeitimai:** 3 files changed, 116 insertions(+), 42 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/app/tiekejas/sections/provider-work-center-data.ts
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 02:23 — Claude
+
+**Commit:** `1f852ce` — fix(home): stop SSR crash from useSession in RecentRequestBanner · lokalus
+
+**Pakeitimai:** 1 file changed, 15 insertions(+)
+
+**Failai:**
+- src/components/guest/RecentRequestBanner.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 02:18 — Claude
+
+**Commit:** `6dd1a00` — chore(notes): tracker retirement status - what shipped, what remains · lokalus
+
+**Pakeitimai:** 1 file changed, 12 insertions(+), 12 deletions(-)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 02:08 — Claude
+
+**Commit:** `bc83c32` — chore(notes): record decision to retire /uzklausos/sekti tracker page · lokalus
+
+**Pakeitimai:** 1 file changed, 12 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 02:00 — Claude
+
+**Commit:** `52cd6c0` — style(paskyra): request list rows match hierarchy mockup · lokalus
+
+**Pakeitimai:** 1 file changed, 43 insertions(+), 121 deletions(-)
+
+**Failai:**
+- src/app/paskyra/uzklausos/MyRequestsList.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 01:58 — Claude
+
+**Commit:** `5d4ba47` — feat(zinutes): merge own requests into inbox as expandable rows · lokalus
+
+**Pakeitimai:** 3 files changed, 383 insertions(+), 4 deletions(-)
+
+**Failai:**
+- src/app/api/requests/mine/list/route.ts
+- src/app/tiekejas/zinutes/MyRequestRow.tsx
+- src/app/tiekejas/zinutes/ProviderInboxClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 01:41 — Claude
+
+**Commit:** `09ce237` — chore(notes): record work-queue merge darbukas · lokalus
+
+**Pakeitimai:** 1 file changed, 4 insertions(+)
+
+**Failai:**
+- NOTES.md
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-13 00:04 — Claude
+
+**Commit:** `832f715` — chore(notes): mark uzklausu UX darbukai done + add hierarchy/strip mockups · lokalus
+
+**Pakeitimai:** 3 files changed, 549 insertions(+)
+
+**Failai:**
+- NOTES.md
+- mockups/nauja-uzklausa-su-nuoroda.html
+- mockups/uzklausu-hierarchija.html
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-12 23:52 — Claude
+
+**Commit:** `b92b1e8` — feat(uzklausos): simplify new-request card + active requests strip · lokalus
+
+**Pakeitimai:** 5 files changed, 238 insertions(+), 237 deletions(-)
+
+**Failai:**
+- src/app/api/requests/mine/summary/route.ts
+- src/app/uzklausos/nauja/page.tsx
+- src/components/layout/Header.tsx
+- src/components/uzklausos-v2/ActiveRequestsStrip.tsx
+- src/components/uzklausos-v2/InlineListingCard.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-12 22:34 — Claude
+
+**Commit:** `9788d93` — chore(dashboard): remove dead StatsGrid + skeleton · lokalus
+
+**Pakeitimai:** 5 files changed, 16 insertions(+), 344 deletions(-)
+
+**Failai:**
+- AGENT_LOG.md
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/components/ui/skeletons/StatsGridSkeleton.tsx
+- src/components/ui/skeletons/index.ts
+- src/lib/provider-completeness.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-12 22:34 — Claude
+
+**Commit:** `d614552` — chore(dashboard): remove dead StatsGrid + skeleton · lokalus
+
+**Pakeitimai:** 2 files changed, 340 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/StatsGrid.tsx
+- src/components/ui/skeletons/StatsGridSkeleton.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-12 21:24 — Codex
+
+**Commit:** `f64bf37` — feat(provider): redesign dashboard work center · lokalus
+
+**Pakeitimai:** 5 files changed, 2258 insertions(+), 51 deletions(-)
+
+**Failai:**
+- provider-dashboard-preview-clean.html
+- provider-dashboard-preview.html
+- src/app/tiekejas/page.tsx
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/app/tiekejas/sections/provider-work-center-data.ts
+
+**Toliau:** Patikrinti `/tiekejas` prisijungus kaip tiekėjas; dashboardo buildas praėjo, bet vizualus authenticated QA dar liko.
+
+
+## 2026-06-12 17:05 — Claude
+
+**Commit:** `d179c14` — chore: route provider request page to /tiekejas/uzklausa, add design audit · lokalus
+
+**Pakeitimai:** 58 files changed, 1020 insertions(+), 1817 deletions(-)
+
+**Failai:**
+- AGENTS.md
+- DESIGN_AUDIT.md
+- next.config.mjs
+- public/sw.js
+- src/app/(auth)/prisijungti/page.tsx
+- src/app/admin/FollowUpAgentCard.tsx
+- src/app/api/tiekejas/atsakymai/route.ts
+- src/app/api/tiekejas/follow-ups/route.ts
+- src/app/api/tracking/[token]/messages/route.ts
+- src/app/api/tracking/[token]/status/route.ts
+- src/app/chat-preview/page.tsx
+- src/app/meistrai/[slug]/components/DirectInquiryWidget.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-11 13:01 — Claude
 
 **Commit:** `2ece62b` — perf(fonts): Inter display optional - font swap repaint was the LCP event

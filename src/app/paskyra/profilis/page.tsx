@@ -67,6 +67,7 @@ async function ProfileFormLoader() {
       phone: true,
       emailVerified: true,
       phoneVerifiedAt: true,
+      brandColor: true,
       createdAt: true,
       _count: { select: { serviceRequests: true } },
     },

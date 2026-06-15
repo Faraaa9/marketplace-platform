@@ -5,15 +5,12 @@ import Image from "next/image";
 import {
   Loader2,
   Mic,
-  Paperclip,
   X,
   ImagePlus,
   MapPin,
   Wallet,
   CalendarClock,
-  MessageSquare,
   Plus,
-  Sparkles,
   Tag,
   ArrowRight,
 } from "lucide-react";
@@ -26,20 +23,10 @@ import { cn } from "@/lib/utils";
 
 type MetaKey = "category" | "location" | "budget" | "deadline";
 
-// Three solid-color variants for the "Tvarkyti aprašymą su AI" button. One is
-// picked at random per mount — keeps the card visually fresh on each visit
-// without changing the action itself. Tailwind needs the literal classes to
-// stay in source so the JIT picks them up.
-const AI_BUTTON_VARIANTS = [
-  "bg-[#A84E2E] hover:bg-[#933F22]",
-  "bg-[#6E813F] hover:bg-[#5C6E33]",
-  "bg-[#A0834F] hover:bg-[#8A6E40]",
-] as const;
-
-// Minimum description length before the dependent fields and the AI button
-// unlock. Matches the server's improveDescriptionSchema (.min(15)) and the
-// runAiImprove guard, so the button is enabled exactly when the AI call will
-// accept the text — not a stricter word-count gate that froze normal requests.
+// Minimum description length before the dependent fields and the "Toliau"
+// button unlock. Matches the server's improveDescriptionSchema (.min(15)) and
+// the runAiImprove guard, so the button is enabled exactly when the AI call
+// will accept the text — not a stricter word-count gate that froze normal requests.
 const MIN_DESCRIPTION_CHARS = 15;
 
 export interface SelectedCategory {
@@ -66,28 +53,23 @@ interface InlineListingCardProps {
   selectedCategories: SelectedCategory[];
   maxCategories: number;
   categoryGroups: ServiceCategoryGroup[];
-  /** True if at least one selected category came from the AI (vs. manual pick). */
-  categoryFromAi: boolean;
   onAddCategory: (id: string) => void;
   onRemoveCategory: (id: string) => void;
 
   location: string;
-  locationFromAi: boolean;
   onLocationChange: (value: string) => void;
 
   budget: string;
-  budgetFromAi: boolean;
   onBudgetChange: (value: string) => void;
 
   deadline: string;
-  deadlineFromAi: boolean;
   onDeadlineChange: (value: string) => void;
 
   titleError?: string;
   descriptionError?: string;
   showCategoryError?: boolean;
 
-  /** Triggered when the user clicks the in-card "Tvarkyti aprašymą su AI" button. */
+  /** Triggered when the user clicks the in-card "Toliau" button. */
   onTriggerAi: () => void;
   /** True while the AI improve request is in flight — disables the button. */
   aiRunning: boolean;
@@ -112,17 +94,13 @@ export default function InlineListingCard({
   selectedCategories,
   maxCategories,
   categoryGroups,
-  categoryFromAi,
   onAddCategory,
   onRemoveCategory,
   location,
-  locationFromAi,
   onLocationChange,
   budget,
-  budgetFromAi,
   onBudgetChange,
   deadline,
-  deadlineFromAi,
   onDeadlineChange,
   titleError,
   descriptionError,
@@ -134,10 +112,6 @@ export default function InlineListingCard({
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const rootRef = useRef<HTMLElement>(null);
   const [openMeta, setOpenMeta] = useState<MetaKey | null>(null);
-  // Pick the AI button color once per mount so it doesn't flicker on re-renders.
-  const [aiButtonVariant] = useState(
-    () => AI_BUTTON_VARIANTS[Math.floor(Math.random() * AI_BUTTON_VARIANTS.length)]!,
-  );
 
   const aiButtonUnlocked = useMemo(
     () => description.trim().length >= MIN_DESCRIPTION_CHARS,
@@ -230,88 +204,80 @@ export default function InlineListingCard({
             photoDragOver && "ring-2 ring-brand-400/60",
           )}
         >
-          {/* ── Category tags row (up to maxCategories) + add button ── */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {selectedCategories.map((cat, index) => (
-              <span
-                key={cat.id}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
-                  showCategoryError
-                    ? "border border-red-400 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-500/10 dark:text-red-300"
-                    : "bg-[#ebe2cb] text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700",
-                )}
-              >
-                <Tag className="h-3 w-3" />
-                <span className="max-w-[12rem] truncate">{cat.label || "Kategorija"}</span>
-                {categoryFromAi && index === 0 && (
-                  <Sparkles
-                    aria-label="AI parinko"
-                    className="h-3 w-3 text-brand-500 dark:text-brand-300"
-                  />
-                )}
+          {/* ── Category tags row — hidden until the description unlocks it ── */}
+          {(hasCategory || !categoryLocked) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selectedCategories.map((cat) => (
+                <span
+                  key={cat.id}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
+                    showCategoryError
+                      ? "border border-red-400 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-500/10 dark:text-red-300"
+                      : "bg-[#ebe2cb] text-[#6f6042] ring-1 ring-inset ring-[#d3c6a2]/70 dark:bg-surface-800 dark:text-surface-300 dark:ring-surface-700",
+                  )}
+                >
+                  <Tag className="h-3 w-3" />
+                  <span className="max-w-[12rem] truncate">{cat.label || "Kategorija"}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveCategory(cat.id)}
+                    aria-label={`Pašalinti kategoriją ${cat.label || ""}`}
+                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[#9b8a5f] transition-colors hover:bg-[#d8cda6] hover:text-[#6f6042] dark:text-surface-500 dark:hover:bg-surface-700 dark:hover:text-surface-200"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              ))}
+              {canAddMoreCategories && (
                 <button
                   type="button"
-                  onClick={() => onRemoveCategory(cat.id)}
-                  aria-label={`Pašalinti kategoriją ${cat.label || ""}`}
-                  className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[#9b8a5f] transition-colors hover:bg-[#d8cda6] hover:text-[#6f6042] dark:text-surface-500 dark:hover:bg-surface-700 dark:hover:text-surface-200"
+                  onClick={() => toggleMetaKey("category")}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
+                    !hasCategory && !showCategoryError &&
+                      "border border-dashed border-[#cdbe8f] text-[#9b8a5f] hover:bg-[#ebe2cb]/40 dark:border-surface-600 dark:text-surface-400 dark:hover:bg-surface-800/50",
+                    hasCategory && !showCategoryError &&
+                      "text-[#9b8a5f] hover:bg-[#ebe2cb]/40 hover:text-[#6f6042] dark:text-surface-400 dark:hover:bg-surface-800/50",
+                    showCategoryError && !hasCategory &&
+                      "border border-red-400 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-500/10 dark:text-red-300",
+                    openMeta === "category" && "ring-2 ring-brand-400/60",
+                  )}
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <Plus className="h-3 w-3" />
+                  <span>{hasCategory ? "dar viena" : "kategorija"}</span>
                 </button>
-              </span>
-            ))}
-            {canAddMoreCategories && (
-              <button
-                type="button"
-                onClick={() => toggleMetaKey("category")}
-                disabled={categoryLocked}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-serif text-[0.78rem] font-medium transition-colors",
-                  categoryLocked &&
-                    "cursor-not-allowed border border-dashed border-brand-300/60 bg-brand-50/40 text-brand-500 dark:border-brand-700/60 dark:bg-brand-950/30 dark:text-brand-300",
-                  !categoryLocked && !hasCategory && !showCategoryError &&
-                    "border border-dashed border-[#cdbe8f] text-[#9b8a5f] hover:bg-[#ebe2cb]/40 dark:border-surface-600 dark:text-surface-400 dark:hover:bg-surface-800/50",
-                  !categoryLocked && hasCategory && !showCategoryError &&
-                    "text-[#9b8a5f] hover:bg-[#ebe2cb]/40 hover:text-[#6f6042] dark:text-surface-400 dark:hover:bg-surface-800/50",
-                  showCategoryError && !hasCategory &&
-                    "border border-red-400 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-500/10 dark:text-red-300",
-                  openMeta === "category" && "ring-2 ring-brand-400/60",
-                )}
-              >
-                {categoryLocked ? <Sparkles className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                <span>
-                  {categoryLocked
-                    ? "AI parinks kategoriją"
-                    : hasCategory
-                      ? "Pridėti dar"
-                      : "Pasirink kategoriją"}
-                </span>
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
-          {/* ── Title (h3 styled, inline input + NAUJA badge) ── */}
-          <div className="mt-3.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h3 className="min-w-0 flex-1 font-serif text-[1.5rem] sm:text-[1.7rem] font-semibold leading-snug text-surface-900 dark:text-white">
-              <input
-                aria-label="Skelbimo pavadinimas"
-                value={title}
-                onChange={(e) => onTitleChange(e.target.value.slice(0, 100))}
-                disabled={titleLocked}
-                placeholder={titleLocked ? "✨ AI sugalvos pavadinimą" : "Skelbimo pavadinimas"}
-                className={cn(
-                  "block w-full border-0 bg-transparent p-0 font-serif text-[1.5rem] sm:text-[1.7rem] font-semibold leading-snug text-surface-900 outline-none placeholder:text-surface-300 dark:text-white dark:placeholder:text-surface-600",
-                  titleLocked &&
-                    "cursor-not-allowed placeholder:text-brand-500/70 dark:placeholder:text-brand-300/60",
-                  titleError && "border-b border-red-400",
-                )}
-                maxLength={100}
-              />
-            </h3>
-            <span className="-rotate-3 shrink-0 rounded border border-brand-500/50 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-brand-600 dark:border-brand-400/50 dark:text-brand-400">
-              Nauja
-            </span>
-          </div>
+          {/* ── Title: static prompt until AI/user fills it, then inline input ── */}
+          {titleLocked ? (
+            <div className="mt-2">
+              <h3 className="font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]">
+                Ko tau reikia?
+              </h3>
+              <p className="mt-0.5 text-body-sm text-surface-500 dark:text-surface-400">
+                Aprašyk savais žodžiais - kas, kur ir kada.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-3.5">
+              <h3 className="min-w-0 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]">
+                <input
+                  aria-label="Skelbimo pavadinimas"
+                  value={title}
+                  onChange={(e) => onTitleChange(e.target.value.slice(0, 100))}
+                  placeholder="Skelbimo pavadinimas"
+                  className={cn(
+                    "block w-full border-0 bg-transparent p-0 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 outline-none placeholder:text-surface-300 dark:text-white dark:placeholder:text-surface-600 sm:text-[1.7rem]",
+                    titleError && "border-b border-red-400",
+                  )}
+                  maxLength={100}
+                />
+              </h3>
+            </div>
+          )}
           {titleError && (
             <p className="mt-1 text-micro text-red-500 dark:text-red-400">{titleError}</p>
           )}
@@ -329,7 +295,7 @@ export default function InlineListingCard({
                   ? "Klausau, kalbėk…"
                   : micStatus === "transcribing"
                     ? "Atpažįstu, ką pasakei…"
-                    : "Pradėk čia — aprašyk savais žodžiais, ko tau reikia…"
+                    : "Pvz.: reikia perdažyti 60 m² butą Kaune, norėčiau pradėti kitą savaitę…"
               }
               rows={3}
               maxLength={2000}
@@ -340,17 +306,6 @@ export default function InlineListingCard({
               )}
             />
           </div>
-          {!descriptionStarted && !descriptionError && micStatus === "idle" && (
-            <p className="mt-1.5 flex items-start gap-1.5 text-micro text-brand-600/85 dark:text-brand-300/80">
-              <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
-              <span>
-                AI užpildys likusius laukus už tave - min. {MIN_DESCRIPTION_CHARS} simbolių.{" "}
-                <span className="font-medium tabular-nums">
-                  ({descriptionChars}/{MIN_DESCRIPTION_CHARS})
-                </span>
-              </span>
-            </p>
-          )}
           {descriptionError && (
             <p className="mt-1 text-micro text-red-500 dark:text-red-400">{descriptionError}</p>
           )}
@@ -439,37 +394,24 @@ export default function InlineListingCard({
                 )}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={photosUploading || attachmentUrls.length >= 5}
-              aria-label="Pridėti nuotraukų"
-              className="grid h-10 w-10 place-items-center rounded-full border border-[#D8D2C6] bg-[#F1EDE4] text-[#C25E3A] transition-all hover:scale-105 hover:bg-[#E9E4D9] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-surface-700 dark:bg-surface-800 dark:text-brand-400 dark:hover:bg-surface-700"
-            >
-              {photosUploading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Paperclip className="h-5 w-5" />
-              )}
-            </button>
+            {!descriptionStarted && (
+              <span className="text-micro tabular-nums text-surface-400 dark:text-surface-500">
+                min. {MIN_DESCRIPTION_CHARS} simbolių
+              </span>
+            )}
             <button
               type="button"
               onClick={onTriggerAi}
               disabled={!aiButtonUnlocked || aiRunning}
-              aria-label="Tvarkyti aprašymą su AI"
+              aria-label="Toliau"
               className={cn(
-                "ml-auto inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[0.82rem] font-medium text-white shadow-sm transition-all",
-                aiButtonVariant,
+                "ml-auto inline-flex items-center gap-1.5 rounded-md bg-[#A84E2E] px-4 py-2 text-[0.82rem] font-medium text-white shadow-sm transition-all hover:bg-[#933F22]",
                 aiButtonUnlocked && !aiRunning && "hover:scale-105 active:scale-95",
                 (!aiButtonUnlocked || aiRunning) && "cursor-not-allowed opacity-40 hover:scale-100",
               )}
             >
-              {aiRunning ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
-              Tvarkyti aprašymą su AI
+              {aiRunning && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Toliau
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -492,15 +434,13 @@ export default function InlineListingCard({
           {/* ── Divider ── */}
           <div className="mt-5 border-t border-[#d8cda6] dark:border-surface-700/70" />
 
-          {/* ── Meta row (location, budget, deadline + comments count) ── */}
+          {/* ── Meta row (location, budget, deadline, photos) ── */}
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[0.8rem] text-surface-600 dark:text-surface-300">
             <MetaItem
               icon={<MapPin className="h-3.5 w-3.5 text-[#a89668]" />}
               value={location}
               filled={hasLocation}
-              fromAi={locationFromAi}
-              placeholder="Pridėk miestą"
-              lockedPlaceholder="Atpažins miestą"
+              placeholder="miestas"
               locked={locationLocked}
               active={openMeta === "location"}
               onClick={() => toggleMetaKey("location")}
@@ -509,9 +449,7 @@ export default function InlineListingCard({
               icon={<Wallet className="h-3.5 w-3.5 text-[#a89668]" />}
               value={budget}
               filled={hasBudget}
-              fromAi={budgetFromAi}
-              placeholder="Pridėk biudžetą"
-              lockedPlaceholder="Atpažins biudžetą"
+              placeholder="biudžetas"
               locked={budgetLocked}
               active={openMeta === "budget"}
               onClick={() => toggleMetaKey("budget")}
@@ -520,17 +458,24 @@ export default function InlineListingCard({
               icon={<CalendarClock className="h-3.5 w-3.5 text-[#a89668]" />}
               value={deadline}
               filled={hasDeadline}
-              fromAi={deadlineFromAi}
-              placeholder="Pridėk terminą"
-              lockedPlaceholder="Atpažins terminą"
+              placeholder="terminas"
               locked={deadlineLocked}
               active={openMeta === "deadline"}
               onClick={() => toggleMetaKey("deadline")}
             />
-            <span className="ml-auto inline-flex items-center gap-1.5 text-[#a89668] dark:text-surface-400">
-              <MessageSquare className="h-3.5 w-3.5" />
-              0 pasiūlymų
-            </span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={photosUploading || attachmentUrls.length >= 5}
+              className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[#9b8a5f] transition-colors hover:bg-[#ebe2cb]/40 hover:text-[#6f6042] disabled:cursor-not-allowed disabled:opacity-50 dark:text-surface-500 dark:hover:bg-surface-800/40 dark:hover:text-surface-300"
+            >
+              {photosUploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Plus className="h-3.5 w-3.5 text-[#a89668] dark:text-surface-500" />
+              )}
+              <span>nuotraukos</span>
+            </button>
           </div>
         </div>
       </div>
@@ -673,9 +618,7 @@ function MetaItem({
   icon,
   value,
   filled,
-  fromAi,
   placeholder,
-  lockedPlaceholder,
   locked,
   active,
   onClick,
@@ -683,9 +626,7 @@ function MetaItem({
   icon: React.ReactNode;
   value: string;
   filled: boolean;
-  fromAi: boolean;
   placeholder: string;
-  lockedPlaceholder: string;
   locked: boolean;
   active: boolean;
   onClick: () => void;
@@ -699,27 +640,13 @@ function MetaItem({
         "inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors",
         active && "bg-brand-50 ring-1 ring-inset ring-brand-300 dark:bg-brand-950/30 dark:ring-brand-700",
         !active && filled && "hover:bg-[#ebe2cb]/40 dark:hover:bg-surface-800/40",
-        !active && !filled && !locked &&
+        !active && !filled &&
           "text-[#9b8a5f] hover:bg-[#ebe2cb]/40 hover:text-[#6f6042] dark:text-surface-500 dark:hover:bg-surface-800/40 dark:hover:text-surface-300",
-        locked && "cursor-not-allowed text-brand-500/80 dark:text-brand-300/70",
+        locked && "cursor-not-allowed opacity-50 hover:bg-transparent dark:hover:bg-transparent",
       )}
     >
-      {locked ? (
-        <Sparkles className="h-3.5 w-3.5" />
-      ) : filled ? (
-        icon
-      ) : (
-        <Plus className="h-3.5 w-3.5 text-[#a89668] dark:text-surface-500" />
-      )}
-      <span className="max-w-[10rem] truncate">
-        {filled ? value : locked ? lockedPlaceholder : placeholder}
-      </span>
-      {fromAi && filled && (
-        <Sparkles
-          aria-label="AI parinko"
-          className="h-3 w-3 text-brand-500 dark:text-brand-300"
-        />
-      )}
+      {filled ? icon : <Plus className="h-3.5 w-3.5 text-[#a89668] dark:text-surface-500" />}
+      <span className="max-w-[10rem] truncate">{filled ? value : placeholder}</span>
     </button>
   );
 }

@@ -10,6 +10,98 @@ Konvencija:
 
 ---
 
+## Darbukai (2026-06-12) — ĮGYVENDINTA 2026-06-12/13 (commit'ai 97429f9, 2654b06, 67ab060)
+
+- [x] **Homepage hero kortelės supaprastinimas** (užklausos kūrimo kortelė su
+      „AI sugalvos pavadinimą"). Turi likti tik vienas įvesties laukas + aiškus
+      trumpas paaiškinimas, ką įvesti. Išimti: „AI parinks kategoriją" chip'ą,
+      „Tvarkyti aprašymą su AI" mygtuką, „AI užpildys likusius laukus už tave"
+      tekstą (palikti tik „min. 15 simbolių"). Apatinė eilutė po brūkšniu — ne
+      „✦ Atpažins miestą/biudžetą/terminą", o kaip buvo anksčiau: pliusiukai
+      („+ miestas", „+ biudžetas", „+ terminas"). PATVIRTINTA pagal
+      `mockups/nauja-uzklausa-su-nuoroda.html` + PALIKTI record (mikrofonо)
+      mygtuką prie lauko.
+- [x] ~~Užklausos kūrimo žingsnių juosta — spalvos.~~ ATŠAUKTA — spalvos
+      paliekamos kaip yra („ai poxui, geros tos spalvos").
+- [x] **Užklausos sekimo puslapis — dubliavimasis.** Po paskelbimo rodomame
+      puslapyje tas pats turinys kartojasi: (a) „pagerink užklausą" CTA 2×
+      (rudas blokas „Padidinkite šansą..." su Nuotraukos/Biudžetas/Kategorija
+      ir tie patys 3 mygtukai tuščioje „Pasiūlymai (0)" kortelėje);
+      (b) „pasiūlymai ateis per kelias valandas" žinutė ~4× (žalias banneris,
+      PERŽIŪROS plytelė, pilka eilutė „Tiekėjai dar neperžiūrėjo...",
+      „Užklausa aktyvuota" kortelė); (c) „KITAS VEIKSMAS: palaukti arba
+      papildyti" kartoja improve-CTA. Palikti po vieną kiekvienos žinutės
+      vietą, kitas išimti / sujungti.
+- [x] **Užklausos sekimo puslapis — „Live" ženkliukas.** Antraštės zonoje
+      (prie „Atidaryta" / kategorijos) pridėti gyvą „Live" indikatorių
+      (pvz., pulsuojantis taškelis + „Gyvai" / „Paskelbta"), kad žmogus
+      iškart matytų, jog užklausa jau realiai paskelbta ir matoma tiekėjams.
+      Derinti su #3 dedupe — galbūt „Live" ženkliukas pakeičia dalį
+      besidubliuojančių „užklausa aktyvuota" žinučių.
+- [x] **Užklausos sekimo puslapis — išimti stepper'į ir 3 plyteles.** Stepper'is
+      (Patvirtinimas → Pasiūlymų laukimas → Vykdoma → Uždaryta) klaidina: be
+      apmokėjimo platformoje Vykdoma/Uždaryta neįvyksta, Patvirtinimas — praeitis.
+      Plytelės Matomumas/Peržiūros/Kitas veiksmas — nulinės informacijos (views
+      klientui nerodyti; kur rodyti — spręsim vėliau, gal išvis nereikės).
+      Nauja struktūra: (1) antraštė + Live ženkliukas, (2) viena eilutė „tiekėjai
+      mato, pirmieji pasiūlymai per kelias valandas", (3) vienas improve-CTA
+      (tik kol pasiūlymų 0), (4) užklausos turinys + veiksmai, (5) pasiūlymų
+      sąrašas. Apima/išplečia #3 dedupe.
+- [x] **Po paskelbimo — be banner'io, tik redirect.** Išimti žalią statinį
+      „Užklausa paskelbta..." banner'į (`?created=1`). Paspaudus „skelbti"
+      vartotoją mesti tiesiai į užklausos puslapį ir tiek. Daugiausia —
+      trumpas toast'as, kuris iššoka ir pats pradingsta po ~2 s.
+      (Patikslina #5 struktūros punktą (2) — atskiros žinutės nereikia.)
+- [x] **Kliento dashboard — „Žinutės" plytelę keisti į „Pateiktos užklausos".**
+      Plokščias žinučių sąrašas neskaluoja (5 užklausos × 10 tiekėjų = 50
+      pokalbių krūvoje). Hierarchija: užklausų sąrašas → užklausos puslapis →
+      pasiūlymai/pokalbiai. (1) Dashboard plytelė: aktyvių užklausų skaičius +
+      bendras neskaitytų badge'as; (2) užklausų sąrašo puslapis: pavadinimas,
+      Live/uždaryta, „N pasiūlymų", neskaitytų badge'as, rikiuota pagal
+      naujausią aktyvumą; (3) užklausos puslapyje pasiūlymai — neskaityti
+      pirmi; (4) unread skaičiai sumuojasi aukštyn (pokalbis → užklausa →
+      dashboard). Globalaus žinučių inbox'o nedaryti.
+      PATVIRTINTA + vizualas: `mockups/uzklausu-hierarchija.html` (labai patiko,
+      „būtinai!"). VIETOS PLANAS (patikslinta):
+      - 3 lygis (užklausos puslapis): `/uzklausos/sekti/[id]` — yra, tvarkyti pagal #5.
+      - 2 lygis (sąrašas): `/paskyra/uzklausos` — jau egzistuoja (USER ir PROVIDER),
+        perdaryti pagal mockup'ą (Live, „N pasiūlymų", unread badge, aktyvumo rikiavimas).
+      - 1 lygis (plytelė su badge'u): tiekėjui — ProviderWorkCenter'yje
+        (`src/app/tiekejas/sections/ProviderWorkCenter.tsx`) vietoj „Žinutės laukia
+        atsakymo" plytelės (screenshot'as buvo iš čia); klientui — `/paskyra` root
+        dashboard'e, kurio DAR NĖRA (senas TODO). Kol nėra — klientui 1-as lygis =
+        header'io „Mano užklausos" nuoroda su unread badge'u (veikia visiems iškart).
+      Svečiai be paskyros lieka 3-iame lygyje (magic link iš el. pašto) —
+      tai paskata kurtis paskyrą, ne problema.
+- [x] **Header navigacija: „Užklausos" → „Užklausų lenta".** Pervadinti
+      nuorodą pagrindiniame meniu (Meistrai / Užklausos / Pateikti užklausą).
+- [x] **„Pateikti užklausą" puslapis — juostelė į esamas užklausas.** Jei
+      vartotojas turi ≥1 aktyvią užklausą, tarp antraštės ir stepper'io rodyti
+      ploną nuorodos juostelę. PATVIRTINTA: B variantas — visada „N aktyvios
+      užklausos (- laukia tavęs)" + suminis naujų badge'as + „Mano užklausos →"
+      (į /paskyra/uzklausos), nepriklausomai nuo skaičiaus (su viena — „1 aktyvi
+      užklausa"). Be naujų — be badge'o, rami juostelė.
+      Vizualas: `mockups/nauja-uzklausa-su-nuoroda.html` (ten pat parodyta
+      #1 supaprastinta kortelė ir #2 neutralus stepper'is kartu).
+- [x] **Tiekėjo „Reikia dėmesio" — užklausos sulietos su žinutėmis** (56b5053).
+      Pateiktos užklausos rodomos tame pačiame sąraše su tagu „Užklausa",
+      burbulas: Visos | Žinutės | Užklausos (`?rodyti=`). Plytelių skaičiai
+      liko tik žinučių.
+- [x] **Užklausos sekimo puslapis išimtas iš prisijungusių srautų** (f00a5e9).
+      (b) inbox'o užklausos eilutė turi „Redaguoti užklausą →" tiesiai į
+      `/uzklausos/sekti/[id]/redaguoti`; (c) po paskelbimo PROVIDER →
+      /tiekejas/zinutes, USER → /paskyra/uzklausos, svečiai → sekti puslapis;
+      (d) pasiūlymo paspaudimas inbox'e atidaro pokalbį chat'o panelėje
+      (tracking messages API + realtime per token, skaitymo kvitai žymimi).
+      LIKO: (a) svečiai ir paprasti USER klientai detalei vis dar naudoja
+      /uzklausos/sekti (USER neturi inbox'o — /tiekejas/* tik PROVIDER;
+      /paskyra/zinutes tik direct inquiries). Galutinai trinti puslapį bus
+      galima tik padarius kliento inbox'ą arba atidarius /tiekejas/zinutes
+      visiems. Iki tol sekti puslapio UI nebeplėtoti. Pastaba: „Uždaryti/
+      Ištrinti" veiksmai liko tik sekti puslapyje ir redaguoti flow.
+
+---
+
 ## Production launch — likę darbai po fix/production-blockers PR (2026-06-10)
 
 Šitas branch'as (`fix/production-blockers`) sutvarkė:

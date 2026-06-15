@@ -13,7 +13,7 @@ const conversations = [
     name: "Driverio pamokos",
     avatar: "A",
     time: "Prieš 5 val.",
-    status: "Tiesioginė",
+    status: "Žinutė",
     preview: "Galite paskambinti?",
     active: true,
     unread: false,
@@ -23,7 +23,7 @@ const conversations = [
     name: "Ramūnas Bruožis",
     avatar: "R",
     time: "Prieš 8 val.",
-    status: "Tiesioginė",
+    status: "Žinutė",
     preview: "Jūs: Kada atvyksite?",
     unread: true,
     accent: "#B58E74",
@@ -60,7 +60,7 @@ const conversations = [
     name: "Anne Castillo",
     avatar: "A",
     time: "Prieš 2 d.",
-    status: "Tiesioginė",
+    status: "Žinutė",
     preview: "Jūs: Kokia kaina?",
     unread: false,
     accent: "#D8C4A8",
@@ -90,7 +90,7 @@ function StatusPill({ label }: { label: string }) {
     label === "Vykdoma" ? "bg-amber-500" : label === "Atidaryta" ? "bg-[#A36545]" : "bg-[#B99170]";
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258]">
-      {label !== "Tiesioginė" && <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />}
+      {label !== "Žinutė" && <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />}
       {label}
     </span>
   );
@@ -215,7 +215,7 @@ export default function ChatPreviewPage() {
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-[#A7826D]" />
                       <p className="truncate text-body font-semibold">Driverio pamokos</p>
-                      <StatusPill label="Tiesioginė" />
+                      <StatusPill label="Žinutė" />
                     </div>
                     <p className="mt-0.5 text-caption text-[#6F6258]">Prisijungęs neseniai</p>
                   </div>
@@ -233,9 +233,9 @@ export default function ChatPreviewPage() {
               <div className="border-b border-[#E4D8C9] px-5 py-4">
                 <div className="flex items-center justify-between gap-4 rounded-xl border border-[#DED2C1] bg-[#FFFDF8] px-4 py-3 shadow-[0_8px_24px_rgba(93,70,54,0.08)]">
                   <div className="min-w-0">
-                    <p className="truncate text-body-sm font-semibold">Užsakymas: Tiesioginė užklausa</p>
+                    <p className="truncate text-body-sm font-semibold">Užsakymas: Žinutė</p>
                     <p className="mt-1 text-caption font-medium text-[#6F6258]">
-                      Statusas: Tiesioginė užklausa
+                      Statusas: Žinutė
                     </p>
                   </div>
                   <button className="min-h-10 rounded-lg border border-[#D7C7B6] bg-[#EFE4D5] px-4 text-body-sm font-semibold text-[#3B2D24] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
@@ -405,7 +405,7 @@ export default function ChatPreviewPage() {
                       <span className="h-2 w-2 rounded-full bg-[#C98F65]" />
                       <p className="truncate text-body font-semibold text-[#20242B]">Driverio pamokos</p>
                       <span className="rounded-full bg-[#ECE7DF] px-2 py-0.5 text-micro font-medium text-[#60646C]">
-                        Tiesioginė
+                        Žinutė
                       </span>
                     </div>
                     <p className="mt-0.5 text-caption text-[#6B7078]">Prisijungęs neseniai</p>
@@ -425,10 +425,10 @@ export default function ChatPreviewPage() {
                 <div className="flex items-center justify-between gap-4 rounded-xl border border-[#DED8CF] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(48,55,68,0.06)]">
                   <div className="min-w-0">
                     <p className="truncate text-body-sm font-semibold text-[#20242B]">
-                      Užsakymas: Tiesioginė užklausa
+                      Užsakymas: Žinutė
                     </p>
                     <p className="mt-1 text-caption font-medium text-[#6B7078]">
-                      Statusas: Tiesioginė užklausa
+                      Statusas: Žinutė
                     </p>
                   </div>
                   <button className="min-h-10 rounded-lg border border-[#D4CEC6] bg-[#F0ECE6] px-4 text-body-sm font-semibold text-[#30343B] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
@@ -583,7 +583,7 @@ export default function ChatPreviewPage() {
                       <span className="h-2 w-2 rounded-full bg-[#14B8A6]" />
                       <p className="truncate text-body font-semibold text-[#0F172A]">Driverio pamokos</p>
                       <span className="rounded-full bg-[#DFF4F2] px-2 py-0.5 text-micro font-medium text-[#17615E]">
-                        Tiesioginė
+                        Žinutė
                       </span>
                     </div>
                     <p className="mt-0.5 text-caption text-[#64748B]">Prisijungęs neseniai</p>
@@ -603,10 +603,10 @@ export default function ChatPreviewPage() {
                 <div className="flex items-center justify-between gap-4 rounded-xl border border-[#CFE4E2] bg-white px-4 py-3 shadow-[0_10px_28px_rgba(10,68,75,0.07)]">
                   <div className="min-w-0">
                     <p className="truncate text-body-sm font-semibold text-[#0F172A]">
-                      Užsakymas: Tiesioginė užklausa
+                      Užsakymas: Žinutė
                     </p>
                     <p className="mt-1 text-caption font-medium text-[#64748B]">
-                      Statusas: Tiesioginė užklausa
+                      Statusas: Žinutė
                     </p>
                   </div>
                   <button className="min-h-10 rounded-lg bg-[#0F766E] px-4 text-body-sm font-semibold text-white shadow-[0_8px_18px_rgba(15,118,110,0.24)]">
@@ -761,7 +761,7 @@ export default function ChatPreviewPage() {
                       <span className="h-2 w-2 rounded-full bg-[#94A3B8]" />
                       <p className="truncate text-body font-semibold text-[#111827]">Driverio pamokos</p>
                       <span className="rounded-full border border-[#D8DEE7] bg-[#F2F5F9] px-2 py-0.5 text-micro font-medium text-[#475569]">
-                        Tiesioginė
+                        Žinutė
                       </span>
                     </div>
                     <p className="mt-0.5 text-caption text-[#64748B]">Prisijungęs neseniai</p>
@@ -781,10 +781,10 @@ export default function ChatPreviewPage() {
                 <div className="flex items-center justify-between gap-4 rounded-xl border border-[#D8DEE7] bg-gradient-to-b from-white to-[#F5F7FA] px-4 py-3 shadow-[0_10px_28px_rgba(15,23,42,0.07)]">
                   <div className="min-w-0">
                     <p className="truncate text-body-sm font-semibold text-[#111827]">
-                      Užsakymas: Tiesioginė užklausa
+                      Užsakymas: Žinutė
                     </p>
                     <p className="mt-1 text-caption font-medium text-[#64748B]">
-                      Statusas: Tiesioginė užklausa
+                      Statusas: Žinutė
                     </p>
                   </div>
                   <button className="min-h-10 rounded-lg border border-[#AEB7C4] bg-gradient-to-b from-[#FDFEFF] to-[#E6EBF2] px-4 text-body-sm font-semibold text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.08)]">

@@ -213,7 +213,7 @@ export function newResponseEmail(clientName: string, requestTitle: string, track
 }
 
 export function newRequestAlertEmail(providerName: string, requestTitle: string, category: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/uzklausos`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos`;
   return {
     subject: `Nauja užklausa: ${requestTitle} — PaslaugųRinka`,
     html: `
@@ -380,7 +380,7 @@ export function creditPurchaseEmail(name: string, credits: number, balance: numb
         <p>Jūsų paskyrą papildėme <strong>${credits} ${creditsLabel(credits)}</strong>.</p>
         <p>Dabartinis balansas: <strong>${balance} ${creditsLabel(balance)}</strong>.</p>
         <p>Kreditus naudokite klientų užklausoms atrakinti — vienas kreditas atrakina vieną užklausą.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas/uzklausos" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
       </div>
     `,
   };

@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import EmptyState from "@/components/ui/EmptyState";
 import { clearGuestRequest } from "@/lib/guest-request";
+import { trackEvent } from "@/lib/analytics-events";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import ProposalCard from "./components/ProposalCard";
 import { FilterChip } from "./components/TrackingHelpers";
@@ -15,6 +16,7 @@ import {
   type SortMode,
   type FilterMode,
   isAwaitingClientReply,
+  isUnreadByClient,
   lastActivityAt,
   comparePrice,
 } from "./components/types";
@@ -93,6 +95,11 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
 
   const awaitingCount = useMemo(
     () => request.responses.filter(isAwaitingClientReply).length,
+    [request.responses],
+  );
+
+  const unreadIds = useMemo(
+    () => new Set(request.responses.filter(isUnreadByClient).map((r) => r.id)),
     [request.responses],
   );
 
@@ -199,7 +206,10 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(`/uzklausos/sekti/${trackingToken}/redaguoti`)}
+              onClick={() => {
+                trackEvent("request_tracker_edit_clicked", { source: "toolbar" });
+                router.push(`/uzklausos/sekti/${trackingToken}/redaguoti`);
+              }}
             >
               <Pencil className="h-4 w-4 mr-1.5" />
               Redaguoti
@@ -238,11 +248,13 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
       </h2>
 
       {request.responses.length === 0 ? (
-        <EmptyState
-          title="Kol kas pasiūlymų nėra"
-          description="Tiekėjai netrukus peržiūrės jūsų užklausą ir atsiųs pasiūlymus."
-          icon={<MessageCircle className="h-12 w-12" />}
-        />
+        <div className="rounded-2xl border border-surface-200/60 bg-white p-6 shadow-card dark:border-surface-700/50 dark:bg-surface-900/50">
+          <EmptyState
+            title="Kol kas pasiūlymų nėra"
+            description="Tiekėjai netrukus peržiūrės tavo užklausą - pasiūlymai atsiras čia."
+            icon={<MessageCircle className="h-12 w-12" />}
+          />
+        </div>
       ) : (
         <>
           {showToolbar && (
@@ -282,8 +294,12 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {displayedResponses.map((resp) => (
+            (() => {
+              const unreadDisplayed = displayedResponses.filter((r) => unreadIds.has(r.id));
+              const readDisplayed = displayedResponses.filter((r) => !unreadIds.has(r.id));
+              const showGroups =
+                filterMode === "all" && unreadDisplayed.length > 0 && readDisplayed.length > 0;
+              const renderCard = (resp: (typeof displayedResponses)[number]) => (
                 <ProposalCard
                   key={resp.id}
                   resp={resp}
@@ -303,8 +319,27 @@ export default function ProposalsClient({ trackingToken, request }: ProposalsCli
                   sendMessage={sendTrackingMessage}
                   onReviewSubmitted={() => router.refresh()}
                 />
-              ))}
-            </div>
+              );
+              return (
+                <div className="space-y-3">
+                  {showGroups && (
+                    <p className="flex items-center gap-2 text-caption font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+                      Nauji
+                      <span className="inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold normal-case text-white">
+                        {unreadDisplayed.length}
+                      </span>
+                    </p>
+                  )}
+                  {unreadDisplayed.map(renderCard)}
+                  {showGroups && (
+                    <p className="pt-2 text-caption font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+                      Peržiūrėti
+                    </p>
+                  )}
+                  {readDisplayed.map(renderCard)}
+                </div>
+              );
+            })()
           )}
         </>
       )}

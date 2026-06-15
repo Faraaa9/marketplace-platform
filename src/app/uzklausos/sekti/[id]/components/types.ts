@@ -74,6 +74,16 @@ export function lastActivityAt(resp: ResponseData): string {
   return lastMessageOf(resp)?.createdAt ?? resp.createdAt;
 }
 
+/** True when something happened in this thread (new proposal or a provider
+ *  message) since the client's last visit — drives the "Nauji" group. */
+export function isUnreadByClient(resp: ResponseData): boolean {
+  const lastRead = resp.clientLastReadAt ? Date.parse(resp.clientLastReadAt) : 0;
+  if (Date.parse(resp.createdAt) > lastRead) return true;
+  return resp.messages.some(
+    (m) => m.senderId === resp.providerId && Date.parse(m.createdAt) > lastRead,
+  );
+}
+
 export function comparePrice(a: ResponseData, b: ResponseData, dir: "asc" | "desc"): number {
   if (a.price == null && b.price == null) return 0;
   if (a.price == null) return 1;

@@ -20,8 +20,14 @@ import ThreadChat from "@/components/messaging/ThreadChat";
 import { RequestBriefDrawer, type RequestBrief } from "@/components/messaging/RequestBriefDrawer";
 import type { ThreadMessage } from "@/store/useConversationStore";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
-import { authenticateRealtime, getSupabaseBrowser } from "@/lib/supabase-browser";
-import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
+import {
+  authenticateRealtime,
+  getSupabaseBrowser,
+  type RealtimeChannelLike,
+  type SupabaseBrowserClient,
+} from "@/lib/supabase-browser";
+import RequestOfferComposer from "./RequestOfferComposer";
+import MyRequestRow, { type MyRequestItem, type MyRequestOffer } from "./MyRequestRow";
 
 type Conversation = {
   type: "request" | "direct";
@@ -133,6 +139,33 @@ function isSenderDirectConversation(conversation: Conversation) {
   return conversation.type === "direct" && conversation.href.startsWith("/zinutes/");
 }
 
+function conversationRoleLabel(conversation: Conversation) {
+  return isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+}
+
+function conversationBadgeLabel(conversation: Conversation) {
+  if (conversation.archived) return "Archyvas";
+  if (conversation.unread) return "Nauja žinutė";
+  if (conversation.type === "request") {
+    if (conversation.status === "IN_PROGRESS") return "Priimta";
+    if (conversation.status === "CLOSED") return "Archyvas";
+    return "Pasiūlymas";
+  }
+  return null;
+}
+
+function conversationBadgeClass(label: string) {
+  switch (label) {
+    case "Nauja žinutė":
+      return "bg-[#166FE5] text-white";
+    case "Priimta":
+    case "Archyvas":
+      return "bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400";
+    default:
+      return "bg-[#EFE7DB] text-[#6F6258] dark:bg-surface-800 dark:text-surface-300";
+  }
+}
+
 function initials(name: string) {
   return name.trim().slice(0, 1).toUpperCase() || "?";
 }
@@ -155,7 +188,7 @@ function ConversationAvatar({
   const badgeSize = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
   return (
     <div className="relative shrink-0" title={presenceLabel || undefined}>
-      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D38331] text-caption font-semibold text-white ring-1 ring-[#D7C7B6] ${dimensions}`}>
+      <div className={`grid place-items-center overflow-hidden rounded-full bg-[#D1D5DB] text-caption font-semibold text-[#4B5563] ring-1 ring-[#C7CDD6] ${dimensions}`}>
         {image ? (
           <Image
             src={image}
@@ -198,9 +231,9 @@ function normalizeDirectThread(data: DirectThreadResponse): ThreadData {
     otherParticipantReadAt: data.clientLastReadAt ?? null,
     hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
-      title: "Tiesioginė užklausa",
+      title: "Žinutė",
       description: data.description,
-      categoryLabel: "Tiesioginė žinutė",
+      categoryLabel: "Klientas",
       budget: data.budget,
       createdAt: data.createdAt,
     },
@@ -233,9 +266,9 @@ function normalizeSenderDirectThread(data: SenderDirectThreadResponse, trackingT
     otherParticipantReadAt: data.providerLastReadAt ?? null,
     hasMoreMessages: data.hasMoreMessages ?? false,
     requestBrief: {
-      title: "Tiesioginė užklausa",
+      title: "Žinutė",
       description: data.description,
-      categoryLabel: "Tiesioginė žinutė",
+      categoryLabel: "Tiekėjas",
       budget: data.budget,
       createdAt: data.createdAt,
     },
@@ -258,7 +291,9 @@ const REQUEST_STATUS: Record<string, { label: string; color: string }> = {
 };
 
 function conversationStatusLabel(thread: ThreadData, conversation: Conversation | null) {
-  if (conversation?.type === "direct" || thread.type === "direct") return "Tiesioginė užklausa";
+  if (conversation?.type === "direct" || thread.type === "direct") {
+    return conversation && isSenderDirectConversation(conversation) ? "Tiekėjas" : "Klientas";
+  }
   return REQUEST_STATUS[thread.status ?? ""]?.label ?? "Užklausa";
 }
 
@@ -269,9 +304,13 @@ function orderSummaryTitle(thread: ThreadData) {
 export default function ProviderInboxClient() {
   const { data: session } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [myRequests, setMyRequests] = useState<MyRequestItem[]>([]);
+  const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const didAutoExpandRef = useRef(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreConversations, setHasMoreConversations] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draftRequestId, setDraftRequestId] = useState<string | null>(null);
   const [thread, setThread] = useState<ThreadData | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -386,6 +425,25 @@ export default function ProviderInboxClient() {
     return promise;
   }, [removeConversation, upsertConversation]);
 
+  // Own submitted requests join the inbox as expandable rows — a request is
+  // also a conversation, it just fans out into one thread per provider.
+  const loadMyRequests = useCallback(async () => {
+    try {
+      const res = await fetch("/api/requests/mine/list", { cache: "no-store" });
+      const data = (await res.json().catch(() => null)) as
+        | { success?: boolean; data?: MyRequestItem[] }
+        | null;
+      if (!res.ok || !data?.success || !Array.isArray(data.data)) return;
+      setMyRequests(data.data);
+      if (!didAutoExpandRef.current && data.data.length === 1) {
+        didAutoExpandRef.current = true;
+        setExpandedRequestId(data.data[0].id);
+      }
+    } catch {
+      // Request rows are an addition to the inbox — never block the list.
+    }
+  }, []);
+
   const loadMoreConversations = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
@@ -398,6 +456,7 @@ export default function ProviderInboxClient() {
 
   const selectConversation = useCallback(async (conversation: Conversation) => {
     const id = toThreadId(conversation);
+    setDraftRequestId(null);
     setSelectedId(id);
     setLoadingThread(true);
     setThreadError("");
@@ -442,10 +501,25 @@ export default function ProviderInboxClient() {
         }
       }
     }
+    void loadMyRequests();
     loadConversations()
       .then((loadedConversations) => {
         if (cancelled) return;
-        const initialThread = new URLSearchParams(window.location.search).get("thread");
+        const initialParams = new URLSearchParams(window.location.search);
+        // Deep-link from the dashboard: expand a specific own-request row.
+        const initialUzklausa = initialParams.get("uzklausa");
+        if (initialUzklausa) {
+          didAutoExpandRef.current = true;
+          setExpandedRequestId(initialUzklausa);
+        }
+        const initialRequest = initialParams.get("request");
+        if (initialRequest) {
+          setDraftRequestId(initialRequest);
+          setSelectedId(null);
+          setThread(null);
+          return;
+        }
+        const initialThread = initialParams.get("thread");
         const initialConversation = loadedConversations.find((c) => toThreadId(c) === initialThread);
         if (initialConversation) {
           void selectConversation(initialConversation);
@@ -464,6 +538,7 @@ export default function ProviderInboxClient() {
 
     const interval = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
+      void loadMyRequests();
       void loadConversations().catch(() => {
         // Keep the current list visible; the next poll can recover.
       });
@@ -473,15 +548,15 @@ export default function ProviderInboxClient() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [loadConversation, loadConversations, selectConversation, sortConversations]);
+  }, [loadConversation, loadConversations, loadMyRequests, selectConversation, sortConversations]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     let cancelled = false;
     // supabase-js loads lazily here so it stays out of the shared bundle.
-    let supabase: SupabaseClient | null = null;
-    let channel: RealtimeChannel | null = null;
+    let supabase: SupabaseBrowserClient | null = null;
+    let channel: RealtimeChannelLike | null = null;
 
     const refreshConversation = (threadId: string) => {
       const existing = conversationsRef.current.find((item) => toThreadId(item) === threadId);
@@ -582,6 +657,32 @@ export default function ProviderInboxClient() {
     );
   }, [conversations, searchQuery]);
 
+  type InboxListItem =
+    | { kind: "conversation"; activityAt: number; conversation: Conversation }
+    | { kind: "request"; activityAt: number; request: MyRequestItem };
+
+  // Conversations and own requests interleave by latest activity, so the
+  // inbox stays one chronological stream.
+  const listItems = useMemo<InboxListItem[]>(() => {
+    const query = searchQuery.trim().toLocaleLowerCase("lt-LT");
+    const requestItems = (query
+      ? myRequests.filter((r) =>
+          decodeHtmlEntities(r.title).toLocaleLowerCase("lt-LT").includes(query),
+        )
+      : myRequests
+    ).map((request) => ({
+      kind: "request" as const,
+      activityAt: new Date(request.lastActivityAt).getTime(),
+      request,
+    }));
+    const conversationItems = filteredConversations.map((conversation) => ({
+      kind: "conversation" as const,
+      activityAt: new Date(conversation.lastMessageAt).getTime(),
+      conversation,
+    }));
+    return [...requestItems, ...conversationItems].sort((a, b) => b.activityAt - a.activityAt);
+  }, [filteredConversations, myRequests, searchQuery]);
+
   const copyConversationLink = useCallback(async () => {
     if (!selectedConversation || typeof window === "undefined") return;
     const threadId = toThreadId(selectedConversation);
@@ -626,8 +727,13 @@ export default function ProviderInboxClient() {
 
   const sendMessage = useCallback(async (threadId: string, content: string): Promise<ThreadMessage> => {
     if (!thread) throw new Error("Nėra pokalbio");
-    const url =
-      thread.type === "response"
+    // Client side of an own-request proposal goes through the tracking API;
+    // everything else keeps the provider/direct endpoints.
+    const isOwnRequestThread =
+      thread.type === "response" && thread.viewerRole === "client" && !!thread.realtimeTrackingToken;
+    const url = isOwnRequestThread
+      ? `/api/tracking/${thread.realtimeTrackingToken}/messages`
+      : thread.type === "response"
         ? `/api/requests/${threadId}/messages`
         : thread.viewerRole === "client" && thread.realtimeTrackingToken
           ? `/api/zinutes/${thread.realtimeTrackingToken}/messages`
@@ -635,7 +741,9 @@ export default function ProviderInboxClient() {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(
+        isOwnRequestThread ? { responseId: thread.id, content } : { content },
+      ),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || "Klaida");
@@ -679,11 +787,105 @@ export default function ProviderInboxClient() {
     [thread],
   );
 
+  // Open the client side of an own-request proposal in the inbox chat pane —
+  // this replaces navigating to the retired /uzklausos/sekti tracker page.
+  // Fetching /api/requests/[token] also stamps clientLastReadAt server-side,
+  // so the local unread state is cleared to match.
+  const openRequestOffer = useCallback(
+    async (request: MyRequestItem, offer: MyRequestOffer) => {
+      setDraftRequestId(null);
+      setSelectedId(`offer-${offer.id}`);
+      setLoadingThread(true);
+      setThreadError("");
+      window.history.replaceState(null, "", "/tiekejas/zinutes");
+      try {
+        const res = await fetch(`/api/requests/${encodeURIComponent(request.trackingToken)}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Klaida");
+        const responses = data.data.responses as Array<{
+          id: string;
+          providerId: string;
+          providerLastReadAt?: string | null;
+          provider?: { name?: string | null; image?: string | null };
+          messages: ApiThreadMessage[];
+        }>;
+        const resp = responses.find((r) => r.id === offer.id);
+        if (!resp) throw new Error("Pasiūlymas nerastas");
+        setThread({
+          type: "response",
+          id: resp.id,
+          providerId: resp.providerId,
+          viewerRole: "client",
+          realtimeTrackingToken: request.trackingToken,
+          title: resp.provider?.name || offer.providerName,
+          subtitle: request.title,
+          otherParticipantName: resp.provider?.name || offer.providerName,
+          otherParticipantImage: resp.provider?.image ?? offer.providerImage,
+          otherParticipantReadAt: resp.providerLastReadAt ?? null,
+          requestBrief: {
+            title: data.data.title ?? request.title,
+            description: data.data.description ?? "",
+            categoryLabel: data.data.category || "Užklausa",
+            budget: data.data.budget ?? null,
+            createdAt: data.data.createdAt ?? null,
+          },
+          hasMoreMessages: false,
+          initialMessages: resp.messages.map((m) => ({
+            id: m.id,
+            content: m.content,
+            createdAt: m.createdAt,
+            senderId: m.senderId,
+            senderName: m.senderName ?? m.sender?.name ?? null,
+            sender: m.sender,
+            status: "sent" as const,
+          })),
+        });
+        setMyRequests((items) =>
+          items.map((r) =>
+            r.id === request.id
+              ? {
+                  ...r,
+                  unreadCount: 0,
+                  offers: r.offers.map((o) => ({ ...o, unread: false })),
+                }
+              : r,
+          ),
+        );
+      } catch {
+        setThread(null);
+        setThreadError("Nepavyko įkelti pokalbio.");
+      } finally {
+        setLoadingThread(false);
+      }
+    },
+    [],
+  );
+
+  const openResponseThread = useCallback(
+    async (responseId: string) => {
+      const threadId = `response-${responseId}`;
+      setDraftRequestId(null);
+      window.history.replaceState(null, "", `/tiekejas/zinutes?thread=${encodeURIComponent(threadId)}`);
+      const conversation = await loadConversation(threadId);
+      if (conversation) {
+        await selectConversation(conversation);
+      }
+    },
+    [loadConversation, selectConversation],
+  );
+
+  const closeDraftRequest = useCallback(() => {
+    setDraftRequestId(null);
+    setThread(null);
+    setSelectedId(null);
+    window.history.replaceState(null, "", "/tiekejas/zinutes");
+  }, []);
+
   return (
     <div className="-mb-[calc(3.5rem+env(safe-area-inset-bottom))] bg-[#EFECE5] px-3 py-3 md:mb-0 md:px-5 md:py-5 dark:bg-surface-950">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-[#DDD3C5] bg-[#FFFDF8] shadow-[0_12px_40px_rgba(93,70,54,0.10)] dark:border-surface-800 dark:bg-surface-900/90">
         <div className="grid h-[calc(100dvh-6rem)] min-h-[560px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className={`${selectedId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
+          <aside className={`${selectedId || draftRequestId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-[#DDD3C5] bg-[#FFFDF8] dark:border-surface-700/60 dark:bg-surface-950/40`}>
             <div className="flex min-h-[64px] items-center justify-between border-b border-[#DDD3C5] bg-[#FFFDF8] px-5 py-2.5 dark:border-surface-700/60">
               {searchOpen ? (
                 <label className="min-w-0 flex-1">
@@ -735,27 +937,44 @@ export default function ProviderInboxClient() {
                     </div>
                   ))}
                 </div>
-              ) : conversations.length === 0 ? (
+              ) : conversations.length === 0 && myRequests.length === 0 ? (
                 <EmptyState title={listError || "Žinučių dar nėra"} icon={<MessageCircle className="h-12 w-12" />} />
-              ) : filteredConversations.length === 0 ? (
+              ) : listItems.length === 0 ? (
                 <EmptyState title="Pokalbių nerasta" description="Pabandykite kitą vardą arba žinutės tekstą." icon={<Search className="h-12 w-12" />} />
               ) : (
                 <div>
-                  {filteredConversations.map((c) => {
+                  {listItems.map((item) => {
+                    if (item.kind === "request") {
+                      return (
+                        <MyRequestRow
+                          key={`myrequest-${item.request.id}`}
+                          request={item.request}
+                          expanded={expandedRequestId === item.request.id}
+                          onToggle={() =>
+                            setExpandedRequestId((current) =>
+                              current === item.request.id ? null : item.request.id,
+                            )
+                          }
+                          onOpenOffer={openRequestOffer}
+                        />
+                      );
+                    }
+                    const c = item.conversation;
                     const id = toThreadId(c);
                     const active = id === selectedId;
-                    const status = c.type === "request" ? REQUEST_STATUS[c.status] : null;
+                    const roleLabel = conversationRoleLabel(c);
+                    const badgeLabel = conversationBadgeLabel(c);
                     return (
                       <button key={`${c.type}-${c.id}`} onClick={() => selectConversation(c)} className="group block w-full text-left">
-                        <article className={`relative border-b border-[#DDD3C5] p-3 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
+                        <article className={`relative border-b border-[#DDD3C5] px-3 py-3.5 transition-colors hover:bg-[#F1E7DA] dark:border-surface-700/60 dark:hover:bg-surface-800/70 ${
                           active
                             ? "rounded-xl border border-[#A7826D] bg-[#F1E7DA] shadow-[0_6px_18px_rgba(93,70,54,0.10)] dark:bg-surface-800/70"
                             : c.unread
-                              ? "bg-[#F7F1E8] dark:bg-surface-800/40"
+                              ? "bg-[#FFFDF8] dark:bg-surface-900/70"
                               : "bg-[#FFFDF8] dark:bg-surface-950/40"
                         }`}>
                           {active && <span className="hidden" aria-hidden="true" />}
-                          <div className="flex items-start gap-3.5">
+                          <div className="flex items-center gap-3.5">
                             <ConversationAvatar
                               name={c.title}
                               image={c.avatarImage}
@@ -763,31 +982,47 @@ export default function ProviderInboxClient() {
                               presenceLabel={c.presenceLabel}
                             />
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-start gap-2">
-                                <h3 className="min-w-0 flex-1 truncate text-body-sm font-semibold text-[#1E1B18]">
+                              <div className="flex items-center gap-2">
+                                <h3 className={`min-w-0 flex-1 truncate text-body-sm ${
+                                  c.unread ? "font-bold text-[#111827]" : "font-semibold text-[#1E1B18]"
+                                } dark:text-white`}>
                                   {decodeHtmlEntities(c.title)}
                                 </h3>
-                                <time className="ml-auto shrink-0 text-right text-[11px] font-medium leading-5 text-[#6F6258]" dateTime={c.lastMessageAt}>
+                                <time
+                                  className={`ml-auto shrink-0 text-right text-[11px] leading-5 ${
+                                    c.unread ? "font-semibold text-[#111827]" : "font-medium text-[#6F6258]"
+                                  } dark:text-surface-400`}
+                                  dateTime={c.lastMessageAt}
+                                >
                                   {formatRelativeDate(new Date(c.lastMessageAt))}
                                 </time>
                               </div>
                               <div className="mt-0.5 flex items-center gap-2">
-                                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" />}
-                                {c.subtitle && !(c.title && c.subtitle.includes("@")) && (
-                                  <p className="min-w-0 flex-1 truncate text-micro text-[#6B6760]">
-                                    {decodeHtmlEntities(c.subtitle)}
-                                  </p>
-                                )}
-                                <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258]">
-                                  {status && <span className={`h-1.5 w-1.5 rounded-full ${status.color}`} />}
-                                  {status ? status.label : "Tiesioginė"}
+                                <span className="inline-flex shrink-0 rounded-full bg-[#EFE7DB] px-2 py-0.5 text-[10px] font-medium leading-4 text-[#6F6258] dark:bg-surface-800 dark:text-surface-300">
+                                  {roleLabel}
                                 </span>
+                                {badgeLabel && (
+                                  <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 ${conversationBadgeClass(badgeLabel)}`}>
+                                    {badgeLabel}
+                                  </span>
+                                )}
                               </div>
-                              <div className="mt-1.5 flex items-start gap-2">
-                                <p className="min-w-0 flex-1 line-clamp-1 text-body-sm font-normal text-[#6B6760]">
-                                  {c.fromProvider && <span>Jūs: </span>}
-                                  {decodeHtmlEntities(c.preview)}
+                              <div className="mt-1 flex items-center gap-2">
+                                <p className={`min-w-0 flex-1 line-clamp-1 text-body-sm ${
+                                  c.unread ? "font-semibold text-[#1E1B18]" : "font-normal text-[#6B6760]"
+                                } dark:text-surface-300`}>
+                                  {c.unread ? (
+                                    "Nauja žinutė"
+                                  ) : (
+                                    <>
+                                      {c.fromProvider && <span>Jūs: </span>}
+                                      {decodeHtmlEntities(c.preview)}
+                                    </>
+                                  )}
                                 </p>
+                                {c.unread && (
+                                  <span className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-[#166FE5]" aria-label="Nauja žinutė" />
+                                )}
                               </div>
                             </div>
                           </div>
@@ -812,8 +1047,14 @@ export default function ProviderInboxClient() {
             </div>
           </aside>
 
-          <main className={`${selectedId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
-            {threadError ? (
+          <main className={`${selectedId || draftRequestId ? "flex" : "hidden lg:flex"} min-h-0 min-w-0 flex-col bg-[#FFFDF8] dark:bg-surface-900`}>
+            {draftRequestId ? (
+              <RequestOfferComposer
+                requestId={draftRequestId}
+                onBack={closeDraftRequest}
+                onCreated={openResponseThread}
+              />
+            ) : threadError ? (
               <div className="grid min-h-0 flex-1 place-items-center p-8 text-center text-body-sm text-red-600">
                 {threadError}
               </div>
@@ -848,7 +1089,7 @@ export default function ProviderInboxClient() {
                       <span className="h-2 w-2 shrink-0 rounded-full bg-[#C29B74]" aria-hidden="true" />
                       <p className="truncate text-body font-semibold text-[#1E1B18]">{decodeHtmlEntities(thread.title)}</p>
                       <span className="rounded-full bg-[#F5F3EF] px-2 py-0.5 text-micro font-medium text-[#6B6760]">
-                        {selectedConversation?.type === "direct" ? "Tiesioginė" : "Užklausa"}
+                        {selectedConversation ? conversationRoleLabel(selectedConversation) : "Pokalbis"}
                       </span>
                     </div>
                     {thread.subtitle && <p className="mt-0.5 truncate text-caption text-[#6B6760]">{decodeHtmlEntities(thread.subtitle)}</p>}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { CheckCircle, KeyRound, UserRound } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import PhoneVerification from "@/components/requests/PhoneVerification";
+import { BRAND_PALETTES, BRAND_COLOR_VALUES, normalizeBrandColor, type BrandColor } from "@/lib/brand-theme";
 import ProfileEmailEditor from "./ProfileEmailEditor";
 
 interface ProfileData {
@@ -14,6 +16,7 @@ interface ProfileData {
   phone: string | null;
   emailVerified: Date | string | null;
   phoneVerifiedAt: Date | string | null;
+  brandColor: string | null;
   createdAt: Date | string;
   _count: { serviceRequests: number };
 }
@@ -23,9 +26,13 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ initialProfile }: ProfileFormProps) {
+  const { update } = useSession();
   const [profile, setProfile] = useState(initialProfile);
   const [name, setName] = useState(initialProfile.name ?? "");
   const [phone, setPhone] = useState(initialProfile.phone ?? "");
+  const [brandColor, setBrandColor] = useState<BrandColor>(
+    normalizeBrandColor(initialProfile.brandColor),
+  );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +50,8 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
 
   const dirty =
     name.trim() !== (profile.name ?? "").trim() ||
-    phone.trim() !== (profile.phone ?? "").trim();
+    phone.trim() !== (profile.phone ?? "").trim() ||
+    brandColor !== normalizeBrandColor(profile.brandColor);
   const phoneVerified =
     !phoneVerificationCleared && !!profile.phoneVerifiedAt && phone.trim() === (profile.phone ?? "");
   const emailVerified = !!profile.emailVerified;
@@ -92,13 +100,15 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
       const res = await fetch("/api/paskyra/profilis", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone }),
+        body: JSON.stringify({ name, phone, brandColor }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.success) {
         setProfile(data.data);
         setName(data.data.name ?? "");
         setPhone(data.data.phone ?? "");
+        setBrandColor(normalizeBrandColor(data.data.brandColor));
+        await update({ brandColor: data.data.brandColor });
         setPhoneVerificationCleared(!data.data.phoneVerifiedAt);
         setMessage("Profilis išsaugotas.");
       } else {
@@ -201,6 +211,47 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
           >
             Išsaugoti profilį
           </Button>
+        </div>
+
+        <div className="mt-6 border-t border-surface-200/70 pt-5 dark:border-surface-700/50">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-4 w-4 rounded-full bg-brand-600" />
+            <h3 className="text-body font-semibold text-surface-900 dark:text-white">
+              Main spalva
+            </h3>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {BRAND_COLOR_VALUES.map((value) => {
+              const palette = BRAND_PALETTES[value];
+              const active = brandColor === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setBrandColor(value);
+                    setMessage("");
+                    setError("");
+                  }}
+                  aria-pressed={active}
+                  className={`min-h-11 rounded-xl border px-3 text-left text-caption font-semibold transition ${
+                    active
+                      ? "border-brand-600 bg-brand-50 text-surface-900 ring-2 ring-brand-600/20"
+                      : "border-surface-200 bg-white text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 rounded-full"
+                      style={{ backgroundColor: palette.main }}
+                      aria-hidden="true"
+                    />
+                    {palette.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-6 border-t border-surface-200/70 pt-5 dark:border-surface-700/50">

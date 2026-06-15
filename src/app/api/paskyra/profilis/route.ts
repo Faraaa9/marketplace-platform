@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizePhoneNumber } from "@/lib/phone";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { revalidateProviderCaches } from "@/lib/cache-invalidation";
+import { BRAND_COLOR_VALUES, normalizeBrandColor } from "@/lib/brand-theme";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Vardas turi būti bent 2 simbolių").max(100),
@@ -19,6 +20,7 @@ const profileSchema = z.object({
       (value) => value.length === 0 || value.length >= 6,
       "Nurodykite telefono numerį",
     ),
+  brandColor: z.enum(BRAND_COLOR_VALUES).optional(),
 });
 
 const userSelect = {
@@ -28,6 +30,7 @@ const userSelect = {
   phone: true,
   emailVerified: true,
   phoneVerifiedAt: true,
+  brandColor: true,
   createdAt: true,
   _count: { select: { serviceRequests: true } },
 } as const;
@@ -102,6 +105,9 @@ export async function PATCH(req: NextRequest) {
         name: sanitizeHtml(parsed.data.name),
         phone: phone ? sanitizeHtml(phone) : null,
         phoneVerifiedAt: phoneChanged ? null : undefined,
+        brandColor: parsed.data.brandColor
+          ? normalizeBrandColor(parsed.data.brandColor)
+          : undefined,
       },
       select: userSelect,
     });

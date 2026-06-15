@@ -56,11 +56,11 @@ export default function UnlockCard({ requestId, creditBalance }: UnlockCardProps
           <Lock className="h-6 w-6 text-brand-600 dark:text-brand-400" />
         </div>
         <h3 className="mt-3 text-heading-3 font-semibold text-surface-900 dark:text-white">
-          Atrakinkite šią užklausą
+          1. Atrakinkite užklausą
         </h3>
         <p className="mt-1.5 max-w-sm text-body-sm text-surface-500 dark:text-surface-400">
-          Atrakinę matysite kliento telefoną bei el. paštą ir galėsite pateikti
-          pasiūlymą. Kaina — 1 kreditas.
+          Tada galėsite pateikti pasiūlymą, pradėti pokalbį ir matyti kliento
+          kontaktus, kai klientas pasirinks jūsų pasiūlymą. Kaina — 1 kreditas.
         </p>
 
         <div className="mt-3 inline-flex items-center gap-1.5 text-caption text-surface-400">
