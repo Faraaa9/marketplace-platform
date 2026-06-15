@@ -71,6 +71,7 @@ export default function RequestOfferComposer({
   }, [onCreated, requestId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount: setState runs inside async loadRequest, not synchronously in the effect body
     void loadRequest();
   }, [loadRequest]);
 
