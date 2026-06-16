@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-17 01:17 — Claude
+
+**Commit:** `8aa1a0d` — experiment(dashboard): dismissible one-off cards (Semrush-style X)
+
+**Pakeitimai:** 2 files changed, 96 insertions(+)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/ui/DismissibleCard.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-15 20:14 — Claude
 
 **Commit:** `17df08a` — fix(categories): make picker search precise and results readable
