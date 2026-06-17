@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-17 12:13 — Claude
+
+**Commit:** `c3d8378` — feat(dashboard): production-ready dismissible cards (cookie-backed, no flash)
+
+**Pakeitimai:** 5 files changed, 187 insertions(+), 58 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/ui/DismissibleCard.tsx
+- src/lib/__tests__/dismissible-cards.test.ts
+- src/lib/dismissible-cards-shared.ts
+- src/lib/dismissible-cards.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-17 01:17 — Claude
 
 **Commit:** `8aa1a0d` — experiment(dashboard): dismissible one-off cards (Semrush-style X)
