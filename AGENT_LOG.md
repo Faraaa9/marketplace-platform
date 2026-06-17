@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-17 13:56 — Claude
+
+**Commit:** `5e32b6e` — feat(announcements): admin-managed dismissible cards on dashboards
+
+**Pakeitimai:** 12 files changed, 878 insertions(+), 28 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260617_add_announcement_cards.sql
+- prisma/schema.prisma
+- src/app/admin/layout.tsx
+- src/app/admin/pranesimai/AnnouncementsCard.tsx
+- src/app/admin/pranesimai/page.tsx
+- src/app/api/admin/announcements/route.ts
+- src/app/paskyra/uzklausos/page.tsx
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/announcements/AnnouncementCardView.tsx
+- src/components/announcements/AnnouncementCards.tsx
+- src/lib/announcement-shared.ts
+- src/lib/announcements.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-17 12:13 — Claude
 
 **Commit:** `c3d8378` — feat(dashboard): production-ready dismissible cards (cookie-backed, no flash)

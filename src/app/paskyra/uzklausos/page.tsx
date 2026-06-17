@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SessionGate } from "@/components/auth/SessionGate";
+import { AnnouncementCards } from "@/components/announcements/AnnouncementCards";
 import Button from "@/components/ui/Button";
 import { MyRequestsListSkeleton } from "@/components/ui/skeletons";
 import MyRequestsList from "./MyRequestsList";
@@ -60,6 +61,8 @@ async function MyRequestsView({
           </Button>
         </Link>
       </div>
+
+      <AnnouncementCards surface="client" className="mb-5" />
 
       {isProvider && (
         <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">

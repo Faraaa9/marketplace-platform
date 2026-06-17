@@ -7,11 +7,9 @@ import {
   Coins,
   Eye,
   FileText,
-  Lightbulb,
   MessageCircle,
 } from "lucide-react";
-import { DismissibleCard } from "@/components/ui/DismissibleCard";
-import { isCardDismissed } from "@/lib/dismissible-cards";
+import { AnnouncementCards } from "@/components/announcements/AnnouncementCards";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 
 function pasiulymaiLabel(count: number): string {
@@ -57,10 +55,6 @@ export async function ProviderWorkCenter({
   filter?: WorkQueueFilter;
 }) {
   const data = await getProviderWorkCenterData(userId);
-  // Server-side gate so a dismissed one-off card never paints (no flash / CLS).
-  // Safe under Cache Components: this subtree is dynamic (Suspense + per-user
-  // Prisma reads), so the cookie read inside isCardDismissed is allowed here.
-  const welcomeTipDismissed = await isCardDismissed("provider-welcome-tip");
   const primaryLabel = data.missingReadiness ? "Sutvarkyti" : "Atidaryti žinutes";
   const primaryHref = data.missingReadiness?.href ?? "/tiekejas/zinutes";
   // "Reikia dėmesio" surfaces only items where something is new / awaiting a
@@ -108,26 +102,7 @@ export async function ProviderWorkCenter({
         </div>
       </header>
 
-      {!welcomeTipDismissed && (
-        <DismissibleCard id="provider-welcome-tip" className="mb-4">
-          <section className="rounded-[20px] border border-[#DED7CC] bg-white p-4 pr-12 shadow-[0_12px_32px_rgba(55,42,31,0.08)] dark:border-surface-700 dark:bg-surface-900">
-            <div className="flex items-start gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#F6E9E3] text-[#A84E2E]">
-                <Lightbulb className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="text-body-sm font-semibold text-[#24211D] dark:text-white">
-                  Greitas atsakymas laimi klientą
-                </h3>
-                <p className="mt-1 text-caption leading-relaxed text-[#6D675F] dark:text-surface-400">
-                  Klientai dažniausiai renkasi pirmą atsakiusį tiekėją. Atsakyk į
-                  naujas žinutes per kelias valandas - taip gausi daugiau darbų.
-                </p>
-              </div>
-            </div>
-          </section>
-        </DismissibleCard>
-      )}
+      <AnnouncementCards surface="provider" className="mb-4" />
 
       <section className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryTile

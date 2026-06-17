@@ -824,6 +824,27 @@ model CreditPack {
   @@map("credit_packs")
 }
 
+/// Admin-managed dismissible cards shown on dashboards (feature announcements,
+/// onboarding tips, promos). Dismissal is per-device (cookie), not stored here.
+model AnnouncementCard {
+  id        String    @id @default(cuid())
+  title     String
+  body      String    @db.Text
+  ctaLabel  String?
+  ctaHref   String?
+  icon      String    @default("lightbulb")
+  audience  String    @default("PROVIDER") // PROVIDER | CLIENT | ALL
+  isActive  Boolean   @default(false)
+  sortOrder Int       @default(0)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([audience, isActive])
+  @@map("announcement_cards")
+}
+
 model CreditTransaction {
   id                      String   @id @default(cuid())
   providerProfileId       String
