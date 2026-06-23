@@ -17,6 +17,22 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-24 00:29 — Claude
+
+**Commit:** `06304b8` — feat(prototype): tabbed meistras profile mockup + restore variants
+
+**Pakeitimai:** 5 files changed, 1495 insertions(+)
+
+**Failai:**
+- public/profile-full.html
+- public/profile-mockup.html
+- public/profile-pro.html
+- public/profile-pro2.html
+- public/profile-variants.html
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-17 13:56 — Claude
 
 **Commit:** `5e32b6e` — feat(announcements): admin-managed dismissible cards on dashboards

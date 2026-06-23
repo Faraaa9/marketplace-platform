@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profilio mockup — eksperimentas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f5f3;          /* clean near-white, no yellow */
+    --surface:#ffffff;
+    --ink:#1c1a18;
+    --muted:#6f6a64;
+    --faint:#9a948d;
+    --line:#ece9e5;
+    --accent:#c0613a;       /* terracotta — single accent */
+    --accent-ink:#a44f2c;
+    --accent-soft:#f7ece6;
+    --star:#e0a32e;
+    --ok:#3f8f6a;
+    --radius:22px;
+    --shadow:0 1px 2px rgba(28,26,24,.04), 0 8px 30px rgba(28,26,24,.06);
+    --shadow-hover:0 2px 4px rgba(28,26,24,.06), 0 14px 40px rgba(28,26,24,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .grid-bg{
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:40px 40px;background-position:-1px -1px;opacity:.55;
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0,#000,transparent 75%);
+            mask-image:radial-gradient(ellipse 80% 60% at 50% 0,#000,transparent 75%);
+  }
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 20px 120px}
+  .topnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
+  .back{color:var(--faint);font-size:14px;text-decoration:none}
+  .back:hover{color:var(--muted)}
+
+  .layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:22px;align-items:start}
+  .col{min-width:0;display:flex;flex-direction:column;gap:22px}
+  .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:26px}
+
+  /* HERO */
+  .cover{position:relative;height:230px;background:linear-gradient(135deg,#e8d8cd,#f1e4da 60%,#eef0ec)}
+  .cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.12),rgba(0,0,0,0) 45%,rgba(0,0,0,.10))}
+  .hero-body{padding:0 26px 24px;position:relative}
+  .avatar{width:96px;height:96px;border-radius:50%;border:4px solid var(--surface);object-fit:cover;margin-top:-52px;position:relative;z-index:2;box-shadow:var(--shadow)}
+  .badge-verified{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent-ink);font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px}
+  .name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+  h1{font-size:30px;line-height:1.1;letter-spacing:-.03em;margin:0;font-weight:800}
+  .headline{color:var(--muted);font-size:16px;margin:8px 0 0;font-weight:500}
+  .rating{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:14px}
+  .stars{color:var(--star);letter-spacing:1px;font-size:15px}
+  .rating b{font-weight:700}
+  .rating span{color:var(--faint)}
+
+  /* TRUST STRIP */
+  .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+  .trust .t{background:var(--surface);padding:16px 14px;text-align:center}
+  .trust .t .v{font-weight:700;font-size:16px;letter-spacing:-.02em}
+  .trust .t .l{font-size:12px;color:var(--faint);margin-top:3px}
+  .trust .t .v.ok{color:var(--ok)}
+
+  /* GALLERY */
+  .sec-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:0 0 16px}
+  .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:130px 130px;gap:10px}
+  .gal a{border-radius:14px;overflow:hidden;display:block;background:#e9e3dc}
+  .gal a:first-child{grid-row:span 2}
+  .gal img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+  .gal a:hover img{transform:scale(1.04)}
+
+  /* BEFORE / AFTER */
+  .ba{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:16/10;user-select:none;background:#e9e3dc;margin-bottom:12px}
+  .ba .layer{position:absolute;inset:0}
+  .ba .layer img{width:100%;height:100%;object-fit:cover;display:block}
+  .ba .after{clip-path:inset(0 0 0 50%)}
+  .ba .tg{position:absolute;bottom:10px;font-size:11px;font-weight:700;letter-spacing:.04em;color:#fff;background:rgba(28,26,24,.6);padding:4px 9px;border-radius:99px;backdrop-filter:blur(4px)}
+  .ba .tg-b{left:10px}
+  .ba .tg-a{right:10px;background:var(--accent)}
+  .ba .hd{position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%)}
+  .ba .kn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;color:var(--ink)}
+  .ba .kn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ba input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+
+  /* TABS (merged into hero card) */
+  .tabwrap{padding:14px;border-top:1px solid var(--line)}
+  .tabs{display:flex;gap:5px;background:var(--bg);border:1px solid var(--line);border-radius:13px;padding:5px}
+  .tab{flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--muted);padding:10px 8px;border-radius:9px;cursor:pointer;border:1px solid transparent;background:none;font-family:inherit;transition:.14s}
+  .tab:hover{color:var(--ink)}
+  .tab.on{background:var(--surface);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+  .panel{display:none}
+  .panel.on{display:block;animation:fade .22s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  /* PROJECT FOLDERS */
+  .projects{display:grid;grid-template-columns:1fr 1fr;gap:16px 14px}
+  .proj{position:relative;border:none;background:none;padding:0;cursor:pointer;text-align:left;font-family:inherit}
+  .proj-stack{position:relative;display:block;aspect-ratio:4/3}
+  .proj-stack::before,.proj-stack::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+  .proj-stack::before{transform:translateY(9px) scale(.92);opacity:.5}
+  .proj-stack::after{transform:translateY(5px) scale(.96);opacity:.8}
+  .proj-cover{position:relative;z-index:1;display:block;width:100%;height:100%;border-radius:14px;overflow:hidden;background:#e9e3dc;box-shadow:var(--shadow)}
+  .proj-cover>img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+  .proj:hover .proj-cover>img{transform:scale(1.06)}
+  .proj-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(28,26,24,.62),rgba(28,26,24,0) 52%)}
+  .proj-count{position:absolute;z-index:2;top:9px;right:9px;display:inline-flex;align-items:center;gap:5px;background:rgba(28,26,24,.6);color:#fff;font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;backdrop-filter:blur(4px)}
+  .proj-count svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .proj-meta{position:absolute;z-index:2;left:11px;right:11px;bottom:9px;display:flex;flex-direction:column}
+  .proj-name{color:#fff;font-weight:700;font-size:14px;letter-spacing:-.01em}
+  .proj-sub{color:rgba(255,255,255,.82);font-size:12px;margin-top:1px}
+
+  /* RATING SUMMARY */
+  .rsum{display:flex;align-items:center;gap:16px;padding-bottom:16px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+  .rsum .big{font-size:42px;font-weight:800;line-height:1;letter-spacing:-.03em}
+  .rsum .sm{font-size:13px;color:var(--faint);margin-top:4px}
+
+  /* PRICING */
+  .price-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid var(--line);font-size:15px}
+  .price-row:first-child{border-top:none}
+  .price-row .pl{color:#46423d}
+  .price-row .pr{font-weight:700;white-space:nowrap}
+  .price-note{font-size:12.5px;color:var(--faint);margin:14px 0 0}
+
+  /* LIGHTBOX */
+  .lb{position:fixed;inset:0;z-index:50;background:rgba(18,16,14,.94);display:none;align-items:center;justify-content:center;padding:24px}
+  .lb.open{display:flex;animation:fade .2s ease}
+  .lb-stage{position:relative;width:100%;max-width:880px;display:flex;flex-direction:column;align-items:center;gap:13px}
+  .lb-img{max-width:100%;max-height:70vh;border-radius:14px;background:#000;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lb-cap{color:#fff;font-size:14.5px;font-weight:600;text-align:center}
+  .lb-cap span{color:rgba(255,255,255,.6);font-weight:500;margin-left:8px}
+  .lb-count{color:rgba(255,255,255,.6);font-size:12.5px;font-weight:600;letter-spacing:.05em}
+  .lb-btn{position:absolute;top:35%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:.14s}
+  .lb-btn:hover{background:rgba(255,255,255,.3)}
+  .lb-prev{left:-6px}.lb-next{right:-6px}
+  .lb-close{position:fixed;top:18px;right:18px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;transition:.14s}
+  .lb-close:hover{background:rgba(255,255,255,.3)}
+  .lb-thumbs{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:100%}
+  .lb-thumbs img{width:52px;height:38px;object-fit:cover;border-radius:7px;cursor:pointer;opacity:.45;border:2px solid transparent;transition:.14s}
+  .lb-thumbs img:hover{opacity:.8}
+  .lb-thumbs img.on{opacity:1;border-color:#fff}
+
+  .about p{color:#46423d;margin:0;font-size:15.5px;line-height:1.65}
+  .svc{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .svc span{background:var(--bg);border:1px solid var(--line);color:#46423d;font-size:13.5px;padding:7px 12px;border-radius:10px}
+
+  /* REVIEWS */
+  .rev{padding:18px 0;border-top:1px solid var(--line)}
+  .rev:first-of-type{border-top:none;padding-top:0}
+  .rev .who{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+  .rev .ava{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+  .rev .meta{min-width:0}
+  .rev .nm{font-weight:700;font-size:14px;line-height:1.2}
+  .rev .sv{font-size:12px;color:var(--faint);margin-top:1px}
+  .rev .st{color:var(--star);font-size:12px;margin-left:auto;align-self:flex-start;white-space:nowrap}
+  .rev p{margin:0 0 0 47px;color:#54504a;font-size:14.5px;line-height:1.6}
+  .rev .reply{margin:11px 0 0 47px;background:var(--accent-soft);border:1px solid #f0ddd2;border-radius:12px;padding:11px 13px;font-size:13.5px;color:#5c5046;line-height:1.55}
+  .rev .reply b{color:var(--accent-ink);font-weight:700}
+
+  /* SIDEBAR CTA */
+  .side{display:flex;flex-direction:column;gap:22px;position:sticky;top:22px}
+  .cta-card{background:linear-gradient(160deg,#fff,#fbf4ef);border:1px solid var(--line)}
+  .cta-card h3{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}
+  .cta-card .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border-radius:14px;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;border:none;transition:all .15s ease}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(192,97,58,.28)}
+  .btn-primary:hover{background:var(--accent-ink);box-shadow:var(--shadow-hover)}
+  .btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);margin-top:10px}
+  .btn-ghost:hover{box-shadow:var(--shadow)}
+  .hero-cta{display:none}
+  .reassure{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .reassure span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+
+  .mini{font-size:13px;color:var(--faint);margin:0 0 12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .fact{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:14px;color:#46423d;border-top:1px solid var(--line)}
+  .fact:first-of-type{border-top:none}
+  .fact .ic{width:30px;height:30px;border-radius:9px;background:var(--bg);display:grid;place-items:center;font-size:15px}
+
+  .note{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:5;background:#1c1a18;color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:.85}
+
+  @media(max-width:860px){
+    .layout{grid-template-columns:1fr}
+    .gal{grid-template-columns:1fr 1fr;grid-template-rows:120px 120px}
+    .gal a:first-child{grid-row:span 1}
+    h1{font-size:26px}
+    .hero-cta{display:flex;gap:10px;margin-top:18px}
+    .hero-cta .btn{margin-top:0}
+    .hero-cta .btn-primary{flex:1.5}
+    .hero-cta .btn-ghost{flex:1}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="wrap">
+  <div class="topnav">
+    <div class="brand"><div class="logo">P</div> Paslaugų rinka</div>
+    <a class="back" href="#">← Visi meistrai</a>
+  </div>
+
+  <div class="layout">
+    <!-- MAIN -->
+    <div class="col">
+
+      <!-- HERO -->
+      <div class="card">
+        <div class="cover">
+          <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1200&q=80" alt="darbai">
+        </div>
+        <div class="hero-body">
+          <img class="avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="Simonas">
+          <div class="name-row">
+            <h1>Gerosimas</h1>
+            <span class="badge-verified">✓ Patikrintas</span>
+          </div>
+          <p class="headline">Patyręs elektrikas Kaune · 15 m. patirtis · atsako per ~2 val.</p>
+          <div class="rating">
+            <span class="stars">★★★★★</span>
+            <b>4.9</b>
+            <span>(28 atsiliepimai)</span>
+          </div>
+          <div class="hero-cta">
+            <button class="btn btn-primary">✈ Rašyti žinutę</button>
+            <button class="btn btn-ghost">📞 Skambinti</button>
+          </div>
+        </div>
+
+        <!-- TRUST STRIP -->
+        <div class="trust">
+          <div class="t"><div class="v">15 m.</div><div class="l">patirtis</div></div>
+          <div class="t"><div class="v">~2 val.</div><div class="l">atsako per</div></div>
+          <div class="t"><div class="v ok">✓</div><div class="l">sąskaitos faktūros</div></div>
+          <div class="t"><div class="v">nuo 50 €</div><div class="l">iškvietimas</div></div>
+        </div>
+
+        <!-- TABS (merged into hero card) -->
+        <div class="tabwrap">
+          <div class="tabs" role="tablist">
+            <button class="tab on" data-t="darbai" role="tab">Atlikti darbai</button>
+            <button class="tab" data-t="atsiliepimai" role="tab">Atsiliepimai</button>
+            <button class="tab" data-t="apie" role="tab">Apie ir kainos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DARBAI -->
+      <div class="panel on" id="darbai">
+        <div class="card pad">
+          <p class="sec-title">⬡ Prieš ir po</p>
+          <div class="ba" id="ba">
+            <div class="layer"><img alt="Vonia prieš" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1000&q=80"></div>
+            <div class="layer after" id="baA"><img alt="Vonia po" src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=1000&q=80"></div>
+            <span class="tg tg-b">PRIEŠ</span><span class="tg tg-a">PO</span>
+            <div class="hd" id="baH"><div class="kn"><svg viewBox="0 0 24 24"><path d="m9 7-5 5 5 5M15 7l5 5-5 5"/></svg></div></div>
+            <input type="range" min="0" max="100" value="50" id="baR" aria-label="Prieš ir po">
+          </div>
+        </div>
+
+        <div class="card pad" style="margin-top:22px">
+          <p class="sec-title">⬡ Projektai · paspausk ir peržiūrėk</p>
+          <div class="projects">
+            <button class="proj" data-name="Buto pilna instaliacija" data-sub="Kaunas · 2024" data-ids="1621905251189-08b45d6a269e,1621905252507-b35492cc74b4,1558618666-fcd25c85cd64,1581092160562-40aa08e78837,1565608438257-fac3c27beb36">
+              <span class="proj-stack"><span class="proj-cover">
+                <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=700&q=80" onerror="this.style.display='none'">
+                <span class="proj-count"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>5</span>
+                <span class="proj-meta"><span class="proj-name">Buto pilna instaliacija</span><span class="proj-sub">Kaunas · 2024</span></span>
+              </span></span>
+            </button>
+            <button class="proj" data-name="Elektros skydinės keitimas" data-sub="Žaliakalnis" data-ids="1581092160562-40aa08e78837,1565608438257-fac3c27beb36,1621905252507-b35492cc74b4,1558618666-fcd25c85cd64">
+              <span class="proj-stack"><span class="proj-cover">
+                <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=700&q=80" onerror="this.style.display='none'">
+                <span class="proj-count"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>4</span>
+                <span class="proj-meta"><span class="proj-name">Elektros skydinės keitimas</span><span class="proj-sub">Žaliakalnis</span></span>
+              </span></span>
+            </button>
+            <button class="proj" data-name="Apšvietimo montavimas" data-sub="Centras · 2025" data-ids="1556912173-3bb406ef7e77,1618221195710-dd6b41faaea6,1620626011761-996317b8d101">
+              <span class="proj-stack"><span class="proj-cover">
+                <img src="https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=700&q=80" onerror="this.style.display='none'">
+                <span class="proj-count"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>3</span>
+                <span class="proj-meta"><span class="proj-name">Apšvietimo montavimas</span><span class="proj-sub">Centras · 2025</span></span>
+              </span></span>
+            </button>
+            <button class="proj" data-name="Vonios renovacija · el. dalis" data-sub="Šilainiai" data-ids="1584622650111-993a426fbf0a,1620626011761-996317b8d101,1618221195710-dd6b41faaea6,1556912173-3bb406ef7e77">
+              <span class="proj-stack"><span class="proj-cover">
+                <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=700&q=80" onerror="this.style.display='none'">
+                <span class="proj-count"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>4</span>
+                <span class="proj-meta"><span class="proj-name">Vonios renovacija</span><span class="proj-sub">Šilainiai · el. dalis</span></span>
+              </span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATSILIEPIMAI -->
+      <div class="panel" id="atsiliepimai">
+        <div class="card pad">
+          <p class="sec-title">⬡ Atsiliepimai (28)</p>
+          <div class="rsum">
+            <div class="big">4.9</div>
+            <div>
+              <div class="stars" style="font-size:18px">★★★★★</div>
+              <div class="sm">28 atsiliepimai · 100% rekomenduoja</div>
+            </div>
+          </div>
+          <div class="rev">
+            <div class="who"><div class="ava">R</div><div class="meta"><div class="nm">Rasa</div><div class="sv">Elektros gedimas · 2026-06</div></div></div>
+            <p>Greitai atvažiavo, viską sutvarkė per valandą. Kaina kaip ir sutarta, jokių staigmenų. Rekomenduoju.</p>
+            <div class="reply"><b>Gerosimo atsakymas:</b> Ačiū, Rasa! Visada pasiruošęs padėti.</div>
+          </div>
+          <div class="rev">
+            <div class="who"><div class="ava">T</div><div class="meta"><div class="nm">Tomas</div><div class="sv">Buto instaliacija · 2026-05</div></div></div>
+            <p>Pilna buto instaliacija. Tvarkingas darbas, paaiškino ką ir kodėl daro. Liko švaru.</p>
+          </div>
+          <div class="rev">
+            <div class="who"><div class="ava">G</div><div class="meta"><div class="nm">Greta</div><div class="sv">Skydinės keitimas · 2026-04</div></div></div>
+            <p>Keitė seną skydinę naujam butui. Viskas tvarkingai sužymėta, gavau ir sąskaitą faktūrą. Ačiū!</p>
+            <div class="reply"><b>Gerosimo atsakymas:</b> Smagu, Greta — sėkmės naujame bute!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APIE -->
+      <div class="panel" id="apie">
+        <div class="card pad about">
+          <p class="sec-title">⬡ Apie tiekėją</p>
+          <p>Profesionalus elektrikas su 15 metų patirtimi Kaune. Sprendžiu elektros instaliacijos, remonto ir priežiūros darbus — nuo naujos instaliacijos iki skubaus gedimo. Dirbu su kokybiškomis medžiagomis, laikausi saugos standartų. Atvažiuoju greitai, dirbu ir savaitgaliais.</p>
+          <div class="svc">
+            <span>Elektros instaliacija</span>
+            <span>Gedimų šalinimas</span>
+            <span>Apšvietimo montavimas</span>
+            <span>Elektros skydinės</span>
+            <span>Skubūs iškvietimai</span>
+          </div>
+        </div>
+        <div class="card pad" style="margin-top:22px">
+          <p class="sec-title">⬡ Kainos</p>
+          <div class="price-row"><span class="pl">Iškvietimas ir diagnostika</span><span class="pr">nuo 50 €</span></div>
+          <div class="price-row"><span class="pl">Rozetės / jungiklio keitimas</span><span class="pr">nuo 15 €</span></div>
+          <div class="price-row"><span class="pl">Apšvietimo taško montavimas</span><span class="pr">nuo 30 €</span></div>
+          <div class="price-row"><span class="pl">Elektros skydinės surinkimas</span><span class="pr">nuo 120 €</span></div>
+          <div class="price-row"><span class="pl">Buto pilna instaliacija</span><span class="pr">pagal projektą</span></div>
+          <p class="price-note">Galutinė kaina priklauso nuo darbų apimties. Tiksli sąmata — nemokama.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="side">
+      <div class="card pad cta-card">
+        <h3>Reikia elektriko?</h3>
+        <p class="sub">Parašyk Gerosimui — atsakymas nemokamas, jokių įsipareigojimų.</p>
+        <button class="btn btn-primary">✈ Rašyti žinutę</button>
+        <button class="btn btn-ghost">📞 Skambinti</button>
+        <div class="reassure">
+          <span><span class="dot"></span> Atsako per ~2 val.</span>
+          <span><span class="dot"></span> 94% priima</span>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <p class="mini">Greiti faktai</p>
+        <div class="fact"><div class="ic">📍</div> Kaunas · visa Lietuva</div>
+        <div class="fact"><div class="ic">🗓️</div> Platformoje nuo 2024</div>
+        <div class="fact"><div class="ic">⚡</div> Skubūs darbai</div>
+        <div class="fact"><div class="ic">🧾</div> Išrašo sąskaitas faktūras</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" aria-hidden="true">
+  <button class="lb-close" id="lbClose" aria-label="Uždaryti">✕</button>
+  <div class="lb-stage">
+    <button class="lb-btn lb-prev" id="lbPrev" aria-label="Ankstesnė">‹</button>
+    <img class="lb-img" id="lbImg" alt="">
+    <button class="lb-btn lb-next" id="lbNext" aria-label="Kita">›</button>
+    <div class="lb-cap" id="lbCap"></div>
+    <div class="lb-count" id="lbCount"></div>
+    <div class="lb-thumbs" id="lbThumbs"></div>
+  </div>
+</div>
+
+<div class="note">Eksperimentinis mockup · /profile-mockup.html</div>
+<script>
+  // Before/after slider
+  (function(){
+    var r=document.getElementById('baR'),a=document.getElementById('baA'),h=document.getElementById('baH');
+    if(!r)return;
+    function s(v){a.style.clipPath='inset(0 0 0 '+v+'%)';h.style.left=v+'%';}
+    r.addEventListener('input',function(){s(this.value);});
+    s(50);
+  })();
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+      document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on');
+      document.getElementById(t.dataset.t).classList.add('on');
+    });
+  });
+
+  // Project folders -> lightbox gallery
+  (function(){
+    var lb=document.getElementById('lb'),img=document.getElementById('lbImg'),
+        cap=document.getElementById('lbCap'),count=document.getElementById('lbCount'),
+        thumbs=document.getElementById('lbThumbs');
+    var photos=[],idx=0;
+    function big(id){return 'https://images.unsplash.com/photo-'+id+'?w=1400&q=80';}
+    function small(id){return 'https://images.unsplash.com/photo-'+id+'?w=140&q=70';}
+    function render(){
+      img.src=big(photos[idx]);
+      count.textContent=(idx+1)+' / '+photos.length;
+      Array.prototype.forEach.call(thumbs.children,function(c,i){c.classList.toggle('on',i===idx);});
+    }
+    function open(btn){
+      photos=btn.dataset.ids.split(',');idx=0;
+      cap.innerHTML=btn.dataset.name+'<span>'+(btn.dataset.sub||'')+'</span>';
+      thumbs.innerHTML='';
+      photos.forEach(function(id,i){
+        var t=document.createElement('img');t.src=small(id);t.alt='';
+        t.addEventListener('click',function(){idx=i;render();});
+        thumbs.appendChild(t);
+      });
+      render();lb.classList.add('open');document.body.style.overflow='hidden';
+    }
+    function close(){lb.classList.remove('open');document.body.style.overflow='';}
+    function move(d){idx=(idx+d+photos.length)%photos.length;render();}
+    document.querySelectorAll('.proj').forEach(function(p){p.addEventListener('click',function(){open(p);});});
+    document.getElementById('lbClose').addEventListener('click',close);
+    document.getElementById('lbPrev').addEventListener('click',function(){move(-1);});
+    document.getElementById('lbNext').addEventListener('click',function(){move(1);});
+    lb.addEventListener('click',function(e){if(e.target===lb)close();});
+    document.addEventListener('keydown',function(e){
+      if(!lb.classList.contains('open'))return;
+      if(e.key==='Escape')close();
+      else if(e.key==='ArrowLeft')move(-1);
+      else if(e.key==='ArrowRight')move(1);
+    });
+  })();
+</script>
+</body>
+</html>

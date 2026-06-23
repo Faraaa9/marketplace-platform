@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profilio variantai — eksperimentas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f5f3;--surface:#fff;--ink:#1c1a18;--muted:#6f6a64;--faint:#9a948d;
+    --line:#ece9e5;--accent:#c0613a;--accent-ink:#a44f2c;--accent-soft:#f7ece6;
+    --star:#e0a32e;--ok:#3f8f6a;--radius:22px;
+    --shadow:0 1px 2px rgba(28,26,24,.04),0 8px 30px rgba(28,26,24,.06);
+    --shadow-h:0 2px 4px rgba(28,26,24,.06),0 14px 40px rgba(28,26,24,.10);
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:30px 20px 100px}
+  .vlabel{display:flex;align-items:baseline;gap:12px;margin:46px 0 18px;padding-top:30px;border-top:2px dashed var(--line)}
+  .vlabel:first-of-type{border-top:none;padding-top:0;margin-top:8px}
+  .vlabel .n{width:30px;height:30px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}
+  .vlabel h2{font-size:20px;margin:0;letter-spacing:-.02em}
+  .vlabel p{margin:0;color:var(--faint);font-size:14px}
+  .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:26px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:13px;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;border:none;transition:all .15s}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(192,97,58,.28)}
+  .btn-primary:hover{background:var(--accent-ink);box-shadow:var(--shadow-h)}
+  .btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{box-shadow:var(--shadow)}
+  .stars{color:var(--star);letter-spacing:1px}
+  .verified{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent-ink);font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px}
+
+  /* ============ VARIANT A — EDITORIAL / žurnalinis ============ */
+  .ed{position:relative}
+  .ed .cover{height:320px;position:relative;background:#2a2622}
+  .ed .cover img{width:100%;height:100%;object-fit:cover;opacity:.92}
+  .ed .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(20,17,15,.85),rgba(20,17,15,.15) 55%,rgba(20,17,15,.35))}
+  .ed .over{position:absolute;left:0;right:0;bottom:0;padding:30px 32px;color:#fff;z-index:2}
+  .ed .kicker{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#e9c9b8;margin-bottom:8px}
+  .ed h1{font-family:Fraunces,serif;font-size:46px;line-height:1;margin:0;font-weight:600;letter-spacing:-.01em}
+  .ed .sub{font-size:17px;margin:12px 0 0;color:rgba(255,255,255,.85);max-width:620px}
+  .ed .meta{display:flex;align-items:center;gap:18px;margin-top:16px;font-size:14px;color:rgba(255,255,255,.9);flex-wrap:wrap}
+  .ed .meta b{color:#fff}
+  .ed .actions{display:flex;gap:10px;padding:22px 32px;border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+  .ed .actions .spacer{flex:1}
+  .ed .pricetag{font-size:14px;color:var(--muted)}
+  .ed .pricetag b{font-size:20px;color:var(--ink);letter-spacing:-.02em}
+
+  /* ============ VARIANT B — COMPACT CARD / kompaktiškas ============ */
+  .cp{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center}
+  .cp .ava{width:88px;height:88px;border-radius:18px;object-fit:cover;flex:none}
+  .cp h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+  .cp .role{color:var(--muted);font-size:14.5px;margin:0}
+  .cp .chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .cp .chip{background:var(--bg);border:1px solid var(--line);font-size:12.5px;padding:4px 10px;border-radius:8px;color:#46423d}
+  .cp .right{text-align:right;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .cp .rt{font-size:14px;color:var(--faint)}
+  .cp .rt b{color:var(--ink);font-size:16px}
+  .cp-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+  .cp-strip .s{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+  .cp-strip .s .v{font-weight:700;font-size:17px;letter-spacing:-.02em}
+  .cp-strip .s .v.ok{color:var(--ok)}
+  .cp-strip .s .l{font-size:12px;color:var(--faint);margin-top:3px}
+
+  /* ============ VARIANT C — SPLIT / suskaidytas su dideliu darbu ============ */
+  .sp{display:grid;grid-template-columns:1.15fr 1fr;min-height:380px}
+  .sp .photo{position:relative;background:#e9e3dc}
+  .sp .photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  .sp .photo .float{position:absolute;left:18px;bottom:18px;background:rgba(255,255,255,.95);backdrop-filter:blur(6px);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+  .sp .photo .float img{position:static;width:38px;height:38px;border-radius:10px}
+  .sp .photo .float .nm{font-weight:700;font-size:14px}
+  .sp .photo .float .rt{font-size:12px;color:var(--muted)}
+  .sp .info{padding:32px}
+  .sp .kicker{font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink)}
+  .sp h1{font-size:30px;margin:8px 0 0;letter-spacing:-.03em}
+  .sp .sub{color:var(--muted);font-size:15.5px;margin:10px 0 0}
+  .sp .feats{margin:20px 0;display:flex;flex-direction:column;gap:11px}
+  .sp .feats .f{display:flex;align-items:center;gap:11px;font-size:14.5px;color:#46423d}
+  .sp .feats .f .ic{width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font-size:14px;flex:none}
+  .sp .cta-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+
+  @media(max-width:820px){
+    .ed h1{font-size:32px}.ed .cover{height:260px}
+    .cp{grid-template-columns:auto 1fr}.cp .right{display:none}
+    .cp-strip{grid-template-columns:1fr 1fr}
+    .sp{grid-template-columns:1fr}.sp .photo{height:240px}
+  }
+  .foot{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#1c1a18;color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:.85;z-index:9}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ VARIANT A ============ -->
+  <div class="vlabel"><div class="n">A</div><div><h2>Žurnalinis</h2><p>Didelis cover, vardas ant nuotraukos, serif šriftas — premium „feature" jausmas. Stalius / interjeras.</p></div></div>
+  <div class="card ed">
+    <div class="cover">
+      <img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1300&q=80" alt="darbai">
+      <div class="over">
+        <div class="kicker">Baldų meistras · Vilnius</div>
+        <h1>Mindaugas Kazlauskas</h1>
+        <p class="sub">Individualūs mediniai baldai pagal užsakymą — virtuvės, spintos, stalviršiai iš masyvo. 12 metų amatas.</p>
+        <div class="meta">
+          <span class="stars">★★★★★ <b>5.0</b></span>
+          <span>· 41 atsiliepimas</span>
+          <span>· <b>atsako per 1 val.</b></span>
+          <span>· <span class="verified" style="background:rgba(255,255,255,.18);color:#fff">✓ Patikrintas</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary">✈ Rašyti žinutę</a>
+      <a class="btn btn-ghost">📞 Skambinti</a>
+      <div class="spacer"></div>
+      <div class="pricetag">Projektai nuo <b>200 €</b></div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT B ============ -->
+  <div class="vlabel"><div class="n">B</div><div><h2>Kompaktiškas</h2><p>Viskas viename ekrane be slinkimo — greitam palyginimui. Valytojai / smulkios paslaugos.</p></div></div>
+  <div class="card pad" style="display:flex;flex-direction:column;gap:18px">
+    <div class="cp">
+      <img class="ava" src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&q=80" alt="Asta">
+      <div>
+        <h1>Asta · Švaros studija <span class="verified">✓ Patikrinta</span></h1>
+        <p class="role">Profesionalus patalpų valymas · Kaunas ir aplink</p>
+        <div class="chips"><span class="chip">Po remonto</span><span class="chip">Biurai</span><span class="chip">Langai</span><span class="chip">Reguliarus</span></div>
+      </div>
+      <div class="right">
+        <div class="rt"><span class="stars">★★★★★</span> <b>4.8</b> (63)</div>
+        <a class="btn btn-primary" style="height:44px">✈ Rašyti žinutę</a>
+      </div>
+    </div>
+    <div class="cp-strip">
+      <div class="s"><div class="v">8 m.</div><div class="l">patirtis</div></div>
+      <div class="s"><div class="v">~30 min.</div><div class="l">atsako per</div></div>
+      <div class="s"><div class="v ok">✓</div><div class="l">sąskaitos</div></div>
+      <div class="s"><div class="v">nuo 35 €</div><div class="l">valymas</div></div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT C ============ -->
+  <div class="vlabel"><div class="n">C</div><div><h2>Suskaidytas</h2><p>Darbo nuotrauka kairėje, info ir CTA dešinėje — nuotrauka įtikina, tekstas parduoda. Santechnikas / plytelės.</p></div></div>
+  <div class="card sp">
+    <div class="photo">
+      <img src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=900&q=80" alt="vonios remontas">
+      <div class="float">
+        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80" alt="Darius">
+        <div><div class="nm">Darius R.</div><div class="rt"><span class="stars">★★★★★</span> 4.9 · 37 ats.</div></div>
+      </div>
+    </div>
+    <div class="info">
+      <div class="kicker">Santechnikas · Klaipėda</div>
+      <h1>Vonios ir santechnika</h1>
+      <p class="sub">Pilnas vonios įrengimas, plytelių klojimas, vamzdynų keitimas. Darbai su garantija.</p>
+      <div class="feats">
+        <div class="f"><span class="ic">⚡</span> Skubūs iškvietimai tą pačią dieną</div>
+        <div class="f"><span class="ic">🛡️</span> 24 mėn. garantija darbams</div>
+        <div class="f"><span class="ic">🧾</span> Sąskaitos faktūros · nuo 40 €</div>
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary">✈ Rašyti žinutę</a>
+        <a class="btn btn-ghost">📞 Skambinti</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="foot">Eksperimentiniai variantai · /profile-variants.html</div>
+</body>
+</html>
