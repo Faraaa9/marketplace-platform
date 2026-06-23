@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { Euro, Wrench } from "lucide-react";
+import { Euro } from "lucide-react";
 import ProfileTabs, { type TabPanel } from "./ProfileTabs";
 import ProfileHeroCard from "./ProfileHeroCard";
 import ProfileSidebar from "./ProfileSidebar";
 import ReviewsSection from "./ReviewsSection";
-import WorkImageGallery from "./WorkImageGallery";
+import WorkProjects from "./WorkProjects";
 import SimilarProvidersSection from "./SimilarProvidersSection";
 import SectionErrorBoundary from "./SectionErrorBoundary";
 import { SectionSkeleton } from "./ProfileUiHelpers";
@@ -47,19 +47,7 @@ export default function ProfileLayoutV2({
     {
       id: "darbai",
       label: "Atlikti darbai",
-      content:
-        provider.images.length > 1 ? (
-          <div className={CARD}>
-            <WorkImageGallery images={provider.images} providerName={provider.name} />
-          </div>
-        ) : (
-          <div className={`${CARD} text-center`}>
-            <Wrench className="mx-auto mb-3 h-8 w-8 text-surface-300" />
-            <p className="text-body-sm text-surface-500 dark:text-surface-400">
-              Darbų nuotraukų kol kas nėra.
-            </p>
-          </div>
-        ),
+      content: <WorkProjects gallery={provider.gallery} providerName={provider.name} />,
     },
     {
       id: "atsiliepimai",

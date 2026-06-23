@@ -39,7 +39,12 @@ import {
   PricingBlock,
   TrustSignals,
 } from "./components/ProfileUiHelpers";
-import type { StoryData } from "./components/types";
+import type {
+  StoryData,
+  WorkGallery,
+  WorkProject,
+  BeforeAfterPair,
+} from "./components/types";
 import type {
   ProviderCategory,
   ProviderProfileWithCategories,
@@ -812,6 +817,7 @@ async function getProviderProfileUncached(
             phone: true,
             website: true,
             images: true,
+            metadataJson: true,
             isVerified: true,
             isPremium: true,
             isYoungTalent: true,
@@ -871,6 +877,7 @@ async function getProviderProfileUncached(
     name: profile.displayName || provider.name || "Tiekėjas",
     image: getSafeProviderImageUrl(images[0] || provider.image),
     images,
+    gallery: buildWorkGallery(profile.metadataJson, images),
     description: profile.description,
     headline: profile.headline,
     services: profile.services,
@@ -1130,6 +1137,60 @@ function sanitizeImageUrls(raw: string[] | null | undefined): string[] {
   return raw
     .map((url) => getSafeProviderImageUrl(url))
     .filter((url): url is string => Boolean(url));
+}
+
+/**
+ * Structured work gallery for the Darbai panel. Reads an optional `gallery`
+ * blob from the profile's `metadataJson` (before/after pair + named project
+ * folders), sanitizing every URL through the image whitelist. Falls back to a
+ * single "Atlikti darbai" folder over the flat `images[]` so legacy profiles
+ * still render their photos. No schema change — rides on the existing JSON field
+ * until the relational GalleryItem model lands.
+ */
+function buildWorkGallery(metadataJson: string | null, images: string[]): WorkGallery {
+  const fallback: WorkGallery = {
+    beforeAfter: null,
+    projects: images.length > 0 ? [{ name: "Atlikti darbai", sub: null, photos: images }] : [],
+  };
+  if (!metadataJson) return fallback;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(metadataJson);
+  } catch {
+    return fallback;
+  }
+  const gallery = (parsed as { gallery?: unknown } | null)?.gallery;
+  if (!gallery || typeof gallery !== "object") return fallback;
+  const g = gallery as { beforeAfter?: unknown; projects?: unknown };
+
+  let beforeAfter: BeforeAfterPair | null = null;
+  if (g.beforeAfter && typeof g.beforeAfter === "object") {
+    const ba = g.beforeAfter as { before?: unknown; after?: unknown };
+    const before = typeof ba.before === "string" ? getSafeProviderImageUrl(ba.before) : null;
+    const after = typeof ba.after === "string" ? getSafeProviderImageUrl(ba.after) : null;
+    if (before && after) beforeAfter = { before, after };
+  }
+
+  const projects: WorkProject[] = [];
+  if (Array.isArray(g.projects)) {
+    for (const raw of g.projects) {
+      if (!raw || typeof raw !== "object") continue;
+      const pr = raw as { name?: unknown; sub?: unknown; photos?: unknown };
+      const name = typeof pr.name === "string" && pr.name.trim() ? pr.name.trim() : null;
+      const photos = Array.isArray(pr.photos)
+        ? pr.photos
+            .filter((u): u is string => typeof u === "string")
+            .map((u) => getSafeProviderImageUrl(u))
+            .filter((u): u is string => Boolean(u))
+        : [];
+      if (!name || photos.length === 0) continue;
+      projects.push({ name, sub: typeof pr.sub === "string" ? pr.sub : null, photos });
+    }
+  }
+
+  if (!beforeAfter && projects.length === 0) return fallback;
+  return { beforeAfter, projects };
 }
 
 function calculateProfileCompleteness(
