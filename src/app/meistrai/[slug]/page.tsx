@@ -28,6 +28,7 @@ import ProfileShareButton from "./components/ProfileShareButton";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import WorkImageGallery from "./components/WorkImageGallery";
+import ProfileLayoutV2 from "./components/ProfileLayoutV2";
 import {
   RatingStars,
   TrustStat,
@@ -38,7 +39,11 @@ import {
   PricingBlock,
   TrustSignals,
 } from "./components/ProfileUiHelpers";
-import type { ProviderProfileData, StoryData } from "./components/types";
+import type { StoryData } from "./components/types";
+import type {
+  ProviderCategory,
+  ProviderProfileWithCategories,
+} from "./components/profileTypes";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -195,19 +200,8 @@ export async function generateMetadata({
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ welcome?: string }>;
+  searchParams: Promise<{ welcome?: string; v2?: string }>;
 }
-
-interface ProviderCategory {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-/** ProviderProfileData plus the provider's curated categories. */
-type ProviderProfileWithCategories = ProviderProfileData & {
-  categories: ProviderCategory[];
-};
 
 export default function PublicProviderProfilePage(props: PageProps) {
   // Cache Components: session check + per-request lookups stream inside a
@@ -222,7 +216,8 @@ export default function PublicProviderProfilePage(props: PageProps) {
 async function ProfileContent({ params, searchParams }: PageProps) {
   await connection();
   const { slug } = await params;
-  const { welcome } = await searchParams;
+  const { welcome, v2 } = await searchParams;
+  const useV2 = process.env.NEXT_PUBLIC_PROFILE_V2 === "1" || v2 === "1";
   const lookup = await resolveProvider(slug);
 
   // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
@@ -367,6 +362,18 @@ async function ProfileContent({ params, searchParams }: PageProps) {
         </Link>
 
         {/* ── Profile Layout ── */}
+        {useV2 ? (
+          <ProfileLayoutV2
+            provider={provider}
+            stories={stories}
+            isSelf={isSelf}
+            profileUrl={profileUrl}
+            resolvedSlug={resolvedSlug}
+            providerIsOnline={providerIsOnline}
+            acceptanceRate={acceptanceRate}
+            profileDescription={profileDescription}
+          />
+        ) : (
         <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] md:items-start">
           <div className="min-w-0 space-y-6">
 
@@ -706,6 +713,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
             </SectionErrorBoundary>
           </div>
         </div>
+        )}
       </div>
 
       <StickyBottomBar
