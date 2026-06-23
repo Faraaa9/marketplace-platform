@@ -102,9 +102,9 @@ export default function ProfileSidebar({
         <p className="mb-3 text-micro font-bold uppercase tracking-[0.04em] text-surface-400">
           Greiti faktai
         </p>
-        {provider.location && (
+        {(provider.location ?? provider.primaryCity) && (
           <Fact icon={<MapPin className="h-[15px] w-[15px] text-surface-500" />}>
-            {provider.location}
+            {provider.location ?? provider.primaryCity}
           </Fact>
         )}
         <Fact icon={<Calendar className="h-[15px] w-[15px] text-surface-500" />}>

@@ -31,8 +31,8 @@ export default function ProfileHeroCard({
   profileUrl,
   providerIsOnline,
 }: ProfileHeroCardProps) {
-  const city = provider.location;
-  const profession = provider.categories[0]?.name ?? null;
+  const city = provider.primaryCity ?? provider.location;
+  const profession = provider.primaryService ?? provider.categories[0]?.name ?? null;
   const headlineParts = [city, profession].filter(Boolean) as string[];
   const headline = headlineParts.length > 0 ? headlineParts.join(" · ") : provider.headline;
 

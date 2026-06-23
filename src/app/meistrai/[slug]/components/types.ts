@@ -19,6 +19,8 @@ export interface ProviderProfileData {
   offersInvoices: boolean;
   availableForUrgent: boolean;
   location: string | null;
+  primaryCity: string | null;
+  primaryService: string | null;
   website: string | null;
   phone: string | null;
   badge: string | null;
