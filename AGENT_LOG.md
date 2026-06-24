@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-24 04:32 — Claude
+
+**Commit:** `05e650a` — refactor(perf): split client pages behind Suspense shells (fix CSR bailout) + SpeedInsights
+
+**Pakeitimai:** 12 files changed, 2115 insertions(+), 1995 deletions(-)
+
+**Failai:**
+- src/app/(auth)/patvirtinti/VerifyEmailClient.tsx
+- src/app/(auth)/patvirtinti/page.tsx
+- src/app/(auth)/prisijungti/LoginClient.tsx
+- src/app/(auth)/prisijungti/page.tsx
+- src/app/(auth)/slaptazodis/reset/ResetPasswordClient.tsx
+- src/app/(auth)/slaptazodis/reset/page.tsx
+- src/app/layout.tsx
+- src/app/tiekejas/planai/CreditsClient.tsx
+- src/app/tiekejas/planai/page.tsx
+- src/app/uzklausos/nauja/NewRequestClient.tsx
+- src/app/uzklausos/nauja/page.tsx
+- src/components/analytics/SpeedInsights.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-24 04:28 — Claude
 
 **Commit:** `8e2a106` — security(db): enable deny-all RLS on announcement_cards
