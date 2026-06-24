@@ -222,9 +222,9 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   await connection();
   const { slug } = await params;
   const { welcome, v2 } = await searchParams;
-  // Senas layout'as yra numatytasis; V2 profilį galima peržiūrėti su ?v2=1
-  // (komponentai lieka repo, užmigdyti už šio flag'o). Terracotta tema – globali, nepriklauso nuo čia.
-  const useV2 = v2 === "1";
+  // V2 layout'as yra numatytasis; seną profilį galima peržiūrėti su ?v2=0
+  // (escape hatch palyginimui / rollback'ui). Terracotta tema – globali, nepriklauso nuo čia.
+  const useV2 = v2 !== "0";
   const lookup = await resolveProvider(slug);
 
   // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
