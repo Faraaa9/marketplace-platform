@@ -5,6 +5,7 @@ import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching"
 import { getUnlockedRequestIds } from "@/lib/credits";
 import { recordAiRun } from "@/lib/ai/audit";
 import { calculateSemanticMatch, summarizeSemanticScores } from "@/lib/semantic-match";
+import { resolveCategoryParam } from "@/lib/service-categories";
 
 export async function GET(req: NextRequest) {
   await connection();
@@ -51,11 +52,8 @@ export async function GET(req: NextRequest) {
     // An explicit ?category= filter (curated slug) narrows to that branch.
     let filterIds = providerMatchSet;
     if (category) {
-      const picked = await prisma.category.findUnique({
-        where: { slug: category },
-        select: { id: true },
-      });
-      filterIds = picked ? await expandToMatchSet([picked.id]) : [];
+      const pickedId = await resolveCategoryParam(category);
+      filterIds = pickedId ? await expandToMatchSet([pickedId]) : [];
     }
 
     const where: Record<string, unknown> = {

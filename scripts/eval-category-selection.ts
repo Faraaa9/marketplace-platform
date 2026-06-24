@@ -144,10 +144,11 @@ async function main(): Promise<void> {
 
   const { prisma } = require("@/lib/prisma") as typeof import("@/lib/prisma");
   const { suggestCategories } = require("@/lib/category-suggestions") as typeof import("@/lib/category-suggestions");
+  const { SERVICE_CATEGORY_WHERE } = require("@/lib/service-categories") as typeof import("@/lib/service-categories");
 
   // id -> rootId (root rows have rootId null -> map to own id).
   const cats = await prisma.category.findMany({
-    where: { pageType: "service", isActive: true },
+    where: SERVICE_CATEGORY_WHERE,
     select: { id: true, rootId: true },
   });
   const rootOf = new Map<string, string>(cats.map((c) => [c.id, c.rootId ?? c.id]));

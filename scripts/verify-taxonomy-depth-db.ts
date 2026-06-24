@@ -42,9 +42,10 @@ import {
 async function main(): Promise<void> {
   // Lazy require so the dotenv config above runs first.
   const { prisma } = require("@/lib/prisma") as typeof import("@/lib/prisma");
+  const { SERVICE_CATEGORY_WHERE } = require("@/lib/service-categories") as typeof import("@/lib/service-categories");
 
   const rows: TreeNode[] = await prisma.category.findMany({
-    where: { pageType: "service", isActive: true },
+    where: SERVICE_CATEGORY_WHERE,
     select: { id: true, parentId: true },
   });
 

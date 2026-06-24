@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveCategoryParam } from "@/lib/service-categories";
 
 export async function GET(req: NextRequest) {
   await connection();
@@ -24,12 +25,9 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status;
     if (category) {
       // `?category=` carries a curated category slug — resolve it to the id.
-      const picked = await prisma.category.findUnique({
-        where: { slug: category },
-        select: { id: true },
-      });
+      const pickedId = await resolveCategoryParam(category);
       // Unknown slug → match nothing rather than silently ignoring the filter.
-      where.categoryId = picked ? picked.id : "__no_match__";
+      where.categoryId = pickedId ?? "__no_match__";
     }
     if (search) {
       where.OR = [

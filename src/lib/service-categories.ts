@@ -18,7 +18,12 @@ export interface ServiceCategoryGroup {
   categories: ServiceCategoryItem[];
 }
 
-const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
+export const SERVICE_TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
+export const SERVICE_CATEGORY_WHERE = {
+  pageType: "service",
+  externalSource: SERVICE_TAXONOMY_SOURCE,
+  isActive: true,
+} as const;
 
 type CategoryRow = {
   id: string;
@@ -32,25 +37,8 @@ type CategoryRow = {
 };
 
 async function loadServiceCategoryRows(): Promise<CategoryRow[]> {
-  const preferred = await prisma.category.findMany({
-    where: { pageType: "service", externalSource: TAXONOMY_SOURCE, isActive: true },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      parentId: true,
-      rootId: true,
-      depth: true,
-      path: true,
-      sortOrder: true,
-    },
-    orderBy: [{ depth: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
-  });
-
-  if (preferred.length > 0) return preferred;
-
   return prisma.category.findMany({
-    where: { pageType: "service", isActive: true },
+    where: SERVICE_CATEGORY_WHERE,
     select: {
       id: true,
       name: true,
@@ -166,24 +154,44 @@ export async function getFlatServiceCategories(): Promise<ServiceCategoryItem[]>
   return out;
 }
 
+export async function getCanonicalServiceCategoryRowsById(ids: string[]): Promise<Array<{ id: string; slug: string }>> {
+  const uniqueIds = [...new Set(ids)].filter(Boolean);
+  if (uniqueIds.length === 0) return [];
+
+  return prisma.category.findMany({
+    where: { ...SERVICE_CATEGORY_WHERE, id: { in: uniqueIds } },
+    select: { id: true, slug: true },
+  });
+}
+
+export async function filterCanonicalServiceCategoryIds(ids: string[]): Promise<string[]> {
+  const uniqueIds = [...new Set(ids)].filter(Boolean);
+  if (uniqueIds.length === 0) return [];
+
+  const rows = await getCanonicalServiceCategoryRowsById(uniqueIds);
+  const valid = new Set(rows.map((row) => row.id));
+  return uniqueIds.filter((id) => valid.has(id));
+}
+
 /**
- * Resolve a `?category=` URL param to a curated Category id. Accepts a curated
- * category/root slug, or a legacy SERVICE_CATEGORIES code via a CategoryAlias
- * (so old indexed `?category=<code>` URLs keep resolving). Returns the
- * category id, or null if unresolvable.
+ * Resolve a `?category=` URL param to a canonical service Category id.
+ * Only the live paslaugurinka taxonomy is accepted; legacy/imported trees and
+ * aliases are intentionally excluded so request/search flows cannot drift.
  */
 export async function resolveCategoryParam(param: string): Promise<string | null> {
   if (!param) return null;
 
   const bySlug = await prisma.category.findUnique({
     where: { slug: param },
-    select: { id: true },
+    select: { id: true, pageType: true, externalSource: true, isActive: true },
   });
-  if (bySlug) return bySlug.id;
+  if (
+    bySlug?.pageType === SERVICE_CATEGORY_WHERE.pageType &&
+    bySlug.externalSource === SERVICE_CATEGORY_WHERE.externalSource &&
+    bySlug.isActive === SERVICE_CATEGORY_WHERE.isActive
+  ) {
+    return bySlug.id;
+  }
 
-  const alias = await prisma.categoryAlias.findFirst({
-    where: { aliasSlug: param },
-    select: { categoryId: true },
-  });
-  return alias?.categoryId ?? null;
+  return null;
 }

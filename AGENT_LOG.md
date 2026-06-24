@@ -19,6 +19,29 @@ sprendžia kontekstą iš diff'o.
 
 ## 2026-06-24 04:32 — Claude
 
+**Commit:** `56a1f8e` — refactor(taxonomy): route category reads through canonical SERVICE_CATEGORY_WHERE; drop legacy trees & dead imports
+
+**Pakeitimai:** 22 files changed, 3434 insertions(+), 3787 deletions(-)
+
+**Failai:**
+- category-map.html
+- package.json
+- prisma/manual-migrations/20260615_deactivate_legacy_category_trees.sql
+- scripts/eval-category-selection.ts
+- scripts/verify-canonical-categories.ts
+- scripts/verify-taxonomy-depth-db.ts
+- src/app/api/admin/uzklausos/route.ts
+- src/app/api/categories/route.ts
+- src/app/api/paskyra/profile-complete/route.ts
+- src/app/api/tiekejai/route.ts
+- src/app/api/tiekejas/uzklausos/route.ts
+- src/app/api/tracking/[token]/route.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-24 04:32 — Claude
+
 **Commit:** `05e650a` — refactor(perf): split client pages behind Suspense shells (fix CSR bailout) + SpeedInsights
 
 **Pakeitimai:** 12 files changed, 2115 insertions(+), 1995 deletions(-)
