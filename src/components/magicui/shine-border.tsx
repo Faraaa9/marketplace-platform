@@ -16,7 +16,7 @@ export function ShineBorder({
   className,
   borderWidth = 1,
   duration = 8,
-  color = ["#6366f1", "#a855f7", "#ec4899"],
+  color = ["#C25E3A", "#A94E2F", "#8A3F26"],
 }: ShineBorderProps) {
   return (
     <div
