@@ -28,6 +28,7 @@
     "test:taxonomy-depth": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/taxonomy-depth-tripwire.test.ts",
     "verify:taxonomy-depth-db": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-taxonomy-depth-db.ts",
     "verify:canonical-categories": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-canonical-categories.ts",
+    "verify:category-refs": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-category-refs.ts",
     "test:routing-v4": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/multi-routing-v4.test.ts",
     "test:taxonomy-map": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/taxonomy-map.test.ts",
     "routing:eval-golden": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/routing-eval-golden.ts",
