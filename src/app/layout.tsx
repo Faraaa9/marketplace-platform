@@ -10,7 +10,7 @@ import LoadingProgressBar from "@/components/ui/LoadingProgressBar";
 import RegisterSW from "@/components/pwa/RegisterSW";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import SpeedInsights from "@/components/analytics/SpeedInsights";
 
 // Inter via next/font/google with the latin-ext subset so Lithuanian glyphs
 // (ą č ę ė į š ų ū ž) render in Inter itself. The previous local build shipped
