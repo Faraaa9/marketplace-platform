@@ -23,7 +23,7 @@ interface ProfileLayoutV2Props {
 }
 
 const CARD =
-  "rounded-3xl border border-surface-100 bg-white p-6 sm:p-8 dark:border-surface-800 dark:bg-surface-900/50";
+  "profile-card bg-white p-6 sm:p-8 dark:bg-surface-900/50";
 const SEC_TITLE =
   "mb-4 flex items-center gap-2 text-micro font-bold uppercase tracking-[0.04em] text-surface-400";
 

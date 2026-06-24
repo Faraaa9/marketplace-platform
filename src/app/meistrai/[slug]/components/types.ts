@@ -26,6 +26,8 @@ export interface ProviderProfileData {
   id: string;
   name: string;
   image: string | null;
+  /** Avatar source — prefers the account/face photo, falls back to gallery. */
+  avatarImage: string | null;
   images: string[];
   gallery: WorkGallery;
   description: string | null;

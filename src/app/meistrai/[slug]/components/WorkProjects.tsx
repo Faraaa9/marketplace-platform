@@ -42,7 +42,7 @@ export default function WorkProjects({ gallery, providerName }: WorkProjectsProp
 
   if (!beforeAfter && projects.length === 0) {
     return (
-      <div className="rounded-3xl border border-surface-100 bg-white p-8 text-center dark:border-surface-800 dark:bg-surface-900/50">
+      <div className="profile-card bg-white p-8 text-center dark:bg-surface-900/50">
         <ImageIcon className="mx-auto mb-3 h-8 w-8 text-surface-300" />
         <p className="text-body-sm text-surface-500 dark:text-surface-400">
           Darbų nuotraukų kol kas nėra.
@@ -54,7 +54,7 @@ export default function WorkProjects({ gallery, providerName }: WorkProjectsProp
   return (
     <>
       {beforeAfter && (
-        <div className="rounded-3xl border border-surface-100 bg-white p-6 dark:border-surface-800 dark:bg-surface-900/50 sm:p-8">
+        <div className="profile-card bg-white p-6 dark:bg-surface-900/50 sm:p-8">
           <p className="mb-4 text-micro font-bold uppercase tracking-[0.04em] text-surface-400">
             Prieš ir po
           </p>
@@ -101,7 +101,7 @@ export default function WorkProjects({ gallery, providerName }: WorkProjectsProp
       )}
 
       {projects.length > 0 && (
-        <div className="rounded-3xl border border-surface-100 bg-white p-6 dark:border-surface-800 dark:bg-surface-900/50 sm:p-8">
+        <div className="profile-card bg-white p-6 dark:bg-surface-900/50 sm:p-8">
           <p className="mb-4 text-micro font-bold uppercase tracking-[0.04em] text-surface-400">
             Projektai · paspausk ir peržiūrėk
           </p>

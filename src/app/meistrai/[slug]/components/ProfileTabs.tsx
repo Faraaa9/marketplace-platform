@@ -69,7 +69,7 @@ export default function ProfileTabs({ hero, panels, defaultTab }: ProfileTabsPro
 
   return (
     <>
-      <div className="overflow-hidden rounded-3xl border border-surface-100 bg-white dark:border-surface-800 dark:bg-surface-900">
+      <div className="profile-card overflow-hidden bg-white dark:bg-surface-900">
         {hero}
         <div className="border-t border-surface-100 p-3.5 dark:border-surface-800">
           <div

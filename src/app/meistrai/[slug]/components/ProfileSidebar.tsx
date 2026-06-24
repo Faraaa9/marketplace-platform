@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Award, Calendar, CheckCircle, FileCheck, MapPin, MessageSquare, Zap } from "lucide-react";
 import DirectInquiryWidget from "./DirectInquiryWidget";
-import MessengerCTA from "./MessengerCTA";
 import ContactButton from "./ContactButton";
 import CallButton from "./CallButton";
 import TrackedWebsiteLink from "./TrackedWebsiteLink";
@@ -41,7 +40,7 @@ export default function ProfileSidebar({
       {/* CTA card + inquiry form */}
       <div
         id="zinute"
-        className="rounded-3xl border border-surface-100 bg-gradient-to-br from-brand-50/80 to-white p-6 dark:border-surface-800 dark:from-brand-950/50 dark:to-surface-900/50"
+        className="profile-card border border-surface-100 bg-gradient-to-br from-white to-brand-50/60 p-6 dark:border-surface-800 dark:from-surface-900/50 dark:to-brand-950/40"
       >
         <DirectInquiryWidget
           providerId={provider.id}
@@ -85,7 +84,6 @@ export default function ProfileSidebar({
                       </span>
                     )}
                   </div>
-                  <MessengerCTA phone={provider.phone} providerName={provider.name} />
                 </>
               ) : (
                 <div className="flex h-11 w-full items-center justify-center rounded-xl bg-surface-100 text-body-sm font-medium text-surface-500 dark:bg-surface-800 dark:text-surface-400">
@@ -98,7 +96,7 @@ export default function ProfileSidebar({
       </div>
 
       {/* Greiti faktai */}
-      <div className="rounded-3xl border border-surface-100 bg-white p-6 dark:border-surface-800 dark:bg-surface-900/50">
+      <div className="profile-card bg-white p-6 dark:bg-surface-900/50">
         <p className="mb-3 text-micro font-bold uppercase tracking-[0.04em] text-surface-400">
           Greiti faktai
         </p>

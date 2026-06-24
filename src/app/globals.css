@@ -4,19 +4,20 @@
 
 @layer base {
   :root {
-    --background: #ece9e2;
+    --background: #f6f5f3;
     --foreground: #1e1b18;
-    --brand-50: 242 245 234;
-    --brand-100: 229 234 213;
-    --brand-200: 207 217 180;
-    --brand-300: 178 194 139;
-    --brand-400: 145 162 99;
-    --brand-500: 111 127 75;
-    --brand-600: 89 103 60;
-    --brand-700: 74 84 48;
-    --brand-800: 59 68 41;
-    --brand-900: 50 58 37;
-    --brand-950: 27 32 19;
+    /* Terakota — vienas akcentas (atitinka profile-mockup.html: 600=#c0613a, 700=#a44f2c, 50=#f7ece6) */
+    --brand-50: 247 236 230;
+    --brand-100: 242 219 207;
+    --brand-200: 232 191 169;
+    --brand-300: 217 154 120;
+    --brand-400: 203 122 82;
+    --brand-500: 197 106 64;
+    --brand-600: 192 97 58;
+    --brand-700: 164 79 44;
+    --brand-800: 132 63 36;
+    --brand-900: 108 53 31;
+    --brand-950: 59 26 15;
     --brand: rgb(var(--brand-500));
     --brand-light: rgb(var(--brand-50));
     --brand-main: rgb(var(--brand-500));
@@ -70,6 +71,14 @@
 }
 
 @layer components {
+  /* Mockup kortelės šešėlis (--shadow) */
+  .profile-card {
+    border-radius: 22px;
+    box-shadow:
+      0 1px 2px rgba(28, 26, 24, 0.04),
+      0 8px 30px rgba(28, 26, 24, 0.06);
+  }
+
   /* Gradient text utility */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r;
@@ -113,9 +122,10 @@
   .layout-grid {
     background-color: var(--background);
     background-image:
-      linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
-    background-size: 56px 56px;
+      linear-gradient(to right, #ece9e5 1px, transparent 1px),
+      linear-gradient(to bottom, #ece9e5 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: -1px -1px;
   }
 
   .dark .layout-grid {

@@ -83,7 +83,7 @@ export default function ProfileHeroCard({
           <StoryAvatarButton
             stories={stories}
             providerName={provider.name}
-            providerImage={provider.image}
+            providerImage={provider.avatarImage}
             isOnline={providerIsOnline}
           />
         </div>

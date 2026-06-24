@@ -42,7 +42,7 @@ export default function Header() {
       className={cn(
         "sticky top-0 z-50 transition-colors duration-300",
         solid
-          ? "border-b border-[#DBD6CB] bg-[#ECE9E2]/85 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/85"
+          ? "border-b border-[#DBD6CB] bg-[#F6F5F3]/85 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/85"
           : "border-b border-transparent bg-transparent"
       )}
     >

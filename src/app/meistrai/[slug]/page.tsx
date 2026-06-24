@@ -222,7 +222,8 @@ async function ProfileContent({ params, searchParams }: PageProps) {
   await connection();
   const { slug } = await params;
   const { welcome, v2 } = await searchParams;
-  const useV2 = process.env.NEXT_PUBLIC_PROFILE_V2 === "1" || v2 === "1";
+  // V2 yra numatytasis layout'as visiems profiliams; senąjį galima pasiekti su ?v2=0.
+  const useV2 = v2 !== "0";
   const lookup = await resolveProvider(slug);
 
   // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
@@ -360,7 +361,9 @@ async function ProfileContent({ params, searchParams }: PageProps) {
 
         <Link
           href="/meistrai"
-          className="mb-8 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+          className={`inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 ${
+            useV2 ? "mb-[22px]" : "mb-8"
+          }`}
         >
           <ArrowLeft className="h-4 w-4" />
           Visi meistrai
@@ -426,7 +429,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
                   <StoryAvatarButton
                     stories={stories}
                     providerName={provider.name}
-                    providerImage={provider.image}
+                    providerImage={provider.avatarImage}
                     isOnline={providerIsOnline}
                   />
                 </div>
@@ -875,7 +878,11 @@ async function getProviderProfileUncached(
     // Public display name first — User.name is the internal account name and
     // must not leak into visible copy (wa.me prefill, gallery alts, CTAs).
     name: profile.displayName || provider.name || "Tiekėjas",
+    // Representative/SEO image — gallery work photo preferred (LocalBusiness schema).
     image: getSafeProviderImageUrl(images[0] || provider.image),
+    // Avatar — the person's face photo preferred, gallery only as fallback so the
+    // hero circle never shows the same cropped work photo as the cover.
+    avatarImage: getSafeProviderImageUrl(provider.image || images[0]),
     images,
     gallery: buildWorkGallery(profile.metadataJson, images),
     description: profile.description,
