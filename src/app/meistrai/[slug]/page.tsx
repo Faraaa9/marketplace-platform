@@ -28,6 +28,7 @@ import ProfileShareButton from "./components/ProfileShareButton";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import WorkImageGallery from "./components/WorkImageGallery";
+import ProfileLayoutV2 from "./components/ProfileLayoutV2";
 import {
   RatingStars,
   TrustStat,
@@ -38,7 +39,16 @@ import {
   PricingBlock,
   TrustSignals,
 } from "./components/ProfileUiHelpers";
-import type { ProviderProfileData, StoryData } from "./components/types";
+import type {
+  StoryData,
+  WorkGallery,
+  WorkProject,
+  BeforeAfterPair,
+} from "./components/types";
+import type {
+  ProviderCategory,
+  ProviderProfileWithCategories,
+} from "./components/profileTypes";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -195,19 +205,8 @@ export async function generateMetadata({
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ welcome?: string }>;
+  searchParams: Promise<{ welcome?: string; v2?: string }>;
 }
-
-interface ProviderCategory {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-/** ProviderProfileData plus the provider's curated categories. */
-type ProviderProfileWithCategories = ProviderProfileData & {
-  categories: ProviderCategory[];
-};
 
 export default function PublicProviderProfilePage(props: PageProps) {
   // Cache Components: session check + per-request lookups stream inside a
@@ -222,7 +221,10 @@ export default function PublicProviderProfilePage(props: PageProps) {
 async function ProfileContent({ params, searchParams }: PageProps) {
   await connection();
   const { slug } = await params;
-  const { welcome } = await searchParams;
+  const { welcome, v2 } = await searchParams;
+  // Senas layout'as yra numatytasis; V2 profilį galima peržiūrėti su ?v2=1
+  // (komponentai lieka repo, užmigdyti už šio flag'o). Terracotta tema – globali, nepriklauso nuo čia.
+  const useV2 = v2 === "1";
   const lookup = await resolveProvider(slug);
 
   // Legacy /meistrai/[cuid] → redirect to slug version (preserves SEO juice).
@@ -360,13 +362,27 @@ async function ProfileContent({ params, searchParams }: PageProps) {
 
         <Link
           href="/meistrai"
-          className="mb-8 inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+          className={`inline-flex items-center gap-1.5 text-body-sm text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 ${
+            useV2 ? "mb-[22px]" : "mb-8"
+          }`}
         >
           <ArrowLeft className="h-4 w-4" />
           Visi meistrai
         </Link>
 
         {/* ── Profile Layout ── */}
+        {useV2 ? (
+          <ProfileLayoutV2
+            provider={provider}
+            stories={stories}
+            isSelf={isSelf}
+            profileUrl={profileUrl}
+            resolvedSlug={resolvedSlug}
+            providerIsOnline={providerIsOnline}
+            acceptanceRate={acceptanceRate}
+            profileDescription={profileDescription}
+          />
+        ) : (
         <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] md:items-start">
           <div className="min-w-0 space-y-6">
 
@@ -414,7 +430,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
                   <StoryAvatarButton
                     stories={stories}
                     providerName={provider.name}
-                    providerImage={provider.image}
+                    providerImage={provider.avatarImage}
                     isOnline={providerIsOnline}
                   />
                 </div>
@@ -706,6 +722,7 @@ async function ProfileContent({ params, searchParams }: PageProps) {
             </SectionErrorBoundary>
           </div>
         </div>
+        )}
       </div>
 
       <StickyBottomBar
@@ -799,9 +816,12 @@ async function getProviderProfileUncached(
               orderBy: { sortOrder: "asc" },
             },
             location: true,
+            primaryCity: true,
+            primaryService: true,
             phone: true,
             website: true,
             images: true,
+            metadataJson: true,
             isVerified: true,
             isPremium: true,
             isYoungTalent: true,
@@ -859,8 +879,13 @@ async function getProviderProfileUncached(
     // Public display name first — User.name is the internal account name and
     // must not leak into visible copy (wa.me prefill, gallery alts, CTAs).
     name: profile.displayName || provider.name || "Tiekėjas",
+    // Representative/SEO image — gallery work photo preferred (LocalBusiness schema).
     image: getSafeProviderImageUrl(images[0] || provider.image),
+    // Avatar — the person's face photo preferred, gallery only as fallback so the
+    // hero circle never shows the same cropped work photo as the cover.
+    avatarImage: getSafeProviderImageUrl(provider.image || images[0]),
     images,
+    gallery: buildWorkGallery(profile.metadataJson, images),
     description: profile.description,
     headline: profile.headline,
     services: profile.services,
@@ -870,6 +895,8 @@ async function getProviderProfileUncached(
     availableForUrgent: profile.availableForUrgent,
     categories,
     location: profile.location,
+    primaryCity: profile.primaryCity,
+    primaryService: profile.primaryService,
     website: profile.website,
     phone: profile.phone,
     badge,
@@ -1118,6 +1145,60 @@ function sanitizeImageUrls(raw: string[] | null | undefined): string[] {
   return raw
     .map((url) => getSafeProviderImageUrl(url))
     .filter((url): url is string => Boolean(url));
+}
+
+/**
+ * Structured work gallery for the Darbai panel. Reads an optional `gallery`
+ * blob from the profile's `metadataJson` (before/after pair + named project
+ * folders), sanitizing every URL through the image whitelist. Falls back to a
+ * single "Atlikti darbai" folder over the flat `images[]` so legacy profiles
+ * still render their photos. No schema change — rides on the existing JSON field
+ * until the relational GalleryItem model lands.
+ */
+function buildWorkGallery(metadataJson: string | null, images: string[]): WorkGallery {
+  const fallback: WorkGallery = {
+    beforeAfter: null,
+    projects: images.length > 0 ? [{ name: "Atlikti darbai", sub: null, photos: images }] : [],
+  };
+  if (!metadataJson) return fallback;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(metadataJson);
+  } catch {
+    return fallback;
+  }
+  const gallery = (parsed as { gallery?: unknown } | null)?.gallery;
+  if (!gallery || typeof gallery !== "object") return fallback;
+  const g = gallery as { beforeAfter?: unknown; projects?: unknown };
+
+  let beforeAfter: BeforeAfterPair | null = null;
+  if (g.beforeAfter && typeof g.beforeAfter === "object") {
+    const ba = g.beforeAfter as { before?: unknown; after?: unknown };
+    const before = typeof ba.before === "string" ? getSafeProviderImageUrl(ba.before) : null;
+    const after = typeof ba.after === "string" ? getSafeProviderImageUrl(ba.after) : null;
+    if (before && after) beforeAfter = { before, after };
+  }
+
+  const projects: WorkProject[] = [];
+  if (Array.isArray(g.projects)) {
+    for (const raw of g.projects) {
+      if (!raw || typeof raw !== "object") continue;
+      const pr = raw as { name?: unknown; sub?: unknown; photos?: unknown };
+      const name = typeof pr.name === "string" && pr.name.trim() ? pr.name.trim() : null;
+      const photos = Array.isArray(pr.photos)
+        ? pr.photos
+            .filter((u): u is string => typeof u === "string")
+            .map((u) => getSafeProviderImageUrl(u))
+            .filter((u): u is string => Boolean(u))
+        : [];
+      if (!name || photos.length === 0) continue;
+      projects.push({ name, sub: typeof pr.sub === "string" ? pr.sub : null, photos });
+    }
+  }
+
+  if (!beforeAfter && projects.length === 0) return fallback;
+  return { beforeAfter, projects };
 }
 
 function calculateProfileCompleteness(

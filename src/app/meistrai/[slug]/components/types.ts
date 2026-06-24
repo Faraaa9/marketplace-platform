@@ -6,11 +6,30 @@ export interface StoryData {
   expiresAt: string;
 }
 
+export interface WorkProject {
+  name: string;
+  sub: string | null;
+  photos: string[];
+}
+
+export interface BeforeAfterPair {
+  before: string;
+  after: string;
+}
+
+export interface WorkGallery {
+  beforeAfter: BeforeAfterPair | null;
+  projects: WorkProject[];
+}
+
 export interface ProviderProfileData {
   id: string;
   name: string;
   image: string | null;
+  /** Avatar source — prefers the account/face photo, falls back to gallery. */
+  avatarImage: string | null;
   images: string[];
+  gallery: WorkGallery;
   description: string | null;
   headline: string | null;
   services: string | null;
@@ -19,6 +38,8 @@ export interface ProviderProfileData {
   offersInvoices: boolean;
   availableForUrgent: boolean;
   location: string | null;
+  primaryCity: string | null;
+  primaryService: string | null;
   website: string | null;
   phone: string | null;
   badge: string | null;

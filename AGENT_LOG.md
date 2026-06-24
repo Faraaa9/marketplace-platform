@@ -17,6 +17,70 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-17 13:56 — Claude
+
+**Commit:** `5e32b6e` — feat(announcements): admin-managed dismissible cards on dashboards
+
+**Pakeitimai:** 12 files changed, 878 insertions(+), 28 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260617_add_announcement_cards.sql
+- prisma/schema.prisma
+- src/app/admin/layout.tsx
+- src/app/admin/pranesimai/AnnouncementsCard.tsx
+- src/app/admin/pranesimai/page.tsx
+- src/app/api/admin/announcements/route.ts
+- src/app/paskyra/uzklausos/page.tsx
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/announcements/AnnouncementCardView.tsx
+- src/components/announcements/AnnouncementCards.tsx
+- src/lib/announcement-shared.ts
+- src/lib/announcements.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-17 12:13 — Claude
+
+**Commit:** `c3d8378` — feat(dashboard): production-ready dismissible cards (cookie-backed, no flash)
+
+**Pakeitimai:** 5 files changed, 187 insertions(+), 58 deletions(-)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/ui/DismissibleCard.tsx
+- src/lib/__tests__/dismissible-cards.test.ts
+- src/lib/dismissible-cards-shared.ts
+- src/lib/dismissible-cards.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-17 01:17 — Claude
+
+**Commit:** `8aa1a0d` — experiment(dashboard): dismissible one-off cards (Semrush-style X)
+
+**Pakeitimai:** 2 files changed, 96 insertions(+)
+
+**Failai:**
+- src/app/tiekejas/sections/ProviderWorkCenter.tsx
+- src/components/ui/DismissibleCard.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-15 20:14 — Claude
+
+**Commit:** `17df08a` — fix(categories): make picker search precise and results readable
+
+**Pakeitimai:** 1 file changed, 42 insertions(+), 21 deletions(-)
+
+**Failai:**
+- src/components/categories/GroupedCategoryPicker.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-13 09:12 — Claude
 
 **Commit:** `ddadee7` — fix(tiekejas): request rows in dashboard match inbox hierarchy · lokalus

@@ -9,6 +9,7 @@ import {
   FileText,
   MessageCircle,
 } from "lucide-react";
+import { AnnouncementCards } from "@/components/announcements/AnnouncementCards";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 
 function pasiulymaiLabel(count: number): string {
@@ -100,6 +101,8 @@ export async function ProviderWorkCenter({
           </Link>
         </div>
       </header>
+
+      <AnnouncementCards surface="provider" className="mb-4" />
 
       <section className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryTile
