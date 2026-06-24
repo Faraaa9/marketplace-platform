@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { syncFreeCategories } from "@/lib/provider-categories";
 
 interface CompleteProfileRequest {
   description: string;
@@ -106,19 +107,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Add categories
-    await prisma.providerProfileCategory.deleteMany({
-      where: { providerProfileId: providerProfile.id },
-    });
-
-    for (const categoryId of categoryIds) {
-      await prisma.providerProfileCategory.create({
-        data: {
-          providerProfileId: providerProfile.id,
-          categoryId,
-        },
-      });
-    }
+    await prisma.$transaction((tx) =>
+      syncFreeCategories(tx, providerProfile.id, categoryIds),
+    );
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 /**
  * Prisma relation filter selecting only categories that are currently ACTIVE:
@@ -28,7 +29,7 @@ export async function expandToMatchSet(ids: string[]): Promise<string[]> {
   if (ids.length === 0) return [];
 
   const rows = await prisma.category.findMany({
-    where: { pageType: "service", isActive: true },
+    where: SERVICE_CATEGORY_WHERE,
     select: { id: true, parentId: true },
   });
 

@@ -11,6 +11,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 import { isPlaceholderTelegramEmail } from "./link-user";
 import { runShadowRouting } from "@/lib/routing/shadow";
+import { getCanonicalServiceCategoryRowsById } from "@/lib/service-categories";
 
 const VERIFICATION_VALID_MS = 60 * 60 * 1000;
 
@@ -139,10 +140,7 @@ export async function createServiceRequest(
     }
 
     const uniqueCategoryIds = Array.from(new Set(data.categoryIds));
-    const categoryRows = await prisma.category.findMany({
-      where: { id: { in: uniqueCategoryIds } },
-      select: { id: true, slug: true },
-    });
+    const categoryRows = await getCanonicalServiceCategoryRowsById(uniqueCategoryIds);
     if (categoryRows.length !== uniqueCategoryIds.length) {
       return {
         ok: false,

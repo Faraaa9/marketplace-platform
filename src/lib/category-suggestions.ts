@@ -9,6 +9,7 @@ import {
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -22,8 +23,6 @@ import { recordAiRun } from "@/lib/ai/audit";
  *
  * The AI must never return a slug that wasn't in the candidate list passed in.
  */
-
-const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
 
 const DEFAULT_RERANK_MODEL = "google/gemini-2.5-flash";
 const RERANK_TIMEOUT_MS = 12_000;
@@ -101,12 +100,8 @@ function stem(token: string): string {
 }
 
 async function loadCandidates(): Promise<CandidateRow[]> {
-  const taxonomy = await prisma.category.findMany({
-    where: {
-      pageType: "service",
-      externalSource: TAXONOMY_SOURCE,
-      isActive: true,
-    },
+  const rows = await prisma.category.findMany({
+    where: SERVICE_CATEGORY_WHERE,
     select: {
       id: true,
       name: true,
@@ -118,22 +113,6 @@ async function loadCandidates(): Promise<CandidateRow[]> {
     },
     orderBy: [{ depth: "asc" }, { sortOrder: "asc" }],
   });
-
-  const rows = taxonomy.length > 0
-    ? taxonomy
-    : await prisma.category.findMany({
-        where: { pageType: "service", isActive: true },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          depth: true,
-          parentId: true,
-          rootId: true,
-          aliases: { select: { aliasName: true } },
-        },
-        orderBy: [{ depth: "asc" }, { sortOrder: "asc" }],
-      });
 
   return rows.map((row) => ({
     id: row.id,

@@ -8,6 +8,7 @@ import { isCloudinaryConfigured, getConfiguredCloudinary, publicIdFromCloudinary
 import { revalidateTag } from "next/cache";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
+import { getCanonicalServiceCategoryRowsById } from "@/lib/service-categories";
 
 /**
  * Edit (PATCH) and delete (DELETE) a service request, authenticated by tracking token.
@@ -91,10 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
 
     // Validate the picked categories before touching the join table.
     const uniqueCategoryIds = Array.from(new Set(parsed.data.categoryIds));
-    const categoryRows = await prisma.category.findMany({
-      where: { id: { in: uniqueCategoryIds } },
-      select: { id: true, slug: true },
-    });
+    const categoryRows = await getCanonicalServiceCategoryRowsById(uniqueCategoryIds);
     if (categoryRows.length !== uniqueCategoryIds.length) {
       return NextResponse.json(
         { success: false, error: "Viena ar daugiau kategorijų nerasta" },

@@ -25,6 +25,7 @@ import {
   mapNamesToCategoryIds,
   type CategoryNameIndex,
 } from "./taxonomy-map";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 /** Default OFF — production behavior is unchanged unless this is explicitly set. */
 export function isShadowRoutingEnabled(): boolean {
@@ -53,7 +54,7 @@ async function loadCategoryNameIndex(): Promise<CategoryNameIndex> {
       // first-writer-wins) and frequently resolved a correct name to a dead id
       // no provider is attached to. The active service rows are exactly the
       // canonical `tax_` id-space. See docs/ai-routing/taxonomy-deduplication-audit.md.
-      where: { pageType: "service", isActive: true },
+      where: SERVICE_CATEGORY_WHERE,
       select: { id: true, name: true, slug: true, externalSlug: true },
     }),
     prisma.categoryAlias.findMany({

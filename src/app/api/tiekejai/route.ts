@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildProviderLocationFilter } from "@/lib/provider-filters";
 import { expandToMatchSet } from "@/lib/category-matching";
+import { resolveCategoryParam } from "@/lib/service-categories";
 
 /**
  * GET /api/tiekejai — Public provider listing.
@@ -33,11 +34,8 @@ export async function GET(req: NextRequest) {
 
     if (category) {
       // ?category=<slug> — providers whose service categories match that branch.
-      const picked = await prisma.category.findUnique({
-        where: { slug: category },
-        select: { id: true },
-      });
-      const matchSet = picked ? await expandToMatchSet([picked.id]) : [];
+      const pickedId = await resolveCategoryParam(category);
+      const matchSet = pickedId ? await expandToMatchSet([pickedId]) : [];
       where.providerProfile = {
         ...(where.providerProfile as Record<string, unknown>),
         categories: matchSet.length > 0

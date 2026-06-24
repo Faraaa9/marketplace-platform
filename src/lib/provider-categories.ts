@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FREE_CATEGORY_LIMIT } from "@/lib/credits";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 type TxClient = Prisma.TransactionClient | typeof prisma;
 
@@ -41,7 +42,7 @@ export async function syncFreeCategories(
       ? new Set(
           (
             await tx.category.findMany({
-              where: { id: { in: desired }, isActive: true },
+              where: { ...SERVICE_CATEGORY_WHERE, id: { in: desired } },
               select: { id: true },
             })
           ).map((c) => c.id),

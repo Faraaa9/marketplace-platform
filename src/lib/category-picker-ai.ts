@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prompt-config";
 import { callOpenRouter } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 /**
  * Two-pass AI category picker for provider profile auto-generation.
@@ -21,7 +22,6 @@ import { recordAiRun } from "@/lib/ai/audit";
  */
 
 const MODEL = "anthropic/claude-haiku-4.5";
-const TAXONOMY_SOURCE = "paslaugurinka-taxonomy";
 const PICKER_TIMEOUT_MS = 15_000;
 const PROMPT_VERSION = "category-picker-v1";
 
@@ -100,9 +100,8 @@ export async function pickProviderCategoriesAI(
 
   const roots = await prisma.category.findMany({
     where: {
+      ...SERVICE_CATEGORY_WHERE,
       depth: 0,
-      externalSource: TAXONOMY_SOURCE,
-      isActive: true,
     },
     select: {
       id: true,
@@ -110,8 +109,7 @@ export async function pickProviderCategoriesAI(
       slug: true,
       children: {
         where: {
-          isActive: true,
-          externalSource: TAXONOMY_SOURCE,
+          ...SERVICE_CATEGORY_WHERE,
         },
         select: { name: true },
         orderBy: { sortOrder: "asc" },
@@ -130,10 +128,9 @@ export async function pickProviderCategoriesAI(
 
   const leaves = await prisma.category.findMany({
     where: {
+      ...SERVICE_CATEGORY_WHERE,
       rootId: { in: selectedRootIds },
       depth: 1,
-      externalSource: TAXONOMY_SOURCE,
-      isActive: true,
     },
     select: {
       id: true,

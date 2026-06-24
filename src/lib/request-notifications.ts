@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, newRequestAlertEmail } from "@/lib/email";
 import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
+import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 
 /**
  * Notify providers whose curated categories match a new request. Matching is
@@ -20,8 +21,8 @@ export async function notifyRelevantProviders(
   if (validCategoryIds.length === 0) return;
 
   const [primaryCategory, matchSet] = await Promise.all([
-    prisma.category.findUnique({
-      where: { id: validCategoryIds[0] },
+    prisma.category.findFirst({
+      where: { ...SERVICE_CATEGORY_WHERE, id: validCategoryIds[0] },
       select: { name: true },
     }),
     expandToMatchSet(validCategoryIds),
