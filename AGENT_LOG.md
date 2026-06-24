@@ -40,6 +40,34 @@ sprendžia kontekstą iš diff'o.
 **Toliau:** _(papildyk ranka kai aišku)_
 
 
+## 2026-06-24 04:28 — Claude
+
+**Commit:** `8e2a106` — security(db): enable deny-all RLS on announcement_cards
+
+**Pakeitimai:** 1 file changed, 33 insertions(+)
+
+**Failai:**
+- prisma/manual-migrations/20260623_announcement_cards_rls.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-24 00:29 — Claude
+
+**Commit:** `06304b8` — feat(prototype): tabbed meistras profile mockup + restore variants
+
+**Pakeitimai:** 5 files changed, 1495 insertions(+)
+
+**Failai:**
+- public/profile-full.html
+- public/profile-mockup.html
+- public/profile-pro.html
+- public/profile-pro2.html
+- public/profile-variants.html
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-17 13:56 — Claude
 
 **Commit:** `5e32b6e` — feat(announcements): admin-managed dismissible cards on dashboards
