@@ -17,6 +17,20 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-24 21:42 — Claude
+
+**Commit:** `304dd70` — fix(categories): remap 2 active providers off retired legacy cats + add ref guard
+
+**Pakeitimai:** 3 files changed, 113 insertions(+)
+
+**Failai:**
+- package.json
+- prisma/manual-migrations/20260624_remap_active_provider_legacy_categories.sql
+- scripts/verify-category-refs.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-24 12:34 — Claude
 
 **Commit:** `a3c7fd5` — chore(theme): unify browser chrome + PWA assets to terracotta
