@@ -17,6 +17,28 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-24 12:34 — Claude
+
+**Commit:** `a3c7fd5` — chore(theme): unify browser chrome + PWA assets to terracotta
+
+**Pakeitimai:** 11 files changed, 11 insertions(+), 11 deletions(-)
+
+**Failai:**
+- provider-dashboard-preview.html
+- public/icons/icon-192.png
+- public/icons/icon-512.png
+- public/icons/icon-maskable-192.png
+- public/icons/icon-maskable-512.png
+- public/manifest.webmanifest
+- scripts/generate-pwa-icons.js
+- src/app/layout.tsx
+- src/components/magicui/border-beam.tsx
+- src/components/magicui/particles.tsx
+- src/components/magicui/shine-border.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-24 04:32 — Claude
 
 **Commit:** `56a1f8e` — refactor(taxonomy): route category reads through canonical SERVICE_CATEGORY_WHERE; drop legacy trees & dead imports

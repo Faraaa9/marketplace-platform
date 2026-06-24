@@ -10,8 +10,8 @@ const path = require("path");
 const sharp = require("sharp");
 
 const OUT_DIR = path.join(__dirname, "..", "public", "icons");
-const BRAND = "#6366f1";
-const BRAND_DARK = "#4338ca";
+const BRAND = "#C25E3A";
+const BRAND_DARK = "#8A3F26";
 const WHITE = "#ffffff";
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
