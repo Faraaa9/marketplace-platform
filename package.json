@@ -26,6 +26,7 @@
     "test:eligibility": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/provider-eligibility.test.ts",
     "test:eligibility-contract": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/eligibility-contract.test.ts",
     "test:taxonomy-depth": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/taxonomy-depth-tripwire.test.ts",
+    "test:category-filter": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/provider-category-filter.test.ts",
     "verify:taxonomy-depth-db": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-taxonomy-depth-db.ts",
     "verify:canonical-categories": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-canonical-categories.ts",
     "verify:category-refs": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/verify-category-refs.ts",

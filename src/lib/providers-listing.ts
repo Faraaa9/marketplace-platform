@@ -3,7 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { isStoryEnabled } from "@/lib/platform-settings";
 import { getSafeProviderImageUrl } from "@/lib/cloudinary-image";
 import { getPresenceLabel, getPresenceLevel } from "@/lib/presence";
-import { getServiceCategoryGroups } from "@/lib/service-categories";
+import {
+  getServiceCategoryGroups,
+  type ServiceCategoryGroup,
+  type ServiceCategoryItem,
+} from "@/lib/service-categories";
 import { activeCategoryFilter } from "@/lib/category-matching";
 import type { ProviderCardData } from "@/lib/provider-filters";
 
@@ -150,10 +154,24 @@ export async function getProvidersListingData() {
 /** Builds card-shape data the listing UI consumes. Pure transform — no DB or
  *  cache work — so callers can slice the providers array first and only pay
  *  the transform cost for the visible subset. */
+/** slug → its ancestor slugs (root-first, self excluded). Lets a provider
+ *  tagged with a leaf category still match a filter on any of its parents. */
+function buildAncestorSlugMap(groups: ServiceCategoryGroup[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  function walk(item: ServiceCategoryItem, ancestors: string[]) {
+    map.set(item.slug, ancestors);
+    const next = [...ancestors, item.slug];
+    for (const child of item.children ?? []) walk(child, next);
+  }
+  for (const group of groups) walk(group.root, []);
+  return map;
+}
+
 export function buildProviderCards(
   data: ProvidersListingCachedData,
   providers: ProvidersListingCachedData["providers"] = data.providers,
 ): ProviderCardData[] {
+  const ancestorSlugs = buildAncestorSlugMap(data.categoryGroups);
   const reviewMap = new Map(data.reviewAggs.map((r) => [r.providerId, { avg: r.avg, count: r.count }]));
   const acceptedMap = new Map(data.acceptedRows.map((r) => [r.providerId, r.count]));
   const lastResponseMap = new Map(data.lastResponseRows.map((r) => [r.providerId, new Date(r.lastAt)]));
@@ -167,6 +185,13 @@ export function buildProviderCards(
       name: link.category.name,
       slug: link.category.slug,
     }));
+    const matchSlugSet = new Set<string>();
+    for (const c of categories) {
+      matchSlugSet.add(c.slug);
+      matchSlugSet.add(c.id);
+      for (const anc of ancestorSlugs.get(c.slug) ?? []) matchSlugSet.add(anc);
+    }
+    const categoryMatchSlugs = [...matchSlugSet];
 
     const lastActiveAt = lastResponseMap.get(p.id) || p.createdAt;
     const daysSinceActive = Math.floor(
@@ -195,6 +220,7 @@ export function buildProviderCards(
       coverImage: getSafeProviderImageUrl(firstImage || p.image, { width: 600, height: 400, crop: "fill" }),
       description,
       categories,
+      categoryMatchSlugs,
       location: p.providerProfile?.location || null,
       isVerified: p.providerProfile?.isVerified ?? false,
       isPremium: p.providerProfile?.isPremium ?? false,

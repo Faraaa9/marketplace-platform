@@ -177,7 +177,14 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Key by the URL-driven filters: on soft navigation Next reuses the
+            client instance, and ProvidersExperience seeds its filter state from
+            useState(initialFilters) — which only reads on mount. Without a key,
+            navigating /meistrai?category=A → ?category=B keeps showing A (the
+            stale state even rewrites the URL back). Remounting on filter change
+            re-seeds the state from the new params. */}
         <ProvidersExperience
+          key={JSON.stringify(initialFilters)}
           initialProviders={initialProviders}
           initialFilters={initialFilters}
           totalProviderCount={totalProviderCount}
