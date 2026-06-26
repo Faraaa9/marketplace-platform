@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { CreditCard, Gift, Mail, Sparkles, X } from "lucide-react";
+import { CreditCard, Gift, Mail, PanelRight, Sparkles, X } from "lucide-react";
 import CreditPacksCard from "./CreditPacksCard";
 
 interface Settings {
@@ -11,6 +11,7 @@ interface Settings {
   emailTestMode: boolean;
   emailAllowlist: string[];
   freeStarterCredits: number;
+  profilePreviewEnabled: boolean;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,6 +70,11 @@ export default function AdminSettingsPage() {
   function toggleStory() {
     if (!settings) return;
     save({ storyEnabled: !settings.storyEnabled });
+  }
+
+  function toggleProfilePreview() {
+    if (!settings) return;
+    save({ profilePreviewEnabled: !settings.profilePreviewEnabled });
   }
 
   function toggleEmailTestMode() {
@@ -177,6 +183,56 @@ export default function AdminSettingsPage() {
                   Esamos story lieka duomenų bazėje, bet yra paslėptos nuo visų vartotojų. Įjungus — vėl bus matomos.
                 </p>
               )}
+            </div>
+          </Card>
+
+          {/* Profilio peržiūros langas */}
+          <Card>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10">
+                  <PanelRight className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+                </div>
+                <div>
+                  <p className="text-body font-semibold text-surface-900 dark:text-white">
+                    Profilio peržiūros langas
+                  </p>
+                  <p className="text-micro text-surface-500 dark:text-surface-400">
+                    {settings.profilePreviewEnabled
+                      ? "Paspaudus tiekėją, šone atsidaro greita profilio peržiūra"
+                      : "Paspaudus tiekėją, iškart atidaromas pilnas profilis"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={toggleProfilePreview}
+                disabled={saving}
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-60 ${
+                  settings.profilePreviewEnabled
+                    ? "bg-brand-600"
+                    : "bg-surface-300 dark:bg-surface-600"
+                }`}
+                role="switch"
+                aria-checked={settings.profilePreviewEnabled}
+                aria-label="Profilio peržiūros langas"
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    settings.profilePreviewEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            {/* Status indicator */}
+            <div className="mt-3 pt-3 border-t border-surface-100 dark:border-surface-800">
+              <p className="text-micro text-surface-400">
+                Būsena:{" "}
+                <span className={`font-medium ${settings.profilePreviewEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {settings.profilePreviewEnabled ? "Įjungta" : "Išjungta"}
+                </span>
+                {saving && <span className="ml-2 text-surface-400">Saugoma...</span>}
+                {saved && !saving && <span className="ml-2 text-emerald-600 dark:text-emerald-400">Išsaugota</span>}
+              </p>
             </div>
           </Card>
 

@@ -24,12 +24,16 @@ interface ProvidersExperienceProps {
    *  carries the top slice (page-1 worth) — we lazy-fetch the rest so the
    *  initial HTML payload stays small. */
   totalProviderCount: number;
+  /** Admin kill switch for the quick-preview drawer. When false, provider
+   *  cards click straight through to the full profile. */
+  previewEnabled: boolean;
 }
 
 export default function ProvidersExperience({
   initialProviders,
   initialFilters,
   totalProviderCount,
+  previewEnabled,
 }: ProvidersExperienceProps) {
   const router = useRouter();
   const [filters, setFilters] = useState<ProviderFilters>(initialFilters);
@@ -163,6 +167,7 @@ export default function ProvidersExperience({
         hasActiveFilters={hasActiveProviderFilters(filters)}
         view={view}
         presence={filters.presence}
+        previewEnabled={previewEnabled}
         onPageChange={handlePageChange}
         onClearFilters={handleClearFilters}
         onPresenceChange={(next) => handleFiltersChange({ presence: next })}
