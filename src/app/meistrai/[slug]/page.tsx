@@ -29,6 +29,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import HeroDescriptionPreview from "./components/HeroDescriptionPreview";
 import WorkImageGallery from "./components/WorkImageGallery";
 import ProfileLayoutV2 from "./components/ProfileLayoutV2";
+import ProfileSkeletonV2 from "./components/ProfileSkeletonV2";
 import {
   RatingStars,
   TrustStat,
@@ -210,9 +211,12 @@ interface PageProps {
 
 export default function PublicProviderProfilePage(props: PageProps) {
   // Cache Components: session check + per-request lookups stream inside a
-  // Suspense boundary so the rest of the route can prerender.
+  // Suspense boundary so the rest of the route can prerender. The fallback is
+  // the static V2 skeleton — it ships in the prerendered shell and paints
+  // instantly while ProfileContent streams in (was `null`, which showed a
+  // blank screen during the data fetch).
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ProfileSkeletonV2 />}>
       <ProfileContent {...props} />
     </Suspense>
   );
