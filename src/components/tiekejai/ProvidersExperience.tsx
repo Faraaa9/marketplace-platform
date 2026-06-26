@@ -2,6 +2,8 @@
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import ProviderFilterBar from "./ProviderFilterBar";
 import ProviderListingClient from "./ProviderListingClient";
 import {
@@ -172,6 +174,26 @@ export default function ProvidersExperience({
         onClearFilters={handleClearFilters}
         onPresenceChange={(next) => handleFiltersChange({ presence: next })}
       />
+
+      {/* "Post a request" CTA — only when there are results; the empty state
+          already carries its own CTA, so showing both would double up. */}
+      {filtered.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
+          <p className="text-body font-semibold text-surface-900 dark:text-white">
+            Nerandate tinkamo specialisto?
+          </p>
+          <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400 max-w-md mx-auto">
+            Paskelbkite užklausą nemokamai — tiekėjai patys pateiks pasiūlymus ir jūs galėsite palyginti.
+          </p>
+          <Link
+            href="/uzklausos/nauja"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
+          >
+            Paskelbti užklausą
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
     </>
   );
 }

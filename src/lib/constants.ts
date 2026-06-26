@@ -31,3 +31,35 @@ export const LITHUANIAN_CITIES = [
   "Druskininkai",
   "Visa Lietuva",
 ] as const;
+
+/**
+ * Lithuanian locative (vietininkas) of each filterable city — for headings and
+ * SEO prose ("... Klaipėdoje", not the naive nominative+"e" → "Klaipėdae").
+ */
+export const LT_CITY_LOCATIVE: Record<string, string> = {
+  Vilnius: "Vilniuje",
+  Kaunas: "Kaune",
+  Klaipėda: "Klaipėdoje",
+  Šiauliai: "Šiauliuose",
+  Panevėžys: "Panevėžyje",
+  Alytus: "Alytuje",
+  Marijampolė: "Marijampolėje",
+  Mažeikiai: "Mažeikiuose",
+  Jonava: "Jonavoje",
+  Utena: "Utenoje",
+  Kėdainiai: "Kėdainiuose",
+  Telšiai: "Telšiuose",
+  Tauragė: "Tauragėje",
+  Ukmergė: "Ukmergėje",
+  Visaginas: "Visagine",
+  Plungė: "Plungėje",
+  Kretinga: "Kretingoje",
+  Palanga: "Palangoje",
+  Druskininkai: "Druskininkuose",
+  "Visa Lietuva": "visoje Lietuvoje",
+};
+
+/** City in locative case; falls back to nominative for unknown cities. */
+export function cityLocative(city: string): string {
+  return LT_CITY_LOCATIVE[city] ?? city;
+}

@@ -12,6 +12,8 @@
  * top provider names, so two categories never produce the same text.
  */
 
+import { cityLocative } from "@/lib/constants";
+
 export interface CategoryContentInput {
   categoryName: string;
   /** Single city when this is a category×city page, else null. */
@@ -56,7 +58,7 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   const { categoryName, city, providerCount, subcategoryNames, topProviderNames, cities } = input;
   const cat = categoryName;
   const catLower = lower(cat);
-  const where = city ? ` ${city}e` : " Lietuvoje";
+  const where = city ? ` ${cityLocative(city)}` : " Lietuvoje";
 
   const paragraphs: string[] = [];
 
@@ -117,7 +119,7 @@ export function buildCategoryContent(input: CategoryContentInput): CategoryConte
   );
 
   const heading = city
-    ? `${cat} ${city}e`
+    ? `${cat} ${cityLocative(city)}`
     : `${cat} — meistrai ir paslaugų teikėjai`;
 
   return { heading, paragraphs, wordCount };

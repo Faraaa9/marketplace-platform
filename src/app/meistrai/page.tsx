@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Users, ArrowRight } from "lucide-react";
+import { Users } from "lucide-react";
 import ProvidersExperience from "@/components/tiekejai/ProvidersExperience";
 import { getProvidersListingData, buildProviderCards } from "@/lib/providers-listing";
 import type { ServiceCategoryItem } from "@/lib/service-categories";
@@ -184,22 +183,6 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           totalProviderCount={totalProviderCount}
           previewEnabled={previewEnabled}
         />
-
-        <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">
-          <p className="text-body font-semibold text-surface-900 dark:text-white">
-            Nerandate tinkamo specialisto?
-          </p>
-          <p className="mt-1 text-body-sm text-surface-500 dark:text-surface-400 max-w-md mx-auto">
-            Paskelbkite užklausą nemokamai — tiekėjai patys pateiks pasiūlymus ir jūs galėsite palyginti.
-          </p>
-          <Link
-            href="/uzklausos/nauja"
-            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
-          >
-            Paskelbti užklausą
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
 
       </div>
     </div>
