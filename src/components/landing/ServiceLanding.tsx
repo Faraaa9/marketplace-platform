@@ -106,7 +106,7 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
   const browseHref = `/meistrai?category=${encodeURIComponent(config.categorySlug)}&location=${encodeURIComponent(city)}`;
 
   const steps: { icon: LucideIcon; title: string; text: string }[] = [
-    { icon: PencilLine, title: "Aprašykite darbą", text: `Per 2 minutes nurodykite, ko reikia, ir savo rajoną ${city}e. Nemokamai.` },
+    { icon: PencilLine, title: "Aprašykite darbą", text: `Per 2 minutes nurodykite, ko reikia, ir savo rajoną ${cityLocative}. Nemokamai.` },
     { icon: Users, title: "Gaukite pasiūlymus", text: "Patikrinti specialistai patys pateikia kainas ir terminus." },
     { icon: ThumbsUp, title: "Pasirinkite geriausią", text: "Palyginkite atsiliepimus bei kainas ir susisiekite tiesiogiai." },
   ];
@@ -115,7 +115,7 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
     "@context": "https://schema.org",
     "@type": "Service",
     serviceType: config.serviceType,
-    name: `${config.serviceType} ${city}e`,
+    name: `${config.serviceType} ${cityLocative}`,
     description: config.seoDescription,
     url,
     areaServed: { "@type": "City", name: city, containedInPlace: { "@type": "Country", name: "Lietuva" } },
@@ -124,7 +124,7 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
       "@type": "Offer",
       priceCurrency: "EUR",
       price: config.offerPrice,
-      description: `${config.serviceType} ${city}e nuo ${config.offerPrice} €. Pasiūlymų gavimas nemokamas.`,
+      description: `${config.serviceType} ${cityLocative} nuo ${config.offerPrice} €. Pasiūlymų gavimas nemokamas.`,
     },
   };
   const breadcrumbSchema = {
