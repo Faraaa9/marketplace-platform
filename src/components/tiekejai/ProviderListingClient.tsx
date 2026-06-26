@@ -33,6 +33,9 @@ interface ProviderListingClientProps {
   hasActiveFilters: boolean;
   view: ProvidersView;
   presence: PresenceFilter;
+  /** Admin kill switch. When false, the quick-preview drawer is disabled and
+   *  card clicks navigate straight to the full /meistrai/[slug] profile. */
+  previewEnabled: boolean;
   onPageChange: (page: number) => void;
   onClearFilters: () => void;
   onPresenceChange: (next: PresenceFilter) => void;
@@ -499,6 +502,7 @@ export default function ProviderListingClient({
   hasActiveFilters,
   view,
   presence,
+  previewEnabled,
   onPageChange,
   onClearFilters,
   onPresenceChange,
@@ -561,16 +565,17 @@ export default function ProviderListingClient({
           setSheetProviderId(null);
           setSheetDetail(null);
         }, 250);
-      } else if (pid && !sheetOpen) {
+      } else if (pid && !sheetOpen && previewEnabled) {
         openSheet(pid);
       }
     }
     window.addEventListener("popstate", handlePop);
     return () => window.removeEventListener("popstate", handlePop);
-  }, [sheetOpen, openSheet]);
+  }, [sheetOpen, openSheet, previewEnabled]);
 
   /* ── Open from URL on mount ── */
   useEffect(() => {
+    if (!previewEnabled) return;
     const url = new URL(window.location.href);
     const pid = url.searchParams.get("provider");
     if (pid) {
@@ -609,10 +614,12 @@ export default function ProviderListingClient({
   /* ── Card click ── */
   const handleCardClick = useCallback(
     (e: React.MouseEvent, id: string) => {
+      // Drawer disabled by admin → let the <a> navigate to the full profile.
+      if (!previewEnabled) return;
       e.preventDefault();
       openSheet(id);
     },
-    [openSheet]
+    [openSheet, previewEnabled]
   );
 
   return (

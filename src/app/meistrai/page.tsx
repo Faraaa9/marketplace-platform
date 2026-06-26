@@ -9,6 +9,7 @@ import { LITHUANIAN_CITIES } from "@/lib/constants";
 import { buildPageSeo } from "@/lib/seo/page-seo";
 import { isUtilityParam } from "@/lib/seo/index-gate";
 import { buildCategoryView, type CategoryView } from "@/lib/seo/category-view";
+import { isProfilePreviewEnabled } from "@/lib/platform-settings";
 
 type ListingData = Awaited<ReturnType<typeof getProvidersListingData>>;
 
@@ -93,6 +94,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
 
   const data = await getProvidersListingData();
   const { categoryGroups, providers } = data;
+  const previewEnabled = await isProfilePreviewEnabled();
 
   // Build only the visible slice; the rest is hydrated client-side. Heavy
   // transform work (image URL builds, presence labels) for 480 unseen rows
@@ -180,6 +182,7 @@ export default async function ProvidersListingPage({ searchParams }: PageProps) 
           initialProviders={initialProviders}
           initialFilters={initialFilters}
           totalProviderCount={totalProviderCount}
+          previewEnabled={previewEnabled}
         />
 
         <div className="mt-6 rounded-2xl border border-surface-200/60 bg-white p-8 text-center dark:border-surface-700/50 dark:bg-surface-900/50">

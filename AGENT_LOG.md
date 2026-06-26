@@ -17,6 +17,25 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-26 15:40 — Claude
+
+**Commit:** `26db3df` — feat(meistrai): admin kill switch for provider profile preview drawer
+
+**Pakeitimai:** 8 files changed, 113 insertions(+), 5 deletions(-)
+
+**Failai:**
+- prisma/manual-migrations/20260626_add_profile_preview_enabled.sql
+- prisma/schema.prisma
+- src/app/admin/nustatymai/page.tsx
+- src/app/api/admin/settings/route.ts
+- src/app/meistrai/page.tsx
+- src/components/tiekejai/ProviderListingClient.tsx
+- src/components/tiekejai/ProvidersExperience.tsx
+- src/lib/platform-settings.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-24 21:42 — Claude
 
 **Commit:** `304dd70` — fix(categories): remap 2 active providers off retired legacy cats + add ref guard

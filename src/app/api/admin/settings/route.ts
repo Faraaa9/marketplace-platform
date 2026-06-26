@@ -4,9 +4,11 @@ import { authOptions } from "@/lib/auth";
 import {
   getEmailDeliverySettings,
   getFreeStarterCredits,
+  isProfilePreviewEnabled,
   isStoryEnabled,
   setEmailDeliverySettings,
   setFreeStarterCredits,
+  setProfilePreviewEnabled,
   setStoryEnabled,
 } from "@/lib/platform-settings";
 
@@ -16,7 +18,8 @@ async function loadSettings() {
   const storyEnabled = await isStoryEnabled();
   const { emailTestMode, emailAllowlist } = await getEmailDeliverySettings();
   const freeStarterCredits = await getFreeStarterCredits();
-  return { storyEnabled, emailTestMode, emailAllowlist, freeStarterCredits };
+  const profilePreviewEnabled = await isProfilePreviewEnabled();
+  return { storyEnabled, emailTestMode, emailAllowlist, freeStarterCredits, profilePreviewEnabled };
 }
 
 export async function GET() {
@@ -47,6 +50,10 @@ export async function PUT(req: NextRequest) {
 
     if (typeof body.storyEnabled === "boolean") {
       await setStoryEnabled(body.storyEnabled);
+    }
+
+    if (typeof body.profilePreviewEnabled === "boolean") {
+      await setProfilePreviewEnabled(body.profilePreviewEnabled);
     }
 
     if (body.freeStarterCredits !== undefined) {

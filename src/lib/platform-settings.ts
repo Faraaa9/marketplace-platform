@@ -7,6 +7,7 @@ interface PlatformSettingsData {
   emailTestMode: boolean;
   emailAllowlist: string[];
   freeStarterCredits: number;
+  profilePreviewEnabled: boolean;
 }
 
 const DEFAULT_SETTINGS: PlatformSettingsData = {
@@ -14,6 +15,7 @@ const DEFAULT_SETTINGS: PlatformSettingsData = {
   emailTestMode: false,
   emailAllowlist: [],
   freeStarterCredits: 3,
+  profilePreviewEnabled: true,
 };
 
 let cached: { data: PlatformSettingsData; fetchedAt: number } | null = null;
@@ -52,6 +54,7 @@ async function getSettings(): Promise<PlatformSettingsData> {
         emailTestMode: true,
         emailAllowlist: true,
         freeStarterCredits: true,
+        profilePreviewEnabled: true,
       },
     });
 
@@ -60,6 +63,7 @@ async function getSettings(): Promise<PlatformSettingsData> {
       emailTestMode: settings.emailTestMode,
       emailAllowlist: settings.emailAllowlist,
       freeStarterCredits: settings.freeStarterCredits,
+      profilePreviewEnabled: settings.profilePreviewEnabled,
     };
     cached = { data, fetchedAt: Date.now() };
     return data;
@@ -143,4 +147,19 @@ export async function getFreeStarterCredits(): Promise<number> {
  */
 export async function setFreeStarterCredits(count: number): Promise<void> {
   await updateSettings({ freeStarterCredits: count });
+}
+
+/**
+ * Whether the provider quick-preview side drawer is shown on /meistrai. When
+ * false, clicking a provider card navigates straight to the full profile.
+ */
+export async function isProfilePreviewEnabled(): Promise<boolean> {
+  return (await getSettings()).profilePreviewEnabled;
+}
+
+/**
+ * Update the provider profile preview drawer flag.
+ */
+export async function setProfilePreviewEnabled(enabled: boolean): Promise<void> {
+  await updateSettings({ profilePreviewEnabled: enabled });
 }
