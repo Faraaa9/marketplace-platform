@@ -456,6 +456,19 @@ function reasonFor(entry: ScoredCandidate): string {
   return `Tekste minimi žodžiai ${joined}.`;
 }
 
+/**
+ * True when the user literally named this category — every token of the
+ * candidate's leaf name appears in the query. Used to stop the AI reranker from
+ * overthinking an unambiguous request (e.g. query "Meistrai į namus" → keep
+ * "Meistrai į namus", don't let the LLM swap in "Automobilio užvedimas"). Pure CPU.
+ */
+function isExactNamedMatch(entry: ScoredCandidate, query: string): boolean {
+  const nameTokens = tokenize(entry.candidate.name);
+  if (nameTokens.length === 0) return false;
+  const queryTokens = new Set(tokenize(query));
+  return nameTokens.every((token) => queryTokens.has(token));
+}
+
 function forcePreferredFirst(
   picked: ScoredCandidate[],
   preferred: ScoredCandidate | null,
@@ -827,6 +840,22 @@ export async function suggestCategories(
   if (input.mode === "request") {
     const filtered = applyRequestIntentRules(pickedEntries, text, limit, rootSignal);
     pickedEntries = filtered.length > 0 ? forcePreferredFirst(filtered, overrideEntry, limit) : deterministicPicked.slice(0, 1);
+  }
+
+  // Exact-match guard: if the user literally named the deterministic #1 (all its
+  // leaf-name tokens are in the query) but the AI reranker moved it off the top,
+  // put it back. The reranker recovers semantic misses well, but it overthinks
+  // queries that ARE a category name (e.g. "Meistrai į namus", "Betranšėjės
+  // technologijos"). A forced override (stronger rule) still wins.
+  if (input.mode === "request" && aiUsed && !overrideEntry) {
+    const detTop = deterministicPicked[0];
+    if (
+      detTop &&
+      pickedEntries[0]?.candidate.id !== detTop.candidate.id &&
+      isExactNamedMatch(detTop, text)
+    ) {
+      pickedEntries = forcePreferredFirst(pickedEntries, detTop, limit);
+    }
   }
 
   // Calibrated confidence = isotonic(margin between final #1 and #2 scores).
