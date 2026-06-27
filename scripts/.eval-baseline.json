@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-06-27T02:05:22.634Z",
+  "mode": "request",
+  "aiRerank": "disabled (deterministic Stage-1)",
+  "hedgeConfThreshold": 0.6,
+  "records": 300,
+  "precisionAt1": {
+    "num": 66,
+    "denom": 254,
+    "value": 0.25984251968503935
+  },
+  "recallAt3": {
+    "num": 91,
+    "denom": 254,
+    "value": 0.35826771653543305
+  },
+  "multiNeed": {
+    "denom": 297,
+    "tp": 232,
+    "fp": 783,
+    "fn": 683,
+    "microPrecision": 0.22857142857142856,
+    "microRecall": 0.253551912568306,
+    "microF1": 0.24041450777202075
+  },
+  "ambiguityGate": {
+    "recall": {
+      "num": 1,
+      "denom": 46,
+      "value": 0.021739130434782608
+    },
+    "falseAlarm": {
+      "num": 30,
+      "denom": 254,
+      "value": 0.11811023622047244
+    }
+  },
+  "recallCeiling": {
+    "resolvableGoldPrimary": 243,
+    "goldPrimaryDenom": 254,
+    "value": 0.9566929133858267,
+    "unresolvableUniqueNames": 5
+  }
+}
