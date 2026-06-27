@@ -37,6 +37,42 @@ const normalize = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// LT cities + neighbouring countries/cities that appear in the taxonomy's
+// route/locative "junk" leaves (e.g. "Keleivi\u0173 perve\u017eimas > Kaunas > Vilniaus
+// oro uostas", "Lietuva > Vokietija") \u2014 a specific A\u2192B trip, not a service a
+// client requests by name. Folded, lowercase, diacritic-free.
+const ROUTE_PLACE_TOKENS = new Set([
+  "vilnius", "vilniaus", "kaunas", "kauno", "klaipeda", "klaipedos", "siauliai",
+  "siauliu", "panevezys", "panevezio", "alytus", "marijampole", "mazeikiai",
+  "jonava", "utena", "kedainiai", "telsiai", "taurage", "ukmerge", "visaginas",
+  "plunge", "kretinga", "palanga", "radviliskis", "druskininkai", "rokiskis",
+  "birzai", "elektrenai", "garliava", "vilkaviskis", "gargzdai", "kursenai",
+  "varsuva", "ryga", "talinas", "talin", "kaliningradas", "minskas", "maskva",
+  "londonas", "berlynas",
+  "lietuva", "latvija", "estija", "lenkija", "vokietija", "belgija", "olandija",
+  "nyderlandai", "ispanija", "anglija", "norvegija", "svedija", "danija",
+  "prancuzija", "italija", "austrija", "sveicarija", "cekija", "slovakija",
+  "vengrija", "ukraina", "rusija", "baltarusija", "airija", "portugalija",
+  "suomija",
+]);
+
+/**
+ * A request-mode candidate-pool gate: drop route/locative junk leaves. Decided
+ * on the leaf name only \u2014 contains "oro uost", OR ">" + \u22651 place token, OR names
+ * \u22652 place tokens. Conservative (false-negatives fine, false-positives not).
+ * Pure CPU. Shared by both categorizers (suggestCategories has its own copy
+ * pending engine unification).
+ */
+export function isRouteLocativeJunk(name: string): boolean {
+  const folded = normalize(name);
+  if (folded.includes("oro uost")) return true;
+  const placeCount = folded
+    .split(/[\s-]+/)
+    .filter((token) => ROUTE_PLACE_TOKENS.has(token)).length;
+  if (name.includes(">") && placeCount >= 1) return true;
+  return placeCount >= 2;
+}
+
 function tokenize(value: string): string[] {
   return normalize(value)
     .split(/[\s-]+/)

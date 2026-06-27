@@ -4,6 +4,7 @@ import { pickCategoryOverrideSlug } from "@/lib/category-overrides";
 import {
   categoryMatchesRequestIntent,
   filterRequestCategoryChoices,
+  isRouteLocativeJunk,
   buildDomainIndex,
   inferRequestRoots,
   type RootSignal,
@@ -67,6 +68,10 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
         score: scoreCategory(query, breadcrumb, category.depth),
       };
     })
+    // Drop route/locative junk leaves before they reach the AI's candidate list
+    // (e.g. "Keleivių pervežimas > Kaunas > Vilniaus oro uostas"). Shared with the
+    // request-mode gate in suggestCategories.
+    .filter(({ category }) => !isRouteLocativeJunk(category.name))
     .filter(({ category }) =>
       categoryMatchesRequestIntent(
         {
