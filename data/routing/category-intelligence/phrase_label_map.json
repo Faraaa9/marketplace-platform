@@ -1,0 +1,3902 @@
+{
+  "Automobilių nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--automobiliu-nuoma",
+      "pr-renginiai-sventes--automobiliu-nuoma",
+      "pr-transportas--automobiliu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Mikroautobusų nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--automobiliu-nuoma--mikroautobusu-nuoma",
+      "pr-nuomos-paslaugos--mikroautobusu-nuoma",
+      "pr-renginiai-sventes--automobiliu-nuoma--mikroautobusu-nuoma",
+      "pr-transportas--automobiliu-nuoma--mikroautobusu-nuoma",
+      "pr-transportas--mikroautobusu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Buhalterinės apskaitos paslaugos": {
+    "slugs": [
+      "pr-paslaugos-verslui--buhalterines-apskaitos-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Interneto svetainių kūrimas": {
+    "slugs": [
+      "pr-internetas-it--interneto-svetainiu-kurimas",
+      "pr-paslaugos-verslui--interneto-svetainiu-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Keleivių pervežimas": {
+    "slugs": [
+      "pr-transportas--keleiviu-pervezimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Rinkodara (marketingas)": {
+    "slugs": [
+      "pr-paslaugos-verslui--rinkodara-marketingas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Grafikos dizaineriai": {
+    "slugs": [
+      "pr-internetas-it--grafikos-dizaineriai",
+      "pr-paslaugos-verslui--grafikos-dizaineriai",
+      "pr-reklama-dizainas-spauda--grafikos-dizaineriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1768,
+    "is_top_category": true
+  },
+  "Vidaus apdailos darbai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai--vidaus-apdailos-darbai",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Aplinkos tvarkymas, apželdinimas": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Statybos darbai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Stogdengiai, stogo darbai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai--stogdengiai-stogo-darbai",
+      "pr-statybos-apdaila--stogdengiai-stogo-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Santechnikai, santechnikos darbai": {
+    "slugs": [
+      "pr-buitines-paslaugos--santechnikai-santechnikos-darbai",
+      "pr-statybos-apdaila--santechnikai-santechnikos-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Meistrai į namus": {
+    "slugs": [
+      "pr-buitines-paslaugos--meistrai-i-namus"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Apšiltinimas, šiltinimas": {
+    "slugs": [
+      "pr-statybos-apdaila--apsiltinimas-siltinimas",
+      "pr-statybos-apdaila--statybos-darbai--apsiltinimas-siltinimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Elektrikai, elektros darbai": {
+    "slugs": [
+      "pr-statybos-apdaila--elektrikai-elektros-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Medžio darbai, staliai": {
+    "slugs": [
+      "pr-statybos-apdaila--medzio-darbai-staliai",
+      "pr-statybos-apdaila--statybos-darbai--medzio-darbai-staliai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Metalo gaminiai, suvirintojai": {
+    "slugs": [
+      "pr-statybos-apdaila--metalo-gaminiai-suvirintojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Langai, durys: gamyba, montavimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--langai-durys-gamyba-montavimas",
+      "pr-statybos-apdaila--langai-durys-gamyba-montavimas",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--langai-durys-gamyba-montavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Baldų gamyba": {
+    "slugs": [
+      "pr-interjeras-baldai--baldu-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Betonavimo darbai, betonavimas": {
+    "slugs": [
+      "pr-statybos-apdaila--betonavimo-darbai-betonavimas",
+      "pr-statybos-apdaila--statybos-darbai--betonavimo-darbai-betonavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Pagalbiniai darbininkai": {
+    "slugs": [
+      "pr-aplinka-sodas--pagalbiniai-darbininkai",
+      "pr-statybos-apdaila--pagalbiniai-darbininkai",
+      "pr-transportas--pagalbiniai-darbininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Žemės kasimas, lyginimas": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai--zemes-kasimas-lyginimas",
+      "pr-statybos-apdaila--zemes-kasimas-lyginimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Tvoros, vartai, montavimas": {
+    "slugs": [
+      "pr-aplinka-sodas--tvoros-vartai-montavimas",
+      "pr-statybos-apdaila--statybos-darbai--tvoros-vartai-montavimas",
+      "pr-statybos-apdaila--tvoros-vartai-montavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Srautinis valymas": {
+    "slugs": [
+      "pr-buitines-paslaugos--srautinis-valymas",
+      "pr-buitines-paslaugos--valymo-paslaugos--srautinis-valymas",
+      "pr-statybos-apdaila--srautinis-valymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Kelių tiesimas": {
+    "slugs": [
+      "pr-statybos-apdaila--keliu-tiesimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Signalizacijos, kameros, apsaugos sistemos": {
+    "slugs": [
+      "pr-statybos-apdaila--elektrikai-elektros-darbai--signalizacijos-kameros-apsaugos-sistemos",
+      "pr-statybos-apdaila--signalizacijos-kameros-apsaugos-sistemos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Interjero dizaineriai": {
+    "slugs": [
+      "pr-interjeras-baldai--interjero-dizaineriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Roletai, žaliuzės, romanetės": {
+    "slugs": [
+      "pr-buitines-paslaugos--roletai-zaliuzes-romanetes",
+      "pr-interjeras-baldai--roletai-zaliuzes-romanetes",
+      "pr-statybos-apdaila--roletai-zaliuzes-romanetes"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Trinkelių klojimas": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--trinkeliu-klojimas",
+      "pr-aplinka-sodas--trinkeliu-klojimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--trinkeliu-klojimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Ventiliacija, vėdinimo sistemos": {
+    "slugs": [
+      "pr-buitines-paslaugos--santechnikai-santechnikos-darbai--ventiliacija-vedinimo-sistemos",
+      "pr-statybos-apdaila--santechnikai-santechnikos-darbai--ventiliacija-vedinimo-sistemos",
+      "pr-statybos-apdaila--ventiliacija-vedinimo-sistemos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "liejimas": {
+    "slugs": [
+      "pr-tradiciniai-amatai--skulptoriai--bronziniu-skulpturu-liejimas",
+      "pr-statybos-apdaila--kalviai-kalvystes-darbai--metalo-liejimas",
+      "pr-statybos-apdaila--statybos-darbai--pamatu-liejimas-irengimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.6,
+    "needs_review": true,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Restauravimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--restauravimas",
+      "pr-interjeras-baldai--restauravimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Vandens filtrai: montavimas, keitimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--vandens-filtrai-montavimas-keitimas",
+      "pr-statybos-apdaila--vandens-filtrai-montavimas-keitimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Kalviai, kalvystės darbai": {
+    "slugs": [
+      "pr-aplinka-sodas--kalviai-kalvystes-darbai",
+      "pr-statybos-apdaila--kalviai-kalvystes-darbai",
+      "pr-tradiciniai-amatai--kalviai-kalvystes-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Kapų tvarkymas, priežiūra": {
+    "slugs": [
+      "pr-tradiciniai-amatai--kapu-tvarkymas-prieziura"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Griovimo darbai": {
+    "slugs": [
+      "pr-statybos-apdaila--griovimo-darbai",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--griovimo-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Pirtys, pirčių įrengimas": {
+    "slugs": [
+      "pr-statybos-apdaila--pirtys-pirciu-irengimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Valymo paslaugos": {
+    "slugs": [
+      "pr-buitines-paslaugos--valymo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Statybinių medžiagų gamintojai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybiniu-medziagu-gamintojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Maitinimas, maistas šventėms": {
+    "slugs": [
+      "pr-maistas-konditerija--maitinimas-maistas-sventems",
+      "pr-renginiai-sventes--maitinimas-maistas-sventems"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Automobilių poliravimas, priežiūra": {
+    "slugs": [
+      "pr-transportas--automobiliu-poliravimas-prieziura"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Telekomunikacijų įrangos montuotojai": {
+    "slugs": [
+      "pr-internetas-it--telekomunikaciju-irangos-montuotojai",
+      "pr-statybos-apdaila--telekomunikaciju-irangos-montuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Plėvelės klijavimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--pleveles-klijavimas",
+      "pr-statybos-apdaila--pleveles-klijavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Krovinių pervežimas": {
+    "slugs": [
+      "pr-transportas--kroviniu-pervezimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Aukštalipiai": {
+    "slugs": [
+      "pr-statybos-apdaila--aukstalipiai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Autoservisai, automobilių remontas": {
+    "slugs": [
+      "pr-transportas--autoservisai-automobiliu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1524,
+    "is_top_category": true
+  },
+  "Šiukšlių išvežimas: statybinių ir kt.": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--siuksliu-isvezimas-statybiniu-ir-kt",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--siuksliu-isvezimas-statybiniu-ir-kt",
+      "pr-statybos-apdaila--siuksliu-isvezimas-statybiniu-ir-kt"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1460,
+    "is_top_category": true
+  },
+  "Statybinės technikos nuoma": {
+    "slugs": [
+      "pr-statybos-apdaila--statybines-technikos-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1460,
+    "is_top_category": true
+  },
+  "Vejos priežiūra, įrengimas": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--vejos-prieziura-irengimas",
+      "pr-aplinka-sodas--vejos-prieziura-irengimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--vejos-prieziura-irengimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1460,
+    "is_top_category": true
+  },
+  "Techninė pagalba kelyje": {
+    "slugs": [
+      "pr-transportas--technine-pagalba-kelyje"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1460,
+    "is_top_category": true
+  },
+  "Interneto svetainių administratoriai": {
+    "slugs": [
+      "pr-paslaugos-verslui--interneto-svetainiu-administratoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Sąmatininkai: sąmatų skaičiavimas": {
+    "slugs": [
+      "pr-statybos-apdaila--samatininkai-samatu-skaiciavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Pastatų sandarumo bandymai": {
+    "slugs": [
+      "pr-statybos-apdaila--pastatu-sandarumo-bandymai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Fotografai": {
+    "slugs": [
+      "pr-renginiai-sventes--fotografai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Nekilnojamo turto brokeriai": {
+    "slugs": [
+      "pr-nt-ir-tarpininkavimas--nekilnojamo-turto-brokeriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Architektai, projektavimas": {
+    "slugs": [
+      "pr-interjeras-baldai--architektai-projektavimas",
+      "pr-statybos-apdaila--architektai-projektavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Statybos dokumentų tvarkymas": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai--statybos-dokumentu-tvarkymas",
+      "pr-statybos-apdaila--statybos-dokumentu-tvarkymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "3D modeliavimas, vizualizacijų kūrimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--3d-modeliavimas-vizualizaciju-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Komunikacijos specialistai": {
+    "slugs": [
+      "pr-paslaugos-verslui--komunikacijos-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Prekyba įvairiomis prekėmis": {
+    "slugs": [
+      "pr-prekyba--prekyba-ivairiomis-prekemis"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": false
+  },
+  "Advokatai, teisininkai": {
+    "slugs": [
+      "pr-paslaugos-verslui--advokatai-teisininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Statybos projektų valdymas": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-projektu-valdymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Projektų ir dokumentų rengėjai": {
+    "slugs": [
+      "pr-statybos-apdaila--projektu-ir-dokumentu-rengejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1351,
+    "is_top_category": true
+  },
+  "Automobilių plovyklos": {
+    "slugs": [
+      "pr-transportas--automobiliu-plovyklos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1300,
+    "is_top_category": true
+  },
+  "Rašto darbų konsultantai": {
+    "slugs": [
+      "pr-dokumentai-tyrimai-konsultavimas--rasto-darbu-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1300,
+    "is_top_category": true
+  },
+  "Matininkai, geodezininkai": {
+    "slugs": [
+      "pr-statybos-apdaila--matininkai-geodezininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Garažo vartai, montavimas": {
+    "slugs": [
+      "pr-aplinka-sodas--tvoros-vartai-montavimas--garazo-vartai-montavimas",
+      "pr-statybos-apdaila--garazo-vartai-montavimas",
+      "pr-statybos-apdaila--tvoros-vartai-montavimas--garazo-vartai-montavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Inžinieriai": {
+    "slugs": [
+      "pr-statybos-apdaila--inzinieriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Stiklo konstrukcijos, montavimas": {
+    "slugs": [
+      "pr-interjeras-baldai--stiklo-konstrukcijos-montavimas",
+      "pr-statybos-apdaila--stiklo-konstrukcijos-montavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Pelėsio naikinimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--pelesio-naikinimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Geologiniai tyrimai": {
+    "slugs": [
+      "pr-statybos-apdaila--geologiniai-tyrimai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Statybos darbų vykdytojai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbu-vykdytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": false
+  },
+  "Alternatyvi energija": {
+    "slugs": [
+      "pr-statybos-apdaila--alternatyvi-energija"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Kenkėjų naikinimas, prevencija": {
+    "slugs": [
+      "pr-aplinka-sodas--kenkeju-naikinimas-prevencija"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Nekilnojamo turto nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--nekilnojamo-turto-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Fotografai verslui": {
+    "slugs": [
+      "pr-paslaugos-verslui--fotografai-verslui",
+      "pr-reklama-dizainas-spauda--fotografai-verslui",
+      "pr-renginiai-sventes--fotografai--fotografai-verslui"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Perkraustymo paslaugos": {
+    "slugs": [
+      "pr-transportas--kroviniu-pervezimas--perkraustymo-paslaugos",
+      "pr-transportas--perkraustymo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Verslo konsultantai": {
+    "slugs": [
+      "pr-paslaugos-verslui--verslo-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Virtualūs asistentai": {
+    "slugs": [
+      "pr-paslaugos-verslui--virtualus-asistentai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Video klipų kūrimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--video-klipu-kurimas",
+      "pr-reklama-dizainas-spauda--video-klipu-kurimas",
+      "pr-renginiai-sventes--video-klipu-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Ventiliuojami fasadai": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 1296,
+    "is_top_category": false
+  },
+  "Internetinio verslo konsultantai": {
+    "slugs": [
+      "pr-internetas-it--internetinio-verslo-konsultantai",
+      "pr-paslaugos-verslui--internetinio-verslo-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Katilų montavimas, remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--katilu-montavimas-remontas",
+      "pr-buitines-paslaugos--santechnikai-santechnikos-darbai--katilu-montavimas-remontas",
+      "pr-statybos-apdaila--katilu-montavimas-remontas",
+      "pr-statybos-apdaila--santechnikai-santechnikos-darbai--katilu-montavimas-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Užuolaidų siuvimas": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--siuvimas-siuvyklos-siuvejai--uzuolaidu-siuvimas",
+      "pr-buitines-paslaugos--siuvimas-siuvyklos-siuvejai--uzuolaidu-siuvimas",
+      "pr-interjeras-baldai--uzuolaidu-siuvimas",
+      "pr-tradiciniai-amatai--siuvimas-siuvyklos-siuvejai--uzuolaidu-siuvimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Draudimas, draudimo agentai": {
+    "slugs": [
+      "pr-buitines-paslaugos--draudimas-draudimo-agentai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1296,
+    "is_top_category": true
+  },
+  "Baseinų, jacuzzi įrengimas, priežiūra": {
+    "slugs": [
+      "pr-statybos-apdaila--baseinu-jacuzzi-irengimas-prieziura"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1252,
+    "is_top_category": true
+  },
+  "Plytelių pjovimas": {
+    "slugs": [
+      "pr-statybos-apdaila--plyteliu-pjovimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1221,
+    "is_top_category": true
+  },
+  "Židinių meistrai": {
+    "slugs": [
+      "pr-interjeras-baldai--zidiniu-meistrai",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--zidiniu-meistrai",
+      "pr-statybos-apdaila--zidiniu-meistrai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1221,
+    "is_top_category": true
+  },
+  "Laiptinių remontas": {
+    "slugs": [
+      "pr-paslaugos-verslui--kompiuteriu-remontas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 1221,
+    "is_top_category": false
+  },
+  "Kaminų valymas": {
+    "slugs": [
+      "pr-buitines-paslaugos--kaminu-valymas",
+      "pr-tradiciniai-amatai--kaminu-valymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Dujų įvedimas, pajungimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--santechnikai-santechnikos-darbai--duju-ivedimas-pajungimas",
+      "pr-statybos-apdaila--duju-ivedimas-pajungimas",
+      "pr-statybos-apdaila--santechnikai-santechnikos-darbai--duju-ivedimas-pajungimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Buitinės technikos remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--buitines-technikos-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Braižytojai": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--braizytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Statybos darbų vadovai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbu-vadovai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Baldų projektavimas, dizaineriai": {
+    "slugs": [
+      "pr-interjeras-baldai--baldu-gamyba--baldu-projektavimas-dizaineriai",
+      "pr-interjeras-baldai--baldu-projektavimas-dizaineriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Reklamos paslaugos": {
+    "slugs": [
+      "pr-paslaugos-verslui--reklamos-paslaugos",
+      "pr-reklama-dizainas-spauda--reklamos-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1219,
+    "is_top_category": true
+  },
+  "Tekstų kūrėjai": {
+    "slugs": [
+      "pr-internetas-it--tekstu-kurejai",
+      "pr-paslaugos-verslui--tekstu-kurejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1200,
+    "is_top_category": true
+  },
+  "Frezavimas (CNC)": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--frezavimas-cnc",
+      "pr-paslaugos-verslui--frezavimas-cnc"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1200,
+    "is_top_category": true
+  },
+  "Stiklų, veidrodžių gamyba, keitimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--stiklu-veidrodziu-gamyba-keitimas",
+      "pr-interjeras-baldai--stiklu-veidrodziu-gamyba-keitimas",
+      "pr-statybos-apdaila--stiklu-veidrodziu-gamyba-keitimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1200,
+    "is_top_category": true
+  },
+  "Akmens masės, marmuro, granito darbai": {
+    "slugs": [
+      "pr-interjeras-baldai--akmens-mases-marmuro-granito-darbai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1200,
+    "is_top_category": true
+  },
+  "Raktų gamyba": {
+    "slugs": [
+      "pr-buitines-paslaugos--raktu-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1200,
+    "is_top_category": true
+  },
+  "Kamino apskardinimas": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 1068,
+    "is_top_category": false
+  },
+  "Krosnys, krosnių meistrai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--krosnys-krosniu-meistrai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1068,
+    "is_top_category": true
+  },
+  "Palangių skardinimas": {
+    "slugs": [
+      "pr-statybos-apdaila--medzio-darbai-staliai--palangiu-gamyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 1068,
+    "is_top_category": false
+  },
+  "Reklamos gamyba": {
+    "slugs": [
+      "pr-paslaugos-verslui--reklamos-gamyba",
+      "pr-reklama-dizainas-spauda--reklamos-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1068,
+    "is_top_category": true
+  },
+  "Tortai, desertai": {
+    "slugs": [
+      "pr-maistas-konditerija--tortai-desertai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 1068,
+    "is_top_category": true
+  },
+  "Darbo saugos paslaugos": {
+    "slugs": [
+      "pr-paslaugos-verslui--darbo-saugos-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 911,
+    "is_top_category": true
+  },
+  "Socialiniai darbuotojai": {
+    "slugs": [
+      "pr-buitines-paslaugos--socialiniai-darbuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 911,
+    "is_top_category": false
+  },
+  "Medelynai, uogos, gėlės": {
+    "slugs": [
+      "pr-aplinka-sodas--medelynai-uogos-geles",
+      "pr-prekyba--prekyba-ivairiomis-prekemis--medelynai-uogos-geles"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 911,
+    "is_top_category": false
+  },
+  "Pardavimų vadybininkai": {
+    "slugs": [
+      "pr-paslaugos-verslui--pardavimu-vadybininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 911,
+    "is_top_category": true
+  },
+  "Sniego valymas": {
+    "slugs": [
+      "pr-aplinka-sodas--sniego-valymas",
+      "pr-buitines-paslaugos--sniego-valymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 732,
+    "is_top_category": true
+  },
+  "Interjero dekoravimas": {
+    "slugs": [
+      "pr-interjeras-baldai--interjero-dekoravimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 732,
+    "is_top_category": true
+  },
+  "Nuotekų valymo įrenginiai": {
+    "slugs": [
+      "pr-buitines-paslaugos--nuoteku-valymo-irenginiai",
+      "pr-statybos-apdaila--statybos-darbai--nuoteku-valymo-irenginiai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 732,
+    "is_top_category": true
+  },
+  "Metalo apdirbimas": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--metalo-apdirbimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 732,
+    "is_top_category": true
+  },
+  "Įvairios technikos nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--ivairios-technikos-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 732,
+    "is_top_category": true
+  },
+  "Produktų pakavimas, fasavimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--produktu-pakavimas-fasavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 722,
+    "is_top_category": false
+  },
+  "SEO paslaugos": {
+    "slugs": [
+      "pr-internetas-it--interneto-svetainiu-kurimas--seo-paslaugos",
+      "pr-internetas-it--seo-paslaugos",
+      "pr-paslaugos-verslui--interneto-svetainiu-kurimas--seo-paslaugos",
+      "pr-paslaugos-verslui--seo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 722,
+    "is_top_category": true
+  },
+  "Programuotojai": {
+    "slugs": [
+      "pr-internetas-it--programuotojai",
+      "pr-paslaugos-verslui--programuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 712,
+    "is_top_category": true
+  },
+  "Dirbtinio intelekto sprendimai": {
+    "slugs": [
+      "pr-internetas-it--dirbtinio-intelekto-sprendimai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 712,
+    "is_top_category": true
+  },
+  "Archyvarai": {
+    "slugs": [
+      "pr-dokumentai-tyrimai-konsultavimas--archyvarai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 712,
+    "is_top_category": false
+  },
+  "Sandėliavimo paslaugos": {
+    "slugs": [
+      "pr-transportas--sandeliavimo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 711,
+    "is_top_category": false
+  },
+  "Sodybos nuomai": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--sodybos-nuomai",
+      "pr-nuomos-paslaugos--sodybos-nuomai",
+      "pr-renginiai-sventes--sodybos-nuomai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 656,
+    "is_top_category": true
+  },
+  "Stovyklos vaikams": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--stovyklos-vaikams"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 656,
+    "is_top_category": true
+  },
+  "Restoranai, kavinės, barai, salės": {
+    "slugs": [
+      "pr-renginiai-sventes--restoranai-kavines-barai-sales"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 656,
+    "is_top_category": true
+  },
+  "Mobilaus kubilo nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--mobilaus-kubilo-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 656,
+    "is_top_category": true
+  },
+  "Renginių organizavimas": {
+    "slugs": [
+      "pr-renginiai-sventes--renginiu-organizavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 656,
+    "is_top_category": true
+  },
+  "Tentai, tentų gamyba": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--tentai-tentu-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 646,
+    "is_top_category": true
+  },
+  "Kitos įvairios paslaugos": {
+    "slugs": [
+      "pr-kitos-paslaugos--kitos-ivairios-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 627,
+    "is_top_category": true
+  },
+  "Paminklai kapams, antkapiai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--kapu-tvarkymas-prieziura--paminklai-kapams-antkapiai",
+      "pr-tradiciniai-amatai--paminklai-kapams-antkapiai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 611,
+    "is_top_category": true
+  },
+  "Drožėjai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--drozejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 611,
+    "is_top_category": false
+  },
+  "Mobiliųjų aplikacijų kūrimas": {
+    "slugs": [
+      "pr-internetas-it--mobiliuju-aplikaciju-kurimas",
+      "pr-paslaugos-verslui--mobiliuju-aplikaciju-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 599,
+    "is_top_category": true
+  },
+  "Finansų konsultantai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--finansu-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 595,
+    "is_top_category": true
+  },
+  "Mobilūs gateriai, medienos pjovimas": {
+    "slugs": [
+      "pr-aplinka-sodas--mobilus-gateriai-medienos-pjovimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 562,
+    "is_top_category": true
+  },
+  "Skalda, smėlis, žvyras, juodžemis": {
+    "slugs": [
+      "pr-aplinka-sodas--skalda-smelis-zvyras-juodzemis",
+      "pr-statybos-apdaila--skalda-smelis-zvyras-juodzemis",
+      "pr-statybos-apdaila--zemes-kasimas-lyginimas--skalda-smelis-zvyras-juodzemis"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 554,
+    "is_top_category": true
+  },
+  "Medžių genėjimas, pjovimas": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--medziu-genejimas-pjovimas",
+      "pr-aplinka-sodas--medziu-genejimas-pjovimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--medziu-genejimas-pjovimas",
+      "pr-tradiciniai-amatai--medziu-genejimas-pjovimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Vertėjai, vertimų biurai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--vertejai-vertimu-biurai",
+      "pr-paslaugos-verslui--vertejai-vertimu-biurai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Vestuvių, švenčių dekoravimas": {
+    "slugs": [
+      "pr-renginiai-sventes--vestuviu-svenciu-dekoravimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Medienos gaminiai": {
+    "slugs": [
+      "pr-statybos-apdaila--medienos-gaminiai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Graviravimo paslaugos": {
+    "slugs": [
+      "pr-daile-menai-keramika--graviravimo-paslaugos",
+      "pr-renginiai-sventes--graviravimo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Kompiuterių remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--kompiuteriu-remontas",
+      "pr-internetas-it--kompiuteriu-remontas",
+      "pr-paslaugos-verslui--kompiuteriu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Tekintojai, frezuotojai": {
+    "slugs": [
+      "pr-statybos-apdaila--tekintojai-frezuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Vaismedžių genėjimas": {
+    "slugs": [
+      "pr-aplinka-sodas--vaismedziu-genejimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Barmenai, gėrimai renginiams": {
+    "slugs": [
+      "pr-maistas-konditerija--barmenai-gerimai-renginiams",
+      "pr-renginiai-sventes--barmenai-gerimai-renginiams"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Bitininkai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--bitininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": false
+  },
+  "Anglų kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--anglu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Mobiliųjų telefonų remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--mobiliuju-telefonu-remontas",
+      "pr-internetas-it--mobiliuju-telefonu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Ekskursijos, gidai": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--ekskursijos-gidai",
+      "pr-tradiciniai-amatai--ekskursijos-gidai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Mobilios pirties nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--mobilios-pirties-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Siuvinėjimas": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--siuvimas-siuvyklos-siuvejai--siuvinejimas",
+      "pr-apranga-papuosalai-aksesuarai--siuvinejimas",
+      "pr-buitines-paslaugos--siuvimas-siuvyklos-siuvejai--siuvinejimas",
+      "pr-tradiciniai-amatai--siuvimas-siuvyklos-siuvejai--siuvinejimas",
+      "pr-tradiciniai-amatai--siuvinejimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Muzikantai, dainininkai, grupės": {
+    "slugs": [
+      "pr-renginiai-sventes--muzikantai-dainininkai-grupes"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Pramogos vaikams": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--pramogos-vaikams",
+      "pr-renginiai-sventes--pramogos-vaikams"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Fejerverkai": {
+    "slugs": [
+      "pr-renginiai-sventes--fejerverkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": false
+  },
+  "Žemės ūkio technikos nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--zemes-ukio-technikos-nuoma",
+      "pr-transportas--zemes-ukio-technikos-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "IT specialistai": {
+    "slugs": [
+      "pr-internetas-it--it-specialistai",
+      "pr-paslaugos-verslui--it-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Floristai, gėlių salonai": {
+    "slugs": [
+      "pr-renginiai-sventes--floristai-geliu-salonai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Spaudos paslaugos": {
+    "slugs": [
+      "pr-paslaugos-verslui--spaudos-paslaugos",
+      "pr-reklama-dizainas-spauda--spaudos-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 539,
+    "is_top_category": true
+  },
+  "Plokštuminiai pamatai": {
+    "slugs": [
+      "pr-aplinka-sodas--tvoros-vartai-montavimas--tvoros-pamatai-betonavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 509,
+    "is_top_category": false
+  },
+  "Metalo laužo supirkimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--metalo-lauzo-supirkimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 506,
+    "is_top_category": true
+  },
+  "Įrankių nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--irankiu-nuoma",
+      "pr-statybos-apdaila--irankiu-nuoma",
+      "pr-statybos-apdaila--statybines-technikos-nuoma--irankiu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 495,
+    "is_top_category": true
+  },
+  "Matematikos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--matematikos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 482,
+    "is_top_category": true
+  },
+  "Fizikos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--fizikos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 482,
+    "is_top_category": true
+  },
+  "Pradinių klasių mokytoja": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--pradiniu-klasiu-mokytoja"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 482,
+    "is_top_category": true
+  },
+  "3D spausdinimas, skenavimas": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--3d-spausdinimas-skenavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 482,
+    "is_top_category": true
+  },
+  "Automobilių pirkimo-pardavimo konsultantai": {
+    "slugs": [
+      "pr-transportas--automobiliu-pirkimo-pardavimo-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 471,
+    "is_top_category": true
+  },
+  "Automobilių multimedijos montavimas": {
+    "slugs": [
+      "pr-transportas--automobiliu-apsaugos-sistemos-montavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.4,
+    "needs_review": true,
+    "peak_total_count": 470,
+    "is_top_category": false
+  },
+  "Ūkio technikos remontas": {
+    "slugs": [
+      "pr-transportas--ukio-technikos-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 466,
+    "is_top_category": true
+  },
+  "Foto video technikos remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--foto-video-technikos-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 466,
+    "is_top_category": false
+  },
+  "Baldų restauravimas namuose": {
+    "slugs": [
+      "pr-interjeras-baldai--restauravimas",
+      "pr-buitines-paslaugos--restauravimas",
+      "pr-buitines-paslaugos--restauravimas--baldu-restauravimas-remontas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.6,
+    "needs_review": true,
+    "peak_total_count": 465,
+    "is_top_category": false
+  },
+  "Odinių baldų atnaujinimas": {
+    "slugs": [
+      "pr-interjeras-baldai--baldu-gamyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 465,
+    "is_top_category": false
+  },
+  "Vandens gręžiniai": {
+    "slugs": [
+      "pr-statybos-apdaila--statybos-darbai--vandens-greziniai",
+      "pr-statybos-apdaila--vandens-greziniai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 433,
+    "is_top_category": true
+  },
+  "Renginių vedėjai": {
+    "slugs": [
+      "pr-renginiai-sventes--renginiu-vedejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 429,
+    "is_top_category": true
+  },
+  "Djs": {
+    "slugs": [
+      "pr-renginiai-sventes--djs",
+      "pr-renginiai-sventes--muzikantai-dainininkai-grupes--djs"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 429,
+    "is_top_category": true
+  },
+  "Įvairios paslaugos vestuvėms": {
+    "slugs": [
+      "pr-renginiai-sventes--ivairios-paslaugos-vestuvems"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 429,
+    "is_top_category": true
+  },
+  "Pramogų organizatoriai": {
+    "slugs": [
+      "pr-renginiai-sventes--pramogu-organizatoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 429,
+    "is_top_category": true
+  },
+  "Lietuvių kalbos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--lietuviu-kalbos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": true
+  },
+  "Redaktoriai": {
+    "slugs": [
+      "pr-paslaugos-verslui--redaktoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": true
+  },
+  "Logopedai": {
+    "slugs": [
+      "pr-sveikata-gydymas--logopedai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": true
+  },
+  "Istorijos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--istorijos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": false
+  },
+  "Šokiai, šokių pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--sokiai-sokiu-pamokos",
+      "pr-renginiai-sventes--sokiai-sokiu-pamokos",
+      "pr-sportas-treniruotes--sokiai-sokiu-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": true
+  },
+  "Dviračių, paspirtukų remontas": {
+    "slugs": [
+      "pr-buitines-paslaugos--dviraciu-paspirtuku-remontas",
+      "pr-transportas--dviraciu-paspirtuku-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 409,
+    "is_top_category": true
+  },
+  "Kompiuterių kursai": {
+    "slugs": [
+      "pr-internetas-it--kompiuteriu-kursai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 404,
+    "is_top_category": true
+  },
+  "Informatikos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--informatikos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 404,
+    "is_top_category": true
+  },
+  "Kelionių organizavimas": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--kelioniu-organizavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 395,
+    "is_top_category": false
+  },
+  "Smėliavimas, dažymas": {
+    "slugs": [
+      "pr-statybos-apdaila--smeliavimas-dazymas",
+      "pr-transportas--smeliavimas-dazymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 391,
+    "is_top_category": true
+  },
+  "Siuvimas, siuvyklos, siuvėjai": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--siuvimas-siuvyklos-siuvejai",
+      "pr-buitines-paslaugos--siuvimas-siuvyklos-siuvejai",
+      "pr-tradiciniai-amatai--siuvimas-siuvyklos-siuvejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 382,
+    "is_top_category": true
+  },
+  "Motociklų, motorolerių remontas": {
+    "slugs": [
+      "pr-transportas--motociklu-motoroleriu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 382,
+    "is_top_category": true
+  },
+  "Tatuiruotės (tattoo)": {
+    "slugs": [
+      "pr-grozio-paslaugos--tatuiruotes-tattoo"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 382,
+    "is_top_category": true
+  },
+  "Meninis lyginimas": {
+    "slugs": [
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--grindu-lyginimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 382,
+    "is_top_category": false
+  },
+  "Personalo sprendimai": {
+    "slugs": [
+      "pr-paslaugos-verslui--personalo-sprendimai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 379,
+    "is_top_category": true
+  },
+  "Biologijos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--biologijos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 379,
+    "is_top_category": true
+  },
+  "Pasirodymai, šou renginiams": {
+    "slugs": [
+      "pr-renginiai-sventes--pasirodymai-sou-renginiams"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": true
+  },
+  "Šventinės įrangos nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--sventines-irangos-nuoma",
+      "pr-renginiai-sventes--sventines-irangos-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": true
+  },
+  "Laivo nuoma": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--laivo-nuoma",
+      "pr-nuomos-paslaugos--laivo-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": true
+  },
+  "Vizažistės": {
+    "slugs": [
+      "pr-grozio-paslaugos--vizazistes"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": true
+  },
+  "Apšvietimo, įgarsinimo paslaugos": {
+    "slugs": [
+      "pr-renginiai-sventes--apsvietimo-igarsinimo-paslaugos",
+      "pr-renginiai-sventes--muzikantai-dainininkai-grupes--apsvietimo-igarsinimo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": true
+  },
+  "Pirties nuoma": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--pirties-nuoma",
+      "pr-nuomos-paslaugos--pirties-nuoma",
+      "pr-sveikata-gydymas--pirties-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 357,
+    "is_top_category": false
+  },
+  "Grindų šlifavimas": {
+    "slugs": [
+      "pr-statybos-apdaila--betonavimo-darbai-betonavimas--grindu-betonavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 340,
+    "is_top_category": false
+  },
+  "Psichologai, psichoterapeutai": {
+    "slugs": [
+      "pr-sveikata-gydymas--psichologai-psichoterapeutai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 327,
+    "is_top_category": true
+  },
+  "Lektoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--lektoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 327,
+    "is_top_category": true
+  },
+  "Koučingo specialistai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--koucingo-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 327,
+    "is_top_category": false
+  },
+  "Pakuočių gamyba": {
+    "slugs": [
+      "pr-paslaugos-verslui--pakuociu-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 326,
+    "is_top_category": true
+  },
+  "Juvelyrai, juvelyriniai dirbiniai": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--juvelyrai-juvelyriniai-dirbiniai",
+      "pr-tradiciniai-amatai--juvelyrai-juvelyriniai-dirbiniai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 326,
+    "is_top_category": true
+  },
+  "Automobilių tiuningas": {
+    "slugs": [
+      "pr-transportas--automobiliu-tiuningas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 311,
+    "is_top_category": true
+  },
+  "IT saugos auditas": {
+    "slugs": [
+      "pr-internetas-it--it-saugos-auditas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 309,
+    "is_top_category": true
+  },
+  "Laistymo sistemos, įrengimas": {
+    "slugs": [
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--laistymo-sistemos-irengimas",
+      "pr-aplinka-sodas--laistymo-sistemos-irengimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--laistymo-sistemos-irengimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 304,
+    "is_top_category": false
+  },
+  "Muitinės tarpininkai": {
+    "slugs": [
+      "pr-transportas--muitines-tarpininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 302,
+    "is_top_category": true
+  },
+  "Sportinių dangų sistemos": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--sportiniu-dangu-sistemos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 302,
+    "is_top_category": true
+  },
+  "Drabužių valymas": {
+    "slugs": [
+      "pr-buitines-paslaugos--drabuziu-valymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 291,
+    "is_top_category": false
+  },
+  "Asmeniniai vairuotojai": {
+    "slugs": [
+      "pr-transportas--asmeniniai-vairuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 291,
+    "is_top_category": true
+  },
+  "Betranšėjės technologijos": {
+    "slugs": [
+      "pr-statybos-apdaila--betransejes-technologijos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 288,
+    "is_top_category": true
+  },
+  "Muzikos prodiuseriai": {
+    "slugs": [
+      "pr-reklama-dizainas-spauda--muzikos-prodiuseriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Slaugytojai": {
+    "slugs": [
+      "pr-sveikata-gydymas--slaugytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Iliustruotojai": {
+    "slugs": [
+      "pr-daile-menai-keramika--iliustruotojai",
+      "pr-internetas-it--iliustruotojai",
+      "pr-paslaugos-verslui--iliustruotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Nuotraukų retušavimas": {
+    "slugs": [
+      "pr-renginiai-sventes--nuotrauku-retusavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Asmeniniai treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--asmeniniai-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Dailininkai": {
+    "slugs": [
+      "pr-daile-menai-keramika--dailininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Priešgaisrinės saugos specialistai": {
+    "slugs": [
+      "pr-statybos-apdaila--priesgaisrines-saugos-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": false
+  },
+  "Rankdarbių kūrėjai": {
+    "slugs": [
+      "pr-renginiai-sventes--rankdarbiu-kurejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Žurnalistai": {
+    "slugs": [
+      "pr-paslaugos-verslui--zurnalistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": false
+  },
+  "Rėminimo paslaugos": {
+    "slugs": [
+      "pr-buitines-paslaugos--reminimo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 281,
+    "is_top_category": true
+  },
+  "Muzikos mokytojai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--muzikos-mokytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": true
+  },
+  "Vestuvių planuotojai": {
+    "slugs": [
+      "pr-renginiai-sventes--renginiu-organizavimas--vestuviu-planuotojai",
+      "pr-renginiai-sventes--vestuviu-planuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": false
+  },
+  "Dainavimo, vokalo pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--dainavimo-vokalo-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": true
+  },
+  "Šunų dresuotojai": {
+    "slugs": [
+      "pr-paslaugos-augintiniams--sunu-dresuotojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": true
+  },
+  "Kirpyklos, kirpėjai, stilistai": {
+    "slugs": [
+      "pr-grozio-paslaugos--kirpyklos-kirpejai-stilistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": true
+  },
+  "Pilateso treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--pilateso-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": false
+  },
+  "Tinklinio treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--tinklinio-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": false
+  },
+  "Baidarių nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--baidariu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 279,
+    "is_top_category": true
+  },
+  "Indų nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--indu-nuoma",
+      "pr-renginiai-sventes--indu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 272,
+    "is_top_category": true
+  },
+  "Automobilių dažymas": {
+    "slugs": [
+      "pr-transportas--automobiliu-nuoma"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 267,
+    "is_top_category": false
+  },
+  "Archeologai": {
+    "slugs": [
+      "pr-statybos-apdaila--archeologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 259,
+    "is_top_category": false
+  },
+  "Suknelių nuoma": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--sukneliu-nuoma",
+      "pr-nuomos-paslaugos--sukneliu-nuoma",
+      "pr-renginiai-sventes--sukneliu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 257,
+    "is_top_category": true
+  },
+  "Šokėjai": {
+    "slugs": [
+      "pr-renginiai-sventes--sokejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 257,
+    "is_top_category": false
+  },
+  "Rusų kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--rusu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 256,
+    "is_top_category": false
+  },
+  "Ispanų kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--ispanu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 256,
+    "is_top_category": false
+  },
+  "Norvegų kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--norvegu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 256,
+    "is_top_category": false
+  },
+  "Automatikos sistemos": {
+    "slugs": [
+      "pr-gamyba-prototipavimas-techniniai-darbai--automatikos-sistemos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 256,
+    "is_top_category": false
+  },
+  "Miškininkai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--miskininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 251,
+    "is_top_category": false
+  },
+  "Konsultacijos mokesčių klausimais": {
+    "slugs": [
+      "pr-paslaugos-verslui--konsultacijos-mokesciu-klausimais"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 251,
+    "is_top_category": true
+  },
+  "Automobilių stiklų keitimas": {
+    "slugs": [
+      "pr-statybos-apdaila--stiklu-veidrodziu-gamyba-keitimas",
+      "pr-interjeras-baldai--stiklu-veidrodziu-gamyba-keitimas",
+      "pr-buitines-paslaugos--stiklu-veidrodziu-gamyba-keitimas",
+      "pr-transportas--automobiliu-tiuningas--automobiliu-stogo-dangos-keitimas",
+      "pr-transportas--autoservisai-automobiliu-remontas--stiklu-keitimas-remontas-tonavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.4,
+    "needs_review": true,
+    "peak_total_count": 249,
+    "is_top_category": true
+  },
+  "Pamatų projektavimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--frezavimas-cnc--3d-projektavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.5,
+    "needs_review": true,
+    "peak_total_count": 245,
+    "is_top_category": false
+  },
+  "Skulptoriai": {
+    "slugs": [
+      "pr-daile-menai-keramika--skulptoriai",
+      "pr-tradiciniai-amatai--skulptoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 242,
+    "is_top_category": false
+  },
+  "Manikiūras": {
+    "slugs": [
+      "pr-grozio-paslaugos--manikiuras"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 235,
+    "is_top_category": true
+  },
+  "Malkos: gamyba, pristatymas": {
+    "slugs": [
+      "pr-aplinka-sodas--malkos-gamyba-pristatymas",
+      "pr-buitines-paslaugos--malkos-gamyba-pristatymas",
+      "pr-tradiciniai-amatai--malkos-gamyba-pristatymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 235,
+    "is_top_category": true
+  },
+  "Ergoterapeutai": {
+    "slugs": [
+      "pr-sveikata-gydymas--ergoterapeutai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 235,
+    "is_top_category": false
+  },
+  "Kiliminės dangos klojimas": {
+    "slugs": [
+      "pr-aplinka-sodas--trinkeliu-klojimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 231,
+    "is_top_category": false
+  },
+  "Vairavimo mokyklos": {
+    "slugs": [
+      "pr-transportas--vairavimo-mokyklos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 221,
+    "is_top_category": true
+  },
+  "Būrimai, būrėjai": {
+    "slugs": [
+      "pr-ezoterika-dvasines-paslaugos--burimai-burejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 221,
+    "is_top_category": true
+  },
+  "Tekstų surinkėjai": {
+    "slugs": [
+      "pr-paslaugos-verslui--tekstu-surinkejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 221,
+    "is_top_category": true
+  },
+  "Kiti įvairūs kursai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--kiti-ivairus-kursai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 221,
+    "is_top_category": false
+  },
+  "Kineziterapeutai": {
+    "slugs": [
+      "pr-grozio-paslaugos--kineziterapeutai",
+      "pr-sveikata-gydymas--kineziterapeutai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 221,
+    "is_top_category": true
+  },
+  "Stiklų tamsinimas": {
+    "slugs": [
+      "pr-statybos-apdaila--pleveles-klijavimas--stiklo-tamsinimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 221,
+    "is_top_category": false
+  },
+  "Drabužių konstravimas": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--drabuziu-dizaineriai"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 216,
+    "is_top_category": false
+  },
+  "Iškarpų gamyba": {
+    "slugs": [
+      "pr-interjeras-baldai--baldu-gamyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 216,
+    "is_top_category": false
+  },
+  "Keramikai": {
+    "slugs": [
+      "pr-daile-menai-keramika--keramikai",
+      "pr-tradiciniai-amatai--keramikai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 216,
+    "is_top_category": false
+  },
+  "Microsoft Office Excel specialistai": {
+    "slugs": [
+      "pr-internetas-it--microsoft-office-excel-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 216,
+    "is_top_category": true
+  },
+  "klojimas": {
+    "slugs": [
+      "pr-aplinka-sodas--trinkeliu-klojimas",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--grindu-klojimas-remontas",
+      "pr-statybos-apdaila--vidaus-apdailos-darbai--laminato-klojimas",
+      "pr-statybos-apdaila--aplinkos-tvarkymas-apzeldinimas--trinkeliu-klojimas",
+      "pr-aplinka-sodas--aplinkos-tvarkymas-apzeldinimas--trinkeliu-klojimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.6,
+    "needs_review": true,
+    "peak_total_count": 213,
+    "is_top_category": false
+  },
+  "Privatūs detektyvai": {
+    "slugs": [
+      "pr-dokumentai-tyrimai-konsultavimas--privatus-detektyvai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 211,
+    "is_top_category": true
+  },
+  "Auklės": {
+    "slugs": [
+      "pr-buitines-paslaugos--aukles"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 210,
+    "is_top_category": false
+  },
+  "Viešųjų pirkimų konsultantai": {
+    "slugs": [
+      "pr-paslaugos-verslui--viesuju-pirkimu-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 210,
+    "is_top_category": true
+  },
+  "Odininkai, odos gaminiai": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--odininkai-odos-gaminiai",
+      "pr-tradiciniai-amatai--odininkai-odos-gaminiai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 210,
+    "is_top_category": true
+  },
+  "Skaitmenizacijos paslaugos": {
+    "slugs": [
+      "pr-internetas-it--skaitmenizacijos-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 210,
+    "is_top_category": false
+  },
+  "Vandens pristatymas": {
+    "slugs": [
+      "pr-kitos-paslaugos--vandens-pristatymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 208,
+    "is_top_category": true
+  },
+  "LinkedIn strategijų kūrimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--linkedin-strategiju-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 205,
+    "is_top_category": true
+  },
+  "Galandimo meistrai": {
+    "slugs": [
+      "pr-buitines-paslaugos--galandimo-meistrai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 205,
+    "is_top_category": true
+  },
+  "Papuošalų, aksesuarų kūrimas": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--papuosalu-aksesuaru-kurimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 198,
+    "is_top_category": true
+  },
+  "Rankų darbo muilas": {
+    "slugs": [
+      "pr-tradiciniai-amatai--ranku-darbo-muilas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 198,
+    "is_top_category": false
+  },
+  "Teniso treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--teniso-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": false
+  },
+  "Šunų, kačių kirpyklos": {
+    "slugs": [
+      "pr-paslaugos-augintiniams--sunu-kaciu-kirpyklos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": true
+  },
+  "Dietologai": {
+    "slugs": [
+      "pr-grozio-paslaugos--dietologai",
+      "pr-sveikata-gydymas--dietologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": true
+  },
+  "Chemijos korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--chemijos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": true
+  },
+  "Meno terapija": {
+    "slugs": [
+      "pr-sveikata-gydymas--meno-terapija"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": false
+  },
+  "Italų kalbos mokytojai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--italu-kalbos-mokytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": true
+  },
+  "Sunkvežimių, autobusų remontas": {
+    "slugs": [
+      "pr-transportas--sunkvezimiu-autobusu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 193,
+    "is_top_category": false
+  },
+  "Jūrinių konteinerių, vagonėlių nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--juriniu-konteineriu-vagoneliu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 188,
+    "is_top_category": true
+  },
+  "Masažo paslaugos": {
+    "slugs": [
+      "pr-sveikata-gydymas--masazo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 183,
+    "is_top_category": true
+  },
+  "Mezgėjos": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--mezgejos",
+      "pr-tradiciniai-amatai--mezgejos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 183,
+    "is_top_category": true
+  },
+  "Žvakių gamyba": {
+    "slugs": [
+      "pr-tradiciniai-amatai--zvakiu-gamyba"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 181,
+    "is_top_category": false
+  },
+  "Prancūzų kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--prancuzu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 180,
+    "is_top_category": false
+  },
+  "Sveikatos mokytojai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--sveikatos-mokytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 178,
+    "is_top_category": false
+  },
+  "Elektronikos inžinieriai": {
+    "slugs": [
+      "pr-buitines-paslaugos--elektronikos-inzinieriai",
+      "pr-statybos-apdaila--elektronikos-inzinieriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 178,
+    "is_top_category": true
+  },
+  "Kaligrafijos meistrai": {
+    "slugs": [
+      "pr-daile-menai-keramika--kaligrafijos-meistrai",
+      "pr-renginiai-sventes--kaligrafijos-meistrai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 168,
+    "is_top_category": true
+  },
+  "Aktoriai": {
+    "slugs": [
+      "pr-daile-menai-keramika--aktoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 168,
+    "is_top_category": false
+  },
+  "Ekstremalios pramogos": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--ekstremalios-pramogos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 168,
+    "is_top_category": false
+  },
+  "Fotostudijos": {
+    "slugs": [
+      "pr-nuomos-paslaugos--fotostudijos",
+      "pr-renginiai-sventes--fotostudijos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 168,
+    "is_top_category": false
+  },
+  "Išblaivinimas, kodavimas nuo alkoholio": {
+    "slugs": [
+      "pr-sveikata-gydymas--isblaivinimas-kodavimas-nuo-alkoholio"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 166,
+    "is_top_category": true
+  },
+  "Automobilių supirkimas": {
+    "slugs": [
+      "pr-transportas--automobiliu-supirkimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 166,
+    "is_top_category": true
+  },
+  "Krautuvų nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--krautuvu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 164,
+    "is_top_category": true
+  },
+  "Stilistai": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--stilistai",
+      "pr-grozio-paslaugos--stilistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 163,
+    "is_top_category": true
+  },
+  "Audėjai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--audejai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 160,
+    "is_top_category": false
+  },
+  "Fotopaslaugos": {
+    "slugs": [
+      "pr-renginiai-sventes--fotopaslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 160,
+    "is_top_category": true
+  },
+  "Kosmetologės": {
+    "slugs": [
+      "pr-grozio-paslaugos--kosmetologes"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 160,
+    "is_top_category": true
+  },
+  "Avarinis atrakinimas": {
+    "slugs": [
+      "pr-buitines-paslaugos--avarinis-atrakinimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 157,
+    "is_top_category": true
+  },
+  "Permanentinis makiažas": {
+    "slugs": [
+      "pr-grozio-paslaugos--permanentinis-makiazas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 152,
+    "is_top_category": true
+  },
+  "Rankų darbo žaislai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--ranku-darbo-zaislai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 152,
+    "is_top_category": false
+  },
+  "Animacijų kūrimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--3d-modeliavimas-vizualizaciju-kurimas--3d-animacijos-kurimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 149,
+    "is_top_category": false
+  },
+  "Kailinių siuvimas": {
+    "slugs": [
+      "pr-apranga-papuosalai-aksesuarai--kailiniu-siuvimas",
+      "pr-apranga-papuosalai-aksesuarai--siuvimas-siuvyklos-siuvejai--kailiniu-siuvimas",
+      "pr-buitines-paslaugos--siuvimas-siuvyklos-siuvejai--kailiniu-siuvimas",
+      "pr-tradiciniai-amatai--siuvimas-siuvyklos-siuvejai--kailiniu-siuvimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 145,
+    "is_top_category": true
+  },
+  "HR specialistas": {
+    "slugs": [
+      "pr-dokumentai-tyrimai-konsultavimas--hr-specialistas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 142,
+    "is_top_category": false
+  },
+  "Bamperių remontas": {
+    "slugs": [
+      "pr-paslaugos-verslui--kompiuteriu-remontas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 137,
+    "is_top_category": false
+  },
+  "Korozijos pažeisto kėbulo tvarkymas": {
+    "slugs": [
+      "pr-tradiciniai-amatai--kapu-tvarkymas-prieziura--kapu-tvarkymas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.2,
+    "needs_review": true,
+    "peak_total_count": 134,
+    "is_top_category": false
+  },
+  "Akmens mūras, lauko židiniai, tvoros": {
+    "slugs": [
+      "pr-statybos-apdaila--akmens-muras-lauko-zidiniai-tvoros",
+      "pr-tradiciniai-amatai--akmens-muras-lauko-zidiniai-tvoros"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 133,
+    "is_top_category": false
+  },
+  "Akvariumų specialistai": {
+    "slugs": [
+      "pr-buitines-paslaugos--akvariumu-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 126,
+    "is_top_category": false
+  },
+  "Stovyklavietės": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--stovyklavietes"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 125,
+    "is_top_category": false
+  },
+  "Fasado apdaila plokštėmis": {
+    "slugs": [
+      "pr-statybos-apdaila"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 123,
+    "is_top_category": false
+  },
+  "Video aptarnavimas": {
+    "slugs": [
+      "pr-renginiai-sventes--video-aptarnavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 122,
+    "is_top_category": false
+  },
+  "Skardos lankstymas": {
+    "slugs": [
+      "pr-statybos-apdaila--metalo-gaminiai-suvirintojai--skardos-lankstiniu-gamyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 117,
+    "is_top_category": false
+  },
+  "Vidaus augalų priežiūra": {
+    "slugs": [
+      "pr-buitines-paslaugos--vidaus-augalu-prieziura"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 116,
+    "is_top_category": true
+  },
+  "Privačios klinikos": {
+    "slugs": [
+      "pr-sveikata-gydymas--privacios-klinikos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 116,
+    "is_top_category": true
+  },
+  "Dujų įrangos montavimas": {
+    "slugs": [
+      "pr-transportas--duju-irangos-montavimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 116,
+    "is_top_category": true
+  },
+  "Gręžtiniai (poliniai) pamatai": {
+    "slugs": [
+      "pr-aplinka-sodas--tvoros-vartai-montavimas--tvoros-pamatai-betonavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.2,
+    "needs_review": true,
+    "peak_total_count": 113,
+    "is_top_category": false
+  },
+  "Karjeros ir asmeninio augimo konsultantai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--karjeros-ir-asmeninio-augimo-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 111,
+    "is_top_category": false
+  },
+  "Oratorystės treneriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--oratorystes-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 111,
+    "is_top_category": false
+  },
+  "Moto nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--moto-nuoma",
+      "pr-transportas--moto-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 111,
+    "is_top_category": true
+  },
+  "Dviračių, paspirtukų nuoma": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--dviraciu-paspirtuku-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 110,
+    "is_top_category": true
+  },
+  "Laidojimo paslaugos": {
+    "slugs": [
+      "pr-tradiciniai-amatai--laidojimo-paslaugos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 110,
+    "is_top_category": false
+  },
+  "Photoshop pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--muzikos-mokytojai--bugnu-pamokos"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 108,
+    "is_top_category": false
+  },
+  "Dailės mokytojai": {
+    "slugs": [
+      "pr-daile-menai-keramika--dailes-mokytojai",
+      "pr-mokymai-kursai-kalbos--dailes-mokytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 108,
+    "is_top_category": true
+  },
+  "Veterinarijos klinikos, veterinarai": {
+    "slugs": [
+      "pr-paslaugos-augintiniams--veterinarijos-klinikos-veterinarai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 108,
+    "is_top_category": true
+  },
+  "Prikabinamų namelių nuoma": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--mobiliu-nameliu-nuoma"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.5,
+    "needs_review": true,
+    "peak_total_count": 105,
+    "is_top_category": false
+  },
+  "Tarologai": {
+    "slugs": [
+      "pr-ezoterika-dvasines-paslaugos--tarologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 102,
+    "is_top_category": false
+  },
+  "Bioenergetikai": {
+    "slugs": [
+      "pr-ezoterika-dvasines-paslaugos--bioenergetikai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 99,
+    "is_top_category": false
+  },
+  "Joga, jogos treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--joga-jogos-treneriai",
+      "pr-sveikata-gydymas--joga-jogos-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 95,
+    "is_top_category": false
+  },
+  "Grožio specialistų mokymai": {
+    "slugs": [
+      "pr-grozio-paslaugos--grozio-specialistu-mokymai",
+      "pr-mokymai-kursai-kalbos--grozio-specialistu-mokymai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 95,
+    "is_top_category": true
+  },
+  "Prodiuseriai": {
+    "slugs": [
+      "pr-paslaugos-verslui--prodiuseriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 92,
+    "is_top_category": false
+  },
+  "Bėgimo treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--begimo-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 86,
+    "is_top_category": false
+  },
+  "Apsaugininkai": {
+    "slugs": [
+      "pr-renginiai-sventes--apsaugininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 86,
+    "is_top_category": true
+  },
+  "Psichiatrai": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 86,
+    "is_top_category": false
+  },
+  "Samdomi bendrijų pirmininkai": {
+    "slugs": [
+      "pr-buitines-paslaugos--samdomi-bendriju-pirmininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 85,
+    "is_top_category": false
+  },
+  "Kuznecovo krosnys": {
+    "slugs": [
+      "pr-tradiciniai-amatai--krosnys-krosniu-meistrai--krosnys-virykles"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 85,
+    "is_top_category": false
+  },
+  "Lenkų kalbos mokytojai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--lenku-kalbos-mokytojai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 84,
+    "is_top_category": true
+  },
+  "Pynimas": {
+    "slugs": [
+      "pr-tradiciniai-amatai--pynimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 79,
+    "is_top_category": false
+  },
+  "Metalo pjovimas lazeriu": {
+    "slugs": [
+      "pr-daile-menai-keramika--graviravimo-paslaugos--pjovimas-lazeriu"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.667,
+    "needs_review": true,
+    "peak_total_count": 79,
+    "is_top_category": false
+  },
+  "Muzikos instrumentų meistrai": {
+    "slugs": [
+      "pr-buitines-paslaugos--muzikos-instrumentu-meistrai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 78,
+    "is_top_category": true
+  },
+  "Astrologai": {
+    "slugs": [
+      "pr-ezoterika-dvasines-paslaugos--astrologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 77,
+    "is_top_category": false
+  },
+  "Paveikslų restauracija": {
+    "slugs": [
+      "pr-daile-menai-keramika--dailininkai--3d-paveikslu-tapyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 68,
+    "is_top_category": true
+  },
+  "Vokiečių kalbos kursai, pamokos": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--vokieciu-kalbos-kursai-pamokos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 63,
+    "is_top_category": true
+  },
+  "Grožio kabineto nuoma": {
+    "slugs": [
+      "pr-grozio-paslaugos--grozio-kabineto-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 60,
+    "is_top_category": false
+  },
+  "Odontologai": {
+    "slugs": [
+      "pr-sveikata-gydymas--odontologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 60,
+    "is_top_category": true
+  },
+  "Kaminų įdėklų gamyba": {
+    "slugs": [
+      "pr-buitines-paslaugos--kaminu-valymas--kaminu-ideklu-montavimas",
+      "pr-buitines-paslaugos--kaminu-valymas--kaminu-ideklu-valymas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.5,
+    "needs_review": true,
+    "peak_total_count": 59,
+    "is_top_category": false
+  },
+  "Kardiologai": {
+    "slugs": [
+      "pr-sveikata-gydymas--kardiologai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 55,
+    "is_top_category": false
+  },
+  "Žolininkai": {
+    "slugs": [
+      "pr-tradiciniai-amatai--zolininkai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 54,
+    "is_top_category": false
+  },
+  "Blakstienų priauginimas": {
+    "slugs": [
+      "pr-grozio-paslaugos--blakstienu-priauginimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 51,
+    "is_top_category": true
+  },
+  "Architektūros korepetitoriai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--architekturos-korepetitoriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 51,
+    "is_top_category": false
+  },
+  "Priekabų, puspriekabių remontas": {
+    "slugs": [
+      "pr-transportas--priekabu-puspriekabiu-remontas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 50,
+    "is_top_category": false
+  },
+  "Lekalai": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 50,
+    "is_top_category": false
+  },
+  "Kitos paslaugos renginiams": {
+    "slugs": [
+      "pr-renginiai-sventes--kitos-paslaugos-renginiams"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 48,
+    "is_top_category": false
+  },
+  "Prekyba atributika": {
+    "slugs": [
+      "pr-renginiai-sventes--prekyba-atributika"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 48,
+    "is_top_category": false
+  },
+  "Mobilus dokumentų naikinimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--mobilus-dokumentu-naikinimas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 47,
+    "is_top_category": true
+  },
+  "Lieknėjimo procedūros": {
+    "slugs": [
+      "pr-grozio-paslaugos--lieknejimo-proceduros"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 45,
+    "is_top_category": true
+  },
+  "Darbo teisės specialistai": {
+    "slugs": [
+      "pr-paslaugos-verslui--darbo-teises-specialistai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 42,
+    "is_top_category": false
+  },
+  "Video filmų kūrimas": {
+    "slugs": [
+      "pr-paslaugos-verslui--video-klipu-kurimas",
+      "pr-renginiai-sventes--video-klipu-kurimas",
+      "pr-reklama-dizainas-spauda--video-klipu-kurimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.5,
+    "needs_review": true,
+    "peak_total_count": 42,
+    "is_top_category": false
+  },
+  "Tautinių juostų audimas": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 42,
+    "is_top_category": false
+  },
+  "Sraigtiniai pamatai": {
+    "slugs": [
+      "pr-aplinka-sodas--tvoros-vartai-montavimas--tvoros-pamatai-betonavimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 41,
+    "is_top_category": false
+  },
+  "Verslo valdymo sistemos": {
+    "slugs": [
+      "pr-paslaugos-verslui--verslo-valdymo-sistemos"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 41,
+    "is_top_category": false
+  },
+  "Vitražai, stiklo interjero detalės": {
+    "slugs": [
+      "pr-daile-menai-keramika--vitrazai-stiklo-interjero-detales",
+      "pr-interjeras-baldai--vitrazai-stiklo-interjero-detales"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 39,
+    "is_top_category": true
+  },
+  "Kaljanų nuoma": {
+    "slugs": [
+      "pr-laisvalaikis-pramogos-turizmas--kaljanu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 39,
+    "is_top_category": false
+  },
+  "Neformalus vaikų ugdymas": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--neformalus-vaiku-ugdymas"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 28,
+    "is_top_category": false
+  },
+  "Irklencių (SUP) nuoma": {
+    "slugs": [
+      "pr-nuomos-paslaugos--irklenciu-sup-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 28,
+    "is_top_category": false
+  },
+  "Vertimo kursai": {
+    "slugs": [
+      "pr-mokymai-kursai-kalbos--vertimo-kursai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 28,
+    "is_top_category": false
+  },
+  "Telekomunikacijų konsultantai": {
+    "slugs": [
+      "pr-paslaugos-verslui--telekomunikaciju-konsultantai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 27,
+    "is_top_category": false
+  },
+  "Ezoterikai": {
+    "slugs": [
+      "pr-ezoterika-dvasines-paslaugos--ezoterikai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 25,
+    "is_top_category": false
+  },
+  "Šunų dresavimas": {
+    "slugs": [
+      "pr-paslaugos-augintiniams--sunu-dresuotojai"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 23,
+    "is_top_category": false
+  },
+  "Grožio salonai": {
+    "slugs": [
+      "pr-grozio-paslaugos--grozio-salonai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 20,
+    "is_top_category": false
+  },
+  "Vaikų kalbos sutrikimų korekcija": {
+    "slugs": [
+      "pr-renginiai-sventes--vaiku-teatras"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.2,
+    "needs_review": true,
+    "peak_total_count": 19,
+    "is_top_category": false
+  },
+  "Homeopatai": {
+    "slugs": [
+      "pr-sveikata-gydymas--homeopatai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 17,
+    "is_top_category": false
+  },
+  "Gamybos inžinieriai": {
+    "slugs": [
+      "pr-paslaugos-verslui--gamybos-inzinieriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 17,
+    "is_top_category": false
+  },
+  "Baldų nuoma": {
+    "slugs": [
+      "pr-renginiai-sventes--baldu-nuoma"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 16,
+    "is_top_category": false
+  },
+  "Modeliai": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 16,
+    "is_top_category": false
+  },
+  "Dailiojo čiuožimo treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--asmeniniai-treneriai"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 15,
+    "is_top_category": false
+  },
+  "Muilo gamyba": {
+    "slugs": [
+      "pr-interjeras-baldai--baldu-gamyba"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.333,
+    "needs_review": true,
+    "peak_total_count": 13,
+    "is_top_category": false
+  },
+  "Dujinis metalų pjovimas": {
+    "slugs": [
+      "pr-statybos-apdaila--plyteliu-pjovimas"
+    ],
+    "matched_by": "heuristic",
+    "confidence": 0.25,
+    "needs_review": true,
+    "peak_total_count": 12,
+    "is_top_category": false
+  },
+  "Futbolo treneriai": {
+    "slugs": [
+      "pr-sportas-treniruotes--futbolo-treneriai"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 12,
+    "is_top_category": false
+  },
+  "Skalūno fasadas": {
+    "slugs": [],
+    "matched_by": "unmapped",
+    "confidence": 0,
+    "needs_review": true,
+    "peak_total_count": 12,
+    "is_top_category": false
+  },
+  "Liofilizavimas, džiovinimas šaltyje": {
+    "slugs": [
+      "pr-maistas-konditerija--liofilizavimas-dziovinimas-saltyje"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 11,
+    "is_top_category": false
+  },
+  "Prekyba maisto produktais": {
+    "slugs": [
+      "pr-maistas-konditerija--prekyba-maisto-produktais"
+    ],
+    "matched_by": "exact_name",
+    "confidence": 1,
+    "needs_review": false,
+    "peak_total_count": 10,
+    "is_top_category": false
+  }
+}
