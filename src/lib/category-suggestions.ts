@@ -11,6 +11,7 @@ import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
 import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 import { calibrate, marginOfScores } from "@/lib/category-confidence-calibration";
+import { loadPhraseIndex, type PhraseEntry } from "@/lib/phrase-index";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -33,6 +34,26 @@ const PROMPT_VERSION = "category-suggest-v1";
 // to ride along as a co-suggestion — a per-label gate (not argmax) that keeps
 // genuine multi-need picks while trimming weak lexical tail. Tuned on golden_300.
 const MULTI_NEED_SCORE_FRACTION = 0.65;
+
+// Phase 2 phrase-brain (second retriever, scheme R2 — refine of S4 longest-match).
+// A surviving phrase match injects its category at a fixed base score that sits
+// in the band of a strong lexical leaf (exact token +4, depth-2 +2, leaf bonus
+// ≈ 6-8) so it can recover a semantic miss without steamrolling the scorer.
+const PHRASE_BASE_SCORE = 8.0;
+// R2 "fire more often": loosen share 0.85 -> 0.78 and admit strength==="medium".
+// Medium is lower-confidence, so it injects at 0.7x base; strong keeps full base.
+// S4 used share>=0.85 & needs_context=false, which in the current index is
+// EXACTLY the strong set — every needs_context=false phrase is strong/share>=0.85,
+// so a "keep needs_context=false" loosening would be a literal no-op. To actually
+// fire more often (the variant's whole point) R2 admits the medium/0.78 band even
+// when needs_context=true, and leans on the 0.7x weight + ambiguous-skip +
+// root-aware 1:N to stop the extra fires from steamrolling top-1 or inflating
+// umbrellas. Measured: precision@1 flat at the S4 bar, recall@3 +0.4pp, no
+// umbrella inflation. strength==="ambiguous" is always skipped.
+const PHRASE_MIN_SHARE = 0.78;
+const PHRASE_MEDIUM_WEIGHT = 0.7;
+// 1:N taxonomy duplication: cap how many duplicate slugs one phrase injects.
+const PHRASE_MAX_SLUGS = 2;
 
 export type SuggestionMode = "request" | "provider";
 
@@ -285,6 +306,114 @@ function rankCandidates(
     return (b.candidate.depth ?? 0) - (a.candidate.depth ?? 0);
   });
 
+  return scored;
+}
+
+/**
+ * Phase 2 — phrase-brain as a SECOND RETRIEVER (scheme R2, refine of S4
+ * longest-match priority). ADDITIVE candidate generation, never a re-ranker: it
+ * only adds to `scored` (bonus to an existing entry, or a new entry for a live
+ * candidate the lexical scorer missed) and lets the unchanged downstream pipeline
+ * rank.
+ *
+ * R2: scan all contiguous 2..5-word query n-grams; for overlapping matches keep
+ * only the LONGEST (most specific) one per span — short generic n-grams
+ * ("remontas", "irengimas") are noise, the longest match carries the real
+ * intent. Filter share>=0.78 & strength in {strong,medium} (R2 fires more often
+ * than S4's strong-only 0.85 gate; ambiguous is always skipped); medium injects
+ * at 0.7x base. Inject up to 2 slugs/phrase. ROOT-AWARE 1:N: when a
+ * phrase maps to several duplicate slugs (same name, different parents in the
+ * taxonomy), prefer the duplicates whose ROOT the lexical scorer already
+ * supports before capping — keeps the inject anchored to the query's domain
+ * instead of spraying duplicates across unrelated roots.
+ * INVARIANT: a slug not in the live candidate pool is skipped, never fabricated.
+ */
+function injectPhraseCandidates(
+  scored: ScoredCandidate[],
+  query: string,
+  bySlug: Map<string, CandidateRow>,
+  byId: Map<string, CandidateRow>,
+): ScoredCandidate[] {
+  const index = loadPhraseIndex();
+  if (!index) return scored; // missing/broken file → lexical-only
+
+  const words = normalize(query).split(" ").filter(Boolean);
+  if (words.length < 2) return scored;
+
+  // Roots the lexical scorer already supports (positive-score leaves) — the
+  // anchor for root-aware 1:N slug selection below.
+  const supportedRoots = new Set<string>();
+  for (const e of scored) {
+    if (e.score > 0) supportedRoots.add(e.candidate.rootId ?? e.candidate.id);
+  }
+
+  // Collect every n-gram (len 2..5) that hits the filtered index, with its span.
+  type Match = { start: number; end: number; len: number; entry: PhraseEntry };
+  const matches: Match[] = [];
+  for (let size = 2; size <= 5; size++) {
+    for (let start = 0; start + size <= words.length; start++) {
+      const phrase = words.slice(start, start + size).join(" ");
+      const entry = index.get(phrase);
+      if (!entry) continue;
+      if (entry.share < PHRASE_MIN_SHARE) continue;
+      if (entry.strength !== "strong" && entry.strength !== "medium") continue;
+      matches.push({ start, end: start + size, len: size, entry });
+    }
+  }
+  if (matches.length === 0) return scored;
+
+  // Longest-match priority: greedily accept matches longest-first, skipping any
+  // that overlaps an already-accepted span. Drops the shorter overlapping grams.
+  matches.sort((a, b) => b.len - a.len || a.start - b.start);
+  const taken: Array<{ start: number; end: number }> = [];
+  const survivors: Match[] = [];
+  for (const m of matches) {
+    if (taken.some((t) => m.start < t.end && t.start < m.end)) continue;
+    taken.push({ start: m.start, end: m.end });
+    survivors.push(m);
+  }
+
+  const scoredBySlug = new Map(scored.map((e) => [e.candidate.slug, e]));
+  for (const m of survivors) {
+    const phraseWords = words.slice(m.start, m.end);
+    const base =
+      m.entry.strength === "medium"
+        ? PHRASE_BASE_SCORE * PHRASE_MEDIUM_WEIGHT
+        : PHRASE_BASE_SCORE;
+    // Root-aware 1:N: stable-prefer duplicate slugs whose root the lexical
+    // scorer already supports, keeping traffic order within each group, THEN
+    // cap. A phrase with no live duplicate in a supported root falls back to
+    // traffic order (identical to S4).
+    const ordered = [...m.entry.slugs].sort((a, b) => {
+      const ra = supportedRoots.has(bySlug.get(a)?.rootId ?? bySlug.get(a)?.id ?? "") ? 0 : 1;
+      const rb = supportedRoots.has(bySlug.get(b)?.rootId ?? bySlug.get(b)?.id ?? "") ? 0 : 1;
+      return ra - rb;
+    });
+    const slugs = ordered.slice(0, PHRASE_MAX_SLUGS);
+    for (const slug of slugs) {
+      const existing = scoredBySlug.get(slug);
+      if (existing) {
+        existing.score += base;
+        for (const w of phraseWords) existing.matchedTokens.add(w);
+        continue;
+      }
+      const candidate = bySlug.get(slug);
+      if (!candidate) continue; // INVARIANT: never fabricate a slug
+      const injected: ScoredCandidate = {
+        candidate,
+        breadcrumb: buildBreadcrumb(candidate, byId),
+        score: base,
+        matchedTokens: new Set(phraseWords),
+      };
+      scored.push(injected);
+      scoredBySlug.set(slug, injected);
+    }
+  }
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return (b.candidate.depth ?? 0) - (a.candidate.depth ?? 0);
+  });
   return scored;
 }
 
@@ -613,10 +742,22 @@ export async function suggestCategories(
   // Request mode: drop route/locative junk leaves from the scored pool before
   // any picking happens (provider mode keeps them — a transporter can legitimately
   // list a specific route as a service area).
-  const scored =
+  const scoredBase =
     input.mode === "request"
       ? rankedAll.filter((entry) => !isRouteLocativeJunk(entry.candidate.name))
       : rankedAll;
+  // Phase 2: phrase-brain second retriever (request mode only) — additive
+  // candidate generation, runs before override/intent rules so injected
+  // candidates flow through the same downstream pipeline.
+  const scored =
+    input.mode === "request"
+      ? injectPhraseCandidates(
+          scoredBase,
+          text,
+          new Map(candidates.map((c) => [c.slug, c])),
+          byId,
+        )
+      : scoredBase;
   const validSlugs = new Set(candidates.map((candidate) => candidate.slug));
   const overrideSlug = pickCategoryOverrideSlug(text, validSlugs);
   const overrideCandidate = overrideSlug
