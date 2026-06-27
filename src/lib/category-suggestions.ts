@@ -99,6 +99,49 @@ function stem(token: string): string {
   return token.slice(0, Math.min(5, token.length));
 }
 
+// Place tokens (LT cities + neighbouring countries/cities) that appear in the
+// taxonomy's route/locative "junk" leaves. These are leaves like
+// "Keleivių pervežimas > Kaunas > Vilniaus oro uostas" or "Lietuva > Vokietija":
+// a specific A→B trip, not a service a client requests by name. They poison the
+// request-mode candidate pool (a request mentioning a city matches the route
+// leaf). A request mentioning ONE place is fine ("...Lietuvoje"); a leaf NAMING
+// two places, or an airport, is a route. Folded, lowercase, diacritic-free.
+const ROUTE_PLACE_TOKENS = new Set([
+  "vilnius", "vilniaus", "kaunas", "kauno", "klaipeda", "klaipedos", "siauliai",
+  "siauliu", "panevezys", "panevezio", "alytus", "marijampole", "mazeikiai",
+  "jonava", "utena", "kedainiai", "telsiai", "taurage", "ukmerge", "visaginas",
+  "plunge", "kretinga", "palanga", "radviliskis", "druskininkai", "rokiskis",
+  "birzai", "elektrenai", "garliava", "vilkaviskis", "gargzdai", "kursenai",
+  "varsuva", "ryga", "talinas", "talin", "kaliningradas", "minskas", "maskva",
+  "londonas", "berlynas",
+  "lietuva", "latvija", "estija", "lenkija", "vokietija", "belgija", "olandija",
+  "nyderlandai", "ispanija", "anglija", "norvegija", "svedija", "danija",
+  "prancuzija", "italija", "austrija", "sveicarija", "cekija", "slovakija",
+  "vengrija", "ukraina", "rusija", "baltarusija", "airija", "portugalija",
+  "suomija",
+]);
+
+/**
+ * A `SERVICE_CATEGORY_WHERE`-style gate for the request-mode candidate pool:
+ * drop route/locative junk leaves. Conservative by design — false-negatives are
+ * fine (a route we keep is just a normal weak candidate), false-positives are
+ * not (never drop a real service). Decided purely on the leaf name:
+ *   - contains "oro uost" (airport destination), OR
+ *   - contains a literal ">" plus ≥1 place token ("Klaipėda > Vilnius"), OR
+ *   - names ≥2 place tokens ("Krovinių pervežimas Lietuva - Lenkija").
+ * Pure CPU, no DB/network — safe on the request-create hot path. Runtime name
+ * predicate (not a slug list) so it survives taxonomy edits.
+ */
+function isRouteLocativeJunk(name: string): boolean {
+  const folded = normalize(name);
+  if (folded.includes("oro uost")) return true;
+  const placeCount = folded
+    .split(" ")
+    .filter((token) => ROUTE_PLACE_TOKENS.has(token)).length;
+  if (name.includes(">") && placeCount >= 1) return true;
+  return placeCount >= 2;
+}
+
 async function loadCandidates(): Promise<CandidateRow[]> {
   const rows = await prisma.category.findMany({
     where: SERVICE_CATEGORY_WHERE,
@@ -535,7 +578,14 @@ export async function suggestCategories(
       : undefined;
 
   const byId = new Map(candidates.map((c) => [c.id, c]));
-  const scored = rankCandidates(candidates, byId, text);
+  const rankedAll = rankCandidates(candidates, byId, text);
+  // Request mode: drop route/locative junk leaves from the scored pool before
+  // any picking happens (provider mode keeps them — a transporter can legitimately
+  // list a specific route as a service area).
+  const scored =
+    input.mode === "request"
+      ? rankedAll.filter((entry) => !isRouteLocativeJunk(entry.candidate.name))
+      : rankedAll;
   const validSlugs = new Set(candidates.map((candidate) => candidate.slug));
   const overrideSlug = pickCategoryOverrideSlug(text, validSlugs);
   const overrideCandidate = overrideSlug
