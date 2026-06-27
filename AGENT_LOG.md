@@ -17,6 +17,89 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-27 19:03 — Claude
+
+**Commit:** `c59aee4` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 3 files changed, 186 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-27 18:35 — Claude
+
+**Commit:** `cd1eb4c` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 3 files changed, 172 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-27 17:19 — Claude
+
+**Commit:** `dd2eace` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 3 files changed, 158 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-27 05:25 — Claude
+
+**Commit:** `34fb24d` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 3 files changed, 144 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-27 05:05 — Claude
+
+**Commit:** `c5e8eb3` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 3 files changed, 130 insertions(+)
+
+**Failai:**
+- AGENT_LOG.md
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
+## 2026-06-27 02:53 — Claude
+
+**Commit:** `b39ca13` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus
+
+**Pakeitimai:** 2 files changed, 117 insertions(+)
+
+**Failai:**
+- NOTES.md
+- prisma/manual-migrations/20260627_dedup_easy_category_groups.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-27 01:13 — Claude
 
 **Commit:** `f0b66e6` — feat(categories): raise FREE_CATEGORY_LIMIT 4->10 for cold-start · lokalus

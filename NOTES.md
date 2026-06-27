@@ -830,3 +830,27 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
   (LCP fiksavosi font-swap momentu), /registruotis CLS 0.208 -> 0 (Suspense be
   fallback). Lighthouse devtools-throttled: home 98/100, LCP 2.2s. NEGRAZINTI
   static supabase-js importu i client komponentus - tai +60KB visiems puslapiams.
+
+## Taksonomijos dedup (2026-06-27) — STAGE 1 padaryta, STAGE 2 atideta
+
+- [x] **Stage 1 — 712 „lengvu" dublikatu grupiu sulieta** (prod, per MCP).
+      Migracija: `prisma/manual-migrations/20260627_dedup_easy_category_groups.sql`.
+      Aktyvios service kategorijos 3255 -> 2098; dublikatu kopijos 1313 -> 156;
+      grupes 820 -> 108; 0 orphan'u; 7/9 realiu nuorodu perkelta. Validacija
+      `pnpm test:routing-all` PASS (golden eval invariantai laikosi, harmful
+      drops 5/<=5). Backup'ai prod'e: `_backup_categories_20260627`,
+      `_backup_dedup_refs_20260627`, map: `_dedup_map_easy`.
+- [ ] **Stage 2 — 108 „sunkios" grupes (156 kopijos)**. Atideta. Reikia
+      giliausi-pirma vaiku perkelimo: 74 kopijos turi vaiku, 291 vaikas
+      perkeliamas (dazni patys dublikatai — idetiniai). Tik 2 realios nuorodos
+      liko ant ju, tad matchingo nauda maza — daryti kaip atskira PERZIURETA
+      migracija (patvirtinti 108 „namus" + 7 override'us is interaktyvaus
+      pasirinkimo). Sprendimo medis ir homes: pokalbis 2026-06-27 + dry-run
+      `taxonomy-dedup-dryrun.md`. Override'ai (mano siulyti): Kompiuteriu
+      remontas/Interneto svetainiu kurimas/IT specialistai -> Internetas, IT;
+      Grafikos dizaineriai -> Reklama; Pagalbiniai darbininkai -> Statybos;
+      Dietologai -> Sveikata; Stiklo konstrukcijos -> Statybos.
+- [ ] **Alias'ai senu slug'u** (1313) atideti kartu — neaisku, ar routingas
+      naudoja `category_aliases` ar lentele `l`; issiaiskinti pries iterpiant.
+      Matchingui NEREIKIA (nuorodos perkeltos fiziskai); tik senu `?category=`
+      URL'u testumui.
