@@ -10,6 +10,7 @@ import { resolveModel, resolvePrompt, resolvePromptVersion } from "@/lib/ai/prom
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
 import { recordAiRun } from "@/lib/ai/audit";
 import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
+import { calibrate, marginOfScores } from "@/lib/category-confidence-calibration";
 
 /**
  * Suggest existing service categories from a natural-language description.
@@ -27,6 +28,11 @@ import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 const DEFAULT_RERANK_MODEL = "google/gemini-2.5-flash";
 const RERANK_TIMEOUT_MS = 12_000;
 const PROMPT_VERSION = "category-suggest-v1";
+
+// A secondary need must score at least this fraction of the strongest candidate
+// to ride along as a co-suggestion — a per-label gate (not argmax) that keeps
+// genuine multi-need picks while trimming weak lexical tail. Tuned on golden_300.
+const MULTI_NEED_SCORE_FRACTION = 0.65;
 
 export type SuggestionMode = "request" | "provider";
 
@@ -326,12 +332,25 @@ function forcePreferredFirst(
   return [preferred, ...rest].slice(0, limit);
 }
 
-function confidenceFor(entry: ScoredCandidate, bestScore: number): number {
-  if (bestScore <= 0) return 0;
-  const ratio = entry.score / Math.max(bestScore, 1);
-  // Squash into a 0..1 score that ranks-by-score but never claims certainty.
-  const raw = Math.min(0.95, 0.3 + ratio * 0.65);
-  return Math.round(raw * 100) / 100;
+/**
+ * Margin-calibrated confidence for one entry given the picked list.
+ *
+ * Confidence is fundamentally a property of the TOP prediction: how separated is
+ * the #1 candidate from the #2 (the margin), mapped through the isotonic
+ * calibration to an empirical P(correct). The #1 gets that calibrated number.
+ * Lower-ranked entries get it scaled by their own score ratio to the top, so the
+ * list stays monotonically non-increasing and a runner-up never out-confidences
+ * the leader. This is the deterministic signal — Gemini may reorder, never
+ * overwrite this number.
+ */
+function confidenceForEntry(
+  entry: ScoredCandidate,
+  topScore: number,
+  topConfidence: number,
+): number {
+  if (topScore <= 0) return 0;
+  const ratio = Math.max(0, Math.min(1, entry.score / topScore));
+  return Math.round(topConfidence * ratio * 100) / 100;
 }
 
 function maybeClarification(
@@ -354,6 +373,14 @@ function maybeClarification(
   const roots = new Set(
     picked.slice(0, 3).map((entry) => entry.candidate.rootId ?? entry.candidate.id),
   );
+  // Hedge only on the STRUCTURAL signal: a spread across 3+ service areas is
+  // genuinely ambiguous. We deliberately do NOT hedge on low calibrated
+  // confidence: on the Stage-1 lexical scorer ambiguous and non-ambiguous
+  // requests have near-identical margins (median ≈ 0.08, a big mass of dead
+  // ties in both classes), so a confidence-driven hedge triples the false-alarm
+  // rate without lifting ambiguity recall. Real ambiguity detection waits for
+  // the phrase-brain / dense retriever (Phase 2/3). See
+  // category-confidence-calibration.ts.
   if (roots.size >= 3) {
     return "Tekstas tinka kelioms sritims — pasirinkite, kuri labiausiai atitinka.";
   }
@@ -361,14 +388,18 @@ function maybeClarification(
   return undefined;
 }
 
-function toSuggestion(entry: ScoredCandidate, bestScore: number): CategorySuggestion {
+function toSuggestion(
+  entry: ScoredCandidate,
+  topScore: number,
+  topConfidence: number,
+): CategorySuggestion {
   return {
     id: entry.candidate.id,
     slug: entry.candidate.slug,
     name: entry.candidate.name,
     breadcrumb: entry.breadcrumb,
     depth: entry.candidate.depth ?? 0,
-    confidence: confidenceFor(entry, bestScore),
+    confidence: confidenceForEntry(entry, topScore, topConfidence),
     reason: reasonFor(entry),
   };
 }
@@ -624,22 +655,20 @@ export async function suggestCategories(
     overrideEntry,
     limit,
   );
-  const bestScore = deterministicPicked[0]?.score ?? safeScored[0].score;
-
   const rerank = await aiRerank(input, safeScored.slice(0, 30));
   const ai = rerank.result;
 
   let pickedEntries = deterministicPicked;
   let reasonBySlug: Map<string, string> | null = null;
-  let confidenceBySlug: Map<string, number> | null = null;
   let aiClarification: string | undefined;
   const aiUsed = Boolean(ai && ai.ranking.length > 0);
 
   if (ai && ai.ranking.length > 0) {
+    // AI reorders and re-explains only. Its confidence numbers are deliberately
+    // discarded — confidence comes from the deterministic margin calibration.
     const merged = mergeWithAi(scoredWithOverride, ai, limit);
     pickedEntries = forcePreferredFirst(merged.picked, overrideEntry, limit);
     reasonBySlug = merged.reasonBySlug;
-    confidenceBySlug = merged.confidenceBySlug;
     aiClarification = ai.clarificationQuestion;
   }
 
@@ -648,22 +677,48 @@ export async function suggestCategories(
     pickedEntries = filtered.length > 0 ? forcePreferredFirst(filtered, overrideEntry, limit) : deterministicPicked.slice(0, 1);
   }
 
-  const suggestionsRaw = pickedEntries.map((entry) => {
-    const base = toSuggestion(entry, bestScore);
+  // Calibrated confidence = isotonic(margin between final #1 and #2 scores).
+  // This is the deterministic signal; Gemini reorders and re-explains but never
+  // overwrites the confidence number (confidenceBySlug is intentionally ignored
+  // here — the old code let the LLM stamp its own number on top of the gate).
+  const topScore = pickedEntries[0]?.score ?? 0;
+  const secondScore = pickedEntries[1]?.score ?? 0;
+  const topConfidence = calibrate(marginOfScores(topScore, secondScore));
+
+  const suggestionsAll = pickedEntries.map((entry) => {
+    const base = toSuggestion(entry, topScore, topConfidence);
     const overrideReason = reasonBySlug?.get(entry.candidate.slug);
-    const overrideConfidence = confidenceBySlug?.get(entry.candidate.slug);
     return {
       ...base,
       reason: overrideReason || base.reason,
-      confidence:
-        typeof overrideConfidence === "number" ? overrideConfidence : base.confidence,
     };
   });
-  const suggestions =
-    input.mode === "request" && suggestionsRaw[0]?.confidence >= 0.9
-      ? suggestionsRaw.filter((suggestion, index) => index === 0 || suggestion.confidence >= 0.75)
-      : suggestionsRaw;
 
+  // Multi-need, per-label (not argmax): keep #1, any forced override (sentinel
+  // score), and any co-need scoring ≥ MULTI_NEED_SCORE_FRACTION of the strongest
+  // real candidate. `refScore` excludes the override sentinel so a forced pick
+  // never sets the bar. This trims the weak lexical tail that dragged multi-need
+  // precision down once the old 0.95-anchored trim was removed, while keeping
+  // genuine secondary needs from other roots.
+  const refScore = pickedEntries.reduce(
+    (max, e) => (e.score < Number.MAX_SAFE_INTEGER && e.score > max ? e.score : max),
+    0,
+  );
+  const suggestions =
+    input.mode === "request" && refScore > 0
+      ? suggestionsAll.filter(
+          (_suggestion, i) =>
+            i === 0 ||
+            pickedEntries[i].score >= Number.MAX_SAFE_INTEGER ||
+            pickedEntries[i].score >= MULTI_NEED_SCORE_FRACTION * refScore,
+        )
+      : suggestionsAll;
+
+  // Ambiguity gate: hedge with a clarifying question when the LLM already asked
+  // one, or the STRUCTURAL heuristic fires (empty pool / weak top score / 3+
+  // candidate roots). Deliberately not confidence-driven — see maybeClarification
+  // and category-confidence-calibration.ts for why margin can't separate
+  // ambiguity from scorer-weakness at Stage 1.
   const clarificationQuestion =
     aiClarification && aiClarification.length > 0
       ? aiClarification
