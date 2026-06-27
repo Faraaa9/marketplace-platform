@@ -20,6 +20,8 @@ import {
   relatedLandings,
   type LandingCity,
 } from "@/lib/seo-landings";
+import { getFeaturedProviders } from "@/lib/providers-listing";
+import { ProviderCard } from "@/components/tiekejai/ProviderCard";
 
 /**
  * Config-driven template for keyword-targeted service landing pages
@@ -86,9 +88,10 @@ const WHY_US: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: CheckCircle2, title: "Be tarpininkų", text: "Susisiekiate ir deratės tiesiogiai su specialistu." },
 ];
 
-export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
+export async function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
   const { city } = config;
   const url = `${BASE_URL}${config.path}`;
+  const featured = await getFeaturedProviders(config.categorySlug, city);
 
   // Cross-links to sibling landings so no page is left with a single incoming
   // internal link (Semrush #213). Full mesh within the city + same service
@@ -199,23 +202,53 @@ export function ServiceLanding({ config }: { config: ServiceLandingConfig }) {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
-          <h2 className="text-center text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">Kaip tai veikia</h2>
-          <p className="mx-auto mt-2 max-w-xl text-center text-body text-surface-500 dark:text-surface-400">Nuo užklausos iki pasirinkto specialisto — per kelias valandas.</p>
-          <ol className="mt-10 grid gap-6 sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <li key={step.title} className="rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950 dark:text-brand-300"><step.icon className="h-5 w-5" /></div>
-                <div className="mt-4 text-body-sm font-semibold text-brand-600">{i + 1} žingsnis</div>
-                <h3 className="mt-1 text-body font-semibold text-surface-900 dark:text-white">{step.title}</h3>
-                <p className="mt-1.5 text-body-sm text-surface-600 dark:text-surface-300">{step.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      {/* Recommended local masters — replaces the generic "Kaip tai veikia"
+          band when relevant, live providers exist for this category + city.
+          Uses the same ProviderCard as the /meistrai listing, so this naturally
+          becomes a "top N" strip as more providers join. */}
+      {featured.length > 0 ? (
+        <section className="border-y border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">
+                {config.serviceType} {cityLocative} —{" "}
+                {featured.length === 1 ? "rekomenduojamas meistras" : "rekomenduojami meistrai"}
+              </h2>
+              <p className="mx-auto mt-2 max-w-xl text-body text-surface-500 dark:text-surface-400">
+                {featured.length === 1 ? "Patikrintas specialistas" : "Patikrinti specialistai"}, dirbantys {cityLocative}. Peržiūrėkite profilį ir susisiekite tiesiogiai.
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/meistrai/${p.slug ?? p.id}`}
+                  className="block h-full"
+                >
+                  <ProviderCard p={p} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="border-y border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
+            <h2 className="text-center text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">Kaip tai veikia</h2>
+            <p className="mx-auto mt-2 max-w-xl text-center text-body text-surface-500 dark:text-surface-400">Nuo užklausos iki pasirinkto specialisto — per kelias valandas.</p>
+            <ol className="mt-10 grid gap-6 sm:grid-cols-3">
+              {steps.map((step, i) => (
+                <li key={step.title} className="rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950 dark:text-brand-300"><step.icon className="h-5 w-5" /></div>
+                  <div className="mt-4 text-body-sm font-semibold text-brand-600">{i + 1} žingsnis</div>
+                  <h3 className="mt-1 text-body font-semibold text-surface-900 dark:text-white">{step.title}</h3>
+                  <p className="mt-1.5 text-body-sm text-surface-600 dark:text-surface-300">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
 
       {/* Services */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">

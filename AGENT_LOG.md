@@ -17,6 +17,21 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-28 02:11 — Claude
+
+**Commit:** `1734cc9` — feat(paslaugos): show featured city providers in service articles · lokalus
+
+**Pakeitimai:** 4 files changed, 295 insertions(+), 191 deletions(-)
+
+**Failai:**
+- src/components/landing/ServiceLanding.tsx
+- src/components/tiekejai/ProviderCard.tsx
+- src/components/tiekejai/ProviderListingClient.tsx
+- src/lib/providers-listing.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-27 19:03 — Claude
 
 **Commit:** `c59aee4` — chore(taxonomy): record Phase 5 dedup stage 1 (712 easy groups) · lokalus

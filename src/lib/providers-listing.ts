@@ -9,7 +9,7 @@ import {
   type ServiceCategoryItem,
 } from "@/lib/service-categories";
 import { activeCategoryFilter } from "@/lib/category-matching";
-import type { ProviderCardData } from "@/lib/provider-filters";
+import { computeProviderScore, type ProviderCardData } from "@/lib/provider-filters";
 
 const DESC_PREVIEW_LENGTH = 160;
 // Local-first listing: every provider is fetched once and filtered in the
@@ -240,4 +240,46 @@ export function buildProviderCards(
       avgResponseTimeHours: avgResponseMap.get(p.id) ?? null,
     };
   });
+}
+
+/** A provider serving the whole country satisfies any city; otherwise the city
+ *  must match exactly. Mirrors the listing's location filter. */
+function providerServesCity(providerLocation: string | null, city: string): boolean {
+  if (providerLocation === "Visa Lietuva") return true;
+  return providerLocation === city;
+}
+
+/**
+ * Top-ranked live providers to feature on a service landing page — matched to
+ * that page's category and city, best first. Reuses the cached listing data
+ * (so it shares the /meistrai cache and adds no DB round-trips) and returns the
+ * same card shape the listing renders, so the landing strip stays identical to
+ * the catalog.
+ *
+ * Category match is tree-aware in both directions: a provider is relevant if it
+ * shares ANY node on the landing category's root→leaf path. So the
+ * "laminato klojimas" page also surfaces a master tagged only with the parent
+ * "Vidaus apdailos darbai", and vice versa. Returns an empty array when nothing
+ * relevant is live (caller falls back to the generic block).
+ */
+export async function getFeaturedProviders(
+  categorySlug: string,
+  city: string,
+  limit = 3,
+): Promise<ProviderCardData[]> {
+  const data = await getProvidersListingData();
+  const ancestorSlugs = buildAncestorSlugMap(data.categoryGroups);
+  const landingChain = new Set<string>([
+    categorySlug,
+    ...(ancestorSlugs.get(categorySlug) ?? []),
+  ]);
+
+  return buildProviderCards(data)
+    .filter(
+      (c) =>
+        providerServesCity(c.location, city) &&
+        c.categoryMatchSlugs.some((slug) => landingChain.has(slug)),
+    )
+    .sort((a, b) => computeProviderScore(b) - computeProviderScore(a))
+    .slice(0, limit);
 }
