@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kategorijų taisyklės · paslaugurinka.lt</title>
+<style>
+  :root {
+    --brand-50:  #f7ece6;
+    --brand-100: #f2dbcf;
+    --brand-600: #c0613a;   /* terakota — vienintelis akcentas */
+    --brand-700: #a44f2c;
+    --ink:       #25221e;   /* surface-900 */
+    --ink-soft:  #463f35;   /* surface-700 */
+    --muted:     #7e7768;   /* surface-500 */
+    --line:      #e3dfd4;   /* surface-100 */
+    --line-2:    #d6d0c3;   /* surface-200 */
+    --surface:   #ffffff;
+    --bg:        #f5f3ef;   /* surface-50 — švari, ne gelsva */
+    --shadow:    0 1px 2px rgba(37,34,30,.04), 0 8px 24px rgba(37,34,30,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Inter", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--brand-700);
+    background: var(--brand-50);
+    padding: 6px 12px; border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 10px; }
+  .lede { font-size: 16px; color: var(--ink-soft); max-width: 70ch; margin: 0; }
+  .accent-line { height: 3px; width: 56px; background: var(--brand-600); border-radius: 999px; margin: 24px 0 0; }
+
+  h2 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin: 48px 0 14px; }
+
+  .source {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    margin-top: 28px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .source p { margin: 0 0 8px; }
+  .source p:last-child { margin-bottom: 0; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 6px;
+    color: var(--ink);
+  }
+
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; vertical-align: bottom;
+    padding: 16px 18px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line-2);
+    font-weight: 600;
+  }
+  thead th:first-child { color: var(--muted); font-weight: 500; }
+  thead th .surface-name { font-size: 15px; color: var(--ink); display: block; }
+  thead th .surface-sub { font-size: 11.5px; color: var(--muted); font-weight: 400; display: block; margin-top: 2px; }
+  thead th.accent-col .surface-name { color: var(--brand-700); }
+
+  tbody th {
+    text-align: left; font-weight: 600; color: var(--ink-soft);
+    padding: 14px 18px; width: 200px;
+    background: #fcfbf9;
+    border-right: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody td { padding: 14px 18px; vertical-align: top; color: var(--ink-soft); }
+  tbody tr + tr th, tbody tr + tr td { border-top: 1px solid var(--line); }
+
+  .big { font-size: 15px; font-weight: 700; color: var(--ink); display: block; }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill-slug { background: #eef4ee; color: #3f6b48; }
+  .pill-id   { background: var(--brand-50); color: var(--brand-700); }
+  .pill-free { background: #eef4ee; color: #3f6b48; }
+  .pill-paid { background: var(--brand-50); color: var(--brand-700); }
+  .pill-yes  { background: var(--brand-50); color: var(--brand-700); }
+  .pill-no   { background: var(--bg); color: var(--muted); }
+  .why { font-size: 12px; color: var(--muted); display: block; margin-top: 4px; }
+
+  ul.reasons { list-style: none; padding: 0; margin: 14px 0 0; }
+  ul.reasons li {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--brand-600);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow);
+  }
+  ul.reasons strong { color: var(--ink); }
+
+  .foot {
+    margin-top: 40px;
+    border-top: 1px solid var(--line-2);
+    padding-top: 18px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .foot h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  .foot ol { margin: 0; padding-left: 18px; }
+  .foot li { margin-bottom: 6px; }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 36px 16px 64px; }
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    tbody th { width: auto; border-right: none; border-bottom: 1px solid var(--line); background: var(--bg); }
+    tbody tr { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 14px; box-shadow: var(--shadow); }
+    .table-card { border: none; box-shadow: none; background: transparent; }
+    tbody td::before { content: attr(data-col); display: block; font-size: 11px; font-weight: 600; color: var(--brand-700); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+    tbody tr + tr th, tbody tr + tr td { border-top: none; }
+    tbody td + td { border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="eyebrow">Vidinė dokumentacija · kategorijų pasirinkimas</span>
+  <h1>Kategorijų taisyklės trijuose ekranuose</h1>
+  <p class="lede">
+    Tas pats kategorijų medis, tas pats pasirinkimo komponentas — skiriasi tik
+    taisyklės viršuje: kiek galima pasirinkti, ar mokama, ir kokią reikšmę
+    ekranas grąžina toliau.
+  </p>
+  <div class="accent-line"></div>
+
+  <div class="source">
+    <p><strong>Vienas šaltinis visiems trims:</strong></p>
+    <p>Medis: funkcija <code>getServiceCategoryGroups()</code> · failas <code>src/lib/service-categories.ts</code></p>
+    <p>DB lentelė <code>Category</code>, where sąlyga
+      <code>SERVICE_CATEGORY_WHERE = { pageType:"service", externalSource:"paslaugurinka-taxonomy", isActive:true }</code></p>
+    <p>UI komponentas: <code>GroupedCategoryPicker</code> · failas <code>src/components/categories/GroupedCategoryPicker.tsx</code>
+      — props <code>mode="id" | "slug"</code> ir <code>multiple</code> nustato elgseną.</p>
+  </div>
+
+  <h2>Palyginimas pagal ekraną</h2>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Taisyklė</th>
+          <th>
+            <span class="surface-name">Filtras /meistrai</span>
+            <span class="surface-sub">tiekėjų paieška</span>
+          </th>
+          <th>
+            <span class="surface-name">Užklausa</span>
+            <span class="surface-sub">/uzklausos/nauja</span>
+          </th>
+          <th class="accent-col">
+            <span class="surface-name">Meistro profilis</span>
+            <span class="surface-sub">/tiekejas/profilis</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Kiek galima pasirinkti</th>
+          <td data-col="Filtras /meistrai"><span class="big">Be limito</span> kelios kategorijos vienu metu (multi-select), papildomi filtrai kaupiasi prie URL</td>
+          <td data-col="Užklausa"><span class="big">Iki 3</span> <code>MAX_CATEGORIES = 3</code></td>
+          <td data-col="Meistro profilis"><span class="big">10 nemokamai</span> <code>FREE_CATEGORY_LIMIT = 10</code>, papildomos — mokamos</td>
+        </tr>
+        <tr>
+          <th>Nemokama / mokama</th>
+          <td data-col="Filtras /meistrai"><span class="pill pill-free">Nemokama</span> tik paieškos filtras</td>
+          <td data-col="Užklausa"><span class="pill pill-free">Nemokama</span> kliento užklausa</td>
+          <td data-col="Meistro profilis"><span class="pill pill-free">10 nemokamai</span> + <span class="pill pill-paid">mokamos papildomos</span></td>
+        </tr>
+        <tr>
+          <th>Kaip atrakinamos papildomos</th>
+          <td data-col="Filtras /meistrai">Netaikoma — pasirenkama kiek nori</td>
+          <td data-col="Užklausa">Netaikoma — riba fiksuota ties 3</td>
+          <td data-col="Meistro profilis">Kreditais: <code>{CREDITS_PER_CATEGORY_MONTH} = 2</code> kr./mėn., iki <code>MAX_CATEGORY_MONTHS = 12</code> mėn. Endpoint <code>POST /api/tiekejas/profilis/categories/unlock</code> (funkcija <code>handleUnlockCategory</code>). Pasibaigus laikui — vieta toje srityje pasislepia</td>
+        </tr>
+        <tr>
+          <th>Grąžinama reikšmė</th>
+          <td data-col="Filtras /meistrai"><span class="pill pill-slug">slug</span><span class="why">kodėl: keliauja į URL (<code>?category=</code>), turi būti dalintinas ir žmogui skaitomas</span></td>
+          <td data-col="Užklausa"><span class="pill pill-id">ID</span><span class="why">kodėl: siunčiama į API ir saugoma DB su užklausa</span></td>
+          <td data-col="Meistro profilis"><span class="pill pill-id">ID</span><span class="why">kodėl: išsaugoma profilyje (<code>categoryIds</code>) per API</span></td>
+        </tr>
+        <tr>
+          <th>Gylio apribojimas</th>
+          <td data-col="Filtras /meistrai">Priimami <strong>visi</strong> medžio slug'ai (šaknis + visi vaikai), surenkami rekursiškai į <code>validCategorySlugs</code>; nežinomi slug'ai numetami. <span class="why">Pastaba: nėra „tik 1-o lygio" ribos — tikrina tik ar slug yra kuruotame medyje (meistrai/page.tsx ~111)</span></td>
+          <td data-col="Užklausa">Nėra — bet koks medžio lapas/mazgas tinka</td>
+          <td data-col="Meistro profilis">Nėra — bet koks medžio lapas/mazgas tinka</td>
+        </tr>
+        <tr>
+          <th>AI auto-suggest</th>
+          <td data-col="Filtras /meistrai"><span class="pill pill-no">Nėra</span> rankinis pasirinkimas</td>
+          <td data-col="Užklausa"><span class="pill pill-yes">Yra</span> <code>mode="request"</code> per <code>/api/category-suggestions</code> + <code>/api/requests/improve</code>; nemokama</td>
+          <td data-col="Meistro profilis"><span class="pill pill-yes">Yra</span> <code>mode="provider"</code> per <code>/api/category-suggestions</code>; auto-parenka pagal aprašymą, kol pats nepalietei; nemokama</td>
+        </tr>
+        <tr>
+          <th>Render'is / UI</th>
+          <td data-col="Filtras /meistrai"><code>variant="chip"</code> + <code>multiple</code>; desktop = chip dropdown, mobile = atskira filtrų lentyna</td>
+          <td data-col="Užklausa"><code>variant="form"</code> (single-select popoveris kortelėje); pasirinkta virsta žyma, iki 3</td>
+          <td data-col="Meistro profilis"><code>variant="form"</code> + <code>multiple</code> nemokamoms; atskiras single-select pikeris mokamų sričių atrakinimui</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Kodėl skiriasi</h2>
+  <ul class="reasons">
+    <li><strong>slug vs ID.</strong> Filtras grąžina <code>slug</code>, nes reikšmė keliauja į URL — dalintina ir skaitoma. Užklausa ir profilis grąžina <code>ID</code>, nes reikšmė tiesiai saugoma DB ir siunčiama per API.</li>
+    <li><strong>Limitai ir render'is.</strong> Filtras leidžia rinktis be ribos (paieška), užklausa fiksuota ties 3, profilis duoda 10 nemokamai ir parduoda daugiau kreditais — tas pats komponentas, tik kitos props (<code>multiple</code>, <code>variant</code>) ir kitos viršutinės taisyklės.</li>
+    <li><strong>AI sluoksnis prijungtas tik kai kur.</strong> Auto-suggest veikia tik užklausoje (<code>mode="request"</code>) ir profilyje (<code>mode="provider"</code>) — ten, kur naudotojas pildo laisvą tekstą. Filtre jo nėra: žmogus pats žino, ko ieško.</li>
+  </ul>
+
+  <div class="foot">
+    <h3>Šaltiniai (failas : eilutė)</h3>
+    <ol>
+      <li><code>FREE_CATEGORY_LIMIT = 10</code> · <code>src/lib/category-pricing.ts:9</code> (naudojama <code>tiekejas/profilis/page.tsx:212, 598</code>)</li>
+      <li><code>CREDITS_PER_CATEGORY_MONTH = 2</code>, <code>MAX_CATEGORY_MONTHS = 12</code> · <code>src/lib/category-pricing.ts:10, 12</code></li>
+      <li>Užklausos riba <code>MAX_CATEGORIES = 3</code> · <code>src/app/uzklausos/nauja/NewRequestClient.tsx:71</code> (taikoma <code>:306, :621</code>)</li>
+      <li>Filtro slug'ų validacija (visi medžio slug'ai, ne tik 1-as lygis) · <code>src/app/meistrai/page.tsx:111-121, 134-141</code></li>
+      <li>Profilio atrakinimo endpoint <code>/api/tiekejas/profilis/categories/unlock</code> · <code>tiekejas/profilis/page.tsx:222</code></li>
+      <li>Picker props <code>mode</code> / <code>multiple</code> · <code>src/components/categories/GroupedCategoryPicker.tsx:32, 36, 72</code></li>
+      <li>Bendras medis ir where sąlyga · <code>src/lib/service-categories.ts:22-26, 76</code></li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

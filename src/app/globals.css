@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: #f6f5f3;
+    --background: #f5f3ef;
     --foreground: #1e1b18;
     /* Terakota — vienas akcentas (atitinka profile-mockup.html: 600=#c0613a, 700=#a44f2c, 50=#f7ece6) */
     --brand-50: 247 236 230;
@@ -106,32 +106,6 @@
       rgba(50, 50, 93, 0.12) 0px 8px 24px -4px,
       rgba(0, 0, 0, 0.06) 0px 4px 12px -2px;
     transform: translateY(-1px);
-  }
-
-  /* Subtle dot grid background */
-  .bg-grid {
-    background-image: radial-gradient(circle, rgba(42,39,35,0.05) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-
-  .dark .bg-grid {
-    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
-  }
-
-  /* Site-wide fixed grid background (see layout.tsx) — dark-aware */
-  .layout-grid {
-    background-color: var(--background);
-    background-image:
-      linear-gradient(to right, #ece9e5 1px, transparent 1px),
-      linear-gradient(to bottom, #ece9e5 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-position: -1px -1px;
-  }
-
-  .dark .layout-grid {
-    background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   }
 
   .chat-message-stream {

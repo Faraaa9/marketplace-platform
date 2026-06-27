@@ -14,6 +14,12 @@ export interface ProviderCardData {
   coverImage: string | null;
   description: string | null;
   categories: ProviderCategory[];
+  /** Slugs + ids this provider matches for category filtering: its own
+   *  categories plus their ancestor slugs, so a root-group filter (e.g. the
+   *  landing-page category cards link to `?category=<root>`) matches providers
+   *  tagged only with leaf categories. Kept separate from `categories` so the
+   *  displayed pills stay leaf-level. */
+  categoryMatchSlugs: string[];
   location: string | null;
   isVerified: boolean;
   isPremium: boolean;
@@ -142,9 +148,7 @@ export function filterAndSortProviders(
     if (!matchesLocations(p.location, filters.locations)) return false;
     if (
       filters.categories.length > 0 &&
-      !p.categories.some(
-        (c) => filters.categories.includes(c.slug) || filters.categories.includes(c.id),
-      )
+      !filters.categories.some((c) => p.categoryMatchSlugs.includes(c))
     ) {
       return false;
     }

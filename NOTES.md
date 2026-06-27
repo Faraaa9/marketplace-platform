@@ -830,3 +830,31 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
   (LCP fiksavosi font-swap momentu), /registruotis CLS 0.208 -> 0 (Suspense be
   fallback). Lighthouse devtools-throttled: home 98/100, LCP 2.2s. NEGRAZINTI
   static supabase-js importu i client komponentus - tai +60KB visiems puslapiams.
+
+## Taksonomijos dedup (2026-06-27) — STAGE 1 + STAGE 2 padaryta
+
+- [x] **Stage 1 — 712 „lengvu" dublikatu grupiu sulieta** (prod, per MCP).
+      Migracija: `prisma/manual-migrations/20260627_dedup_easy_category_groups.sql`.
+      Aktyvios service kategorijos 3255 -> 2098; dublikatu kopijos 1313 -> 156;
+      grupes 820 -> 108; 0 orphan'u; 7/9 realiu nuorodu perkelta. Validacija
+      `pnpm test:routing-all` PASS (golden eval invariantai laikosi, harmful
+      drops 5/<=5). Backup'ai prod'e: `_backup_categories_20260627`,
+      `_backup_dedup_refs_20260627`, map: `_dedup_map_easy`.
+- [x] **Stage 2 — 108 „sunkios" grupes (156 kopijos) sulieta** (prod, per MCP,
+      2026-06-27). Migracija: `prisma/manual-migrations/20260627_dedup_hard_category_groups.sql`.
+      Vienas set-based pass: global map copy->canon (taisykle + 7 override'ai),
+      tad „giliausi-pirma" reparenting susitraukia i 1 UPDATE (map rodo tiesiai i
+      isliekancius). Repoint 3 nuorodos (visos provider_profile_categories; 2 —
+      tiekejas jau turi kanonine -> delete dublio, 1 — Pagalbiniai darbininkai
+      perkelta i Statybos kanonine) + reparent 292 vaiku + deactivate 156 kopiju.
+      Aktyvios service kat. 2098 -> 1942 (= unikalus vardai); 0 dublikatu grupiu;
+      0 orphan'u. Validacija `pnpm test:routing-all` PASS (harmful drops 5/<=5).
+      Backup'ai prod'e: `_backup_categories_dedup2_20260627`,
+      `_backup_dedup2_ppc_20260627` (rollback = 1 UPDATE is backup). Override'ai
+      (patvirtinti): Kompiuteriu remontas / Interneto svetainiu kurimas / IT
+      specialistai -> Internetas, IT; Grafikos dizaineriai -> Reklama; Pagalbiniai
+      darbininkai -> Statybos; Dietologai -> Sveikata; Stiklo konstrukcijos -> Statybos.
+- [ ] **Alias'ai senu slug'u** (1313) atideti kartu — neaisku, ar routingas
+      naudoja `category_aliases` ar lentele `l`; issiaiskinti pries iterpiant.
+      Matchingui NEREIKIA (nuorodos perkeltos fiziskai); tik senu `?category=`
+      URL'u testumui.
