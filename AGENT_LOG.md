@@ -17,6 +17,19 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-27 01:13 — Claude
+
+**Commit:** `f0b66e6` — feat(categories): raise FREE_CATEGORY_LIMIT 4->10 for cold-start · lokalus
+
+**Pakeitimai:** 2 files changed, 265 insertions(+), 1 deletion(-)
+
+**Failai:**
+- public/_previews/kategoriju-taisykles.html
+- src/lib/category-pricing.ts
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-26 15:40 — Claude
 
 **Commit:** `26db3df` — feat(meistrai): admin kill switch for provider profile preview drawer
