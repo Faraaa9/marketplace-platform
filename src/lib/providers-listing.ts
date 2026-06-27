@@ -267,6 +267,13 @@ export async function getFeaturedProviders(
   city: string,
   limit = 3,
 ): Promise<ProviderCardData[]> {
+  "use cache";
+  // Date.now() in buildProviderCards is non-deterministic; under cacheComponents
+  // it's only allowed inside a cache boundary (runs once per cache build, not at
+  // static prerender). Shares the listing's revalidate window + tag.
+  cacheLife({ revalidate: 60 });
+  cacheTag("providers-listing");
+
   const data = await getProvidersListingData();
   const ancestorSlugs = buildAncestorSlugMap(data.categoryGroups);
   const landingChain = new Set<string>([
