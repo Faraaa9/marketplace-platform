@@ -20,6 +20,9 @@ create table if not exists category_embedding (
 );
 create index if not exists category_embedding_hnsw
   on category_embedding using hnsw (embedding vector_cosine_ops);
+-- Server-only table (Prisma/service-role bypasses RLS). Enable RLS with NO
+-- policies so the anon/authenticated client keys get zero access (no exposure).
+alter table category_embedding enable row level security;
 
 -- MANDATORY day-1 logging: every suggested -> accepted/rejected/changed event.
 -- Training data for a future auto-assign (UX variant A). See phase3-production-design.md §4.
@@ -38,3 +41,4 @@ create table if not exists category_suggestion_event (
 );
 create index if not exists category_suggestion_event_cat
   on category_suggestion_event (suggested_category_id);
+alter table category_suggestion_event enable row level security;
