@@ -47,11 +47,14 @@ raw užklausos tekstas
       │   "Sienų dažymas, plytelių klojimas ir kriauklės"
       │   → ["sienų dažymas", "plytelių klojimas", "kriauklės keitimas"]
       ▼
-[2] PER-JOB DENSE  (lygiagrečiai kiekvienam darbui)
-      │   embed(darbas, 3-large) → pgvector top-K kategorijų
+[2] PER-JOB DENSE RETRIEVAL
+      │   embed(darbas, 1536) → pgvector top-15..20 kandidatų/darbui (recall)
       ▼
-[3] SURINKIMAS: kiekvienam darbui top-1..N kategorija → dedupe → chip'ai
-      │   (UX: sugrupuota pagal darbą arba bendras dedupe rinkinys)
+[2b] LLM-RERANK (1 iškvietimas visiems darbams)
+      │   iš kandidatų parenka 1-2 LOGIŠKAI tinkančias/darbui (precision;
+      │   taiso "montavimas"-tipo embedding triukšmą)
+      ▼
+[3] SURINKIMAS: per-darbo 1-2 pasiūlymai → pilki chip'ai (UX=C, §4)
       ▼
    grąžinti kategorijų rinkinį
 ```
@@ -83,21 +86,42 @@ procentinis.
 
 ---
 
-## 3. [2] Per-job dense kategorizacija
+## 3. [2]+[2b] retrieve-then-LLM-rerank (produkcinis kategorizacijos pipeline)
 
-- **Modelis:** `openai/text-embedding-3-large` (3072d) per **TURIMĄ
-  `OPENROUTER_API_KEY`** — OpenRouter palaiko OpenAI embeddings (patikrinta, HTTP
-  200). **Dizaino „centrinis nežinomasis" (reikia naujo rakto/infra) DINGO.**
-  Matuota: 39.8% single-label p@1 (lenkė net lokalų e5-large); multi-label per-job
-  recall@3 66–72%.
-- **Offline precompute:** ~1916 kategorijų (`depth>0`) tekstai (`name. aliases.
-  breadcrumb`) embed'inami 3-large, laikomi pgvector (§5). Vienkartinis backfill +
-  re-embed keičiant taksonomiją.
-- **Runtime:** kiekvieno darbo frazė embed'inama (galima 1 BATCH iškvietimas
-  visiems darbams = 1 round-trip), pgvector top-K (cosine) kiekvienam darbui.
-- **K:** top-3..5 per darbą (matavimas: recall@3 66–72%, @5 72–75%).
-- **Invariantas:** kandidatai TIK iš pgvector lentelės (realios taksonomijos) —
-  niekada neišgalvojam slug.
+Embedding-only gaudo žodžių panašumą, ne logiką („kondicionieriaus montavimas" →
+durų/langų montavimas, nes „montavimas"). Sprendimas: **plati dense paieška
+(recall) → LLM parenka 1-2 logiškas (precision).** Kodas: `src/lib/category-dense.ts`
++ `src/lib/category-rerank.ts`.
+
+**[2] Dense retrieval (recall):**
+- Modelis `openai/text-embedding-3-large` **@ dimensions:1536** (test-confirmed:
+  recall@5 73.5% vs 3072 74.7% — 1536 telpa į standartinį HNSW indeksą) per
+  **TURIMĄ `OPENROUTER_API_KEY`** (OpenRouter daro OpenAI embeddings — naujo rakto/
+  infra NEREIKIA).
+- Runtime: kiekvieno darbo frazė embed'inama (1 batch iškvietimas visiems darbams),
+  pgvector cosine **top-15..20 kandidatų/darbui** (platus pool — svarbu recall@20).
+- **Backfill teksto receptas (matuota):** `name + breadcrumb + aliases + 3-5 LLM
+  tipiniai darbai/sinonimai`. recall@20: vardai-only 72.3% → **+tipiniai darbai
+  74.7%**. breadcrumb+aliases NEUTRALŪS (net kiek kenkia — atskiedžia leaf vektorių;
+  breadcrumb laikom tik bendravardžiams atskirti). Tipiniai darbai = vienintelis
+  recall svertas (kuklus +2.4pp; lubos ~75%@20 — žodyno spraga). `scripts/
+  backfill-category-embeddings.ts`.
+
+**[2b] LLM rerank (precision):**
+- 1 iškvietimas VISIEMS darbams: iš kiekvieno darbo top-15..20 kandidatų LLM
+  (`gemini-2.5-flash`) parenka 1-2 logiškai tinkančias (griežtas JSON, „prasmė, ne
+  žodžiai"). Fallback → dense top-2 jei LLM lūžta.
+- **Matuota (multi-label golden, 83 darbai):** LLM gold-tarp-1-2 = **67.5%** vs
+  dense recall@2 54.2% (**+13pp** tame pačiame selektyvume), ≈ dense recall@5 (65%)
+  bet su 1-2 ŠVARIAIS, ne 5. Lubos = retrieval recall@20 (74.7%); LLM atgauna 90%+.
+  Win = švara/precision (triukšmas ištaisytas), ne raw recall.
+
+**Invariantas:** LLM picks privalo būti tarp paduotų kandidatų; ne-atitikmenys
+metami. Kandidatai TIK iš pgvector (realios taksonomijos) — niekada neišgalvojam slug.
+
+**Latency pasekmė:** kelyje 2 LLM iškvietimai — segmentacija (įsukta į ai-improve,
+~free) + 1 rerank iškvietimas + 1 embed batch + pgvector. Rerank pakeičia
+nenaudingą Gemini rerank'ą (§6), tad neto gali būti panašiai.
 
 ---
 
@@ -107,11 +131,13 @@ procentinis.
 auto-priskyrimas+redagavimas.** Sistema NIEKADA pati neuždeda aktyvaus chip'o.
 
 Konkrečiai:
-- Po segmentacijos kiekvienas darbas rodomas kaip **antraštė**, po juo **3–5
-  pasiūlyti (pilki, neaktyvūs) kategorijų chip'ai** (per-job dense top-K).
+- Po segmentacijos kiekvienas darbas rodomas kaip **antraštė**, po juo **1–2
+  LLM-parinkti (pilki, neaktyvūs) logiški chip'ai** (iš §3 rerank); **„daugiau"**
+  atskleidžia platesnius dense kandidatus (fallback, jei 1-2 netinka).
 - Vartotojas **tapši tuos, kurie tinka** → jie tampa aktyvūs (priskirti).
 - **„+ dar viena"** lieka spragoms (jei nė vienas pasiūlymas netinka).
 - Sistema niekada pati neaktyvina chip'o — visada vartotojo veiksmas.
+- (Demo `feat/multilabel-phase0-demo` rodo tai gyvai — švarūs 1-2/darbui.)
 
 Kodėl C: vartotojo patvirtinimas **dengia coverage spragą** (~50% „visi darbai
 auto-teisingi" tampa nebe blokeriu — vartotojas mato pasiūlymus ir pasirenka).
@@ -136,56 +162,46 @@ create table category_suggestion_event (
 Be šito launch'inti negalima — duomenys kaupiami nuo pirmos dienos, kad vėliau
 būtų iš ko mokyti A (auto-priskyrimą).
 
-### UI tankio patikra (3–5 pasiūlymai × 3–4 darbai)
-3–4 darbai × 3–5 chip'ai = 9–20 pilkų chip'ų → gali paskęsti. **Limitas:**
+### UI tankio patikra (su LLM rerank — jau švaru)
+LLM rerank duoda **1-2/darbui**, ne 5 → tankis nebėra problema (demo patvirtino).
 - Darbai dėliojami **vertikaliai**, kiekvienas su aiškia antrašte.
-- Per darbą **matomi top-3** chip'ai; likę (4–5) po **„daugiau"** nuoroda.
-- Jei darbų >3 — apsvarstyti darbų accordion (sutraukti, išskleidžiami).
-Tikslas: ekranas lieka skenuojamas, ne chip'ų siena.
+- Per darbą **1-2 pilki** chip'ai; platesni dense kandidatai po **„daugiau"**.
+- Jei darbų >3 — accordion (sutraukti) jei reikės.
 
 ---
 
 ## 5. pgvector setup (SQL)
 
-`vector` 0.8.0 prieinama (dar neįjungta), palaiko HNSW. **Dimensija = 3072**
-(text-embedding-3-large).
+`vector` 0.8.0 prieinama (dar neįjungta). **Dimensija = 1536** (SPRENDIMAS,
+test-confirmed: recall@5 73.5% @1536 vs 74.7% @3072 — ~1pp; 1536 telpa į
+**standartinį HNSW** indeksą, jokio halfvec). Pilnas SQL + logging lentelė:
+`docs/ai-routing/phase3-impl/migration.sql`. **DAR NEįvykdyta** — laukia DB
+sprendimo (prod aditYVi vs Supabase branch).
 
 ```sql
 create extension if not exists vector;
-
 create table category_embedding (
-  category_id text primary key references "Category"(id) on delete cascade,
-  embedding   vector(3072) not null,
-  model       text not null,            -- saugiklis: runtime modelis privalo sutapti
-  updated_at  timestamptz not null default now()
+  category_id  text primary key references "Category"(id) on delete cascade,
+  embedding    vector(1536) not null,
+  model        text not null,        -- runtime modelis privalo sutapti (drift saugiklis)
+  text_version text not null,        -- enriched-v1 (recepto versija)
+  updated_at   timestamptz not null default now()
 );
-
--- HNSW (paprasčiau nei IVFFlat, puiku ~2k eilučių), cosine
 create index on category_embedding using hnsw (embedding vector_cosine_ops);
 ```
-Runtime per darbą: `select category_id from category_embedding order by embedding <=> $1 limit 5;`
-(Prisma `$queryRaw`; $1 = darbo vektorius.)
-
-> SVARBU: 3072d viršija pgvector HNSW/ivfflat indekso ribą (2000d `vector`).
-> Sprendimai (pasirinkti backfill metu): (a) `text-embedding-3-large` su
-> `dimensions: 1536` param (OpenAI palaiko dimensijų mažinimą — RE-VALIDATE ant
-> multi-label golden, kad recall nenukristų), arba (b) `halfvec(3072)` +
-> `halfvec_cosine_ops` (pgvector 0.7+ palaiko iki 4096d half-precision indeksą).
-> Rekomendacija: pradėti nuo (b) halfvec (laiko pilną tikslumą), (a) jei latency/
-> dydis spaus.
+Runtime per darbą (`src/lib/category-dense.ts`): `... order by embedding <=> $1::vector limit 15` (Prisma `$queryRaw`).
 
 ---
 
 ## 6. Atidėti svertai — NE branduolyje, NE launch blokeriai
 
-Kadangi UX = C (vartotojas patvirtina, §4), patvirtinimas dengia coverage spragą —
-tad nei rerank, nei fuzija nėra launch'o sąlyga. Branduolys = segmentacija +
-per-job dense. Svertai — tik jei matavimai parodys, kad verta.
+> Patikslinimas: **LLM-rerank (kategorijų SELEKCIJA, §3 [2b]) YRA branduolyje** —
+> tai ne cross-encoder. Žemiau atidėti yra (a) cross-encoder reranker ir (b)
+> leksinė fuzija. Branduolys = segmentacija + dense retrieval + LLM-rerank.
 
-- **Rerank (cross-encoder):** padeda „visi darbai" coverage (39%→50%@3), bet
-  ~1.8s/darbui ant CPU → runtime NEtinka. **Vartotojo patvirtinimas jau dengia šią
-  spragą, tad rerank API NĖRA launch blokeris.** NEįtraukti į branduolį; jei kada —
-  rerank API (Cohere/Jina), flag-gated, neprivaloma.
+- **Cross-encoder reranker (jina/bge):** padeda „visi darbai" coverage (39%→50%@3),
+  bet ~1.8s/darbui ant CPU → runtime NEtinka. Be to LLM-rerank (§3) jau dengia
+  precision. **NEįtraukti** į branduolį.
 - **Leksinė fuzija (RRF):** apytiksle Python replika PAKENKĖ per-job recall
   (66%→59% dense-only). Atidėta. **Veiksmas:** pajungti TIKRĄ TS leksinį per darbą
   TIK SHADOW režime (loginti, nerodyti), pamatuoti ant multi-label golden; į
@@ -199,11 +215,13 @@ per-job dense. Svertai — tik jei matavimai parodys, kad verta.
 vartotojas patvirtina), sėkmė = ar teisinga kategorija MATOMA pasiūlyme, kad
 vartotojas galėtų ją tapšti.
 
-- **PIRMINIS matas = per-job recall@5** (~75% baseline) — ar teisinga kategorija
-  yra tarp 5 pasiūlytų kiekvienam darbui. **Tai launch gate.** Taikinys ≥75%.
-- **Segmentacijos accuracy:** % darbų teisingai išskaidyta (taikinys ≥90%; baseline 93%).
-- Antriniai (stebėti, ne gate): per-job recall@3 (66/72% kontekstas), visi-darbai-
-  covered@5 (~56% — informacinis, NE blokeris, nes vartotojas patvirtina).
+- **Retrieval recall@20** (kandidatų pool LLM'ui) — **74.7%** (enriched receptas).
+  Tai lubos; gate ≥72%.
+- **Pipeline matas = gold tarp LLM-parinktų 1-2/darbui** — **67.5%** (matuota).
+  Launch gate ≥65%. (Tikras recall aukštesnis — anotacija griežta, sibling/parent.)
+- **Segmentacijos accuracy:** % darbų teisingai išskaidyta (≥90%; baseline 93%).
+- Antriniai (stebėti): per-job recall@5 (~75% kontekstas), visi-darbai (informacinis,
+  NE blokeris — vartotojas patvirtina).
 - Multi-label golden rinkinys: praplėsti iki ~80–100 realių multi-darbo užklausų;
   keli priimtini gold/darbui (sumažina griežtumą).
 - Shadow ant realaus srauto prieš on; po launch — patvirtinimų logging (§4) duoda
@@ -213,11 +231,15 @@ vartotojas galėtų ją tapšti.
 
 ## 8. Rollout
 
-1. Migracija: `create extension vector` + `category_embedding` (+dim sprendimas §5).
-2. Backfill: embed visas kategorijas 3-large (`scripts/backfill-category-embeddings.ts`).
-3. Segmentacija: pridėti `jobs[]` į ai-improve prompt (versijuoti).
-4. Per-job dense: naujas modulis, fallback į esamą single-chip.
-5. Offline gate: multi-label golden (§7).
+PHASE A scaffolding (parašyta, NEįvykdyta — laukia DB sprendimo):
+`docs/ai-routing/phase3-impl/migration.sql`, `scripts/backfill-category-embeddings.ts`,
+`src/lib/category-dense.ts`, `src/lib/category-rerank.ts`. Gate skaičiai jau turimi
+offline (§7). Tolesni žingsniai:
+1. Migracija: `migration.sql` (prod aditYVi ARBA Supabase branch — sprendimas).
+2. Backfill: enriched tekstas 1536 (`scripts/backfill-category-embeddings.ts`).
+3. (STOP buvo čia) Segmentacija: pridėti `jobs[]` į ai-improve prompt (versijuoti).
+4. Per-job dense+rerank: prijungti `category-dense` + `category-rerank`, fallback į single-chip.
+5. Offline gate patvirtinimas per realų pgvector: multi-label golden (§7).
 6. Shadow: `CATEGORY_MULTILABEL_SHADOW=1` — skaičiuoja + loginа, nerodo; stebėti latency + coverage.
 7. On (flag): `CATEGORY_MULTILABEL_ENABLED=1`. Grįžtama (flag off → dabartinis elgesys).
 
