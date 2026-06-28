@@ -25,6 +25,11 @@ kategoriją N-darbų užklausai → N−1 darbų gauna NIEKO.
 | Embedding modelis | `text-embedding-3-large` (per TURIMĄ OpenRouter raktą) |
 | Segmentacijos modelis | `gemini-2.5-flash` ≈ `flash-lite` (pigus tinka) |
 
+**Pirminis sėkmės matas (nes UX = C, vartotojas patvirtina — §4): per-job
+recall@5 ~75%** — ar teisinga kategorija MATOMA pasiūlyme, kad vartotojas galėtų
+ją tapšti. NE „visi darbai auto-teisingi @3" (tai antrinis — patvirtinimas dengia
+spragą). → §7.
+
 Caveat'ai (sąžiningai): rinkinys mažas ir ranka-sukurtas; vienas gold/darbui yra
 GRIEŽTA (daug „miss'ų" — priimtini sibling/parent), tad tikras recall aukštesnis.
 Leksinė fuzija (apytiksle replika) pakenkė — neapibrėžta; rerank padeda coverage
@@ -96,15 +101,47 @@ procentinis.
 
 ---
 
-## 4. [3] Surinkimas + UX
+## 4. [3] Surinkimas + UX — SPRENDIMAS: C (siūlyti, vartotojas patvirtina)
 
-- Kiekvienas darbas → top-1 kategorija (auto-chip) ARBA top-3 (vartotojas
-  renkasi). Dedupe (du darbai gali rodyti tą pačią kategoriją).
-- **UX variantai (founder forkas, §9):** (a) bendras dedupe chip'ų rinkinys (kaip
-  dabar, tik daugiau ir tikslesnių); (b) sugrupuota „darbas → kategorija(-os)" —
-  skaidriau, bet daugiau UI. Su PR#41 (X) + PR#42 — chip'ai jau pašalinami.
-- **Confidence:** per-job cosine panašumas → galima rodyti silpnus pasiūlymus
-  kitaip; bet ATSARGIAI (žr. ankstesnius hedge tyrimus — detekcija sunki).
+**Priimta: C — siūlyti, vartotojas patvirtina. NE auto-priskyrimas, NE
+auto-priskyrimas+redagavimas.** Sistema NIEKADA pati neuždeda aktyvaus chip'o.
+
+Konkrečiai:
+- Po segmentacijos kiekvienas darbas rodomas kaip **antraštė**, po juo **3–5
+  pasiūlyti (pilki, neaktyvūs) kategorijų chip'ai** (per-job dense top-K).
+- Vartotojas **tapši tuos, kurie tinka** → jie tampa aktyvūs (priskirti).
+- **„+ dar viena"** lieka spragoms (jei nė vienas pasiūlymas netinka).
+- Sistema niekada pati neaktyvina chip'o — visada vartotojo veiksmas.
+
+Kodėl C: vartotojo patvirtinimas **dengia coverage spragą** (~50% „visi darbai
+auto-teisingi" tampa nebe blokeriu — vartotojas mato pasiūlymus ir pasirenka).
+Tai leidžia paleisti be rerank/fuzijos (§6).
+
+### Patvirtinimų logging (PRIVALOMA nuo dienos 1, ne nice-to-have)
+Kiekvienas „pasiūlyta X → vartotojas priėmė / atmetė / pakeitė į Y" SAUGOMAS.
+Tai **treniravimo duomenys** ateities auto-priskyrimui (variantas A). Lentelė pvz.:
+```sql
+create table category_suggestion_event (
+  id           bigserial primary key,
+  request_id   text,                 -- jei jau sukurta; arba draft id
+  job_phrase   text not null,        -- segmentuotas darbas
+  suggested_category_id text,        -- pasiūlyta kategorija
+  suggested_rank int,                -- pozicija pasiūlyme (1..5)
+  action       text not null,        -- 'accepted' | 'rejected' | 'added_manual'
+  chosen_category_id text,           -- ką galiausiai pasirinko (jei pakeitė/pridėjo)
+  seg_model    text, emb_model text, -- audit
+  created_at   timestamptz not null default now()
+);
+```
+Be šito launch'inti negalima — duomenys kaupiami nuo pirmos dienos, kad vėliau
+būtų iš ko mokyti A (auto-priskyrimą).
+
+### UI tankio patikra (3–5 pasiūlymai × 3–4 darbai)
+3–4 darbai × 3–5 chip'ai = 9–20 pilkų chip'ų → gali paskęsti. **Limitas:**
+- Darbai dėliojami **vertikaliai**, kiekvienas su aiškia antrašte.
+- Per darbą **matomi top-3** chip'ai; likę (4–5) po **„daugiau"** nuoroda.
+- Jei darbų >3 — apsvarstyti darbų accordion (sutraukti, išskleidžiami).
+Tikslas: ekranas lieka skenuojamas, ne chip'ų siena.
 
 ---
 
@@ -139,26 +176,38 @@ Runtime per darbą: `select category_id from category_embedding order by embeddi
 
 ---
 
-## 6. Atidėti svertai (matuota — neaiškūs/lėti)
+## 6. Atidėti svertai — NE branduolyje, NE launch blokeriai
 
-- **Leksinė fuzija (RRF):** apytiksle Python replika PAKENKĖ per-job recall
-  (66%→59%). Neapibrėžta — gali būti replikos kaltė, ne tikro TS leksinio.
-  **Veiksmas:** implementacijos metu pajungti TIKRĄ TS leksinį per darbą SHADOW
-  režimu, pamatuoti ant multi-label golden; palikti tik jei kelia.
+Kadangi UX = C (vartotojas patvirtina, §4), patvirtinimas dengia coverage spragą —
+tad nei rerank, nei fuzija nėra launch'o sąlyga. Branduolys = segmentacija +
+per-job dense. Svertai — tik jei matavimai parodys, kad verta.
+
 - **Rerank (cross-encoder):** padeda „visi darbai" coverage (39%→50%@3), bet
-  ~1.8s/darbui ant CPU → runtime NEtinka. **Veiksmas:** jei reikės coverage —
-  rerank API (Cohere/Jina), neprivaloma, flag-gated.
+  ~1.8s/darbui ant CPU → runtime NEtinka. **Vartotojo patvirtinimas jau dengia šią
+  spragą, tad rerank API NĖRA launch blokeris.** NEįtraukti į branduolį; jei kada —
+  rerank API (Cohere/Jina), flag-gated, neprivaloma.
+- **Leksinė fuzija (RRF):** apytiksle Python replika PAKENKĖ per-job recall
+  (66%→59% dense-only). Atidėta. **Veiksmas:** pajungti TIKRĄ TS leksinį per darbą
+  TIK SHADOW režime (loginti, nerodyti), pamatuoti ant multi-label golden; į
+  branduolį kelti tik jei aiškiai kelia recall@5. NE branduolyje pradžiai.
 
 ---
 
 ## 7. Matavimas (gate'ai — TEISINGOS metrikos)
 
-**NE precision@1.** Multi-label golden rinkinys (praplėsti iki ~80-100 realių
-multi-darbo užklausų; keli priimtini gold/darbui, kad sumažintų griežtumą):
-- **Segmentacijos accuracy:** % darbų teisingai išskaidyta (taikinys ≥90%).
-- **Per-job recall@3/@5:** % darbų, kur teisinga kategorija top-K (baseline 66/72%).
-- **Visi-darbai-covered@3:** % užklausų, kur VISI darbai gauna teisingą kategoriją.
-- Shadow ant realaus srauto prieš on.
+**NE precision@1. NE „visi darbai auto-teisingi @3".** Kadangi UX = C (siūlyti,
+vartotojas patvirtina), sėkmė = ar teisinga kategorija MATOMA pasiūlyme, kad
+vartotojas galėtų ją tapšti.
+
+- **PIRMINIS matas = per-job recall@5** (~75% baseline) — ar teisinga kategorija
+  yra tarp 5 pasiūlytų kiekvienam darbui. **Tai launch gate.** Taikinys ≥75%.
+- **Segmentacijos accuracy:** % darbų teisingai išskaidyta (taikinys ≥90%; baseline 93%).
+- Antriniai (stebėti, ne gate): per-job recall@3 (66/72% kontekstas), visi-darbai-
+  covered@5 (~56% — informacinis, NE blokeris, nes vartotojas patvirtina).
+- Multi-label golden rinkinys: praplėsti iki ~80–100 realių multi-darbo užklausų;
+  keli priimtini gold/darbui (sumažina griežtumą).
+- Shadow ant realaus srauto prieš on; po launch — patvirtinimų logging (§4) duoda
+  TIKRĄ accept-rate metriką (geriau nei golden).
 
 ---
 
@@ -176,21 +225,22 @@ multi-darbo užklausų; keli priimtini gold/darbui, kad sumažintų griežtumą)
 
 ## 9. Forkai founder'iui
 
-1. **UX:** bendras dedupe chip'ų rinkinys (mažiau pakeitimų) vs „darbas →
-   kategorija" grupavimas (skaidriau). → pradžiai bendras rinkinys.
-2. **Per darbą top-1 auto vs top-3 pasirinkimui** — auto greičiau, top-3
-   tiksliau bet daugiau UI.
-3. **Embedding dimensija** (§5): halfvec 3072 (pilnas) vs sumažintas 1536
-   (re-validate) — sprendžiam backfill metu pagal pgvector indekso ribą.
-4. **Segmentacija atskirai vs įsukta į ai-improve** — įsukta (0 latency)
+**IŠSPRĘSTA:** UX = C (siūlyti pilkus 3–5 chip'us per darbą, vartotojas
+patvirtina; sugrupuota pagal darbą; sistema niekada neauto-priskiria). §4.
+
+Liko spręsti:
+1. **Embedding dimensija** (§5): halfvec 3072 (pilnas tikslumas) vs sumažintas
+   1536 (re-validate) — sprendžiam backfill metu pagal pgvector indekso ribą.
+2. **Segmentacija atskirai vs įsukta į ai-improve** — įsukta (0 latency)
    rekomenduojama; atskira jei norisi izoliacijos/cache.
 
 ---
 
 ## 10. Rizikos
 
-- **„Visi darbai" coverage ~50%** — vienas silpnas darbas nuskandina užklausą.
-  Realiai priimtina (chip'ai pašalinami/papildomi ranka), bet lūkesčius nustatyti.
+- **„Visi darbai" coverage ~50%** — NEBĖRA blokeris: UX = C (vartotojas mato 3–5
+  pasiūlymus per darbą ir patvirtina; „+ dar viena" spragoms). Pirminis matas =
+  recall@5 (~75%), ne auto-coverage.
 - **Segmentacija per-skaido / sulieja** — matuota gerai (ratio 1.05), bet stebėti
   shadow.
 - **3072d pgvector indekso riba** (§5) — spręsti backfill metu (halfvec/dimensijos).
