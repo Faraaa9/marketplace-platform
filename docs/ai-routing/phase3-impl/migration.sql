@@ -10,11 +10,12 @@ create extension if not exists vector;
 -- Precomputed category embeddings (text-embedding-3-large @ dimensions:1536).
 -- `model` + `text_version` guard against runtime/precompute drift (a mismatch
 -- must fall back to the lexical engine, never silently mis-match).
+-- FK -> categories(id): the Category Prisma model @@map's to table `categories`.
 create table if not exists category_embedding (
-  category_id  text primary key references "Category"(id) on delete cascade,
+  category_id  text primary key references categories(id) on delete cascade,
   embedding    vector(1536) not null,
   model        text not null,
-  text_version text not null default 'enriched-v1',
+  text_version text not null default 'name-typ-v1',
   updated_at   timestamptz not null default now()
 );
 create index if not exists category_embedding_hnsw

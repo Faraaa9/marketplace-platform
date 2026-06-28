@@ -23,7 +23,7 @@ import { SERVICE_CATEGORY_WHERE } from "../src/lib/service-categories";
 import { embedTexts, DENSE_EMB_MODEL } from "../src/lib/category-dense";
 
 const SEG_MODEL = "google/gemini-2.5-flash";
-const TEXT_VERSION = "enriched-v1";
+const TEXT_VERSION = "name-typ-v1";
 const GEN_BATCH = 40;
 const EMB_BATCH = 96;
 
@@ -81,9 +81,10 @@ async function main() {
   for (let i = 0; i < leaves.length; i += EMB_BATCH) {
     const batch = leaves.slice(i, i + EMB_BATCH);
     const texts = batch.map((c) => {
-      const aliases = c.aliases.map((a) => a.aliasName).filter(Boolean);
+      // Recipe: name + 3-5 typical job phrases. Measured best for recall@20 (74.7%);
+      // breadcrumb + aliases are neutral-to-negative (dilute the leaf vector), so dropped.
       const extra = (typical.get(c.slug) ?? []).join(". ");
-      return [c.name, breadcrumb(c).join(" > "), aliases.join(", "), extra].filter(Boolean).join(". ");
+      return [c.name, extra].filter(Boolean).join(". ");
     });
     const vecs = await embedTexts(texts);
     for (let j = 0; j < batch.length; j++) {
