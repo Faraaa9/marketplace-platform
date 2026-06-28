@@ -163,3 +163,44 @@ export async function isProfilePreviewEnabled(): Promise<boolean> {
 export async function setProfilePreviewEnabled(enabled: boolean): Promise<void> {
   await updateSettings({ profilePreviewEnabled: enabled });
 }
+
+// ── Multi-label category pipeline kill switch ──────────────────────────────
+// Read in its OWN isolated query (NOT the main getSettings select) so that
+// before the DB column exists it degrades to false WITHOUT dragging every other
+// setting to defaults. Default OFF: merging the PR is a no-op until flipped.
+let mlCached: { value: boolean; fetchedAt: number } | null = null;
+
+/** Whether the segment -> per-job dense+rerank multi-label categorization is live. */
+export async function isMultilabelCategoriesEnabled(): Promise<boolean> {
+  if (mlCached && Date.now() - mlCached.fetchedAt < CACHE_TTL_MS) {
+    return mlCached.value;
+  }
+  try {
+    const row = await prisma.platformSettings.findUnique({
+      where: { id: "singleton" },
+      select: { multilabelCategoriesEnabled: true },
+    });
+    const value = row?.multilabelCategoriesEnabled ?? false;
+    mlCached = { value, fetchedAt: Date.now() };
+    return value;
+  } catch (error) {
+    // Column not migrated yet, or a transient error -> OFF (never breaks a request).
+    if (!isSchemaNotReadyError(error)) {
+      console.error("[platform-settings] multilabel flag read failed:", error);
+    }
+    mlCached = { value: false, fetchedAt: Date.now() };
+    return false;
+  }
+}
+
+/** Flip the multi-label kill switch (instant off, ~30s cache, no deploy). */
+export async function setMultilabelCategoriesEnabled(enabled: boolean): Promise<void> {
+  // Direct upsert (not updateSettings) so the isolated flag stays out of the
+  // typed PlatformSettingsData shape used by the main getSettings read.
+  await prisma.platformSettings.upsert({
+    where: { id: "singleton" },
+    update: { multilabelCategoriesEnabled: enabled },
+    create: { id: "singleton", multilabelCategoriesEnabled: enabled },
+  });
+  mlCached = null;
+}

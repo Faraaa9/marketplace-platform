@@ -12,6 +12,7 @@ interface Settings {
   emailAllowlist: string[];
   freeStarterCredits: number;
   profilePreviewEnabled: boolean;
+  multilabelCategoriesEnabled: boolean;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,6 +76,11 @@ export default function AdminSettingsPage() {
   function toggleProfilePreview() {
     if (!settings) return;
     save({ profilePreviewEnabled: !settings.profilePreviewEnabled });
+  }
+
+  function toggleMultilabel() {
+    if (!settings) return;
+    save({ multilabelCategoriesEnabled: !settings.multilabelCategoriesEnabled });
   }
 
   function toggleEmailTestMode() {
@@ -229,6 +235,53 @@ export default function AdminSettingsPage() {
                 Būsena:{" "}
                 <span className={`font-medium ${settings.profilePreviewEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                   {settings.profilePreviewEnabled ? "Įjungta" : "Išjungta"}
+                </span>
+                {saving && <span className="ml-2 text-surface-400">Saugoma...</span>}
+                {saved && !saving && <span className="ml-2 text-emerald-600 dark:text-emerald-400">Išsaugota</span>}
+              </p>
+            </div>
+          </Card>
+
+          {/* Multi-label kategorijų pipeline (kill switch) */}
+          <Card>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10">
+                  <PanelRight className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+                </div>
+                <div>
+                  <p className="text-body font-semibold text-surface-900 dark:text-white">
+                    Multi-label kategorijos (AI)
+                  </p>
+                  <p className="text-micro text-surface-500 dark:text-surface-400">
+                    {settings.multilabelCategoriesEnabled
+                      ? "Užklausa skaidoma į darbus, kiekvienam siūlomos kategorijos"
+                      : "Senas elgesys: viena kategorija visam tekstui"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={toggleMultilabel}
+                disabled={saving}
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-60 ${
+                  settings.multilabelCategoriesEnabled ? "bg-brand-600" : "bg-surface-300 dark:bg-surface-600"
+                }`}
+                role="switch"
+                aria-checked={settings.multilabelCategoriesEnabled}
+                aria-label="Multi-label kategorijos"
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    settings.multilabelCategoriesEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="mt-3 pt-3 border-t border-surface-100 dark:border-surface-800">
+              <p className="text-micro text-surface-400">
+                Būsena:{" "}
+                <span className={`font-medium ${settings.multilabelCategoriesEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {settings.multilabelCategoriesEnabled ? "Įjungta (100%)" : "Išjungta"}
                 </span>
                 {saving && <span className="ml-2 text-surface-400">Saugoma...</span>}
                 {saved && !saving && <span className="ml-2 text-emerald-600 dark:text-emerald-400">Išsaugota</span>}
