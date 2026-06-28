@@ -26,6 +26,7 @@ import AiSuggestionsStrip, {
 } from "@/components/uzklausos-v2/AiSuggestionsStrip";
 import ActiveRequestsStrip from "@/components/uzklausos-v2/ActiveRequestsStrip";
 import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
+import { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 
 export default function NewRequestV2Page() {
   return (
@@ -114,6 +115,8 @@ function NewRequestV2Form() {
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiStatus, setAiStatus] = useState<AiStatus>(cameFromHero ? "running" : "idle");
   const [aiError, setAiError] = useState<string | null>(null);
+  // Phase A multi-label: per-job suggestions (null = flag off / fallback -> old behaviour).
+  const [multilabelJobs, setMultilabelJobs] = useState<MlJob[] | null>(null);
 
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -336,6 +339,31 @@ function NewRequestV2Form() {
             result.improvedDescription ?? trimmed,
             result.title ?? "",
           );
+        }
+
+        // Phase A multi-label (flag-gated server-side). When enabled and the
+        // pipeline returns jobs, show per-job suggestions and let the user pick
+        // (UX=C), clearing the auto-filled chips. Off / fallback / error keeps
+        // the behaviour above untouched.
+        try {
+          const mlRes = await fetch("/api/category-multilabel", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: `${result.title ?? ""} ${result.improvedDescription ?? trimmed}`.trim(),
+            }),
+          });
+          const mlData = (await mlRes.json().catch(() => null)) as
+            | { enabled?: boolean; jobs?: MlJob[] }
+            | null;
+          if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
+            setMultilabelJobs(mlData.jobs);
+            setForm((current) => ({ ...current, categoryIds: [] }));
+          } else {
+            setMultilabelJobs(null);
+          }
+        } catch {
+          setMultilabelJobs(null);
         }
       } catch {
         setAiError("Tinklo klaida. Bandyk dar kartą arba užpildyk pats.");
@@ -704,6 +732,7 @@ function NewRequestV2Form() {
               categoryGroups={categoryGroups}
               onAddCategory={addCategoryId}
               onRemoveCategory={removeCategoryId}
+              multilabelJobs={multilabelJobs}
               location={form.location}
               onLocationChange={(value) => setField("location", value)}
               budget={form.budget}

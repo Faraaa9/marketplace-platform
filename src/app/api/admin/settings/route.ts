@@ -4,10 +4,12 @@ import { authOptions } from "@/lib/auth";
 import {
   getEmailDeliverySettings,
   getFreeStarterCredits,
+  isMultilabelCategoriesEnabled,
   isProfilePreviewEnabled,
   isStoryEnabled,
   setEmailDeliverySettings,
   setFreeStarterCredits,
+  setMultilabelCategoriesEnabled,
   setProfilePreviewEnabled,
   setStoryEnabled,
 } from "@/lib/platform-settings";
@@ -19,7 +21,8 @@ async function loadSettings() {
   const { emailTestMode, emailAllowlist } = await getEmailDeliverySettings();
   const freeStarterCredits = await getFreeStarterCredits();
   const profilePreviewEnabled = await isProfilePreviewEnabled();
-  return { storyEnabled, emailTestMode, emailAllowlist, freeStarterCredits, profilePreviewEnabled };
+  const multilabelCategoriesEnabled = await isMultilabelCategoriesEnabled();
+  return { storyEnabled, emailTestMode, emailAllowlist, freeStarterCredits, profilePreviewEnabled, multilabelCategoriesEnabled };
 }
 
 export async function GET() {
@@ -54,6 +57,10 @@ export async function PUT(req: NextRequest) {
 
     if (typeof body.profilePreviewEnabled === "boolean") {
       await setProfilePreviewEnabled(body.profilePreviewEnabled);
+    }
+
+    if (typeof body.multilabelCategoriesEnabled === "boolean") {
+      await setMultilabelCategoriesEnabled(body.multilabelCategoriesEnabled);
     }
 
     if (body.freeStarterCredits !== undefined) {

@@ -501,6 +501,7 @@ model PlatformSettings {
   freeStarterCredits Int      @default(3)
   telegramBotEnabled Boolean  @default(true)
   profilePreviewEnabled Boolean @default(true)
+  multilabelCategoriesEnabled Boolean @default(false)
   updatedAt          DateTime @updatedAt
 
   @@map("platform_settings")
