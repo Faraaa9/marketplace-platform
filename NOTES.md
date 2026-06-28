@@ -10,6 +10,19 @@ Konvencija:
 
 ---
 
+- [ ] **ai-improve kategorijų priskyrimas negyvas** (2026-06-28). `getCategoryPromptData`
+      (`src/lib/ai-improve.ts`) filtruoja `category.depth > 0`, bet
+      `getFlatServiceCategories()` serializuoja node'us BE `depth/parentId/rootId`
+      (numesta RSC payload plonimui) → kandidatų sąrašas tuščias kiekvienai
+      užklausai → LLM negrąžina kategorijų (matuota 300/300 zero). Forma ir
+      telegram bot'as krenta į `suggestCategories` (1 chip'as). Šis PR tik
+      short-circuit'ina bevaisį domain-index skenavimą + dokumentuoja.
+      **Tikras fix (atidėtas):** ai-improve turi krautis raw kategorijų eilutes
+      SU `depth` (atskira prisma užklausa, kaip `suggestCategories.loadCandidates`),
+      ne UI-suplonintą flat sąrašą. NEpridėti `depth` atgal į `getFlatServiceCategories`
+      — tai grąžintų RSC payload problemą. Sprendimas ar apskritai taisyti
+      (1 kalibruotas chip'as gali būti geriau nei 3 nepatikrinti LLM) — atviras.
+
 ## Darbukai (2026-06-12) — ĮGYVENDINTA 2026-06-12/13 (commit'ai 97429f9, 2654b06, 67ab060)
 
 - [x] **Homepage hero kortelės supaprastinimas** (užklausos kūrimo kortelė su
