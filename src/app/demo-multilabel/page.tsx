@@ -6,8 +6,8 @@ import { useState } from "react";
 // per-job grey suggestion chips -> tap-to-activate. UX = C (system never
 // auto-activates). No DB; ~15 hardcoded category vectors behind /api/demo-multilabel.
 
-interface Suggestion { name: string; slug: string; score: number }
-interface Job { phrase: string; suggestions: Suggestion[] }
+interface Suggestion { name: string; slug: string }
+interface Job { phrase: string; suggestions: Suggestion[]; more: Suggestion[] }
 
 const PRESETS = [
   "Sienų dažymas, plytelių klojimas ir kriauklės",
@@ -81,7 +81,7 @@ export default function DemoMultilabel() {
             Pilki = pasiūlyta. Tapši, kad priimtum (sistema pati neuždeda aktyvaus chip&apos;o).
           </p>
           {jobs.map((job, ji) => {
-            const shown = expanded[ji] ? job.suggestions : job.suggestions.slice(0, 3);
+            const shown = expanded[ji] ? [...job.suggestions, ...job.more] : job.suggestions;
             const act = active[ji] ?? new Set<string>();
             return (
               <div key={ji} className="border-l-2 border-surface-200 pl-4">
@@ -104,10 +104,10 @@ export default function DemoMultilabel() {
                       </button>
                     );
                   })}
-                  {!expanded[ji] && job.suggestions.length > 3 && (
+                  {!expanded[ji] && job.more.length > 0 && (
                     <button type="button" onClick={() => setExpanded((p) => ({ ...p, [ji]: true }))}
                       className="px-2 py-1 text-xs text-surface-400 hover:text-brand-600">
-                      daugiau ({job.suggestions.length - 3})
+                      daugiau ({job.more.length})
                     </button>
                   )}
                   <button type="button"
