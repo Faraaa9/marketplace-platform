@@ -17,6 +17,29 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-06-28 03:04 — Claude
+
+**Commit:** `61866a4` — perf(profilis,admin): server-fetch profile + instant nav skeletons · lokalus
+
+**Pakeitimai:** 17 files changed, 1266 insertions(+), 1153 deletions(-)
+
+**Failai:**
+- src/app/admin/ai/loading.tsx
+- src/app/admin/claims/loading.tsx
+- src/app/admin/laiskai/loading.tsx
+- src/app/admin/loading.tsx
+- src/app/admin/moderacija/loading.tsx
+- src/app/admin/naudotojai/loading.tsx
+- src/app/admin/nustatymai/loading.tsx
+- src/app/admin/telegram/loading.tsx
+- src/app/admin/tiekejai/loading.tsx
+- src/app/admin/uzklausos/loading.tsx
+- src/app/api/tiekejas/profilis/route.ts
+- src/app/tiekejas/profilis/ProfileEditorClient.tsx
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-28 02:11 — Claude
 
 **Commit:** `1734cc9` — feat(paslaugos): show featured city providers in service articles · lokalus

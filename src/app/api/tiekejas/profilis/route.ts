@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { providerProfileSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText } from "@/lib/moderation";
-import { publicIdFromCloudinaryUrl } from "@/lib/cloudinary";
 import { revalidateProviderCaches } from "@/lib/cache-invalidation";
 import { syncFreeCategories } from "@/lib/provider-categories";
+import { getProviderProfileEditData } from "@/lib/provider-profile-edit";
 
 export async function GET() {
   await connection();
@@ -24,71 +24,7 @@ export async function GET() {
       );
     }
 
-    const [profile, user] = await Promise.all([
-      prisma.providerProfile.findUnique({
-        where: { userId: session.user.id },
-        select: {
-          id: true,
-          userId: true,
-          description: true,
-          headline: true,
-          services: true,
-          priceFrom: true,
-          experienceYears: true,
-          offersInvoices: true,
-          availableForUrgent: true,
-          location: true,
-          phone: true,
-          website: true,
-          isActive: true,
-          planType: true,
-          planExpiresAt: true,
-          images: true,
-          slug: true,
-          createdAt: true,
-          updatedAt: true,
-          categories: {
-            select: { categoryId: true, sortOrder: true, expiresAt: true },
-            orderBy: { sortOrder: "asc" },
-          },
-        },
-      }),
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { name: true, email: true, emailVerified: true },
-      }),
-    ]);
-
-    const parsedImages: { url: string; publicId: string }[] = profile
-      ? profile.images.map((url) => ({
-          url,
-          publicId: publicIdFromCloudinaryUrl(url) ?? "",
-        }))
-      : [];
-
-    const now = Date.now();
-    // Free/base categories drive the picker; active paid (timed) categories are
-    // surfaced separately so the editor can show expiry + a renew action.
-    const freeCategoryIds = profile
-      ? profile.categories
-          .filter((c) => c.expiresAt == null)
-          .map((c) => c.categoryId)
-      : [];
-    const paidCategories = profile
-      ? profile.categories
-          .filter((c) => c.expiresAt != null && c.expiresAt.getTime() > now)
-          .map((c) => ({ categoryId: c.categoryId, expiresAt: c.expiresAt }))
-      : [];
-
-    const data = profile ? {
-      ...profile,
-      images: parsedImages,
-      categoryIds: freeCategoryIds,
-      paidCategories,
-      userName: user?.name || null,
-      userEmail: user?.email || null,
-      emailVerified: !!user?.emailVerified,
-    } : null;
+    const data = await getProviderProfileEditData(session.user.id);
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
