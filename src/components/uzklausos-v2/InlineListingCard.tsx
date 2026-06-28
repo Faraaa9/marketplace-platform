@@ -13,6 +13,7 @@ import {
   Plus,
   Tag,
   ArrowRight,
+  Info,
 } from "lucide-react";
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
@@ -112,6 +113,7 @@ export default function InlineListingCard({
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const rootRef = useRef<HTMLElement>(null);
   const [openMeta, setOpenMeta] = useState<MetaKey | null>(null);
+  const [categoryInfoOpen, setCategoryInfoOpen] = useState(false);
 
   const aiButtonUnlocked = useMemo(
     () => description.trim().length >= MIN_DESCRIPTION_CHARS,
@@ -176,6 +178,24 @@ export default function InlineListingCard({
     setOpenMeta((current) => (current === key ? null : key));
   }
 
+  // Close the category-info popover on outside click or Escape.
+  useEffect(() => {
+    if (!categoryInfoOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) setCategoryInfoOpen(false);
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCategoryInfoOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [categoryInfoOpen]);
+
   const hasCategory = selectedCategories.length > 0;
   const canAddMoreCategories = selectedCategories.length < maxCategories;
   const hasLocation = !!location.trim();
@@ -206,6 +226,7 @@ export default function InlineListingCard({
         >
           {/* ── Category tags row — hidden until the description unlocks it ── */}
           {(hasCategory || !categoryLocked) && (
+            <div>
             <div className="flex flex-wrap items-center gap-1.5">
               {selectedCategories.map((cat) => (
                 <span
@@ -248,6 +269,26 @@ export default function InlineListingCard({
                   <span>{hasCategory ? "dar viena" : "kategorija"}</span>
                 </button>
               )}
+              {hasCategory && (
+                <button
+                  type="button"
+                  onClick={() => setCategoryInfoOpen((v) => !v)}
+                  aria-label="Ką reiškia kategorija?"
+                  aria-expanded={categoryInfoOpen}
+                  className={cn(
+                    "inline-flex h-5 w-5 items-center justify-center rounded-full text-[#9b8a5f] transition-colors hover:bg-[#ebe2cb] hover:text-[#6f6042] dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-200",
+                    categoryInfoOpen && "bg-[#ebe2cb] text-[#6f6042] dark:bg-surface-800",
+                  )}
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            {categoryInfoOpen && (
+              <p className="mt-1.5 max-w-prose font-serif text-xs leading-relaxed text-[#9b8a5f] dark:text-surface-400">
+                Tavo užklausą matys meistrai, dirbantys šiose kategorijose. Jei kuri netinka - pašalink ją kryžiuku.
+              </p>
+            )}
             </div>
           )}
 
