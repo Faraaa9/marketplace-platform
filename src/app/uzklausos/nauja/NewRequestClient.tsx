@@ -26,7 +26,6 @@ import AiSuggestionsStrip, {
 } from "@/components/uzklausos-v2/AiSuggestionsStrip";
 import ActiveRequestsStrip from "@/components/uzklausos-v2/ActiveRequestsStrip";
 import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
-import { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 
 export default function NewRequestV2Page() {
   return (
@@ -115,8 +114,6 @@ function NewRequestV2Form() {
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiStatus, setAiStatus] = useState<AiStatus>(cameFromHero ? "running" : "idle");
   const [aiError, setAiError] = useState<string | null>(null);
-  // Phase A multi-label: per-job suggestions (null = flag off / fallback -> old behaviour).
-  const [multilabelJobs, setMultilabelJobs] = useState<MlJob[] | null>(null);
   // Category zone is resolving (improve categories or the multi-label pipeline).
   // Drives the "Ieškoma kategorijų…" spinner so the category appears once, not
   // a chip that gets overwritten by the picker ~6-10s later.
@@ -363,12 +360,12 @@ function NewRequestV2Form() {
           }
         };
 
-        // Phase A multi-label (flag-gated server-side). The category zone has a
-        // SINGLE owner per request: when the pipeline is enabled and returns
-        // jobs, the per-job picker owns it (UX=C, nothing auto-selected);
-        // otherwise the legacy improve categories own it. The spinner stays up
-        // for the whole resolution, so the user sees one final result — never a
-        // chip that gets replaced ~6-10s later.
+        // Multi-label categorization (flag-gated server-side). The category zone
+        // has a SINGLE owner per request: when the prototype pipeline is enabled
+        // and returns jobs, it AUTO-SELECTS the top category of each job as an
+        // active, removable chip; otherwise the legacy improve categories own it.
+        // The spinner stays up for the whole resolution, so the user sees one
+        // final result — never a chip that gets overwritten ~6-10s later.
         setCategorizing(true);
         try {
           const mlRes = await fetch("/api/category-multilabel", {
@@ -379,17 +376,29 @@ function NewRequestV2Form() {
             }),
           });
           const mlData = (await mlRes.json().catch(() => null)) as
-            | { enabled?: boolean; jobs?: MlJob[] }
+            | { enabled?: boolean; jobs?: { suggestions?: { slug?: string }[] }[] }
             | null;
           if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
-            setMultilabelJobs(mlData.jobs);
-            setForm((current) => ({ ...current, categoryIds: [] }));
+            // Auto-categorize: apply the rerank top-1 of each job as an ACTIVE
+            // category. Resolve by slug so the id matches the form's set; dedupe
+            // and cap at MAX_CATEGORIES. The user removes via X or adds by hand.
+            const resolved: string[] = [];
+            for (const job of mlData.jobs) {
+              const id = resolveCategorySlug(job.suggestions?.[0]?.slug);
+              if (id && !resolved.includes(id)) resolved.push(id);
+            }
+            if (resolved.length > 0) {
+              setForm((current) => ({
+                ...current,
+                categoryIds: resolved.slice(0, MAX_CATEGORIES),
+              }));
+            } else {
+              await applyImproveCategories();
+            }
           } else {
-            setMultilabelJobs(null);
             await applyImproveCategories();
           }
         } catch {
-          setMultilabelJobs(null);
           await applyImproveCategories();
         } finally {
           setCategorizing(false);
@@ -767,7 +776,6 @@ function NewRequestV2Form() {
               categoryGroups={categoryGroups}
               onAddCategory={addCategoryId}
               onRemoveCategory={removeCategoryId}
-              multilabelJobs={multilabelJobs}
               categorizing={categorizing}
               location={form.location}
               onLocationChange={(value) => setField("location", value)}

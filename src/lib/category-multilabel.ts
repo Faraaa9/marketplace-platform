@@ -17,9 +17,12 @@ const STEP_TIMEOUT_MS = 12_000;
 const TOPK = 20;
 
 const SEG_PROMPT =
-  "Tu skaidai paslaugų užklausas į ATSKIRUS darbus. Grąžink TIK JSON masyvą trumpų darbų frazių. " +
-  "Numanomus darbus irgi išskirk (pvz. 'pilna vonios renovacija' -> griovimas + plytelės + santechnika). " +
-  'Pvz.: "Sienų dažymas, plytelių klojimas ir kriauklės" -> ["sienų dažymas","plytelių klojimas","kriauklės keitimas"]';
+  "Tu skaidai paslaugų užklausą į ATSKIRUS, SAVARANKIŠKUS darbus (skirtingas paslaugas). " +
+  "SVARBU: vieno darbo atributai — medžiaga, vieta, aukštas, matmenys, spalva, rėmo tipas, garantija — NĖRA atskiri darbai; juos SUJUNK į TĄ PATĮ darbą. " +
+  "Skaidyk tik kai tai tikrai skirtingos paslaugos. Numanomus darbus išskirk tik jei jie aiškiai atskiri (pvz. 'pilna vonios renovacija' -> griovimas + plytelės + santechnika). " +
+  "Grąžink TIK JSON masyvą trumpų darbų frazių, DAUGIAUSIAI 4. " +
+  'Pvz.: "Sienų dažymas, plytelių klojimas ir kriauklės" -> ["sienų dažymas","plytelių klojimas","kriauklės keitimas"]. ' +
+  'Pvz.: "Pakeisti PVC rėmo stiklo paketą 1 aukšte, veidrodinį bronzinį, su garantija" -> ["stiklo paketo keitimas"] (vienas darbas su atributais).';
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -50,7 +53,7 @@ async function segment(text: string): Promise<string[]> {
   const d = (await res.json()) as { choices: { message: { content: string } }[] };
   const raw = d.choices[0].message.content.trim().replace(/```json|```/g, "").trim();
   try {
-    return (JSON.parse(raw) as unknown[]).map((x) => String(x).trim()).filter(Boolean).slice(0, 6);
+    return (JSON.parse(raw) as unknown[]).map((x) => String(x).trim()).filter(Boolean).slice(0, 4);
   } catch {
     return [];
   }

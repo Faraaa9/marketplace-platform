@@ -17,7 +17,6 @@ import {
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
-import MultilabelCategoryPicker, { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 import { useVoiceRecorder } from "@/lib/use-voice-recorder";
 import { cn } from "@/lib/utils";
@@ -56,8 +55,6 @@ interface InlineListingCardProps {
   categoryGroups: ServiceCategoryGroup[];
   onAddCategory: (id: string) => void;
   onRemoveCategory: (id: string) => void;
-  /** Phase A multi-label: when set, per-job suggestion UI replaces the chip row. */
-  multilabelJobs?: MlJob[] | null;
   /** True while the category engine is resolving — shows a spinner in the zone. */
   categorizing?: boolean;
 
@@ -105,7 +102,6 @@ export default function InlineListingCard({
   categoryGroups,
   onAddCategory,
   onRemoveCategory,
-  multilabelJobs,
   categorizing,
   location,
   onLocationChange,
@@ -220,22 +216,13 @@ export default function InlineListingCard({
             photoDragOver && "ring-2 ring-brand-400/60",
           )}
         >
-          {/* ── Category zone: spinner while the engine resolves, then ONE
-                result — the multi-label picker, or the legacy tags row. ── */}
-          {categorizing && !(multilabelJobs && multilabelJobs.length > 0) && !hasCategory ? (
+          {/* ── Category zone: spinner while the engine resolves, then the
+                auto-selected categories as active chips (removable via X). ── */}
+          {categorizing && !hasCategory ? (
             <div className="flex items-center gap-2 font-serif text-[0.78rem] text-[#9b8a5f] dark:text-surface-400">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               <span>Ieškoma kategorijų…</span>
             </div>
-          ) : multilabelJobs && multilabelJobs.length > 0 ? (
-            <MultilabelCategoryPicker
-              jobs={multilabelJobs}
-              selectedIds={selectedCategories.map((c) => c.id)}
-              onToggle={(id) =>
-                selectedCategories.some((c) => c.id === id) ? onRemoveCategory(id) : onAddCategory(id)
-              }
-              onAddManual={() => toggleMetaKey("category")}
-            />
           ) : (hasCategory || !categoryLocked) ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {selectedCategories.map((cat) => (
