@@ -17,7 +17,7 @@ import {
 import type { ServiceCategoryGroup } from "@/lib/service-categories";
 import { LITHUANIAN_CITIES } from "@/lib/constants";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
-import MultilabelCategoryPicker, { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
+import MultilabelCategoryPicker, { logEvents, type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-image";
 import { useVoiceRecorder } from "@/lib/use-voice-recorder";
 import { cn } from "@/lib/utils";
@@ -124,6 +124,9 @@ export default function InlineListingCard({
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const rootRef = useRef<HTMLElement>(null);
   const [openMeta, setOpenMeta] = useState<MetaKey | null>(null);
+  // Which multi-label job opened the manual "+ dar viena" picker — so the
+  // resulting add is logged as added_manual WITH its chosen category id.
+  const [manualJobPhrase, setManualJobPhrase] = useState<string | null>(null);
 
   const aiButtonUnlocked = useMemo(
     () => description.trim().length >= MIN_DESCRIPTION_CHARS,
@@ -234,7 +237,10 @@ export default function InlineListingCard({
               onToggle={(id) =>
                 selectedCategories.some((c) => c.id === id) ? onRemoveCategory(id) : onAddCategory(id)
               }
-              onAddManual={() => toggleMetaKey("category")}
+              onAddManual={(phrase) => {
+                setManualJobPhrase(phrase);
+                toggleMetaKey("category");
+              }}
             />
           ) : (hasCategory || !categoryLocked) ? (
             <div className="flex flex-wrap items-center gap-1.5">
@@ -555,6 +561,13 @@ export default function InlineListingCard({
                   if (!value) return;
                   // Silently dedupe — onAddCategory in the parent ignores duplicates.
                   onAddCategory(value);
+                  // Multi-label "+ dar viena": record WHICH category was manually
+                  // added (chosen_category_id was always null before — the log fired
+                  // on picker-open, not on commit). Training signal for the golden.
+                  if (manualJobPhrase) {
+                    logEvents([{ jobPhrase: manualJobPhrase, action: "added_manual", chosenCategoryId: value }]);
+                    setManualJobPhrase(null);
+                  }
                   setOpenMeta(null);
                 }}
                 mode="id"

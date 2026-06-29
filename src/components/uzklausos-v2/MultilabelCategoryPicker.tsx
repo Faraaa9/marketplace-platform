@@ -25,10 +25,10 @@ interface Props {
   /** add or remove a category from the request */
   onToggle: (categoryId: string) => void;
   /** open the manual category picker for a gap ("+ dar viena") */
-  onAddManual: () => void;
+  onAddManual: (jobPhrase: string) => void;
 }
 
-function logEvents(events: unknown[]) {
+export function logEvents(events: unknown[]) {
   // best-effort; never blocks or throws
   void fetch("/api/category-multilabel/log", {
     method: "POST",
@@ -105,10 +105,7 @@ export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, 
               )}
               <button
                 type="button"
-                onClick={() => {
-                  onAddManual();
-                  logEvents([{ jobPhrase: job.phrase, action: "added_manual" }]);
-                }}
+                onClick={() => onAddManual(job.phrase)}
                 className="inline-flex items-center gap-1 rounded-lg border border-dashed border-surface-300 px-2.5 py-1 text-sm text-surface-400 hover:bg-surface-50 dark:border-surface-600 dark:hover:bg-surface-800"
               >
                 {single ? "+ kita kategorija" : "+ dar viena"}
