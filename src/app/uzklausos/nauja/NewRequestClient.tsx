@@ -117,6 +117,10 @@ function NewRequestV2Form() {
   const [aiError, setAiError] = useState<string | null>(null);
   // Phase A multi-label: per-job suggestions (null = flag off / fallback -> old behaviour).
   const [multilabelJobs, setMultilabelJobs] = useState<MlJob[] | null>(null);
+  // Category zone is resolving (improve categories or the multi-label pipeline).
+  // Drives the "Ieškoma kategorijų…" spinner so the category appears once, not
+  // a chip that gets overwritten by the picker ~6-10s later.
+  const [categorizing, setCategorizing] = useState(false);
 
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -305,8 +309,9 @@ function NewRequestV2Form() {
           location: result.location || current.location,
           budget: result.budget || current.budget,
           deadline: result.deadline || current.deadline,
-          categoryIds:
-            resolvedIds.length > 0 ? resolvedIds.slice(0, MAX_CATEGORIES) : current.categoryIds,
+          // Category is resolved separately below, once we know whether the
+          // multi-label picker will own this zone — so we never paint an improve
+          // chip that the picker then overwrites (the flicker).
         }));
         setAiSuggestions(
           Array.isArray(result.recommendations)
@@ -328,23 +333,35 @@ function NewRequestV2Form() {
         );
         setAiStatus("done");
 
-        if (unresolvedSlugs.length > 0 && resolvedIds.length === 0) {
-          // AI returned slugs but categories haven't loaded yet — defer all.
-          setPendingAiCategorySlugs(unresolvedSlugs);
-        }
-        if (aiSlugs.length === 0) {
-          // AI couldn't match any curated category from the improve flow; try
-          // the dedicated suggestion endpoint for a best-guess fallback.
-          await fillCategoryFromSuggestions(
-            result.improvedDescription ?? trimmed,
-            result.title ?? "",
-          );
-        }
+        // Apply the legacy improve-flow category result. Only invoked when the
+        // multi-label pipeline is off / falls back, so it never races the picker.
+        const applyImproveCategories = async () => {
+          if (resolvedIds.length > 0) {
+            setForm((current) => ({
+              ...current,
+              categoryIds: resolvedIds.slice(0, MAX_CATEGORIES),
+            }));
+          } else if (unresolvedSlugs.length > 0) {
+            // AI returned slugs but categories haven't loaded yet — defer all.
+            setPendingAiCategorySlugs(unresolvedSlugs);
+          }
+          if (aiSlugs.length === 0) {
+            // AI couldn't match any curated category from the improve flow; try
+            // the dedicated suggestion endpoint for a best-guess fallback.
+            await fillCategoryFromSuggestions(
+              result.improvedDescription ?? trimmed,
+              result.title ?? "",
+            );
+          }
+        };
 
-        // Phase A multi-label (flag-gated server-side). When enabled and the
-        // pipeline returns jobs, show per-job suggestions and let the user pick
-        // (UX=C), clearing the auto-filled chips. Off / fallback / error keeps
-        // the behaviour above untouched.
+        // Phase A multi-label (flag-gated server-side). The category zone has a
+        // SINGLE owner per request: when the pipeline is enabled and returns
+        // jobs, the per-job picker owns it (UX=C, nothing auto-selected);
+        // otherwise the legacy improve categories own it. The spinner stays up
+        // for the whole resolution, so the user sees one final result — never a
+        // chip that gets replaced ~6-10s later.
+        setCategorizing(true);
         try {
           const mlRes = await fetch("/api/category-multilabel", {
             method: "POST",
@@ -361,9 +378,13 @@ function NewRequestV2Form() {
             setForm((current) => ({ ...current, categoryIds: [] }));
           } else {
             setMultilabelJobs(null);
+            await applyImproveCategories();
           }
         } catch {
           setMultilabelJobs(null);
+          await applyImproveCategories();
+        } finally {
+          setCategorizing(false);
         }
       } catch {
         setAiError("Tinklo klaida. Bandyk dar kartą arba užpildyk pats.");
@@ -733,6 +754,7 @@ function NewRequestV2Form() {
               onAddCategory={addCategoryId}
               onRemoveCategory={removeCategoryId}
               multilabelJobs={multilabelJobs}
+              categorizing={categorizing}
               location={form.location}
               onLocationChange={(value) => setField("location", value)}
               budget={form.budget}
