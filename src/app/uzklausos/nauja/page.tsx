@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { isCategorizationV2Enabled } from "@/lib/platform-settings";
 import NewRequestClient from "./NewRequestClient";
 
 function NewRequestShell() {
@@ -18,10 +19,13 @@ function NewRequestShell() {
   );
 }
 
-export default function NewRequestV2Page() {
+export default async function NewRequestV2Page() {
+  // v2-only flow disables the legacy ai-improve (description rewrite + Taip/Ne
+  // questions); cached + isolated, defaults false until the flag column exists.
+  const categorizationV2Enabled = await isCategorizationV2Enabled();
   return (
     <Suspense fallback={<NewRequestShell />}>
-      <NewRequestClient />
+      <NewRequestClient categorizationV2Enabled={categorizationV2Enabled} />
     </Suspense>
   );
 }

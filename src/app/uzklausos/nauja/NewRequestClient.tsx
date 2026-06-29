@@ -28,10 +28,10 @@ import ActiveRequestsStrip from "@/components/uzklausos-v2/ActiveRequestsStrip";
 import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
 import { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 
-export default function NewRequestV2Page() {
+export default function NewRequestV2Page({ categorizationV2Enabled = false }: { categorizationV2Enabled?: boolean }) {
   return (
     <Suspense fallback={<NewRequestShell />}>
-      <NewRequestV2Form />
+      <NewRequestV2Form categorizationV2Enabled={categorizationV2Enabled} />
     </Suspense>
   );
 }
@@ -73,7 +73,7 @@ const MAX_CATEGORIES = 3;
 
 type AiStatus = "idle" | "running" | "done" | "error";
 
-function NewRequestV2Form() {
+function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV2Enabled?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status: sessionStatus } = useSession();
@@ -255,6 +255,44 @@ function NewRequestV2Form() {
       setAiStatus("running");
       setAiError(null);
       try {
+        if (categorizationV2Enabled) {
+          // v2-only: legacy ai-improve OFF (no description rewrite, no Taip/Ne
+          // clarification questions) — the v2 multilabel engine is the sole
+          // categorizer. Keep the user's raw text; derive a simple title so the
+          // form stays submittable without the old auto-title.
+          setAiSuggestions([]);
+          setForm((current) => ({
+            ...current,
+            title: current.title || trimmed.split(/[.\n]/)[0].trim().slice(0, 70),
+          }));
+          try {
+            const mlRes = await fetch("/api/category-multilabel", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: trimmed }),
+            });
+            const mlData = (await mlRes.json().catch(() => null)) as
+              | { enabled?: boolean; jobs?: MlJob[] }
+              | null;
+            if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
+              setMultilabelJobs(mlData.jobs);
+              const autoIds = [
+                ...new Set(
+                  mlData.jobs.flatMap((job) =>
+                    job.suggestions.filter((s) => s.auto).map((s) => s.categoryId),
+                  ),
+                ),
+              ].slice(0, MAX_CATEGORIES);
+              setForm((current) => ({ ...current, categoryIds: autoIds }));
+            } else {
+              setMultilabelJobs(null);
+            }
+          } catch {
+            setMultilabelJobs(null);
+          }
+          setAiStatus("done");
+          return;
+        }
         const res = await fetch("/api/requests/improve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -381,7 +419,7 @@ function NewRequestV2Form() {
         setAiStatus("error");
       }
     },
-    [resolveCategorySlug, fillCategoryFromSuggestions],
+    [resolveCategorySlug, fillCategoryFromSuggestions, categorizationV2Enabled],
   );
 
   // ── Effects ──

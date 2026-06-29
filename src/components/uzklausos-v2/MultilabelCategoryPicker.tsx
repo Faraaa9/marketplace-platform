@@ -60,7 +60,9 @@ export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[0.7rem] text-surface-400">
-        Pilki = pasiūlyta. Tapši, kad priimtum — sistema pati nieko neuždeda.
+        {selected.size > 0
+          ? "Pažymėtos parinktos automatiškai. Nuimk netinkamą, „+ dar viena“ pridėk trūkstamą."
+          : "Pilki = pasiūlyta. Tapši, kad priimtum."}
       </p>
       {jobs.map((job, ji) => {
         const shown = expanded[ji] ? [...job.suggestions, ...job.more] : job.suggestions;
