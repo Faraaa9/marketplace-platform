@@ -255,44 +255,6 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
       setAiStatus("running");
       setAiError(null);
       try {
-        if (categorizationV2Enabled) {
-          // v2-only: legacy ai-improve OFF (no description rewrite, no Taip/Ne
-          // clarification questions) — the v2 multilabel engine is the sole
-          // categorizer. Keep the user's raw text; derive a simple title so the
-          // form stays submittable without the old auto-title.
-          setAiSuggestions([]);
-          setForm((current) => ({
-            ...current,
-            title: current.title || trimmed.split(/[.\n]/)[0].trim().slice(0, 70),
-          }));
-          try {
-            const mlRes = await fetch("/api/category-multilabel", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text: trimmed }),
-            });
-            const mlData = (await mlRes.json().catch(() => null)) as
-              | { enabled?: boolean; jobs?: MlJob[] }
-              | null;
-            if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
-              setMultilabelJobs(mlData.jobs);
-              const autoIds = [
-                ...new Set(
-                  mlData.jobs.flatMap((job) =>
-                    job.suggestions.filter((s) => s.auto).map((s) => s.categoryId),
-                  ),
-                ),
-              ].slice(0, MAX_CATEGORIES);
-              setForm((current) => ({ ...current, categoryIds: autoIds }));
-            } else {
-              setMultilabelJobs(null);
-            }
-          } catch {
-            setMultilabelJobs(null);
-          }
-          setAiStatus("done");
-          return;
-        }
         const res = await fetch("/api/requests/improve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -336,10 +298,14 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
           else if (!id) unresolvedSlugs.push(slug);
         }
 
+        const firstLineTitle = trimmed.split(/[.\n]/)[0].trim().slice(0, 70);
         setForm((current) => ({
           ...current,
           description: result.improvedDescription || current.description,
-          title: result.title || current.title,
+          // v2: title from the first line of the user's text; else AI-generated.
+          title: categorizationV2Enabled
+            ? firstLineTitle || result.title || current.title
+            : result.title || current.title,
           location: result.location || current.location,
           budget: result.budget || current.budget,
           deadline: result.deadline || current.deadline,
@@ -395,11 +361,6 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
             | { enabled?: boolean; jobs?: MlJob[] }
             | null;
           if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
-            setMultilabelJobs(mlData.jobs);
-            // v2: pre-select the high-confidence ("auto") suggestions so the user
-            // sees categories already applied (removable). Legacy responses carry
-            // no `auto` flag, so this collapses to [] — identical to the old
-            // "system adds nothing, user taps to pick" behaviour.
             const autoIds = [
               ...new Set(
                 mlData.jobs.flatMap((job) =>
@@ -407,7 +368,21 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
                 ),
               ),
             ].slice(0, MAX_CATEGORIES);
-            setForm((current) => ({ ...current, categoryIds: autoIds }));
+            if (categorizationV2Enabled) {
+              // v2: keep the SIMPLE category-tag design (no per-job picker) — show
+              // the auto-detected (>0.70) categories as removable tags with the
+              // "+ dar viena" add button. ai-improve already set the polished
+              // description + Taip/Ne recommendations above.
+              setMultilabelJobs(null);
+              setForm((current) => ({
+                ...current,
+                categoryIds: autoIds.length > 0 ? autoIds : current.categoryIds,
+              }));
+            } else {
+              // legacy multi-label: per-job picker, user taps to confirm (UX=C).
+              setMultilabelJobs(mlData.jobs);
+              setForm((current) => ({ ...current, categoryIds: [] }));
+            }
           } else {
             setMultilabelJobs(null);
           }
