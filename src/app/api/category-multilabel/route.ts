@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isMultilabelCategoriesEnabled } from "@/lib/platform-settings";
+import { isMultilabelCategoriesEnabled, isCategorizationV2Enabled } from "@/lib/platform-settings";
 import { categorizeMultilabel } from "@/lib/category-multilabel";
 
 // Multi-label categorization endpoint (Phase A, flag-gated).
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     if (!text || text.trim().length < 5) {
       return NextResponse.json({ fallback: true });
     }
-    const jobs = await categorizeMultilabel(text);
+    const v2 = await isCategorizationV2Enabled();
+    const jobs = await categorizeMultilabel(text, { v2 });
     if (!jobs) return NextResponse.json({ fallback: true });
     return NextResponse.json({ enabled: true, jobs });
   } catch {

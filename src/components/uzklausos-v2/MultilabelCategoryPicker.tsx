@@ -11,6 +11,8 @@ export interface MlSuggestion {
   categoryId: string;
   slug: string;
   name: string;
+  confidence?: number; // v2 only
+  auto?: boolean; // v2 only: pre-selected by the parent on load
 }
 export interface MlJob {
   phrase: string;

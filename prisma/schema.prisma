@@ -502,6 +502,7 @@ model PlatformSettings {
   telegramBotEnabled Boolean  @default(true)
   profilePreviewEnabled Boolean @default(true)
   multilabelCategoriesEnabled Boolean @default(false)
+  categorizationV2Enabled Boolean @default(false)
   updatedAt          DateTime @updatedAt
 
   @@map("platform_settings")

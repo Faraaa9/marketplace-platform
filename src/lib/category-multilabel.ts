@@ -1,5 +1,5 @@
 import { embedTexts, denseTopK } from "@/lib/category-dense";
-import { rerankJobs } from "@/lib/category-rerank";
+import { rerankJobs, rerankJobsScored } from "@/lib/category-rerank";
 
 /**
  * Multi-label categorization pipeline (Phase A). segment (LLM) -> per-job dense
@@ -15,6 +15,8 @@ const SEG_MODEL = "google/gemini-2.5-flash";
 const SEG_TIMEOUT_MS = 8_000;
 const STEP_TIMEOUT_MS = 12_000;
 const TOPK = 20;
+const V2_TOPK = 50; // v2: wider candidate net (offline eval: gold-in-1-2 67.5%->72.3%)
+const AUTO_THRESHOLD = 0.7; // v2: picks above this are pre-selected ("auto")
 
 const SEG_PROMPT =
   "Tu skaidai paslaugų užklausas į ATSKIRUS darbus. Grąžink TIK JSON masyvą trumpų darbų frazių. " +
@@ -60,6 +62,8 @@ export interface MultilabelSuggestion {
   categoryId: string;
   slug: string;
   name: string;
+  confidence?: number; // v2 only: 0..1 rerank confidence
+  auto?: boolean; // v2 only: confidence > AUTO_THRESHOLD -> caller pre-selects it
 }
 export interface MultilabelJob {
   phrase: string;
@@ -71,29 +75,53 @@ export interface MultilabelJob {
  * Returns the per-job suggestions, or null to signal the caller to fall back to
  * the existing single-chip behaviour. Never throws.
  */
-export async function categorizeMultilabel(text: string): Promise<MultilabelJob[] | null> {
+export async function categorizeMultilabel(
+  text: string,
+  opts: { v2?: boolean } = {},
+): Promise<MultilabelJob[] | null> {
   try {
     const phrases = await segment(text);
     if (phrases.length === 0) return null;
 
+    const k = opts.v2 ? V2_TOPK : TOPK;
     const vecs = await withTimeout(embedTexts(phrases), STEP_TIMEOUT_MS);
     const dense = await withTimeout(
-      Promise.all(vecs.map((v) => denseTopK(v, TOPK))),
+      Promise.all(vecs.map((v) => denseTopK(v, k))),
       STEP_TIMEOUT_MS,
     );
     // If retrieval came back empty for every job, the pool is unusable -> fall back.
     if (dense.every((d) => d.length === 0)) return null;
-
-    const chosen = await withTimeout(
-      rerankJobs(phrases.map((phrase, i) => ({ phrase, candidates: dense[i].map((c) => c.name) }))),
-      STEP_TIMEOUT_MS,
-    );
 
     const toS = (c: { categoryId: string; slug: string; name: string }): MultilabelSuggestion => ({
       categoryId: c.categoryId,
       slug: c.slug,
       name: c.name,
     });
+    const rerankInput = phrases.map((phrase, i) => ({ phrase, candidates: dense[i].map((c) => c.name) }));
+
+    if (opts.v2) {
+      // v2: scored rerank -> confidence per pick; picks above AUTO_THRESHOLD are
+      // marked `auto` so the caller pre-selects them (the rest stay tappable).
+      const scored = await withTimeout(rerankJobsScored(rerankInput), STEP_TIMEOUT_MS);
+      return phrases.map((phrase, i) => {
+        const byName = new Map(dense[i].map((c) => [c.name, c]));
+        const ranked = (scored[i] ?? [])
+          .map((p) => ({ c: byName.get(p.name), confidence: p.confidence }))
+          .filter((x): x is { c: { categoryId: string; slug: string; name: string }; confidence: number } => !!x.c);
+        const base = ranked.length ? ranked : dense[i].slice(0, 2).map((c) => ({ c, confidence: 0.5 }));
+        const suggestions: MultilabelSuggestion[] = base.map(({ c, confidence }) => ({
+          ...toS(c),
+          confidence,
+          auto: confidence > AUTO_THRESHOLD,
+        }));
+        const taken = new Set(suggestions.map((s) => s.slug));
+        const more = dense[i].filter((c) => !taken.has(c.slug)).slice(0, 5).map(toS);
+        return { phrase, suggestions, more };
+      });
+    }
+
+    // legacy path (unchanged): rerank returns names only, no confidence/auto.
+    const chosen = await withTimeout(rerankJobs(rerankInput), STEP_TIMEOUT_MS);
     return phrases.map((phrase, i) => {
       const pickNames = new Set(chosen[i] ?? []);
       const picks = dense[i].filter((c) => pickNames.has(c.name));

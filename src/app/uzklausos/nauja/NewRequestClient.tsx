@@ -358,7 +358,18 @@ function NewRequestV2Form() {
             | null;
           if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
             setMultilabelJobs(mlData.jobs);
-            setForm((current) => ({ ...current, categoryIds: [] }));
+            // v2: pre-select the high-confidence ("auto") suggestions so the user
+            // sees categories already applied (removable). Legacy responses carry
+            // no `auto` flag, so this collapses to [] — identical to the old
+            // "system adds nothing, user taps to pick" behaviour.
+            const autoIds = [
+              ...new Set(
+                mlData.jobs.flatMap((job) =>
+                  job.suggestions.filter((s) => s.auto).map((s) => s.categoryId),
+                ),
+              ),
+            ].slice(0, MAX_CATEGORIES);
+            setForm((current) => ({ ...current, categoryIds: autoIds }));
           } else {
             setMultilabelJobs(null);
           }

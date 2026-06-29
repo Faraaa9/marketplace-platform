@@ -204,3 +204,44 @@ export async function setMultilabelCategoriesEnabled(enabled: boolean): Promise<
   });
   mlCached = null;
 }
+
+// ---------------------------------------------------------------------------
+// categorizationV2Enabled: the upgraded recognition engine (dense k50 + rerank
+// WITH confidence + few-shot, high-confidence picks auto-selected). Separate
+// kill switch, default OFF, so merging is a NO-OP until flipped. When this is
+// ON, it supersedes the legacy multilabel behaviour. See NOTES.md.
+// ---------------------------------------------------------------------------
+let v2Cached: { value: boolean; fetchedAt: number } | null = null;
+
+/** Whether the v2 (confidence + auto-select) categorization engine is live. */
+export async function isCategorizationV2Enabled(): Promise<boolean> {
+  if (v2Cached && Date.now() - v2Cached.fetchedAt < CACHE_TTL_MS) {
+    return v2Cached.value;
+  }
+  try {
+    const row = await prisma.platformSettings.findUnique({
+      where: { id: "singleton" },
+      select: { categorizationV2Enabled: true },
+    });
+    const value = row?.categorizationV2Enabled ?? false;
+    v2Cached = { value, fetchedAt: Date.now() };
+    return value;
+  } catch (error) {
+    // Column not migrated yet, or a transient error -> OFF (never breaks a request).
+    if (!isSchemaNotReadyError(error)) {
+      console.error("[platform-settings] categorizationV2 flag read failed:", error);
+    }
+    v2Cached = { value: false, fetchedAt: Date.now() };
+    return false;
+  }
+}
+
+/** Flip the v2 categorization kill switch (instant, ~30s cache, no deploy). */
+export async function setCategorizationV2Enabled(enabled: boolean): Promise<void> {
+  await prisma.platformSettings.upsert({
+    where: { id: "singleton" },
+    update: { categorizationV2Enabled: enabled },
+    create: { id: "singleton", categorizationV2Enabled: enabled },
+  });
+  v2Cached = null;
+}

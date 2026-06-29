@@ -858,3 +858,27 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
       naudoja `category_aliases` ar lentele `l`; issiaiskinti pries iterpiant.
       Matchingui NEREIKIA (nuorodos perkeltos fiziskai); tik senu `?category=`
       URL'u testumui.
+
+---
+
+## Kategorizavimas v2 (2026-06-29) — variklio apkeitimas, ETAPAS #1
+
+Tikslas: prototipo variklis (dense k50 + rerank su confidence + few-shot,
+auto-priskyrimas >0.70) tampa VIENINTELIU auto-kategorizavimu visur, senas
+isjungiamas. Si saka = ETAPAS #1 (uzklausos srautas).
+
+- [x] **#1 Uzklausos multilabel** — flag `platform_settings.categorizationV2Enabled`
+      (default OFF). ON: k50 + `rerankJobsScored` (confidence) + auto-select >0.70;
+      OFF: senas elgesys nepaliestas. UI nepakeista (cipai pre-selected + ✕ + „+ kita").
+      Failai: category-rerank.ts, category-multilabel.ts, platform-settings.ts,
+      api/category-multilabel/route.ts, NewRequestClient.tsx, MultilabelCategoryPicker.tsx.
+      **MIGRACIJA reikalinga pries flipinant:**
+      `alter table platform_settings add column "categorizationV2Enabled" boolean not null default false;`
+      + `prisma generate`. Helper graceful (kol stulpelio nera -> OFF).
+- [ ] **#3 Paskyros/profilio kurimas** (`category-picker-ai.ts`, Claude Haiku 2-pass)
+      — perrasyti i embed→dense→rerank+confidence. Atskira saka.
+- [ ] **#2 „Sutvarkyti su AI" + rankinis** (`ai-improve.ts`, `category-suggestions.ts`)
+      — pervesti i ta pati dense variklį. Telegram botas paveldi.
+- [ ] **Senas isjungimas + zyma** — kai #1–#3 padaryta: flipinti `categorizationV2Enabled=true`;
+      senas (deterministinis ai-improve / pickProviderCategoriesAI) lieka kode kaip
+      avarinis fallback. Tada cia pazymeti „LEGACY OFF nuo <data>".
