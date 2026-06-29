@@ -77,6 +77,8 @@ export interface SuggestCategoriesInput {
   text: string;
   title?: string;
   limit?: number;
+  /** skip the AI rerank -> pure deterministic (instant). Used as the categorization fallback. */
+  skipAi?: boolean;
 }
 
 export interface SuggestCategoriesResult {
@@ -574,7 +576,7 @@ async function aiRerank(
   topCandidates: ScoredCandidate[],
 ): Promise<AiRerankOutcome> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey || topCandidates.length === 0) {
+  if (!apiKey || input.skipAi || topCandidates.length === 0) {
     return { result: null, attempted: false, ok: false, model: null, usage: null, latencyMs: 0 };
   }
 

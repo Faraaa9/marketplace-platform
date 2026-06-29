@@ -28,10 +28,10 @@ import ActiveRequestsStrip from "@/components/uzklausos-v2/ActiveRequestsStrip";
 import InlineListingCard from "@/components/uzklausos-v2/InlineListingCard";
 import { type MlJob } from "@/components/uzklausos-v2/MultilabelCategoryPicker";
 
-export default function NewRequestV2Page({ categorizationV2Enabled = false }: { categorizationV2Enabled?: boolean }) {
+export default function NewRequestV2Page() {
   return (
     <Suspense fallback={<NewRequestShell />}>
-      <NewRequestV2Form categorizationV2Enabled={categorizationV2Enabled} />
+      <NewRequestV2Form />
     </Suspense>
   );
 }
@@ -73,7 +73,7 @@ const MAX_CATEGORIES = 3;
 
 type AiStatus = "idle" | "running" | "done" | "error";
 
-function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV2Enabled?: boolean }) {
+function NewRequestV2Form() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status: sessionStatus } = useSession();
@@ -302,10 +302,8 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
         setForm((current) => ({
           ...current,
           description: result.improvedDescription || current.description,
-          // v2: title from the first line of the user's text; else AI-generated.
-          title: categorizationV2Enabled
-            ? firstLineTitle || result.title || current.title
-            : result.title || current.title,
+          // title from the first line of the user's text (else AI-generated)
+          title: firstLineTitle || result.title || current.title,
           location: result.location || current.location,
           budget: result.budget || current.budget,
           deadline: result.deadline || current.deadline,
@@ -345,47 +343,23 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
           );
         }
 
-        // Phase A multi-label (flag-gated server-side). When enabled and the
-        // pipeline returns jobs, show per-job suggestions and let the user pick
-        // (UX=C), clearing the auto-filled chips. Off / fallback / error keeps
-        // the behaviour above untouched.
+        // Two-layer category recognition (server-side): prototype engine ->
+        // deterministic fallback, flag kill switch, logged. Returns a flat list
+        // of categories shown as simple tags (no per-job picker).
         try {
-          const mlRes = await fetch("/api/category-multilabel", {
+          const catRes = await fetch("/api/category-multilabel", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               text: `${result.title ?? ""} ${result.improvedDescription ?? trimmed}`.trim(),
             }),
           });
-          const mlData = (await mlRes.json().catch(() => null)) as
-            | { enabled?: boolean; jobs?: MlJob[] }
+          const catData = (await catRes.json().catch(() => null)) as
+            | { categories?: { id: string; name: string }[]; source?: string }
             | null;
-          if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
-            const autoIds = [
-              ...new Set(
-                mlData.jobs.flatMap((job) =>
-                  job.suggestions.filter((s) => s.auto).map((s) => s.categoryId),
-                ),
-              ),
-            ].slice(0, MAX_CATEGORIES);
-            if (categorizationV2Enabled) {
-              // v2: keep the SIMPLE category-tag design (no per-job picker) — show
-              // the auto-detected (>0.70) categories as removable tags with the
-              // "+ dar viena" add button. ai-improve already set the polished
-              // description + Taip/Ne recommendations above.
-              setMultilabelJobs(null);
-              setForm((current) => ({
-                ...current,
-                categoryIds: autoIds.length > 0 ? autoIds : current.categoryIds,
-              }));
-            } else {
-              // legacy multi-label: per-job picker, user taps to confirm (UX=C).
-              setMultilabelJobs(mlData.jobs);
-              setForm((current) => ({ ...current, categoryIds: [] }));
-            }
-          } else {
-            setMultilabelJobs(null);
-          }
+          setMultilabelJobs(null);
+          const ids = (catData?.categories ?? []).map((c) => c.id).slice(0, MAX_CATEGORIES);
+          if (ids.length > 0) setForm((current) => ({ ...current, categoryIds: ids }));
         } catch {
           setMultilabelJobs(null);
         }
@@ -394,7 +368,7 @@ function NewRequestV2Form({ categorizationV2Enabled = false }: { categorizationV
         setAiStatus("error");
       }
     },
-    [resolveCategorySlug, fillCategoryFromSuggestions, categorizationV2Enabled],
+    [resolveCategorySlug, fillCategoryFromSuggestions],
   );
 
   // ── Effects ──
