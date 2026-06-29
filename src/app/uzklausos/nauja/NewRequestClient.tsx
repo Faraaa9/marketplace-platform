@@ -121,6 +121,10 @@ function NewRequestV2Form() {
   // Drives the "Ieškoma kategorijų…" spinner so the category appears once, not
   // a chip that gets overwritten by the picker ~6-10s later.
   const [categorizing, setCategorizing] = useState(false);
+  // Guards runAiImprove against re-entrant / concurrent triggers (e.g. a second
+  // "Toliau" press while the pipeline is still resolving) — the source of the
+  // duplicated picker + wiped selection.
+  const aiInFlightRef = useRef(false);
 
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -256,6 +260,10 @@ function NewRequestV2Form() {
     async (text: string) => {
       const trimmed = text.trim();
       if (trimmed.length < 15) return;
+      // A run is already in flight (improve + ~6-10s multi-label pipeline) —
+      // ignore the new trigger so it can't double the picker or wipe picks.
+      if (aiInFlightRef.current) return;
+      aiInFlightRef.current = true;
       setAiStatus("running");
       setAiError(null);
       try {
@@ -389,6 +397,8 @@ function NewRequestV2Form() {
       } catch {
         setAiError("Tinklo klaida. Bandyk dar kartą arba užpildyk pats.");
         setAiStatus("error");
+      } finally {
+        aiInFlightRef.current = false;
       }
     },
     [resolveCategorySlug, fillCategoryFromSuggestions],
@@ -740,7 +750,11 @@ function NewRequestV2Form() {
               title={form.title}
               onTitleChange={(value) => setField("title", value)}
               description={form.description}
-              onDescriptionChange={(value) => setField("description", value)}
+              onDescriptionChange={(value) => {
+                setField("description", value);
+                // Editing the description re-enables "Toliau" for a fresh run.
+                if (aiStatus === "done") setAiStatus("idle");
+              }}
               attachmentUrls={form.attachmentUrls}
               onRemovePhoto={removePhoto}
               onUploadFiles={uploadPhotos}
@@ -768,6 +782,7 @@ function NewRequestV2Form() {
               showCategoryError={showErrors && !categoryOk}
               onTriggerAi={() => void runAiImprove(form.description)}
               aiRunning={aiIsRunning}
+              aiCompleted={aiStatus === "done"}
             />
           </div>
         </>

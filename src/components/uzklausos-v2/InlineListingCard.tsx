@@ -78,6 +78,10 @@ interface InlineListingCardProps {
   onTriggerAi: () => void;
   /** True while the AI improve request is in flight — disables the button. */
   aiRunning: boolean;
+  /** True once an AI run has completed for the current description — the in-card
+   *  "Toliau" stops re-firing the heavy pipeline (re-enabled when the user edits
+   *  the description). */
+  aiCompleted?: boolean;
 }
 
 /** The editable v2 listing card, rendered in the paper-note aesthetic that
@@ -114,6 +118,7 @@ export default function InlineListingCard({
   showCategoryError = false,
   onTriggerAi,
   aiRunning,
+  aiCompleted,
 }: InlineListingCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -124,6 +129,10 @@ export default function InlineListingCard({
     () => description.trim().length >= MIN_DESCRIPTION_CHARS,
     [description],
   );
+  // "Toliau" stays busy for the whole pipeline (improve + multi-label), and once
+  // a run has completed it no longer re-fires (avoids the duplicated picker).
+  const aiButtonBusy = aiRunning || !!categorizing;
+  const aiButtonDisabled = !aiButtonUnlocked || aiButtonBusy || !!aiCompleted;
 
   // Grow the description textarea to fit content.
   const resizeDescription = useCallback(() => {
@@ -424,15 +433,15 @@ export default function InlineListingCard({
             <button
               type="button"
               onClick={onTriggerAi}
-              disabled={!aiButtonUnlocked || aiRunning}
+              disabled={aiButtonDisabled}
               aria-label="Toliau"
               className={cn(
                 "ml-auto inline-flex items-center gap-1.5 rounded-md bg-[#A84E2E] px-4 py-2 text-[0.82rem] font-medium text-white shadow-sm transition-all hover:bg-[#933F22]",
-                aiButtonUnlocked && !aiRunning && "hover:scale-105 active:scale-95",
-                (!aiButtonUnlocked || aiRunning) && "cursor-not-allowed opacity-40 hover:scale-100",
+                !aiButtonDisabled && "hover:scale-105 active:scale-95",
+                aiButtonDisabled && "cursor-not-allowed opacity-40 hover:scale-100",
               )}
             >
-              {aiRunning && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {aiButtonBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Toliau
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
