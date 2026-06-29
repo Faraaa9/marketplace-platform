@@ -14,7 +14,11 @@ import { rerankJobs } from "@/lib/category-rerank";
 const SEG_MODEL = "google/gemini-2.5-flash";
 const SEG_TIMEOUT_MS = 8_000;
 const STEP_TIMEOUT_MS = 12_000;
-const TOPK = 20;
+// Wider candidate net: offline eval (36-req/83-job multi-label golden) measured
+// gold-in-1-2 67.5% @20 -> 72.3% @50 (+~5pp), all-jobs-correct 33%->42%. The LLM
+// rerank still picks 1-2, so the only cost is a larger rerank prompt (50 vs 20
+// candidate names/job) — bounded by STEP_TIMEOUT_MS. User still confirms every pick.
+const TOPK = 50;
 
 const SEG_PROMPT =
   "Tu skaidai paslaugų užklausas į ATSKIRUS darbus. Grąžink TIK JSON masyvą trumpų darbų frazių. " +
