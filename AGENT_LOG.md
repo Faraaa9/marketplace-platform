@@ -17,6 +17,18 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-07-01 00:35 — Claude
+
+**Commit:** `695eda5` — security(db): enable deny-all RLS on category_recognition_log · lokalus
+
+**Pakeitimai:** 1 file changed, 32 insertions(+)
+
+**Failai:**
+- prisma/manual-migrations/20260701_category_recognition_log_rls.sql
+
+**Toliau:** _(papildyk ranka kai aišku)_
+
+
 ## 2026-06-28 03:04 — Claude
 
 **Commit:** `61866a4` — perf(profilis,admin): server-fetch profile + instant nav skeletons · lokalus
