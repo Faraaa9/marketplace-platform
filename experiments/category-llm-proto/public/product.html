@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nauja užklausa · paslaugų rinka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f0e8; --sheet:#fdfcfa; --ink:#23201b; --muted:#7a766c; --faint:#a39d90;
+    --line:#e7e1d4; --line-2:#d9d2c2;
+    --terra:#bd5d39; --terra-d:#8f4527; --terra-bg:#f6e9e1; --terra-line:#e3c4b4;
+    --ok:#3f7a4f; --ok-bg:#e9f1ea;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+        font:16px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;}
+  .app{max-width:540px;margin:0 auto;padding:18px 16px 60px;}
+  .brand{display:flex;align-items:center;gap:8px;margin:6px 2px 16px;}
+  .brand .mark{width:24px;height:24px;border-radius:6px;background:var(--terra);color:#fff;
+        display:flex;align-items:center;justify-content:center;font-family:Lora,serif;font-weight:600;font-size:15px;}
+  .brand b{font-weight:600;font-size:15px;letter-spacing:-.01em;}
+  .brand b span{color:var(--terra);}
+  .brand .step{margin-left:auto;font-size:12px;color:var(--faint);}
+
+  .sheet{background:var(--sheet);border:1px solid var(--line);border-radius:16px;
+        padding:22px 20px;box-shadow:0 1px 0 rgba(0,0,0,.02);}
+  h1{font-family:Lora,serif;font-weight:600;font-size:21px;margin:0 0 2px;letter-spacing:-.01em;}
+  .lead{color:var(--muted);font-size:13.5px;margin:0 0 18px;}
+  label.f{display:block;font-size:13px;font-weight:500;color:var(--ink);margin:0 0 7px;}
+  textarea,input{width:100%;font:inherit;background:#fff;border:1px solid var(--line-2);border-radius:11px;
+        padding:12px 13px;color:var(--ink);}
+  textarea{min-height:96px;resize:vertical;line-height:1.5;}
+  textarea:focus,input:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 3px var(--terra-bg);}
+  ::placeholder{color:var(--faint);}
+  .hint{font-size:12px;color:var(--faint);margin:7px 2px 0;}
+  .hint a{color:var(--terra);text-decoration:none;cursor:pointer;}
+
+  .btn{font:inherit;font-weight:500;border-radius:11px;padding:11px 18px;cursor:pointer;border:1px solid transparent;}
+  .btn.primary{background:var(--terra);color:#fff;width:100%;font-size:15px;}
+  .btn.primary:disabled{opacity:.55;cursor:default;}
+  .btn.ghost{background:#fff;border-color:var(--line-2);color:var(--ink);}
+
+  /* categories block */
+  .cats{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);}
+  .cats-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;}
+  .cats-head .t{font-size:13px;font-weight:500;}
+  .auto-pill{font-size:11px;color:var(--terra-d);background:var(--terra-bg);border:1px solid var(--terra-line);
+        border-radius:20px;padding:2px 9px;display:inline-flex;align-items:center;gap:5px;}
+  .auto-pill .dot{width:5px;height:5px;border-radius:50%;background:var(--terra);}
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:8px;font-family:Lora,serif;font-size:14.5px;
+        background:var(--terra-bg);color:var(--terra-d);border:1px solid var(--terra-line);
+        border-radius:10px;padding:6px 9px 6px 12px;transition:background .12s;}
+  .chip .x{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
+        cursor:pointer;color:var(--terra-d);font-size:13px;}
+  .chip .x:hover{background:var(--terra-line);}
+  .chip.off{background:#f4f2ee;border-color:var(--line);color:var(--faint);text-decoration:line-through;}
+  .add{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;color:var(--muted);
+        background:#fff;border:1px dashed var(--line-2);border-radius:10px;padding:6px 12px;cursor:pointer;}
+  .add:hover{border-color:var(--terra);color:var(--terra);}
+  .search{position:relative;margin-top:11px;}
+  .search input{font-size:14px;}
+  .results{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line-2);
+        border-radius:11px;box-shadow:0 6px 22px rgba(0,0,0,.08);overflow:hidden;z-index:5;}
+  .results .r{padding:10px 13px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);}
+  .results .r:last-child{border-bottom:0;}
+  .results .r:hover{background:var(--terra-bg);color:var(--terra-d);}
+  .results .none{padding:10px 13px;font-size:13px;color:var(--faint);}
+  .meta-row{display:flex;gap:10px;margin-top:18px;}
+  .meta-row > div{flex:1;}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--terra-line);border-top-color:var(--terra);
+        border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px;}
+  @keyframes s{to{transform:rotate(360deg);}}
+
+  /* published listing */
+  .posted-banner{display:flex;align-items:center;gap:8px;background:var(--ok-bg);color:var(--ok);
+        border:1px solid #cfe2d3;border-radius:11px;padding:10px 13px;font-size:13.5px;font-weight:500;margin-bottom:14px;}
+  .listing{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:20px;}
+  .listing h2{font-family:Lora,serif;font-weight:600;font-size:18px;margin:0 0 7px;}
+  .listing .desc{font-size:14.5px;color:#3a362e;margin:0 0 14px;white-space:pre-wrap;}
+  .listing .tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .tag{font-family:Lora,serif;font-size:13.5px;background:#efe7d6;color:#6c5d3e;border:1px solid #e0d4ba;
+        border-radius:8px;padding:4px 10px;}
+  .listing .foot{display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--faint);
+        border-top:1px solid var(--line);padding-top:12px;}
+  .listing .foot i{font-style:normal;}
+  .reset{margin-top:16px;text-align:center;}
+  .reset a{color:var(--terra);font-size:13px;cursor:pointer;text-decoration:none;}
+  .err{color:#a3322f;font-size:13px;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">
+    <span class="mark">p</span><b>paslaugų<span>rinka</span></b>
+    <span class="step" id="step">1 / 2 · užklausa</span>
+  </div>
+
+  <!-- COMPOSE -->
+  <section class="sheet" id="compose">
+    <h1>Kokios paslaugos ieškai?</h1>
+    <p class="lead">Aprašyk darbą savais žodžiais — kategorijas parinksime už tave.</p>
+
+    <label class="f" for="desc">Darbo aprašymas</label>
+    <textarea id="desc" placeholder="pvz. Reikia perdažyti buto sienas, paklijuoti plyteles vonioje ir pajungti klozetą"></textarea>
+    <p class="hint">Nežinai nuo ko pradėti? <a id="ex">Įkelti pavyzdį</a></p>
+
+    <div id="catsWrap"></div>
+
+    <div class="meta-row" id="metaRow" style="display:none;">
+      <div><label class="f" for="loc">Vieta</label><input id="loc" placeholder="Miestas" /></div>
+      <div><label class="f" for="bud">Biudžetas (nebūtina)</label><input id="bud" placeholder="pvz. iki 500 €" /></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn primary" id="go">Parinkti kategorijas</button>
+    </div>
+    <div id="err"></div>
+  </section>
+
+  <!-- PUBLISHED -->
+  <section id="published" style="display:none;">
+    <div class="posted-banner"><span>✓</span> Užklausa paskelbta — netrukus atsilieps meistrai</div>
+    <article class="listing">
+      <h2 id="pTitle"></h2>
+      <p class="desc" id="pDesc"></p>
+      <div class="tags" id="pTags"></div>
+      <div class="foot">
+        <i id="pLoc">📍 Lietuva</i>
+        <i>🕑 ką tik</i>
+        <i id="pBud" style="display:none;"></i>
+      </div>
+    </article>
+    <div class="reset"><a id="again">← Nauja užklausa</a></div>
+  </section>
+</div>
+
+<script>
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:5577';
+const AUTO_MIN = 0.70;
+const EXAMPLE = "Reikalinga suprojektuoti supaprastintą nuovažą į sklypą pagal išduotas sąlygas. Adresas: Lazdynų 29 Palanga";
+
+const $ = id => document.getElementById(id);
+const desc = $('desc'), go = $('go'), catsWrap = $('catsWrap'), metaRow = $('metaRow');
+let chosen = []; // {category, on}
+
+$('ex').onclick = () => { desc.value = EXAMPLE; desc.focus(); };
+
+function esc(s){ return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function fold(s){ return (s||'').toLowerCase().replace(/[ąčęėįšųūž]/g,m=>({'ą':'a','č':'c','ę':'e','ė':'e','į':'i','š':'s','ų':'u','ū':'u','ž':'z'}[m])).trim(); }
+
+function makeChip(c){
+  const chip = document.createElement('span');
+  chip.className = 'chip' + (c.on ? '' : ' off');
+  chip.append(document.createTextNode(c.category + ' '));
+  const x = document.createElement('span'); x.className='x';
+  const sync = () => { x.textContent = c.on?'✕':'↺'; x.title = c.on?'Pašalinti':'Grąžinti'; chip.className='chip'+(c.on?'':' off'); };
+  x.onclick = () => { c.on = !c.on; sync(); };
+  sync(); chip.appendChild(x);
+  return chip;
+}
+
+function renderCats(){
+  catsWrap.innerHTML =
+    '<div class="cats"><div class="cats-head"><span class="t">Kategorijos</span>'+
+    '<span class="auto-pill"><span class="dot"></span>parinkta automatiškai</span></div>'+
+    '<div class="chiprow" id="chiprow"></div>'+
+    '<div class="search" id="searchBox" style="display:none;"><input id="catq" placeholder="Ieškok kategorijos…" autocomplete="off"/><div class="results" id="results"></div></div>'+
+    '</div>';
+  const row = $('chiprow');
+  chosen.forEach(c => row.appendChild(makeChip(c)));
+  const add = document.createElement('span'); add.className='add'; add.id='addBtn'; add.textContent='+ kita kategorija';
+  add.onclick = toggleSearch; row.appendChild(add);
+  $('catq').oninput = e => doSearch(e.target.value);
+  metaRow.style.display = 'flex';
+  go.textContent = 'Skelbti užklausą';
+  go.onclick = publish;
+}
+
+let allCats=null;
+async function loadCats(){
+  if(allCats) return;
+  try{ const r=await fetch(API+'/categories'); allCats=await r.json(); }catch(e){ allCats=[]; }
+}
+
+function toggleSearch(){
+  const b = $('searchBox'); const open = b.style.display === 'none';
+  b.style.display = open ? 'block' : 'none';
+  if(open){ loadCats(); $('catq').focus(); } else { $('catq').value=''; $('results').innerHTML=''; }
+}
+
+let searchT;
+function doSearch(v){
+  clearTimeout(searchT);
+  const q=(v||'').trim(); const box=$('results');
+  if(q.length<2){ box.innerHTML=''; return; }
+  searchT=setTimeout(async ()=>{
+    await loadCats();
+    const fq=fold(q), root=fq.replace(/[aeiouy]+$/,''); // strip trailing vowels -> LT-declension-safe stem
+    const have=new Set(chosen.map(c=>fold(c.category)));
+    const list=(allCats||[]).filter(n=>{
+      const fn=fold(n); if(have.has(fn)) return false;
+      if(fn.includes(fq)) return true;                                   // exact substring
+      return root.length>=3 && fn.split(/[^a-z]+/).some(w=>w.startsWith(root)); // word starts with stem
+    }).slice(0,8);
+    box.innerHTML = list.length ? '' : '<div class="none">nieko nerasta</div>';
+    list.forEach(n=>{ const d=document.createElement('div'); d.className='r'; d.textContent=n; d.onclick=()=>addCategory(n); box.appendChild(d); });
+  },180);
+}
+
+function addCategory(name){
+  const c={category:name, on:true}; chosen.push(c);
+  $('chiprow').insertBefore(makeChip(c), $('addBtn'));
+  toggleSearch();
+}
+
+async function classify(){
+  const text = desc.value.trim();
+  if(!text){ desc.focus(); return; }
+  go.disabled = true; go.innerHTML = '<span class="spin"></span>Parenkame…'; $('err').textContent='';
+  try{
+    const r = await fetch(API+'/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const d = await r.json();
+    if(d.error){ $('err').innerHTML='<div class="err">Klaida: '+esc(d.error)+'</div>'; return; }
+    const seen = new Set();
+    chosen = [];
+    (d.jobs||[]).forEach(j => (j.picks||[]).forEach(p => {
+      if(p.confidence > AUTO_MIN && !seen.has(p.category)){ seen.add(p.category); chosen.push({category:p.category, on:true}); }
+    }));
+    if(!chosen.length){
+      // fallback: take the single best pick so the user is never stuck
+      const best = (d.jobs||[]).flatMap(j=>j.picks||[]).sort((a,b)=>b.confidence-a.confidence)[0];
+      if(best) chosen=[{category:best.category, on:true}];
+    }
+    renderCats();
+  }catch(e){ $('err').innerHTML='<div class="err">Tinklo klaida: '+esc(e.message)+'</div>'; }
+  finally{ go.disabled=false; go.textContent = chosen.length?'Skelbti užklausą':'Parinkti kategorijas'; }
+}
+
+function publish(){
+  const active = chosen.filter(c=>c.on);
+  if(!active.length){ $('err').innerHTML='<div class="err">Palik bent vieną kategoriją.</div>'; return; }
+  const text = desc.value.trim();
+  const title = text.split(/[.\n]/)[0].trim().slice(0,70) + (text.split(/[.\n]/)[0].length>70?'…':'');
+  $('pTitle').textContent = title || 'Paslaugos užklausa';
+  $('pDesc').textContent = text;
+  $('pTags').innerHTML = active.map(c=>'<span class="tag">'+esc(c.category)+'</span>').join('');
+  const loc = $('loc').value.trim(); $('pLoc').textContent = '📍 ' + (loc || 'Lietuva');
+  const bud = $('bud').value.trim();
+  if(bud){ $('pBud').style.display='inline'; $('pBud').textContent = '💶 ' + bud; }
+  $('compose').style.display='none'; $('published').style.display='block'; $('step').textContent='2 / 2 · paskelbta';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+$('again').onclick = () => {
+  $('published').style.display='none'; $('compose').style.display='block';
+  catsWrap.innerHTML=''; metaRow.style.display='none'; chosen=[]; desc.value='';
+  go.textContent='Parinkti kategorijas'; go.onclick=classify; $('step').textContent='1 / 2 · užklausa'; desc.focus();
+};
+
+go.onclick = classify;
+desc.addEventListener('keydown', e => { if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){ (go.textContent.includes('Skelbti')?publish:classify)(); }});
+</script>
+</body>
+</html>

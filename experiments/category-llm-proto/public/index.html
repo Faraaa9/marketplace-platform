@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kategorijų prototipas</title>
+<style>
+  :root { --bg:#fafafa; --card:#fff; --ink:#1c1b1a; --muted:#6b6962; --line:#e7e5df;
+          --terra:#c4633f; --terra-bg:#f7ece7; --green:#3b7a4e; --green-bg:#e8f1ea;
+          --amber:#9a6b12; --amber-bg:#f7efdd; --gray-bg:#efeee9; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:28px 20px 60px; }
+  h1 { font-size:20px; font-weight:600; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 20px; }
+  textarea { width:100%; min-height:72px; padding:12px 14px; border:1px solid var(--line);
+             border-radius:10px; font:inherit; resize:vertical; background:var(--card); }
+  textarea:focus { outline:none; border-color:var(--terra); }
+  .row { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  button { background:var(--terra); color:#fff; border:0; padding:10px 18px; border-radius:10px;
+           font:inherit; font-weight:500; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .chip { font-size:12px; color:var(--muted); background:var(--gray-bg); border:1px solid var(--line);
+          border-radius:14px; padding:4px 10px; cursor:pointer; }
+  .chip:hover { border-color:var(--terra); color:var(--terra); }
+  .meta { color:var(--muted); font-size:12px; margin:18px 0 8px; }
+  .job { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+  .jobhead { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .phrase { font-weight:600; }
+  .draft { color:var(--muted); font-weight:400; font-size:13px; }
+  .badge { font-size:12px; font-weight:600; padding:3px 10px; border-radius:8px; white-space:nowrap; }
+  .b-auto { background:var(--green-bg); color:var(--green); }
+  .b-confirm { background:var(--amber-bg); color:var(--amber); }
+  .b-none { background:var(--gray-bg); color:var(--muted); }
+  .pick { display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .pname { flex:0 0 auto; font-size:14px; }
+  .pname.first { font-weight:600; }
+  .bar { flex:1; height:6px; background:var(--gray-bg); border-radius:4px; overflow:hidden; min-width:60px; }
+  .bar > i { display:block; height:100%; background:var(--terra); }
+  .conf { flex:0 0 44px; text-align:right; font-size:12px; color:var(--muted); }
+  .why { font-size:12px; color:var(--muted); margin-top:10px; padding-top:8px; border-top:1px dashed var(--line); }
+  .cands { font-size:12px; color:var(--muted); margin-top:6px; }
+  .legend { font-size:12px; color:var(--muted); margin-top:22px; line-height:1.7; border-top:1px solid var(--line); padding-top:14px; }
+  .err { color:#a3322f; font-size:13px; margin-top:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kategorijų klasifikavimo prototipas</h1>
+  <p class="sub">Izoliuotas eksperimentas · DB tik skaitomas · raktas serveryje. Įvesk paslaugų užklausą (gali būti keli darbai).</p>
+
+  <textarea id="q" placeholder="pvz. Reikia nupjaut žolę, iškasti tvenkinį ir nuplaut mašiną"></textarea>
+  <div class="row">
+    <button id="go">Klasifikuoti</button>
+    <span id="status" class="sub" style="margin:0;"></span>
+  </div>
+  <div class="chips" id="examples"></div>
+
+  <div id="out"></div>
+
+  <div class="legend">
+    <strong>Auto-gate</strong> (dense∩rerank sutapimas): kai LLM rerank pirmas pasirinkimas sutampa su embeddingų pirmu kandidatu — ~93% tikslumas, eina <span style="color:var(--green)">AUTO</span>. Kitaip — <span style="color:var(--amber)">PATVIRTINTI</span> (one-tap). Matuota: ~pusė srauto gali eiti auto.
+  </div>
+</div>
+
+<script>
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:5577';
+const EXAMPLES = [
+  "Reikia nupjaut žolę, iškasti tvenkinį ir nuplaut mašiną",
+  "Sienų dažymas, plytelių klojimas ir kriauklės keitimas",
+  "Sugedo skalbyklė ir indaplovė, abi reikia pataisyt",
+  "Reikia fotografo vestuvėm ir video operatoriaus",
+  "Pilna vonios renovacija",
+];
+const out = document.getElementById('out');
+const statusEl = document.getElementById('status');
+const qEl = document.getElementById('q');
+const goEl = document.getElementById('go');
+
+const exWrap = document.getElementById('examples');
+EXAMPLES.forEach(t => {
+  const c = document.createElement('span'); c.className = 'chip'; c.textContent = t;
+  c.onclick = () => { qEl.value = t; run(); };
+  exWrap.appendChild(c);
+});
+
+function esc(s){ return (s||'').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+const BADGE = {
+  auto_high: ['b-auto','AUTO ✓✓'], auto: ['b-auto','AUTO ✓'],
+  confirm: ['b-confirm','PATVIRTINTI'], none: ['b-none','NĖRA']
+};
+
+function render(data){
+  if (data.error){ out.innerHTML = '<div class="err">Klaida: '+esc(data.error)+'</div>'; return; }
+  const jobs = data.jobs || [];
+  const autoN = jobs.filter(j => j.verdict === 'auto' || j.verdict === 'auto_high').length;
+  let html = '<div class="meta">'+jobs.length+' darbai · '+autoN+' → AUTO · '+data.ms+'ms · '+esc(data.model)+'</div>';
+  for (const j of jobs){
+    const [cls,label] = BADGE[j.verdict] || BADGE.none;
+    html += '<div class="job"><div class="jobhead"><div class="phrase">'+esc(j.phrase)+
+            (j.draft ? ' <span class="draft">· spėjimas: '+esc(j.draft)+'</span>' : '')+
+            '</div><span class="badge '+cls+'">'+label+'</span></div>';
+    if (j.picks && j.picks.length){
+      j.picks.forEach((p,i) => {
+        const pc = Math.round((p.confidence||0)*100);
+        html += '<div class="pick"><span class="pname'+(i===0?' first':'')+'">'+(i===0?'→ ':'   ')+esc(p.category)+
+                '</span><span class="bar"><i style="width:'+pc+'%"></i></span><span class="conf">'+ (p.confidence||0).toFixed(2) +'</span></div>';
+      });
+    } else {
+      html += '<div class="cands">jokio pasirinkimo</div>';
+    }
+    html += '<div class="why">embeddingų #1: <b>'+esc(j.denseTop1)+'</b> · sutampa su rerank: '+(j.agree?'taip':'ne')+'</div>';
+    html += '<div class="cands">kiti kandidatai: '+esc((j.candidates||[]).slice(0,6).join('  ·  '))+'</div>';
+    html += '</div>';
+  }
+  out.innerHTML = html;
+}
+
+async function run(){
+  const text = qEl.value.trim();
+  if (!text) return;
+  goEl.disabled = true; statusEl.textContent = 'galvoju…'; out.innerHTML = '';
+  try {
+    const r = await fetch(API + '/classify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    render(await r.json());
+  } catch(e){ out.innerHTML = '<div class="err">Tinklo klaida: '+esc(e.message)+'</div>'; }
+  finally { goEl.disabled = false; statusEl.textContent = ''; }
+}
+goEl.onclick = run;
+qEl.addEventListener('keydown', e => { if ((e.metaKey||e.ctrlKey) && e.key === 'Enter') run(); });
+</script>
+</body>
+</html>

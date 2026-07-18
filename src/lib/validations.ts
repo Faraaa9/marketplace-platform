@@ -137,6 +137,16 @@ export const providerProfileSchema = z.object({
   website: z.string().url("Neteisingas URL formatas").optional().or(z.literal("")),
 });
 
+// Minimal "go live in 60s" onboarding — no description/price/photos required.
+// description is auto-stubbed server-side; the full editor (providerProfileSchema)
+// enforces the richer rules later.
+export const quickOnboardSchema = z.object({
+  displayName: z.string().trim().min(2, "Įveskite vardą"),
+  location: z.string().trim().min(1, "Pasirinkite miestą").max(100),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  categoryIds: z.array(z.string().min(1)).min(1, "Pasirinkite bent vieną sritį"),
+});
+
 export const directInquirySchema = z.object({
   providerId: z.string().min(1, "Trūksta tiekėjo ID"),
   description: z.string().min(20, "Žinutė turi būti bent 20 simbolių").max(2000, "Žinutė per ilga (max 2000)"),
@@ -156,4 +166,5 @@ export type CategorySuggestionsInput = z.infer<typeof categorySuggestionsSchema>
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ProviderProfileInput = z.infer<typeof providerProfileSchema>;
+export type QuickOnboardInput = z.infer<typeof quickOnboardSchema>;
 export type DirectInquiryInput = z.infer<typeof directInquirySchema>;

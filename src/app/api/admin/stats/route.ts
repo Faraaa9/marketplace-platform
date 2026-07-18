@@ -8,6 +8,7 @@ import { buildDayBuckets } from "@/lib/admin/day-buckets";
 import { getAiUsageStats } from "@/lib/admin/ai-usage";
 import { getMarketplaceIntelligence } from "@/lib/admin/marketplace-intelligence";
 import { getFollowUpAdminSignal } from "@/lib/admin/follow-up-signal";
+import { getEmailDeliverySettings } from "@/lib/platform-settings";
 
 export async function GET() {
   await connection();
@@ -37,6 +38,7 @@ export async function GET() {
       aiUsage,
       marketplaceIntelligence,
       followUps,
+      emailDelivery,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "PROVIDER" } }),
@@ -65,6 +67,7 @@ export async function GET() {
       getAiUsageStats(fourteenDaysAgo),
       getMarketplaceIntelligence(fourteenDaysAgo),
       getFollowUpAdminSignal(fourteenDaysAgo),
+      getEmailDeliverySettings(),
     ]);
 
     const chartData = buildDayBuckets(recentRequests);
@@ -90,6 +93,8 @@ export async function GET() {
         aiUsage,
         marketplaceIntelligence,
         followUps,
+        emailTestMode: emailDelivery.emailTestMode,
+        emailAllowlistCount: emailDelivery.emailAllowlist.length,
       },
     });
   } catch (error) {

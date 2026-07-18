@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kategorijų automatika</title>
+<style>
+  :root { --bg:#fafafa; --card:#fff; --ink:#1c1b1a; --muted:#6b6962; --line:#e7e5df;
+          --terra:#c4633f; --terra-bg:#f7ece7; --terra-ink:#8a4226; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:28px 20px 60px; }
+  h1 { font-size:20px; font-weight:600; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 20px; }
+  textarea { width:100%; min-height:72px; padding:12px 14px; border:1px solid var(--line);
+             border-radius:10px; font:inherit; resize:vertical; background:var(--card); }
+  textarea:focus { outline:none; border-color:var(--terra); }
+  .row { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  button.go { background:var(--terra); color:#fff; border:0; padding:10px 18px; border-radius:10px;
+              font:inherit; font-weight:500; cursor:pointer; }
+  button.go:disabled { opacity:.5; cursor:default; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .ex { font-size:12px; color:var(--muted); background:#efeee9; border:1px solid var(--line);
+        border-radius:14px; padding:4px 10px; cursor:pointer; }
+  .ex:hover { border-color:var(--terra); color:var(--terra); }
+  .meta { color:var(--muted); font-size:12px; margin:18px 0 8px; }
+  .job { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+  .phrase { font-weight:600; margin-bottom:10px; }
+  .auto { display:flex; flex-wrap:wrap; gap:8px; }
+  /* auto-applied chip (terracotta, removable) */
+  .cat { display:inline-flex; align-items:center; gap:7px; border-radius:9px; padding:5px 8px 5px 11px;
+         font-size:14px; font-weight:500; border:1px solid var(--terra); background:var(--terra-bg); color:var(--terra-ink); }
+  .cat .c { font-size:11px; font-weight:400; opacity:.7; }
+  .cat .x { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
+            border-radius:50%; cursor:pointer; color:var(--terra-ink); }
+  .cat .x:hover { background:#e7cfc3; }
+  /* removed (opted-out) chip */
+  .cat.off { border-color:var(--line); background:#f3f2ee; color:var(--muted); text-decoration:line-through; }
+  .cat.off .x { color:var(--muted); }
+  /* low-confidence optional suggestion (click to add) */
+  .opt { display:inline-flex; align-items:center; gap:6px; border:1px dashed var(--line); border-radius:9px;
+         padding:5px 10px; font-size:13px; color:var(--muted); background:#fff; cursor:pointer; }
+  .opt:hover { border-color:var(--terra); color:var(--terra); }
+  .none { font-size:13px; color:var(--muted); }
+  .cands { font-size:12px; color:var(--muted); margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); }
+  .legend { font-size:12px; color:var(--muted); margin-top:22px; border-top:1px solid var(--line); padding-top:14px; line-height:1.7; }
+  .err { color:#a3322f; font-size:13px; margin-top:12px; }
+  a { color:var(--terra); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kategorijų automatika <span style="font-size:13px;font-weight:400;color:var(--muted)">(opt-out)</span></h1>
+  <p class="sub">Variantai su pasitikėjimu &gt; 0.70 uždedami <b>automatiškai</b> — nieko tvirtinti nereikia. Nereikalingą atjunk paspaudęs ✕. (<a href="/">← patvirtinimo variantas</a>)</p>
+
+  <textarea id="q" placeholder="pvz. Reikalinga suprojektuoti nuovažą į sklypą, Palanga"></textarea>
+  <div class="row"><button class="go" id="go">Klasifikuoti</button><span id="status" class="sub" style="margin:0;"></span></div>
+  <div class="chips" id="examples"></div>
+
+  <div id="out"></div>
+
+  <div class="legend">
+    <b>Auto</b> = pasitikėjimas &gt; 0.70 → kategorija pritaikoma iš karto, su ✕ atjungimui. Žemiau 0.70 → siūloma punktyru, pridedi paspaudęs. Skaičius dešinėje = confidence.
+  </div>
+</div>
+
+<script>
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:5577';
+const AUTO_MIN = 0.70;
+const EXAMPLES = [
+  "Reikalinga suprojektuoti nuovažą į sklypą, Palanga",
+  "Sienų dažymas, plytelių klojimas ir kriauklės keitimas",
+  "Reikia nupjaut žolę, iškasti tvenkinį ir nuplaut mašiną",
+  "Pilna vonios renovacija",
+];
+const out = document.getElementById('out');
+const statusEl = document.getElementById('status');
+const qEl = document.getElementById('q');
+const goEl = document.getElementById('go');
+const exWrap = document.getElementById('examples');
+EXAMPLES.forEach(t => { const c=document.createElement('span'); c.className='ex'; c.textContent=t; c.onclick=()=>{qEl.value=t;run();}; exWrap.appendChild(c); });
+
+function esc(s){ return (s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function render(data){
+  if (data.error){ out.innerHTML='<div class="err">Klaida: '+esc(data.error)+'</div>'; return; }
+  const jobs = data.jobs || [];
+  out.innerHTML = '';
+  let autoCount = 0;
+  const meta = document.createElement('div'); meta.className='meta'; out.appendChild(meta);
+  jobs.forEach(j => {
+    const auto = (j.picks||[]).filter(p => (p.confidence||0) > AUTO_MIN);
+    const low  = (j.picks||[]).filter(p => (p.confidence||0) <= AUTO_MIN);
+    autoCount += auto.length;
+    const card = document.createElement('div'); card.className='job';
+    card.innerHTML = '<div class="phrase">'+esc(j.phrase)+'</div>';
+    const wrap = document.createElement('div'); wrap.className='auto'; card.appendChild(wrap);
+
+    auto.forEach(p => {
+      const chip = document.createElement('span'); chip.className='cat';
+      chip.innerHTML = esc(p.category)+' <span class="c">'+(p.confidence||0).toFixed(2)+'</span>';
+      const x = document.createElement('span'); x.className='x'; x.title='Atjungti'; x.textContent='✕';
+      let on = true;
+      x.onclick = () => { on=!on; chip.classList.toggle('off', !on); x.textContent = on?'✕':'↩'; x.title = on?'Atjungti':'Grąžinti'; };
+      chip.appendChild(x); wrap.appendChild(chip);
+    });
+    if (!auto.length){ const n=document.createElement('span'); n.className='none'; n.textContent='nėra auto ( > 0.70 )'; wrap.appendChild(n); }
+
+    low.forEach(p => {
+      const o = document.createElement('span'); o.className='opt';
+      o.innerHTML = '+ '+esc(p.category)+' <span class="c">'+(p.confidence||0).toFixed(2)+'</span>';
+      o.onclick = () => {
+        const chip=document.createElement('span'); chip.className='cat';
+        chip.innerHTML = esc(p.category)+' <span class="c">'+(p.confidence||0).toFixed(2)+'</span>';
+        const x=document.createElement('span'); x.className='x'; x.textContent='✕'; let on=true;
+        x.onclick=()=>{on=!on;chip.classList.toggle('off',!on);x.textContent=on?'✕':'↩';};
+        chip.appendChild(x); wrap.appendChild(chip); o.remove();
+      };
+      wrap.appendChild(o);
+    });
+
+    const cands = document.createElement('div'); cands.className='cands';
+    cands.textContent = 'kandidatai: ' + (j.candidates||[]).slice(0,6).join('  ·  ');
+    card.appendChild(cands);
+    out.appendChild(card);
+  });
+  meta.textContent = jobs.length+' darbai · '+autoCount+' kategorijų pritaikyta automatiškai · '+data.ms+'ms · '+esc(data.model);
+}
+
+async function run(){
+  const text=qEl.value.trim(); if(!text) return;
+  goEl.disabled=true; statusEl.textContent='galvoju…'; out.innerHTML='';
+  try { const r=await fetch(API+'/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); render(await r.json()); }
+  catch(e){ out.innerHTML='<div class="err">Tinklo klaida: '+esc(e.message)+'</div>'; }
+  finally { goEl.disabled=false; statusEl.textContent=''; }
+}
+goEl.onclick=run;
+qEl.addEventListener('keydown', e => { if((e.metaKey||e.ctrlKey)&&e.key==='Enter') run(); });
+</script>
+</body>
+</html>

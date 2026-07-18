@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tomas Kazlauskas — Apdaila ir renovacija Kaune | paslaugųrinka.lt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Brand (alyvuogių žalia) — iš globals.css */
+    --brand-50:#f2f5ea; --brand-100:#e5ead5; --brand-200:#cfd9b4;
+    --brand-500:#6f7f4b; --brand-600:#59673c; --brand-700:#4a5430; --brand-800:#3b4429; --brand-900:#323a25;
+    /* Terakota akcentas — naudoti taupiai */
+    --terra-50:#f7ece6; --terra:#a94e2f; --terra-600:#99421f; --terra-300:#cf8763;
+    /* Šilti beveik-balti paviršiai */
+    --bg:#f6f4ef; --bg-warm:#efece4; --card:#ffffff;
+    --ink-900:#25221e; --ink-700:#463f35; --ink-500:#7e7768; --ink-400:#a29b8b;
+    --line:rgba(37,34,30,.09); --line-strong:rgba(37,34,30,.14);
+    --gold:#c79a3b;
+    --shadow-soft:0 2px 8px -2px rgba(37,34,30,.10), 0 1px 2px -1px rgba(37,34,30,.05);
+    --shadow-card:0 0 0 1px rgba(37,34,30,.05), 0 4px 16px -6px rgba(37,34,30,.12);
+    --shadow-lift:0 0 0 1px rgba(37,34,30,.05), 0 12px 32px -10px rgba(37,34,30,.18);
+    --r-sm:10px; --r:14px; --r-lg:20px; --r-xl:26px;
+    --maxw:1140px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink-900);
+    font-family:Inter,"SF Pro Display",-apple-system,system-ui,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6; font-size:16px;
+  }
+  a{color:inherit; text-decoration:none}
+  img{display:block; max-width:100%}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .serif{font-family:Lora,Georgia,serif}
+  h1,h2,h3{margin:0; letter-spacing:-.02em; line-height:1.15}
+  .eyebrow{font-size:12.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--terra-600)}
+  .muted{color:var(--ink-500)}
+
+  /* ── Buttons ── */
+  .btn{display:inline-flex; align-items:center; gap:8px; height:48px; padding:0 22px; border-radius:var(--r);
+    font-weight:600; font-size:15px; cursor:pointer; border:1px solid transparent; transition:box-shadow .15s ease, background .15s ease, border-color .15s ease; white-space:nowrap}
+  .btn-primary{background:var(--brand-600); color:#fff; box-shadow:var(--shadow-soft)}
+  .btn-primary:hover{background:var(--brand-700); box-shadow:var(--shadow-card)}
+  .btn-ghost{background:#fff; color:var(--ink-900); border-color:var(--line-strong)}
+  .btn-ghost:hover{box-shadow:var(--shadow-soft)}
+  .btn-sm{height:40px; padding:0 16px; font-size:14px}
+  .icon{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .icon-sm{width:15px;height:15px}
+
+  /* ── Top nav ── */
+  header.nav{position:sticky; top:0; z-index:50; background:rgba(246,244,239,.82); backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid var(--line)}
+  .nav-in{display:flex; align-items:center; gap:24px; height:64px}
+  .brand{display:flex; align-items:center; gap:9px; font-weight:700; font-size:16px; letter-spacing:-.02em}
+  .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--brand-600);display:grid;place-items:center;color:#fff;font-size:13px}
+  .navlinks{display:flex; gap:26px; margin-left:auto; font-size:14.5px; font-weight:500; color:var(--ink-700)}
+  .navlinks a:hover{color:var(--ink-900)}
+  .nav-cta{display:flex; gap:10px; align-items:center}
+  @media(max-width:860px){ .navlinks{display:none} .nav-cta .btn-ghost{display:none} }
+
+  /* ── Hero ── */
+  .hero{position:relative}
+  .cover{position:relative; height:340px; overflow:hidden; background:linear-gradient(120deg,#3b4429,#59673c 55%,#6f7f4b)}
+  .cover img{width:100%;height:100%;object-fit:cover}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,14,.30) 0%,rgba(20,18,14,.08) 35%,rgba(20,18,14,.45) 100%)}
+  .cover .badge-float{position:absolute; top:18px; right:18px; z-index:2; display:flex; gap:8px}
+  .pill-dark{display:inline-flex;align-items:center;gap:6px;background:rgba(20,18,14,.55);color:#fff;border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:999px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
+
+  .hero-card{position:relative; z-index:3; margin-top:-92px; background:var(--card); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-lift); padding:26px 30px 28px}
+  .hero-top{display:flex; gap:22px; align-items:flex-start}
+  .avatar{width:118px;height:118px;border-radius:50%;border:4px solid #fff;box-shadow:var(--shadow-card);object-fit:cover;flex:none;margin-top:-58px;background:linear-gradient(135deg,#cfd9b4,#6f7f4b)}
+  .hero-id{flex:1; min-width:0}
+  .name-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .name-row h1{font-size:34px; font-weight:800}
+  .verified{display:inline-flex;align-items:center;gap:6px;background:var(--brand-50);color:var(--brand-700);border:1px solid var(--brand-100);padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:700;cursor:help;position:relative}
+  .verified .tip{position:absolute;top:130%;left:0;width:248px;background:var(--ink-900);color:#fff;padding:11px 13px;border-radius:12px;font-size:12.5px;font-weight:500;line-height:1.5;box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;transform:translateY(-4px);transition:.16s;z-index:9}
+  .verified:hover .tip{opacity:1;transform:translateY(0)}
+  .headline{margin-top:8px; font-size:18px; color:var(--ink-700); font-weight:500; max-width:640px}
+  .rating-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .stars{display:inline-flex;gap:2px;color:var(--gold)}
+  .stars svg{width:18px;height:18px;fill:currentColor}
+  .rating-num{font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--bg-warm);border:1px solid var(--line);color:var(--ink-700);padding:8px 13px;border-radius:999px;font-size:13.5px;font-weight:600}
+  .chip svg{width:15px;height:15px;color:var(--brand-600)}
+  .chip.live{background:#edf6ee;border-color:#cfe8d3;color:#2f6e3b}
+  .chip.live .dot{width:8px;height:8px;border-radius:50%;background:#36a24a}
+  .hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px;align-items:center}
+  .share-row{display:flex;gap:8px;margin-left:auto}
+  .share-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line-strong);background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink-700)}
+  .share-btn:hover{box-shadow:var(--shadow-soft)}
+  @media(max-width:720px){ .share-row{margin-left:0;width:100%} .avatar{width:92px;height:92px;margin-top:-46px} .name-row h1{font-size:27px} .hero-card{padding:20px} }
+
+  /* ── Trust strip ── */
+  .trust-strip{margin-top:16px;background:linear-gradient(120deg,var(--brand-800),var(--brand-600));border-radius:var(--r-lg);color:#fff;padding:6px 4px}
+  .trust-grid{display:grid;grid-template-columns:repeat(5,1fr)}
+  .trust-cell{padding:20px 14px;text-align:center;border-right:1px solid rgba(255,255,255,.14)}
+  .trust-cell:last-child{border-right:none}
+  .trust-cell .n{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .trust-cell .l{font-size:12.5px;color:rgba(255,255,255,.78);margin-top:4px;font-weight:500}
+  @media(max-width:720px){ .trust-grid{grid-template-columns:repeat(2,1fr)} .trust-cell:nth-child(odd){border-right:1px solid rgba(255,255,255,.14)} .trust-cell{border-bottom:1px solid rgba(255,255,255,.14)} }
+
+  /* ── Sections ── */
+  section{padding:64px 0}
+  .sec-head{max-width:680px;margin-bottom:34px}
+  .sec-head h2{font-size:30px;font-weight:700;margin-top:10px}
+  .sec-head p{color:var(--ink-500);margin:12px 0 0;font-size:16.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-soft)}
+
+  /* About */
+  .about-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:start}
+  .pullquote{font-size:23px;line-height:1.4;color:var(--ink-900);font-style:italic;border-left:3px solid var(--terra);padding-left:18px;margin:0 0 22px}
+  .about p{color:var(--ink-700);margin:0 0 16px}
+  .speclist{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+  .spec{background:var(--brand-50);color:var(--brand-700);border:1px solid var(--brand-100);padding:8px 14px;border-radius:999px;font-size:14px;font-weight:600}
+  .steps{padding:26px}
+  .steps h3{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-500);margin-bottom:18px}
+  .step{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+  .step:first-of-type{border-top:none}
+  .step .num{width:30px;height:30px;border-radius:9px;background:var(--brand-600);color:#fff;font-weight:700;display:grid;place-items:center;flex:none;font-size:14px}
+  .step h4{font-size:15.5px;font-weight:700;margin:2px 0 2px}
+  .step p{font-size:14px;color:var(--ink-500);margin:0}
+  @media(max-width:820px){ .about-grid{grid-template-columns:1fr;gap:28px} }
+
+  /* Services / pricing */
+  .price-list{overflow:hidden}
+  .price-row{display:flex;align-items:center;gap:18px;padding:20px 24px;border-top:1px solid var(--line)}
+  .price-row:first-child{border-top:none}
+  .price-row:hover{background:var(--bg-warm)}
+  .price-ic{width:46px;height:46px;border-radius:12px;background:var(--brand-50);color:var(--brand-600);display:grid;place-items:center;flex:none}
+  .price-ic svg{width:22px;height:22px}
+  .price-row .info{flex:1;min-width:0}
+  .price-row .info h4{font-size:16.5px;font-weight:700}
+  .price-row .info p{font-size:13.5px;color:var(--ink-500);margin:3px 0 0}
+  .price-row .amt{text-align:right;flex:none}
+  .price-row .amt .v{font-size:18px;font-weight:800;color:var(--ink-900)}
+  .price-row .amt .u{font-size:12.5px;color:var(--ink-400);font-weight:600}
+  .price-note{display:flex;gap:10px;align-items:center;margin-top:16px;color:var(--ink-500);font-size:14px}
+  .price-note svg{width:17px;height:17px;color:var(--brand-600);flex:none}
+
+  /* Portfolio */
+  .gallery{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .ph{position:relative;overflow:hidden;border-radius:var(--r);background:linear-gradient(135deg,#cfd9b4,#6f7f4b);box-shadow:var(--shadow-soft);cursor:pointer}
+  .ph img{width:100%;height:100%;object-fit:cover;transition:none}
+  .ph .cap{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 12px;background:linear-gradient(180deg,transparent,rgba(20,18,14,.72));color:#fff}
+  .ph .cap .t{font-size:14.5px;font-weight:700}
+  .ph .cap .tag{font-size:12px;color:rgba(255,255,255,.82);margin-top:2px}
+  .g-tall{grid-column:span 6;aspect-ratio:4/5}
+  .g-wide{grid-column:span 6;aspect-ratio:16/11}
+  .g-third{grid-column:span 4;aspect-ratio:1/1}
+  @media(max-width:720px){ .g-tall,.g-wide{grid-column:span 12} .g-third{grid-column:span 6} }
+
+  /* Before / after */
+  .ba-wrap{margin-top:14px}
+  .ba{position:relative;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-card);user-select:none;aspect-ratio:16/8;background:#3b4429}
+  .ba .layer{position:absolute;inset:0}
+  .ba .layer img{width:100%;height:100%;object-fit:cover}
+  .ba .after{clip-path:inset(0 0 0 50%)}
+  .ba .tagb{position:absolute;bottom:14px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;color:#fff;background:rgba(20,18,14,.6);backdrop-filter:blur(4px)}
+  .ba .tag-before{left:14px}
+  .ba .tag-after{right:14px;background:var(--terra)}
+  .ba .handle{position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+  .ba .knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:var(--shadow-card);display:grid;place-items:center;color:var(--ink-700)}
+  .ba input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+
+  /* Reviews */
+  .rev-grid{display:grid;grid-template-columns:300px 1fr;gap:34px;align-items:start}
+  .rev-summary{padding:26px;text-align:center}
+  .rev-summary .big{font-size:54px;font-weight:800;line-height:1;letter-spacing:-.03em}
+  .rev-summary .of{color:var(--ink-400);font-weight:600}
+  .rev-summary .count{color:var(--ink-500);font-size:14px;margin-top:6px}
+  .axes{margin-top:22px;text-align:left;display:flex;flex-direction:column;gap:12px}
+  .axis{font-size:13.5px}
+  .axis .top{display:flex;justify-content:space-between;margin-bottom:5px;font-weight:600;color:var(--ink-700)}
+  .bar{height:7px;border-radius:999px;background:var(--bg-warm);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--brand-500);border-radius:999px}
+  .reviews{display:flex;flex-direction:column;gap:16px}
+  .review{padding:22px 24px}
+  .rev-h{display:flex;align-items:center;gap:12px}
+  .rev-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:16px}
+  .rev-meta{flex:1;min-width:0}
+  .rev-meta .nm{font-weight:700;font-size:15px}
+  .rev-meta .sv{font-size:12.5px;color:var(--ink-500)}
+  .rev-sub{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+  .subscore{font-size:12px;font-weight:600;color:var(--ink-700);background:var(--bg-warm);border:1px solid var(--line);padding:4px 9px;border-radius:8px}
+  .review p.body{margin:8px 0 0;color:var(--ink-700);font-size:15px}
+  .rev-photo{width:88px;height:88px;border-radius:12px;object-fit:cover;margin-top:12px;box-shadow:var(--shadow-soft);background:linear-gradient(135deg,#cfd9b4,#6f7f4b)}
+  .reply{margin-top:14px;background:var(--brand-50);border:1px solid var(--brand-100);border-radius:12px;padding:13px 15px}
+  .reply .who{font-size:12.5px;font-weight:700;color:var(--brand-700);display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .reply p{margin:0;font-size:14px;color:var(--ink-700)}
+  @media(max-width:820px){ .rev-grid{grid-template-columns:1fr} }
+
+  /* Credentials */
+  .cred-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .cred{padding:20px 22px;display:flex;gap:14px;align-items:flex-start}
+  .cred .ic{width:42px;height:42px;border-radius:11px;background:var(--terra-50);color:var(--terra);display:grid;place-items:center;flex:none}
+  .cred .ic svg{width:21px;height:21px}
+  .cred h4{font-size:15px;font-weight:700;margin:1px 0 3px}
+  .cred p{font-size:13.5px;color:var(--ink-500);margin:0}
+  @media(max-width:820px){ .cred-grid{grid-template-columns:1fr} }
+
+  /* Area */
+  .area-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
+  .area-list{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+  .area-pill{background:#fff;border:1px solid var(--line-strong);padding:8px 14px;border-radius:999px;font-size:14px;font-weight:600;display:inline-flex;gap:7px;align-items:center}
+  .area-pill svg{width:14px;height:14px;color:var(--terra)}
+  .map{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-card);aspect-ratio:16/11;position:relative;background:#e8ead9}
+  @media(max-width:820px){ .area-grid{grid-template-columns:1fr} }
+
+  /* Contact */
+  .contact{background:linear-gradient(135deg,var(--brand-900),var(--brand-700));color:#fff;border-radius:var(--r-xl);padding:46px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .contact h2{font-size:30px;font-weight:700}
+  .contact .lead{color:rgba(255,255,255,.8);margin-top:12px;font-size:16.5px}
+  .contact .channels{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .ch{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:11px 16px;border-radius:12px;font-weight:600;font-size:14.5px;cursor:pointer}
+  .ch:hover{background:rgba(255,255,255,.2)}
+  .ch svg{width:17px;height:17px}
+  .cform{background:#fff;border-radius:var(--r-lg);padding:24px;color:var(--ink-900)}
+  .cform label{font-size:13px;font-weight:600;color:var(--ink-700);display:block;margin:0 0 6px}
+  .cform input,.cform textarea{width:100%;border:1px solid var(--line-strong);border-radius:11px;padding:12px 14px;font:inherit;font-size:15px;margin-bottom:14px;background:var(--bg);color:var(--ink-900)}
+  .cform textarea{resize:none;min-height:84px}
+  .hours{margin-top:24px;font-size:14px;color:rgba(255,255,255,.85)}
+  .hours .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.12);max-width:300px}
+  @media(max-width:820px){ .contact{grid-template-columns:1fr;padding:30px} }
+
+  /* Footer */
+  footer.foot{padding:46px 0 120px;border-top:1px solid var(--line);margin-top:40px}
+  .foot-in{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .foot .legal{font-size:13.5px;color:var(--ink-500);line-height:1.7;max-width:420px}
+  .foot .legal b{color:var(--ink-700)}
+  .foot .made{font-size:13px;color:var(--ink-400)}
+  .foot .made b{color:var(--brand-700)}
+
+  /* Sticky mobile bar */
+  .sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 16px;display:none;gap:10px}
+  .sticky-bar .btn{flex:1;justify-content:center;height:50px}
+  @media(max-width:860px){ .sticky-bar{display:flex} }
+
+  /* Lightbox */
+  .lb{position:fixed;inset:0;z-index:100;background:rgba(20,18,14,.88);display:none;align-items:center;justify-content:center;padding:30px}
+  .lb.open{display:flex}
+  .lb img{max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:var(--shadow-lift)}
+  .lb .lb-cap{position:absolute;bottom:26px;left:0;right:0;text-align:center;color:#fff;font-size:14.5px}
+  .lb .lb-close{position:absolute;top:22px;right:24px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer}
+
+  .proto-tag{position:fixed;left:14px;bottom:14px;z-index:70;background:var(--ink-900);color:#fff;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:999px;opacity:.8}
+  @media(max-width:860px){ .proto-tag{display:none} }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#"><span class="dot">pr</span> paslaugų<span style="color:var(--brand-600)">rinka</span>.lt</a>
+    <nav class="navlinks">
+      <a href="#apie">Apie</a>
+      <a href="#paslaugos">Paslaugos</a>
+      <a href="#darbai">Darbai</a>
+      <a href="#atsiliepimai">Atsiliepimai</a>
+      <a href="#kontaktai">Kontaktai</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost btn-sm" href="tel:+37060000000"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>Skambinti</a>
+      <a class="btn btn-primary btn-sm" href="#kontaktai">Gauti pasiūlymą</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="cover" style="background:linear-gradient(120deg,#3b4429,#59673c 55%,#6f7f4b)">
+    <img alt="Tomo Kazlausko atlikta virtuvės renovacija — bendras vaizdas" src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80" onerror="this.style.display='none'">
+    <div class="badge-float">
+      <span class="pill-dark"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Patvirtintas tiekėjas</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="hero-card">
+      <div class="hero-top">
+        <img class="avatar" alt="Tomas Kazlauskas" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&q=80" onerror="this.style.display='none'">
+        <div class="hero-id">
+          <div class="name-row">
+            <h1>Tomas Kazlauskas</h1>
+            <span class="verified">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Patvirtinta
+              <span class="tip">Patvirtintas el. paštas ir telefonas. Registruota MB „Tomo Apdaila", įmonės kodas 305 612 480.</span>
+            </span>
+          </div>
+          <p class="headline serif">Pilna butų apdaila ir renovacija Kaune — tvarkingai, laiku ir su 24 mėn. garantija.</p>
+          <div class="rating-row">
+            <span class="stars" aria-label="Įvertinimas 4,9 iš 5">
+              <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+            </span>
+            <span class="rating-num">4,9</span>
+            <span class="muted">(87 atsiliepimai)</span>
+          </div>
+          <div class="chips">
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> 12 m. patirtis</span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m9 11 3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> 240+ baigtų projektų</span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 10c0 6-8 11-8 11s-8-5-8-11a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Kaunas + 40 km</span>
+            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M13 2 3 14h7l-1 8 10-12h-7Z"/></svg> Nuo 25 €/val.</span>
+            <span class="chip live"><span class="dot"></span> Paprastai atsako per ~2 val.</span>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#kontaktai"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Gauti pasiūlymą</a>
+            <a class="btn btn-ghost" href="tel:+37060000000"><svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg> +370 600 00000</a>
+            <div class="share-row">
+              <button class="share-btn" title="WhatsApp" aria-label="Dalintis per WhatsApp"><svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.5A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z"/></svg></button>
+              <button class="share-btn" title="Messenger" aria-label="Dalintis per Messenger"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></button>
+              <button class="share-btn" title="Kopijuoti nuorodą" aria-label="Kopijuoti nuorodą"><svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust strip -->
+    <div class="trust-strip">
+      <div class="trust-grid">
+        <div class="trust-cell"><div class="n">4,9★</div><div class="l">vidutinis įvertinimas</div></div>
+        <div class="trust-cell"><div class="n">240+</div><div class="l">baigtų projektų</div></div>
+        <div class="trust-cell"><div class="n">~2 val.</div><div class="l">atsako laikas</div></div>
+        <div class="trust-cell"><div class="n">98%</div><div class="l">klientų rekomenduoja</div></div>
+        <div class="trust-cell"><div class="n">12 m.</div><div class="l">rinkoje</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APIE ── -->
+<section id="apie">
+  <div class="wrap about-grid">
+    <div class="about">
+      <div class="eyebrow">Apie meistrą</div>
+      <p class="pullquote serif">„Apdaila — tai detalės. Jei kampas nelygus, viskas matosi. Todėl dirbu taip, kaip daryčiau sau namuose."</p>
+      <p>Esu Tomas, apdailos ir renovacijos meistras iš Kauno. Per 12 metų su savo komanda įrengėme daugiau nei 240 butų, namų ir komercinių patalpų — nuo pilno „po raktą" remonto iki atskirų plytelių, glaistymo ar grindų darbų.</p>
+      <p>Dirbu su nedidele patikima komanda, todėl kokybę ir terminus kontroliuoju asmeniškai. Visada pateikiu aiškią sąmatą iš anksto — be staigmenų darbų eigoje. Darbams suteikiu <b>24 mėn. garantiją</b>, išrašau sąskaitas faktūras.</p>
+      <div class="speclist">
+        <span class="spec">Pilna butų apdaila</span>
+        <span class="spec">Plytelių klijavimas</span>
+        <span class="spec">Glaistymas ir dažymas</span>
+        <span class="spec">Grindų klojimas</span>
+        <span class="spec">Vonios įrengimas</span>
+        <span class="spec">Gipso kartonas</span>
+      </div>
+    </div>
+    <div class="card steps">
+      <h3>Kaip dirbu</h3>
+      <div class="step"><span class="num">1</span><div><h4>Susisiekiame</h4><p>Aptariame jūsų idėją, terminus ir biudžetą — nemokamai.</p></div></div>
+      <div class="step"><span class="num">2</span><div><h4>Apžiūra ir sąmata</h4><p>Atvykstu, išmatuoju ir pateikiu detalią, fiksuotą sąmatą raštu.</p></div></div>
+      <div class="step"><span class="num">3</span><div><h4>Darbai</h4><p>Dirbu tvarkingai, laikausi termino, informuoju apie kiekvieną etapą.</p></div></div>
+      <div class="step"><span class="num">4</span><div><h4>Priėmimas ir garantija</h4><p>Perduodu sutvarkytą objektą, suteikiu 24 mėn. garantiją darbams.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PASLAUGOS ── -->
+<section id="paslaugos" style="background:var(--bg-warm)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Paslaugos ir kainos</div>
+      <h2 class="serif">Skaidrios kainos, nustatytos paties meistro</h2>
+      <p>Žemiau — orientacinės kainos „nuo". Tiksli kaina priklauso nuo objekto ir medžiagų, ją pateikiu sąmatoje po apžiūros.</p>
+    </div>
+    <div class="card price-list">
+      <div class="price-row">
+        <div class="price-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9 12 2l9 7"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg></div>
+        <div class="info"><h4>Pilna buto apdaila „po raktą"</h4><p>Nuo sienų iki grindų ir santechnikos — viskas vienose rankose</p></div>
+        <div class="amt"><div class="v">nuo 180 €</div><div class="u">/ m²</div></div>
+      </div>
+      <div class="price-row">
+        <div class="price-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div class="info"><h4>Plytelių klijavimas</h4><p>Vonios, virtuvės, koridoriai — tikslus klijavimas ir glaistymas</p></div>
+        <div class="amt"><div class="v">nuo 28 €</div><div class="u">/ m²</div></div>
+      </div>
+      <div class="price-row">
+        <div class="price-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 5 4 4"/><path d="M4 20 16 8l-4-4L0 16v4Z" transform="translate(4 0)"/></svg></div>
+        <div class="info"><h4>Glaistymas ir dažymas</h4><p>Lygios sienos ir lubos, paruošimas dažymui</p></div>
+        <div class="amt"><div class="v">nuo 12 €</div><div class="u">/ m²</div></div>
+      </div>
+      <div class="price-row">
+        <div class="price-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v10H3z"/><path d="M3 11h18M7 7v10M12 7v10M17 7v10"/></svg></div>
+        <div class="info"><h4>Grindų klojimas</h4><p>Laminatas, parketlentės, vinilas — su paruošimu</p></div>
+        <div class="amt"><div class="v">nuo 9 €</div><div class="u">/ m²</div></div>
+      </div>
+      <div class="price-row">
+        <div class="price-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16"/><path d="M6 12V6a2 2 0 0 1 2-2h2"/><circle cx="8" cy="16" r="2"/><circle cx="16" cy="16" r="2"/></svg></div>
+        <div class="info"><h4>Vonios kambario įrengimas</h4><p>Kompleksiškai: hidroizoliacija, plytelės, santechnika</p></div>
+        <div class="amt"><div class="v">nuo 1 200 €</div><div class="u">/ objektas</div></div>
+      </div>
+    </div>
+    <div class="price-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg> Konsultacija ir sąmata — nemokamai. Išrašau sąskaitas faktūras (PVM mokėtojas).</div>
+  </div>
+</section>
+
+<!-- ── DARBAI ── -->
+<section id="darbai">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Atlikti darbai</div>
+      <h2 class="serif">Tikros nuotraukos iš mano objektų</h2>
+      <p>Kiekviena nuotrauka — realus baigtas projektas Kaune ir apylinkėse. Patraukite slankiklį, kad pamatytumėte „prieš ir po".</p>
+    </div>
+
+    <!-- Before / after -->
+    <div class="ba-wrap">
+      <div class="ba" id="ba">
+        <div class="layer before"><img alt="Vonios kambarys prieš renovaciją" src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1400&q=80" onerror="this.style.display='none'"></div>
+        <div class="layer after" id="baAfter"><img alt="Vonios kambarys po renovacijos" src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=1400&q=80" onerror="this.style.display='none'"></div>
+        <span class="tagb tag-before">PRIEŠ</span>
+        <span class="tagb tag-after">PO</span>
+        <div class="handle" id="baHandle"><div class="knob"><svg class="icon" viewBox="0 0 24 24"><path d="m9 7-5 5 5 5M15 7l5 5-5 5"/></svg></div></div>
+        <input type="range" min="0" max="100" value="50" id="baRange" aria-label="Prieš ir po slankiklis">
+      </div>
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery" style="margin-top:14px" id="gallery">
+      <div class="ph g-tall" data-cap="Skandinaviško stiliaus virtuvė — pilna apdaila" data-src="https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=1200&q=80" style="background:linear-gradient(135deg,#cfd9b4,#59673c)">
+        <img alt="Skandinaviško stiliaus virtuvė po pilnos apdailos" src="https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=900&q=80" onerror="this.style.display='none'">
+        <div class="cap"><div class="t">Virtuvės renovacija</div><div class="tag">Pilna apdaila · Žaliakalnis</div></div>
+      </div>
+      <div class="ph g-wide" data-cap="Svetainės apdaila su dekoratyviniu tinku" data-src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=80" style="background:linear-gradient(135deg,#e5ead5,#6f7f4b)">
+        <img alt="Svetainė su dekoratyviniu tinku ir parketu" src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&q=80" onerror="this.style.display='none'">
+        <div class="cap"><div class="t">Svetainės apdaila</div><div class="tag">Glaistymas, dažymas · Centras</div></div>
+      </div>
+      <div class="ph g-third" data-cap="Vonios plytelės — didelis formatas" data-src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=1200&q=80" style="background:linear-gradient(135deg,#cf8763,#a94e2f)">
+        <img alt="Vonios kambarys su didelio formato plytelėmis" src="https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800&q=80" onerror="this.style.display='none'">
+        <div class="cap"><div class="t">Vonios įrengimas</div><div class="tag">Plytelės · Šilainiai</div></div>
+      </div>
+      <div class="ph g-third" data-cap="Laminato klojimas atviroje erdvėje" data-src="https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=1200&q=80" style="background:linear-gradient(135deg,#cfd9b4,#6f7f4b)">
+        <img alt="Laminuotos grindys atviroje erdvėje" src="https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=800&q=80" onerror="this.style.display='none'">
+        <div class="cap"><div class="t">Grindų klojimas</div><div class="tag">Laminatas · Kalniečiai</div></div>
+      </div>
+      <div class="ph g-third" data-cap="Miegamasis — pilna apdaila po raktą" data-src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=1200&q=80" style="background:linear-gradient(135deg,#e5ead5,#59673c)">
+        <img alt="Miegamasis po pilnos apdailos" src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80" onerror="this.style.display='none'">
+        <div class="cap"><div class="t">Miegamojo apdaila</div><div class="tag">Po raktą · Aleksotas</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ATSILIEPIMAI ── -->
+<section id="atsiliepimai" style="background:var(--bg-warm)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Atsiliepimai</div>
+      <h2 class="serif">Ką sako klientai</h2>
+      <p>Atsiliepimus palieka tik realūs klientai, samdę meistrą per platformą.</p>
+    </div>
+    <div class="rev-grid">
+      <div class="card rev-summary">
+        <div class="big">4,9 <span class="of">/ 5</span></div>
+        <div class="stars" style="justify-content:center;margin-top:8px">
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg>
+        </div>
+        <div class="count">87 atsiliepimai</div>
+        <div class="axes">
+          <div class="axis"><div class="top"><span>Kokybė</span><span>4,9</span></div><div class="bar"><i style="width:98%"></i></div></div>
+          <div class="axis"><div class="top"><span>Kaina</span><span>4,7</span></div><div class="bar"><i style="width:94%"></i></div></div>
+          <div class="axis"><div class="top"><span>Bendravimas</span><span>5,0</span></div><div class="bar"><i style="width:100%"></i></div></div>
+          <div class="axis"><div class="top"><span>Terminai</span><span>4,8</span></div><div class="bar"><i style="width:96%"></i></div></div>
+        </div>
+      </div>
+
+      <div class="reviews">
+        <div class="card review">
+          <div class="rev-h">
+            <div class="rev-av" style="background:#59673c">R</div>
+            <div class="rev-meta"><div class="nm">Rūta M.</div><div class="sv">Atlikta paslauga: Pilna buto apdaila · 2026-05</div></div>
+            <span class="stars"><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg></span>
+          </div>
+          <div class="rev-sub"><span class="subscore">Kokybė 5,0</span><span class="subscore">Kaina 4,5</span><span class="subscore">Bendravimas 5,0</span><span class="subscore">Terminai 5,0</span></div>
+          <p class="body">Tomas su komanda atnaujino visą mūsų 58 m² butą. Viskas labai tvarkingai, terminų laikėsi diena dienon, o sąmata nepasikeitė nė euru. Plytelės vonioje suklijuotos idealiai. Rekomenduoju visiems.</p>
+          <img class="rev-photo" alt="Kliento atsiųsta nuotrauka — atnaujinta virtuvė" src="https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=300&q=80" onerror="this.style.display='none'">
+          <div class="reply">
+            <div class="who"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Tomo atsakymas</div>
+            <p>Ačiū, Rūta! Buvo malonu dirbti — sėkmės naujuose namuose.</p>
+          </div>
+        </div>
+
+        <div class="card review">
+          <div class="rev-h">
+            <div class="rev-av" style="background:#a94e2f">D</div>
+            <div class="rev-meta"><div class="nm">Darius P.</div><div class="sv">Atlikta paslauga: Vonios įrengimas · 2026-04</div></div>
+            <span class="stars"><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg><svg viewBox="0 0 24 24"><path d="m12 2 3 6.9 7.5.6-5.7 4.9 1.8 7.3L12 17.8 5.1 21.7l1.8-7.3L1.2 9.5l7.5-.6Z"/></svg></span>
+          </div>
+          <div class="rev-sub"><span class="subscore">Kokybė 5,0</span><span class="subscore">Kaina 5,0</span><span class="subscore">Bendravimas 4,5</span><span class="subscore">Terminai 4,5</span></div>
+          <p class="body">Įrengė vonią nuo nulio — hidroizoliacija, plytelės, santechnika. Konsultavo dėl medžiagų, padėjo sutaupyti. Darbas švarus, po savęs viską sutvarkė. Sąskaitą faktūrą išrašė be problemų.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REKVIZITAI / GARANTIJA ── -->
+<section id="rekvizitai">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Patikimumas</div>
+      <h2 class="serif">Tikras, registruotas verslas</h2>
+      <p>Rodome tik realius faktus — kad žinotumėte, su kuo bendraujate.</p>
+    </div>
+    <div class="cred-grid">
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg></div><div><h4>MB „Tomo Apdaila"</h4><p>Įmonės kodas 305 612 480 · PVM LT100012345678</p></div></div>
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div><div><h4>Sąskaitos faktūros</h4><p>Išrašau PVM sąskaitas faktūras įmonėms ir privatiems</p></div></div>
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div><div><h4>24 mėn. garantija darbams</h4><p>Atsiranda defektas dėl darbo kokybės — sutvarkau nemokamai</p></div></div>
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div><div><h4>Civilinės atsakomybės draudimas</h4><p>Apdraustas iki 30 000 € — jūsų turtas saugus</p></div></div>
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><path d="M8 13l-2 8 6-3 6 3-2-8"/></svg></div><div><h4>Kvalifikacijos pažymėjimas</h4><p>Statybos darbų kvalifikacija (pažymėjimą rodau pageidaujant)</p></div></div>
+      <div class="card cred"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div><div><h4>Patvirtintas kontaktas</h4><p>El. paštas ir telefonas patikrinti platformos</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TERITORIJA ── -->
+<section id="teritorija" style="background:var(--bg-warm)">
+  <div class="wrap area-grid">
+    <div>
+      <div class="eyebrow">Aptarnaujama teritorija</div>
+      <h2 class="serif" style="font-size:30px;margin-top:10px">Kaunas ir 40 km spinduliu</h2>
+      <p class="muted" style="margin-top:12px">Dirbu Kaune ir aplinkiniuose rajonuose. Dėl tolimesnių objektų — susitarkime atskirai.</p>
+      <div class="area-list">
+        <span class="area-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 11-8 11s-8-5-8-11a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> Kaunas</span>
+        <span class="area-pill">Kauno r.</span>
+        <span class="area-pill">Garliava</span>
+        <span class="area-pill">Domeikava</span>
+        <span class="area-pill">Ramučiai</span>
+        <span class="area-pill">Vilkija</span>
+        <span class="area-pill">Jonava</span>
+        <span class="area-pill">Kėdainiai</span>
+      </div>
+    </div>
+    <div class="map">
+      <svg viewBox="0 0 400 270" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="background:#e8ead9">
+        <g stroke="#cfd9b4" stroke-width="1" fill="none" opacity=".7">
+          <path d="M0 60 H400 M0 120 H400 M0 180 H400 M0 240 H400 M70 0 V270 M150 0 V270 M230 0 V270 M310 0 V270"/>
+        </g>
+        <path d="M40 140 q40 -50 110 -40 q70 10 110 -10 q50 -20 90 20 q20 40 -30 70 q-80 40 -150 20 q-90 -20 -130 -60 Z" fill="#dbe2c4" stroke="#b9c79a" stroke-width="1.5"/>
+        <circle cx="200" cy="135" r="62" fill="#a94e2f" opacity=".12"/>
+        <circle cx="200" cy="135" r="62" fill="none" stroke="#a94e2f" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle cx="200" cy="135" r="7" fill="#a94e2f"/>
+        <circle cx="200" cy="135" r="13" fill="none" stroke="#a94e2f" stroke-width="2"/>
+        <text x="200" y="120" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#3b4429">Kaunas</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ── KONTAKTAI ── -->
+<section id="kontaktai">
+  <div class="wrap">
+    <div class="contact">
+      <div>
+        <div class="eyebrow" style="color:#e3c6a5">Susisiekime</div>
+        <h2 class="serif" style="margin-top:10px">Aptarkime jūsų projektą</h2>
+        <p class="lead">Parašykite ar paskambinkite — atsakau paprastai per porą valandų. Konsultacija ir sąmata visada nemokama.</p>
+        <div class="channels">
+          <a class="ch" href="tel:+37060000000"><svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg> +370 600 00000</a>
+          <button class="ch"><svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.5A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z"/></svg> WhatsApp</button>
+          <button class="ch"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Messenger</button>
+        </div>
+        <div class="hours">
+          <div class="row"><span>Pirmadienis–Penktadienis</span><b>8:00 – 18:00</b></div>
+          <div class="row"><span>Šeštadienis</span><b>9:00 – 14:00</b></div>
+          <div class="row"><span>Sekmadienis</span><b>Nedirba</b></div>
+        </div>
+      </div>
+      <form class="cform" onsubmit="return false">
+        <label>Vardas</label>
+        <input type="text" placeholder="Jūsų vardas">
+        <label>Telefonas arba el. paštas</label>
+        <input type="text" placeholder="Kaip su jumis susisiekti">
+        <label>Trumpai apie darbą</label>
+        <textarea placeholder="Pvz.: noriu atnaujinti 50 m² butą, vonią ir virtuvę"></textarea>
+        <button class="btn btn-primary" style="width:100%;justify-content:center">Siųsti užklausą</button>
+        <p style="text-align:center;font-size:12.5px;color:var(--ink-400);margin:12px 0 0">Nemokama · be įsipareigojimų</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div class="legal">
+      <b>MB „Tomo Apdaila"</b> · Įmonės kodas 305 612 480 · PVM LT100012345678<br>
+      Registracijos adresas: Savanorių pr. 124, Kaunas · tomas@tomoapdaila.lt<br>
+      Apdaila ir renovacija Kaune ir Kauno rajone.
+    </div>
+    <div style="text-align:right">
+      <div class="share-row" style="justify-content:flex-end;margin-bottom:14px">
+        <button class="share-btn" title="WhatsApp"><svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.5A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z"/></svg></button>
+        <button class="share-btn" title="Messenger"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></button>
+        <button class="share-btn" title="Kopijuoti nuorodą"><svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
+      </div>
+      <div class="made">Profesionali svetainė sukurta su <b>paslaugųrinka.lt</b></div>
+    </div>
+  </div>
+</footer>
+
+<!-- Sticky mobile bar -->
+<div class="sticky-bar">
+  <a class="btn btn-ghost" href="tel:+37060000000" style="flex:none;width:50px;padding:0"><svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></a>
+  <a class="btn btn-primary" href="#kontaktai"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Gauti pasiūlymą</a>
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Darbo nuotrauka">
+  <button class="lb-close" id="lbClose" aria-label="Uždaryti"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <img id="lbImg" alt="">
+  <div class="lb-cap" id="lbCap"></div>
+</div>
+
+<div class="proto-tag">Prototipas · paslaugųrinka.lt</div>
+
+<script>
+  // Before / after slider
+  (function(){
+    var range=document.getElementById('baRange'), after=document.getElementById('baAfter'), handle=document.getElementById('baHandle');
+    function set(v){ after.style.clipPath='inset(0 0 0 '+v+'%)'; handle.style.left=v+'%'; }
+    if(range){ range.addEventListener('input',function(){ set(this.value); }); set(50); }
+  })();
+
+  // Accessible lightbox
+  (function(){
+    var lb=document.getElementById('lb'), img=document.getElementById('lbImg'), cap=document.getElementById('lbCap'),
+        close=document.getElementById('lbClose'), lastFocus=null;
+    document.querySelectorAll('#gallery .ph').forEach(function(el){
+      el.setAttribute('tabindex','0'); el.setAttribute('role','button');
+      function open(){
+        lastFocus=document.activeElement;
+        img.src=el.getAttribute('data-src'); img.alt=el.getAttribute('data-cap')||'';
+        cap.textContent=el.getAttribute('data-cap')||'';
+        lb.classList.add('open'); document.body.style.overflow='hidden'; close.focus();
+      }
+      el.addEventListener('click',open);
+      el.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
+    });
+    function hide(){ lb.classList.remove('open'); document.body.style.overflow=''; if(lastFocus) lastFocus.focus(); }
+    close.addEventListener('click',hide);
+    lb.addEventListener('click',function(e){ if(e.target===lb) hide(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&lb.classList.contains('open')) hide(); });
+  })();
+</script>
+</body>
+</html>

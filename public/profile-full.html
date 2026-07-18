@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pilni profilio variantai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f5f3;--surface:#fff;--ink:#1c1a18;--muted:#6f6a64;--faint:#9a948d;
+    --line:#ece9e5;--accent:#c0613a;--accent-ink:#a44f2c;--accent-soft:#f7ece6;
+    --star:#e0a32e;--ok:#3f8f6a;--radius:22px;
+    --shadow:0 1px 2px rgba(28,26,24,.04),0 8px 30px rgba(28,26,24,.06);
+    --shadow-h:0 2px 4px rgba(28,26,24,.06),0 14px 40px rgba(28,26,24,.10);
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .switcher{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(28,26,24,.96);backdrop-filter:blur(8px);display:flex;gap:8px;justify-content:center;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+  .switcher button{background:transparent;color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.18);padding:8px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s}
+  .switcher button:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+  .switcher button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .stage{max-width:1080px;margin:0 auto;padding:78px 20px 120px}
+  .variant{display:none}
+  .variant.show{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .vhead{margin:0 0 18px}
+  .vhead h2{font-size:19px;margin:0;letter-spacing:-.02em}
+  .vhead p{margin:4px 0 0;color:var(--faint);font-size:14px}
+
+  .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .pad{padding:26px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:13px;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;border:none;transition:all .15s}
+  .btn.full{width:100%}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(192,97,58,.28)}
+  .btn-primary:hover{background:var(--accent-ink);box-shadow:var(--shadow-h)}
+  .btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{box-shadow:var(--shadow)}
+  .stars{color:var(--star);letter-spacing:1px}
+  .verified{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent-ink);font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px}
+  .sec-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin:0 0 16px}
+  .svc{display:flex;flex-wrap:wrap;gap:8px}
+  .svc span{background:var(--bg);border:1px solid var(--line);color:#46423d;font-size:13.5px;padding:7px 12px;border-radius:10px}
+  .about p{color:#46423d;margin:0;font-size:15.5px;line-height:1.65}
+  .rev{padding:18px 0;border-top:1px solid var(--line)}
+  .rev:first-of-type{border-top:none;padding-top:0}
+  .rev .who{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .rev .ava{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:13px}
+  .rev .nm{font-weight:600;font-size:14px}
+  .rev .st{color:var(--star);font-size:12px;margin-left:auto}
+  .rev p{margin:0 0 0 40px;color:#54504a;font-size:14.5px}
+  .rev .tag{margin:6px 0 0 40px;font-size:12px;color:var(--faint)}
+
+  /* ===================== D — MAGAZINE FULL (žurnalinis pilnas) ===================== */
+  .mag .hero{position:relative;height:380px;border-radius:var(--radius);overflow:hidden;background:#241f1b}
+  .mag .hero img{width:100%;height:100%;object-fit:cover;opacity:.9}
+  .mag .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(20,17,15,.9),rgba(20,17,15,.1) 60%)}
+  .mag .hero .ov{position:absolute;left:0;right:0;bottom:0;padding:34px;color:#fff;z-index:2}
+  .mag .hero .kick{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#e9c9b8}
+  .mag .hero h1{font-family:Fraunces,serif;font-weight:600;font-size:52px;line-height:1;margin:10px 0 0;letter-spacing:-.01em}
+  .mag .hero .sub{font-size:17px;color:rgba(255,255,255,.85);margin:12px 0 0;max-width:560px}
+  .mag .hero .meta{display:flex;gap:16px;align-items:center;margin-top:14px;font-size:14px;flex-wrap:wrap}
+  .mag .body{display:grid;grid-template-columns:minmax(0,2fr) minmax(290px,1fr);gap:22px;margin-top:22px;align-items:start}
+  .mag .col{display:flex;flex-direction:column;gap:22px;min-width:0}
+  .mag .side{position:sticky;top:90px;display:flex;flex-direction:column;gap:18px}
+  .mag .cta{background:linear-gradient(160deg,#fff,#fbf4ef);border:1px solid var(--line)}
+  .mag .cta h3{margin:0 0 6px;font-size:18px}
+  .mag .cta .s{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .mag .reassure{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .mag .reassure span{display:inline-flex;gap:5px;align-items:center}.dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+  .mag .fact{display:flex;gap:10px;align-items:center;padding:9px 0;font-size:14px;color:#46423d;border-top:1px solid var(--line)}.mag .fact:first-of-type{border-top:none}
+  .mag .fact .ic{width:30px;height:30px;border-radius:9px;background:var(--bg);display:grid;place-items:center;font-size:15px}
+  .galm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .galm a{border-radius:13px;overflow:hidden;aspect-ratio:1;background:#e9e3dc}
+  .galm img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+  .galm a:hover img{transform:scale(1.05)}
+
+  /* ===================== E — TIMELINE / proceso pasakojimas ===================== */
+  .tl .top{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+  .tl .ava{width:100px;height:100px;border-radius:24px;object-fit:cover}
+  .tl h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em;display:flex;gap:9px;align-items:center}
+  .tl .role{color:var(--muted);font-size:15px;margin:0}
+  .tl .rrow{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:14px}
+  .tl .rrow b{font-weight:700}.tl .rrow span{color:var(--faint)}
+  .tl .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .tl .step{position:relative;padding-left:0}
+  .tl .step .num{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent-ink);font-weight:800;display:grid;place-items:center;margin-bottom:10px}
+  .tl .step h4{margin:0 0 4px;font-size:15px;letter-spacing:-.01em}
+  .tl .step p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .tl .banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#1c1a18,#33291f);color:#fff;border-radius:18px;padding:22px 26px;flex-wrap:wrap}
+  .tl .banner .t{font-size:18px;font-weight:700;letter-spacing:-.02em}
+  .tl .banner .d{color:rgba(255,255,255,.7);font-size:14px;margin-top:3px}
+
+  /* ===================== F — SHOWCASE / portfolio pirma ===================== */
+  .sc .topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .sc .ava{width:64px;height:64px;border-radius:16px;object-fit:cover}
+  .sc h1{font-size:24px;margin:0;letter-spacing:-.02em;display:flex;gap:8px;align-items:center}
+  .sc .role{color:var(--muted);font-size:14px;margin:2px 0 0}
+  .sc .topbar .sp{flex:1}
+  .sc .feature{position:relative;border-radius:18px;overflow:hidden;height:300px;background:#e9e3dc}
+  .sc .feature img{width:100%;height:100%;object-fit:cover}
+  .sc .feature .cap{position:absolute;left:0;right:0;bottom:0;padding:18px;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);color:#fff;font-size:14px}
+  .sc .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .sc .thumbs a{border-radius:13px;overflow:hidden;aspect-ratio:4/3;background:#e9e3dc}
+  .sc .thumbs img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+  .sc .thumbs a:hover img{transform:scale(1.05)}
+  .sc .barcta{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;background:var(--surface)}
+  .sc .barcta .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .sc .barcta .acts{display:flex;gap:10px}
+
+  @media(max-width:820px){
+    .mag .hero h1{font-size:34px}.mag .hero{height:300px}
+    .mag .body{grid-template-columns:1fr}.mag .side{position:static}
+    .tl .steps{grid-template-columns:1fr 1fr}.tl .top{grid-template-columns:auto 1fr}
+    .sc .thumbs{grid-template-columns:1fr 1fr}.sc .barcta{grid-template-columns:1fr}
+  }
+  .foot{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#1c1a18;color:#fff;font-size:12.5px;padding:9px 16px;border-radius:99px;opacity:.85;z-index:40}
+</style>
+</head>
+<body>
+<div class="switcher">
+  <button data-v="D" class="on">D · Žurnalinis pilnas</button>
+  <button data-v="E">E · Procesas</button>
+  <button data-v="F">F · Portfolio pirma</button>
+</div>
+
+<div class="stage">
+
+  <!-- ================= D ================= -->
+  <div class="variant show" id="D">
+    <div class="vhead"><h2>D · Žurnalinis pilnas</h2><p>A varianto hero + pilnas kūnas su lipnia šonine. Premium amatininkas, daug nuotraukų.</p></div>
+    <div class="mag">
+      <div class="hero">
+        <img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1400&q=80">
+        <div class="ov">
+          <div class="kick">Baldų meistras · Vilnius</div>
+          <h1>Mindaugas K.</h1>
+          <p class="sub">Individualūs mediniai baldai pagal užsakymą — virtuvės, spintos, stalviršiai iš masyvo.</p>
+          <div class="meta"><span class="stars">★★★★★ <b>5.0</b></span><span>· 41 atsiliepimas</span><span>· <span class="verified" style="background:rgba(255,255,255,.18);color:#fff">✓ Patikrintas</span></span></div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="col">
+          <div class="card pad"><p class="sec-title">⬡ Atlikti darbai</p>
+            <div class="galm">
+              <a><img src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500&q=80"></a>
+              <a><img src="https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=500&q=80"></a>
+              <a><img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=500&q=80"></a>
+              <a><img src="https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=500&q=80"></a>
+              <a><img src="https://images.unsplash.com/photo-1503602642458-232111445657?w=500&q=80"></a>
+              <a><img src="https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=500&q=80"></a>
+            </div>
+          </div>
+          <div class="card pad about"><p class="sec-title">⬡ Apie meistrą</p>
+            <p>Baldus gaminu 12 metų. Dirbu su ąžuolu, uosiu ir riešutmedžiu. Kiekvienas projektas individualus — nuo eskizo iki sumontavimo jūsų namuose. Kokybė, kuri tarnaus dešimtmečius.</p>
+            <div class="svc" style="margin-top:16px"><span>Virtuvės baldai</span><span>Spintos</span><span>Stalviršiai iš masyvo</span><span>Komodos</span><span>Restauracija</span></div>
+          </div>
+          <div class="card pad"><p class="sec-title">⬡ Atsiliepimai (41)</p>
+            <div class="rev"><div class="who"><div class="ava">G</div><div class="nm">Giedrė</div><div class="st">★★★★★</div></div><p>Pagamino virtuvę kaip iš žurnalo. Tikslus, tvarkingas, laikėsi termino. Verta kiekvieno euro.</p><div class="tag">Virtuvės baldai · Vilnius</div></div>
+            <div class="rev"><div class="who"><div class="ava">M</div><div class="nm">Marius</div><div class="st">★★★★★</div></div><p>Spinta įmontuota idealiai, milimetro tikslumu. Konsultavo dėl medienos. Rekomenduoju.</p><div class="tag">Spinta · Vilnius</div></div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="card pad cta">
+            <h3>Turite projektą?</h3>
+            <p class="s">Aprašyk idėją — Mindaugas pateiks pasiūlymą nemokamai.</p>
+            <button class="btn btn-primary full">✈ Rašyti žinutę</button>
+            <button class="btn btn-ghost full" style="margin-top:10px">📞 Skambinti</button>
+            <div class="reassure"><span><span class="dot"></span> Atsako per 1 val.</span><span><span class="dot"></span> 97% priima</span></div>
+          </div>
+          <div class="card pad">
+            <p class="sec-title" style="margin-bottom:12px">Greiti faktai</p>
+            <div class="fact"><div class="ic">📍</div> Vilnius · visa Lietuva</div>
+            <div class="fact"><div class="ic">🗓️</div> Platformoje nuo 2023</div>
+            <div class="fact"><div class="ic">💶</div> Projektai nuo 200 €</div>
+            <div class="fact"><div class="ic">🧾</div> Sąskaitos faktūros</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= E ================= -->
+  <div class="variant" id="E">
+    <div class="vhead"><h2>E · Procesas</h2><p>Akcentas į „kaip dirbu" — žingsniai mažina klientui riziką. Renovacija, didesni darbai.</p></div>
+    <div class="tl" style="display:flex;flex-direction:column;gap:22px">
+      <div class="card pad">
+        <div class="top">
+          <img class="ava" src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=200&q=80">
+          <div>
+            <h1>Tomas · Statybų brigada <span class="verified">✓ Patikrinta</span></h1>
+            <p class="role">Pilna butų ir namų renovacija · Vilnius, Kaunas</p>
+            <div class="rrow"><span class="stars">★★★★★</span> <b>4.9</b> <span>(58 atsiliepimai)</span> <span>· atsako per ~3 val.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card pad">
+        <p class="sec-title">⬡ Kaip vyksta darbas</p>
+        <div class="steps">
+          <div class="step"><div class="num">1</div><h4>Nemokamas vizitas</h4><p>Atvažiuoju, apžiūriu, aptariam idėjas ir biudžetą.</p></div>
+          <div class="step"><div class="num">2</div><h4>Sąmata ir planas</h4><p>Gaunate detalią sąmatą be paslėptų kaštų per 2 d.</p></div>
+          <div class="step"><div class="num">3</div><h4>Darbai</h4><p>Dirbam pagal grafiką, informuojam kiekviename etape.</p></div>
+          <div class="step"><div class="num">4</div><h4>Perdavimas</h4><p>Priduodam švarų objektą + 24 mėn. garantija.</p></div>
+        </div>
+      </div>
+      <div class="card pad about">
+        <p class="sec-title">⬡ Ką darome</p>
+        <div class="svc"><span>Pilna renovacija</span><span>Vonios</span><span>Virtuvės</span><span>Elektra</span><span>Santechnika</span><span>Plytelės</span><span>Dažymas</span><span>Grindys</span></div>
+      </div>
+      <div class="banner">
+        <div><div class="t">Pasiruošę pradėti?</div><div class="d">Aprašyk darbą — atsiųsim nemokamą sąmatą.</div></div>
+        <div style="display:flex;gap:10px"><a class="btn btn-primary">✈ Rašyti žinutę</a><a class="btn btn-ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)">📞 Skambinti</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= F ================= -->
+  <div class="variant" id="F">
+    <div class="vhead"><h2>F · Portfolio pirma</h2><p>Darbai užima sceną iškart. Tekstas minimalus. Fotografai, dažytojai, dekoratoriai.</p></div>
+    <div class="sc" style="display:flex;flex-direction:column;gap:18px">
+      <div class="card pad">
+        <div class="topbar">
+          <img class="ava" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=160&q=80">
+          <div><h1>Eglė · Interjero dekoras <span class="verified">✓ Patikrinta</span></h1><p class="role">Erdvių dekoravimas ir stilizavimas · Vilnius</p></div>
+          <div class="sp"></div>
+          <div style="font-size:14px;text-align:right"><span class="stars">★★★★★</span> <b>5.0</b><br><span style="color:var(--faint)">29 atsiliepimai</span></div>
+        </div>
+      </div>
+      <div class="feature">
+        <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80">
+        <div class="cap">Svetainės dekoravimas · Vilnius, 2025</div>
+      </div>
+      <div class="thumbs">
+        <a><img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&q=80"></a>
+        <a><img src="https://images.unsplash.com/photo-1616137466211-f939a420be84?w=500&q=80"></a>
+        <a><img src="https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=500&q=80"></a>
+        <a><img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=500&q=80"></a>
+      </div>
+      <div class="card pad barcta">
+        <div class="chips"><span class="svc"><span>Stilizavimas</span></span><span class="svc"><span>Spalvų schemos</span></span><span class="svc"><span>Apstatymas</span></span><span class="svc"><span>Konsultacijos</span></span></div>
+        <div class="acts"><a class="btn btn-primary">✈ Rašyti žinutę</a><a class="btn btn-ghost">📞 Skambinti</a></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="foot">Pilni variantai · /profile-full.html</div>
+<script>
+  const btns=[...document.querySelectorAll('.switcher button')];
+  const vars=[...document.querySelectorAll('.variant')];
+  btns.forEach(b=>b.addEventListener('click',()=>{
+    btns.forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    vars.forEach(v=>v.classList.toggle('show',v.id===b.dataset.v));
+    window.scrollTo(0,0);
+  }));
+</script>
+</body>
+</html>

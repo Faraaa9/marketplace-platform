@@ -858,3 +858,23 @@ slug nuorodos vietoj cuid (commit'ai `87b643f`, `aed95d3` ant `main`).
       naudoja `category_aliases` ar lentele `l`; issiaiskinti pries iterpiant.
       Matchingui NEREIKIA (nuorodos perkeltos fiziskai); tik senu `?category=`
       URL'u testumui.
+
+---
+
+## Saugumo skeneris — išorinės ataskaitos radiniai (2026-07-01)
+
+Gauta iš trečios šalies svetainės saugumo skenerio (versijos/HSTS/IPv6/HTTP3
+patikra). Nekritiška, bet verta sutvarkyti kada nors atskiru PR'u.
+
+- [ ] **2 komponentai atskleidžia versiją response header'iuose** — leidžia
+      užpuolikams tikslintis viešai žinomus CVE pagal versiją. Reikia: rasti,
+      kurie serverio/frameworkų header'iai (pvz. `X-Powered-By`, `Server`)
+      nutekina versiją, ir juos nuslopinti (Next.js `poweredByHeader: false`
+      `next.config.mjs`'e + patikrinti hosting/CDN sluoksnio header'ius).
+- [ ] **HSTS yra, bet ne preload-ready.** Reikia `max-age>=31536000;
+      includeSubDomains; preload` ir įtraukimas į hstspreload.org. Patikrinti
+      dabartinį `Strict-Transport-Security` header'į (Vercel/next.config)
+      prieš keičiant — `includeSubDomains` gali paveikti subdomenus, jei tokių yra.
+- [ ] **Nėra AAAA (IPv6) įrašo** — DNS/hosting lygio, ne kodo; low priority.
+- [ ] **HTTP/3 (QUIC) nepalaikomas** — CDN/serverio konfigūracija, ne saugumo
+      spraga, tik performance rekomendacija.

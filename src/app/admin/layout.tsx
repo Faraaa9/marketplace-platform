@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox, Sparkles, Send, Megaphone } from "lucide-react";
+import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox, Sparkles, Send, Megaphone, MailWarning } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -30,6 +30,8 @@ interface NavBadges {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [badges, setBadges] = useState<NavBadges>({ pendingActivation: 0, pendingRequests: 0, pendingClaims: 0, pendingModeration: 0 });
+  const [emailTestMode, setEmailTestMode] = useState(false);
+  const [emailAllowlistCount, setEmailAllowlistCount] = useState(0);
 
   useEffect(() => {
     fetch("/api/admin/stats")
@@ -42,6 +44,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             pendingClaims: data.data.pendingClaims || 0,
             pendingModeration: data.data.pendingModeration || 0,
           });
+          setEmailTestMode(Boolean(data.data.emailTestMode));
+          setEmailAllowlistCount(data.data.emailAllowlistCount || 0);
         }
       })
       .catch(() => {});
@@ -109,7 +113,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto pb-16 md:pb-0">{children}</div>
+      <div className="flex-1 overflow-auto pb-16 md:pb-0">
+        {emailTestMode && (
+          <Link
+            href="/admin/nustatymai"
+            className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-body-sm text-amber-900 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+          >
+            <MailWarning className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              <strong>El. laiškų testavimo režimas įjungtas.</strong> Laiškai siunčiami tik {emailAllowlistCount} baltojo sąrašo adresui (-ams) — visiems kitiems gavėjams tyliai praleidžiami. Spustelėkite, kad pakeistumėte.
+            </span>
+          </Link>
+        )}
+        {children}
+      </div>
     </div>
   );
 }

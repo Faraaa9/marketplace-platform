@@ -4,12 +4,12 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { AIProfileSetup } from "@/app/kontaktai/AIProfileSetup";
+import { QuickOnboard } from "./QuickOnboard";
 
 export const metadata: Metadata = {
   title: "Sukurti meistro profilį | PaslaugųRinka",
   description:
-    "Greitai sukurkite savo meistro profilį su AI pagalba. Tik nurodykite URL ir mes užpildysime visą informaciją.",
+    "Sukurkite meistro profilį per minutę — vardas, sritis, miestas, telefonas. Ir tave randa klientai.",
 };
 
 
@@ -56,7 +56,7 @@ async function SessionGate() {
 
   return (
     <div className="min-h-screen py-12">
-      <AIProfileSetup />
+      <QuickOnboard name={user.name ?? ""} />
     </div>
   );
 }

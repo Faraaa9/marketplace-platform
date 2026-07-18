@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Šakų patikra</title>
+<style>
+  :root { --bg:#fafafa; --card:#fff; --ink:#1c1b1a; --muted:#6b6962; --faint:#a39d90; --line:#e7e5df;
+          --terra:#c4633f; --terra-d:#8a4226; --terra-bg:#f7ece7; --root-bg:#eef3ea; --root-ink:#3b6d34; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .wrap { max-width:780px; margin:0 auto; padding:26px 18px 60px; }
+  h1 { font-size:19px; font-weight:600; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 18px; }
+  textarea { width:100%; min-height:64px; padding:11px 13px; border:1px solid var(--line); border-radius:10px; font:inherit; resize:vertical; background:var(--card); }
+  textarea:focus { outline:none; border-color:var(--terra); }
+  .row { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  button { background:var(--terra); color:#fff; border:0; padding:9px 17px; border-radius:10px; font:inherit; font-weight:500; cursor:pointer; }
+  button:disabled { opacity:.5; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:11px; }
+  .chip { font-size:12px; color:var(--muted); background:#efeee9; border:1px solid var(--line); border-radius:14px; padding:4px 10px; cursor:pointer; }
+  .chip:hover { border-color:var(--terra); color:var(--terra); }
+  .meta { color:var(--muted); font-size:12px; margin:18px 0 8px; }
+  .job { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-bottom:11px; }
+  .phrase { font-weight:600; margin-bottom:9px; font-size:14px; }
+  .crumb { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:7px; }
+  .lvl { padding:3px 9px; border-radius:8px; font-size:13px; white-space:nowrap; }
+  .lvl.root { background:var(--root-bg); color:var(--root-ink); border:1px solid #cfe0c8; font-weight:500; }
+  .lvl.l2 { background:var(--terra-bg); color:var(--terra-d); border:1px solid #e3c4b4; font-weight:500; }
+  .lvl.leaf { background:#f2f1ec; color:var(--ink); border:1px solid var(--line); }
+  .sep { color:var(--faint); font-size:13px; }
+  .conf { color:var(--faint); font-size:11px; margin-left:4px; }
+  .legend { font-size:12px; color:var(--muted); margin-top:20px; border-top:1px solid var(--line); padding-top:13px; line-height:1.7; }
+  .legend .root { color:var(--root-ink); font-weight:500; } .legend .l2 { color:var(--terra-d); font-weight:500; }
+  .err { color:#a3322f; font-size:13px; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Šakų patikra <span style="font-size:12px;font-weight:400;color:var(--muted)">(root › 2-as lygis › lapas)</span></h1>
+  <p class="sub">Kiekvienai auto-parinktai kategorijai rodoma pilna šaka. Klausimas: ar šaka (žalia/terakota) teisinga net kai lapas suklysta? (<a href="/product" style="color:var(--terra)">← produkto vaizdas</a>)</p>
+  <textarea id="q" placeholder="pvz. Reikia padidinti elektros galią ir pakeisti skydelį"></textarea>
+  <div class="row"><button id="go">Tikrinti</button><span id="status" class="sub" style="margin:0;"></span></div>
+  <div class="chips" id="examples"></div>
+  <div id="out"></div>
+  <div class="legend">
+    <span class="root">žalia</span> = root-šaka (depth 0, pvz. „Statybos“) · <span class="l2">terakota</span> = 2-as lygis (depth 1, pvz. „Elektros darbai“) · pilka = lapas.<br>
+    Matavimas (top-1): GOLD-SEG root 84% / 2-as lygis 82% / lapas 64% · šnekamosios root 97% / 97% / 87%.
+  </div>
+</div>
+<script>
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:5577';
+const EXAMPLES = [
+  "Reikia padidinti elektros galią ir pakeisti elektros skydelį",
+  "Sienų dažymas, plytelių klojimas ir kriauklės keitimas",
+  "Reikia išvežti statybines atliekas ir konteinerio",
+  "Reikia nupjaut žolę, iškasti tvenkinį ir nuplaut mašiną",
+];
+const out=document.getElementById('out'), statusEl=document.getElementById('status'), qEl=document.getElementById('q'), goEl=document.getElementById('go');
+EXAMPLES.forEach(t=>{const c=document.createElement('span');c.className='chip';c.textContent=t;c.onclick=()=>{qEl.value=t;run();};document.getElementById('examples').appendChild(c);});
+function esc(s){return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+function render(d){
+  if(d.error){out.innerHTML='<div class="err">Klaida: '+esc(d.error)+'</div>';return;}
+  const jobs=d.jobs||[];
+  out.innerHTML='<div class="meta">'+jobs.length+' darbai · '+d.ms+'ms · '+esc(d.model)+'</div>';
+  for(const j of jobs){
+    let h='<div class="job"><div class="phrase">'+esc(j.phrase)+'</div>';
+    const auto=(j.picks||[]).filter(p=>(p.confidence||0)>0.70);
+    const show=auto.length?auto:(j.picks||[]).slice(0,1);
+    if(!show.length){ h+='<div class="sub" style="margin:0">nėra</div>'; }
+    for(const p of show){
+      h+='<div class="crumb">';
+      if(p.root) h+='<span class="lvl root">'+esc(p.root)+'</span><span class="sep">›</span>';
+      if(p.lvl2 && p.lvl2!==p.root) h+='<span class="lvl l2">'+esc(p.lvl2)+'</span><span class="sep">›</span>';
+      h+='<span class="lvl leaf">'+esc(p.category)+'</span><span class="conf">'+(p.confidence||0).toFixed(2)+'</span>';
+      h+='</div>';
+    }
+    h+='</div>'; out.innerHTML+=h;
+  }
+}
+async function run(){const text=qEl.value.trim();if(!text)return;goEl.disabled=true;statusEl.textContent='galvoju…';out.innerHTML='';
+  try{const r=await fetch(API+'/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});render(await r.json());}
+  catch(e){out.innerHTML='<div class="err">Tinklo klaida: '+esc(e.message)+'</div>';}
+  finally{goEl.disabled=false;statusEl.textContent='';}}
+goEl.onclick=run; qEl.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')run();});
+</script>
+</body>
+</html>

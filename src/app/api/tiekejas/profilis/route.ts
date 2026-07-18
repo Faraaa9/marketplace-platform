@@ -2,12 +2,14 @@ import { NextRequest, NextResponse, connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { providerProfileSchema } from "@/lib/validations";
+import { providerProfileSchema, quickOnboardSchema } from "@/lib/validations";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText } from "@/lib/moderation";
 import { revalidateProviderCaches } from "@/lib/cache-invalidation";
 import { syncFreeCategories } from "@/lib/provider-categories";
 import { getProviderProfileEditData } from "@/lib/provider-profile-edit";
+import { getServiceCategoryNameMap } from "@/lib/service-categories";
+import { generateUniqueProviderSlug } from "@/lib/slug";
 
 export async function GET() {
   await connection();
@@ -160,6 +162,78 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: profile });
   } catch (error) {
     console.error("Update profile error:", error);
+    return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
+  }
+}
+
+// Quick onboarding — create a live, matchable profile from the 4-field flow
+// (name + trade + city + phone). No description/photos/AI required; the profile
+// goes live immediately and the full editor enriches it later.
+export async function POST(req: NextRequest) {
+  await connection();
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const parsed = quickOnboardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues?.[0]?.message || "Validacijos klaida" },
+        { status: 400 },
+      );
+    }
+
+    // Idempotent: a returning user who already has a profile just gets sent there.
+    const existing = await prisma.providerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { slug: true },
+    });
+    if (existing?.slug) {
+      return NextResponse.json({ success: true, data: { slug: existing.slug } });
+    }
+
+    const categoryIds = [...new Set(parsed.data.categoryIds)].slice(0, 20);
+    const nameMap = await getServiceCategoryNameMap();
+    const primaryName = nameMap.get(categoryIds[0]) ?? null;
+    const displayName = parsed.data.displayName.trim();
+    // Honest factual one-liner only — NO fabricated prices/guarantees
+    // (see meistras-profile-analysis.md §6). Editor adds the real bio later.
+    const stub = [primaryName, parsed.data.location].filter(Boolean).join(", ") || null;
+    const slug = await generateUniqueProviderSlug(prisma, displayName, session.user.id);
+
+    const profile = await prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: session.user.id }, data: { role: "PROVIDER" } });
+      const created = await tx.providerProfile.create({
+        data: {
+          userId: session.user.id,
+          slug,
+          displayName,
+          description: stub,
+          location: parsed.data.location,
+          phone: parsed.data.phone || null,
+          primaryService: primaryName,
+          primaryCity: parsed.data.location,
+          serviceArea: [parsed.data.location],
+          isActive: true,
+          status: "claimed",
+          sourceType: "self_created",
+          // ponytail: only user free-text here is their own name; full editor PUT
+          // moderates the real description when they add it. Keep onboarding instant.
+          moderationStatus: "APPROVED",
+        },
+        select: { id: true, slug: true },
+      });
+      await syncFreeCategories(tx, created.id, categoryIds);
+      return created;
+    });
+
+    revalidateProviderCaches(session.user.id);
+    return NextResponse.json({ success: true, data: { slug: profile.slug } });
+  } catch (error) {
+    console.error("Onboard create error:", error);
     return NextResponse.json({ success: false, error: "Klaida" }, { status: 500 });
   }
 }

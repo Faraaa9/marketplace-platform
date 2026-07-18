@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paslaugų rinka - tiekėjo darbo centro preview</title>
+    <style>
+      :root {
+        --bg: #f4f1ec;
+        --panel: #fffdf8;
+        --panel-strong: #ffffff;
+        --ink: #24211d;
+        --muted: #6d675f;
+        --soft: #8d857b;
+        --line: #ded7cc;
+        --brand: #6f7f4b;
+        --brand-dark: #526036;
+        --green: #0e7a55;
+        --green-bg: #e7f7ef;
+        --blue: #1769e0;
+        --blue-bg: #e8f1ff;
+        --amber: #a96800;
+        --amber-bg: #fff4d7;
+        --shadow: 0 18px 55px rgba(55, 42, 31, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          linear-gradient(rgba(36, 33, 29, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(36, 33, 29, 0.045) 1px, transparent 1px),
+          var(--bg);
+        background-size: 48px 48px;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 20px 0 48px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 64px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 760;
+      }
+
+      .brand-mark,
+      .avatar {
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        color: white;
+        background: var(--brand);
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-button {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+      }
+
+      .user-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 6px 12px 6px 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        font-weight: 650;
+      }
+
+      .user-pill .avatar {
+        width: 32px;
+        height: 32px;
+        background: var(--brand);
+        color: white;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 24px;
+        align-items: end;
+        padding: 42px 0 22px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--brand);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(38px, 5vw, 64px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        max-width: 520px;
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .hero-cta {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .primary-button,
+      .secondary-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 12px;
+        font-weight: 750;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+
+      .primary-button {
+        color: white;
+        background: var(--brand);
+        box-shadow: 0 10px 22px rgba(111, 127, 75, 0.24);
+      }
+
+      .secondary-button {
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.82);
+        border-color: var(--line);
+      }
+
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .status-tile {
+        position: relative;
+        min-height: 90px;
+        padding: 16px 18px;
+        border: 1px solid rgba(222, 215, 204, 0.78);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.74));
+        box-shadow: 0 10px 26px rgba(55, 42, 31, 0.055);
+        overflow: hidden;
+      }
+
+      .status-tile::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: rgba(111, 127, 75, 0.42);
+      }
+
+      .status-value {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 27px;
+        font-weight: 720;
+        letter-spacing: 0;
+      }
+
+      .status-value span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .status-label {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(310px, 0.75fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 820;
+      }
+
+      .panel-subtitle {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .segmented {
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #f5f1ea;
+      }
+
+      .segment {
+        min-height: 34px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .segment.active {
+        color: var(--ink);
+        background: white;
+        box-shadow: 0 2px 8px rgba(36, 33, 29, 0.08);
+      }
+
+      .conversation-list {
+        padding: 8px 0;
+      }
+
+      .conversation {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        min-height: 92px;
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(222, 215, 204, 0.72);
+        background: var(--panel);
+      }
+
+      .conversation:last-child {
+        border-bottom: 0;
+      }
+
+      .conversation.urgent {
+        background: #fff8ec;
+      }
+
+      .avatar {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        font-weight: 800;
+        background: #d1d5db;
+        color: #4b5563;
+      }
+
+      .avatar.green {
+        background: #d1d5db;
+        color: #4b5563;
+      }
+
+      .avatar.blue {
+        background: #d1d5db;
+        color: #4b5563;
+      }
+
+      .avatar.dark {
+        background: #d1d5db;
+        color: #4b5563;
+      }
+
+      .online-dot {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 13px;
+        height: 13px;
+        border: 2px solid var(--panel);
+        border-radius: 999px;
+        background: #20b46b;
+      }
+
+      .conversation-main {
+        min-width: 0;
+      }
+
+      .conversation-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .conversation-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 15px;
+        font-weight: 820;
+      }
+
+      .conversation-meta {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .conversation-preview {
+        margin-top: 6px;
+        color: var(--ink);
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .conversation-preview.muted {
+        color: var(--muted);
+      }
+
+      .badge-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 23px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .badge.blue {
+        color: var(--blue);
+        background: var(--blue-bg);
+      }
+
+      .badge.green {
+        color: var(--muted);
+        background: #eee9e1;
+      }
+
+      .badge.amber {
+        color: var(--muted);
+        background: #eee9e1;
+      }
+
+      .badge.neutral {
+        color: var(--muted);
+        background: #eee9e1;
+      }
+
+      .conversation-action {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .time {
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 720;
+        white-space: nowrap;
+      }
+
+      .open-button {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: white;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .open-button.primary {
+        color: white;
+        border-color: var(--brand);
+        background: var(--brand);
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .side-card {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 12px 32px rgba(55, 42, 31, 0.08);
+      }
+
+      .side-card.warning {
+        background: #fff8e8;
+        border-color: #ebca7a;
+      }
+
+      .side-card h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .side-card p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .progress {
+        height: 8px;
+        margin-top: 14px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e4ded4;
+      }
+
+      .progress > span {
+        display: block;
+        width: 86%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--brand), #8b9a60);
+      }
+
+      .checklist {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .check {
+        display: grid;
+        place-items: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--green-bg);
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .check.empty {
+        background: transparent;
+        border: 1px solid #cfc6b8;
+        color: transparent;
+      }
+
+      .side-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .small-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: white;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 760;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .footer-links a {
+        min-height: 42px;
+        padding: 11px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-cta {
+          justify-content: flex-start;
+        }
+
+        .status-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100% - 20px, 1180px);
+          padding-top: 10px;
+        }
+
+        .topbar {
+          min-height: 56px;
+        }
+
+        .brand span:last-child,
+        .icon-button:nth-child(1),
+        .secondary-button,
+        .panel-subtitle,
+        .conversation-action .time {
+          display: none;
+        }
+
+        .hero {
+          padding-top: 28px;
+        }
+
+        .status-strip {
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .status-tile {
+          min-height: 72px;
+          padding: 12px;
+        }
+
+        .status-value {
+          font-size: 22px;
+        }
+
+        .panel-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .segmented {
+          width: 100%;
+          overflow-x: auto;
+        }
+
+        .conversation {
+          grid-template-columns: 44px minmax(0, 1fr);
+          min-height: 88px;
+          padding: 13px 14px;
+        }
+
+        .conversation-action {
+          grid-column: 2;
+          align-items: stretch;
+        }
+
+        .open-button {
+          width: 100%;
+        }
+
+        .side-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar" aria-label="Viršutinė navigacija">
+        <a class="brand" href="#">
+          <span class="brand-mark">P</span>
+          <span>Paslaugų rinka</span>
+        </a>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="Tema">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M21 12.8A8.2 8.2 0 1 1 11.2 3a6.4 6.4 0 0 0 9.8 9.8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="icon-button" aria-label="Pranešimai">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <path d="M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <a class="user-pill" href="#">
+            <span class="avatar">J</span>
+            Justas
+          </a>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Tiekėjo darbo centras</p>
+          <h1>Kas laukia šiandien</h1>
+          <p class="hero-copy">
+            Viena vieta klientų žinutėms, atsakymo terminams ir profilio būsenai.
+            Jeigu nėra veiksmo, ekranas turi būti ramus.
+          </p>
+        </div>
+        <div class="hero-cta">
+          <a class="primary-button" href="#">Atidaryti žinutes</a>
+          <a class="secondary-button" href="#">Viešas profilis</a>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="Darbo centro santrauka">
+        <a class="status-tile" href="#">
+          <div class="status-value">2 <span>naujos</span></div>
+          <div class="status-label">Žinutės laukia atsakymo</div>
+        </a>
+        <a class="status-tile" href="#">
+          <div class="status-value">5 <span>aktyvūs</span></div>
+          <div class="status-label">Pokalbiai su klientais</div>
+        </a>
+        <a class="status-tile" href="#">
+          <div class="status-value">86%</div>
+          <div class="status-label">Profilio paruošimas</div>
+        </a>
+        <a class="status-tile" href="#">
+          <div class="status-value">2</div>
+          <div class="status-label">Kreditai atsakymams</div>
+        </a>
+      </section>
+
+      <main class="dashboard-grid">
+        <section class="panel" aria-label="Pokalbiai, kuriems reikia dėmesio">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Reikia dėmesio</h2>
+              <p class="panel-subtitle">Pirmiausia rodomi pokalbiai, kur klientas laukia jūsų atsakymo.</p>
+            </div>
+            <div class="segmented" aria-label="Pokalbių filtras">
+              <button class="segment active">Visi</button>
+              <button class="segment">Nauji</button>
+              <button class="segment">Vyksta</button>
+            </div>
+          </div>
+
+          <div class="conversation-list">
+            <article class="conversation urgent">
+              <div class="avatar green">
+                JP
+                <span class="online-dot"></span>
+              </div>
+              <div class="conversation-main">
+                <div class="conversation-top">
+                  <div class="conversation-name">Jonas Petrauskas</div>
+                  <div class="badge-row">
+                    <span class="badge blue">Nauja žinutė</span>
+                    <span class="badge neutral">Klientas</span>
+                  </div>
+                </div>
+                <div class="conversation-meta">Vonios remontas · Vilnius</div>
+                <div class="conversation-preview">Ar galite pradėti kitą savaitę? Reikia sąmatos.</div>
+              </div>
+              <div class="conversation-action">
+                <span class="time">Prieš 12 min.</span>
+                <button class="open-button primary">Atsakyti</button>
+              </div>
+            </article>
+
+            <article class="conversation urgent">
+              <div class="avatar blue">GR</div>
+              <div class="conversation-main">
+                <div class="conversation-top">
+                  <div class="conversation-name">Gerbūvis LT</div>
+                  <div class="badge-row">
+                    <span class="badge blue">Nauja žinutė</span>
+                    <span class="badge neutral">Klientas</span>
+                  </div>
+                </div>
+                <div class="conversation-meta">Trinkelių klojimas · Kaunas</div>
+                <div class="conversation-preview">Galite paskambinti šiandien po 17 val.?</div>
+              </div>
+              <div class="conversation-action">
+                <span class="time">Prieš 1 val.</span>
+                <button class="open-button primary">Atsakyti</button>
+              </div>
+            </article>
+
+            <article class="conversation">
+              <div class="avatar dark">AC</div>
+              <div class="conversation-main">
+                <div class="conversation-top">
+                  <div class="conversation-name">Anne Castillo</div>
+                  <div class="badge-row">
+                    <span class="badge green">Vyksta</span>
+                    <span class="badge neutral">Klientas</span>
+                  </div>
+                </div>
+                <div class="conversation-meta">Virtuvės baldų surinkimas · Klaipėda</div>
+                <div class="conversation-preview muted">Jūs: Galiu atvykti penktadienį ir įvertinti vietoje.</div>
+              </div>
+              <div class="conversation-action">
+                <span class="time">Vakar</span>
+                <button class="open-button">Atidaryti</button>
+              </div>
+            </article>
+
+            <article class="conversation">
+              <div class="avatar">MD</div>
+              <div class="conversation-main">
+                <div class="conversation-top">
+                  <div class="conversation-name">Mantas D.</div>
+                  <div class="badge-row">
+                    <span class="badge amber">Priimta</span>
+                    <span class="badge neutral">Darbas</span>
+                  </div>
+                </div>
+                <div class="conversation-meta">Elektros instaliacija · Šiauliai</div>
+                <div class="conversation-preview muted">Suderintas laikas. Laukia galutinio patvirtinimo.</div>
+              </div>
+              <div class="conversation-action">
+                <span class="time">Prieš 3 d.</span>
+                <button class="open-button">Atidaryti</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="side-stack" aria-label="Tiekėjo būsena">
+          <section class="side-card warning">
+            <h3>Vienas blokatorius</h3>
+            <p>Profilis beveik paruoštas, bet trūksta telefono. Klientai greičiau pasitiki tiekėjais, kuriuos galima pasiekti tiesiogiai.</p>
+            <div class="progress"><span></span></div>
+            <div class="checklist">
+              <div class="check-item"><span class="check">✓</span> Paskyra patvirtinta</div>
+              <div class="check-item"><span class="check">✓</span> Veiklos sritys pasirinktos</div>
+              <div class="check-item"><span class="check empty">.</span> Telefonas</div>
+            </div>
+            <div class="side-actions">
+              <a class="small-link" href="#">Užpildyti</a>
+              <a class="small-link" href="#">Peržiūrėti profilį</a>
+            </div>
+          </section>
+
+          <section class="side-card">
+            <h3>Kreditai</h3>
+            <p>Turite 2 kreditus. Jie naudojami atsakymams, kai klientas atėjo iš platformos užklausos.</p>
+            <div class="side-actions">
+              <a class="small-link" href="#">Papildyti</a>
+              <a class="small-link" href="#">Istorija</a>
+            </div>
+          </section>
+
+          <section class="side-card">
+            <h3>Matomumas</h3>
+            <p>Profilis aktyvus ir rodomas klientams. Paskutinį kartą atnaujintas prieš 6 dienas.</p>
+            <div class="side-actions">
+              <a class="small-link" href="#">Redaguoti</a>
+              <a class="small-link" href="#">Viešas vaizdas</a>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <nav class="footer-links" aria-label="Antriniai veiksmai">
+        <a href="#">Žinutės</a>
+        <a href="#">Teikėjo profilis</a>
+        <a href="#">Kreditai</a>
+        <a href="#">Paskyros nustatymai</a>
+      </nav>
+    </div>
+  </body>
+</html>

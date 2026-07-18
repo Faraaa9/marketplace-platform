@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fazė 5 dedup — 108 sunkios grupės (peržiūrai)</title>
+<style>
+  :root {
+    --brand-50:#fbf1ec; --brand-600:#c0593b; --brand-700:#a8472d;
+    --surface:#ffffff; --bg:#f5f3ef;
+    --ink:#2b2622; --muted:#7a726a; --line:#e9e3db;
+    --warn-bg:#fdf3e7; --warn-ink:#9a5b16; --warn-line:#f0d9b8;
+    --use-bg:#eef4ee; --use-ink:#3f6b48;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1040px; margin:0 auto; padding:40px 24px 80px; }
+  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.02em; }
+  .accent-line { height:3px; width:56px; background:var(--brand-600); border-radius:999px; margin:14px 0 22px; }
+  .lead { color:var(--muted); max-width:70ch; margin:0 0 8px; }
+  h2 { font-size:18px; margin:34px 0 10px; letter-spacing:-0.01em; }
+  h2 .count { color:var(--muted); font-weight:500; font-size:14px; }
+  .howto { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:14px 18px; margin:18px 0 8px; font-size:14px; color:var(--muted); }
+  .howto b { color:var(--ink); }
+  table { width:100%; border-collapse:collapse; background:var(--surface);
+    border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:13.5px; }
+  thead th { text-align:left; padding:9px 12px; background:var(--bg); color:var(--muted);
+    font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; border-bottom:1px solid var(--line); }
+  tbody td { padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tbody tr:last-child td { border-bottom:none; }
+  .grp { font-weight:600; }
+  .home { color:var(--use-ink); font-weight:600; white-space:nowrap; }
+  .home.warn { color:var(--warn-ink); }
+  .merged { color:var(--muted); }
+  .merged span { display:inline-block; }
+  .sep { color:var(--line); }
+  .pill { display:inline-block; font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px; white-space:nowrap; }
+  .pill-use { background:var(--use-bg); color:var(--use-ink); }
+  .pill-warn { background:var(--warn-bg); color:var(--warn-ink); }
+  tr.warn td { background:var(--warn-bg); }
+  .note { font-size:12.5px; color:var(--warn-ink); margin-top:3px; }
+  .foot { margin-top:34px; font-size:13px; color:var(--muted); }
+  code { background:var(--bg); padding:1px 5px; border-radius:5px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Fazė 5 — 108 sunkios grupės</h1>
+  <div class="accent-line"></div>
+  <p class="lead">Kiekviena grupė = tas pats paslaugos pavadinimas, įrašytas po keliais tėvais.
+  Dedup palieka vieną <b>kanoninį „namą"</b> (✅) ir sulieja kitas kopijas į jį.
+  Lengvos 712 grupių liejamos automatiškai; šios 108 turi tėvą su vaikais, tad „namus" tvirtini tu.</p>
+
+  <div class="howto">
+    <b>Kaip skaityti:</b> ✅ stulpelis = taisyklės pasiūlytas kanoninis tėvas (root › tėvas).
+    „Sulieti iš" = tėvai, kurių kopijos išjungiamos ir nukreipiamos į kanoninį.
+    <b>Pažymėk man tik tas, kurių namai netinka</b> — visa kita priimu kaip taisyklė siūlo.
+    Eilutės su <span class="pill pill-warn">⚠ peržiūrėk</span> — semantiškai ginčytinos (verta žvilgsnio).
+    <span class="pill pill-use">naud.</span> = grupė turi realų naudojimą (prioritetas).
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="foot">
+    Šaltinis: gyva <code>categories</code> užklausa (kanoninė taksonomija), <span id="ts"></span>.
+    Taisyklė: daugiausiai naudojimo → turi vaikų → mažesnis gylis → mažiausias ID.
+    Nieko nevykdyta — tik peržiūrai.
+  </div>
+</div>
+
+<script>
+// Gyvi duomenys (root › tėvas). u=naudojimas, c=kopijų skaičius.
+const DATA = [
+  {n:"Kalviai, kalvystės darbai",u:2,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Aplinka, sodas > Aplinka, sodas  |  Statybos, apdaila > Statybos, apdaila",c:3},
+  {n:"Perkraustymo paslaugos",u:2,h:"Transportas > Transportas",m:"Transportas > Krovinių pervežimas",c:2},
+  {n:"Reklamos paslaugos",u:2,h:"Paslaugos verslui > Paslaugos verslui",m:"Reklama, dizainas, spauda > Reklama, dizainas, spauda",c:2},
+  {n:"Santechnikai, santechnikos darbai",u:2,h:"Statybos, apdaila > Statybos, apdaila",m:"Buitinės paslaugos > Buitinės paslaugos",c:2},
+  {n:"Skalda, smėlis, žvyras, juodžemis",u:2,h:"Statybos, apdaila > Žemės kasimas, lyginimas",m:"Statybos, apdaila > Statybos, apdaila  |  Aplinka, sodas > Aplinka, sodas",c:3},
+  {n:"Tvoros, vartai, montavimas",u:2,h:"Aplinka, sodas > Aplinka, sodas",m:"Statybos, apdaila > Statybos, apdaila  |  Statybos, apdaila > Statybos darbai",c:3},
+  {n:"Vidaus apdailos darbai",u:2,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Automobilių nuoma",u:1,h:"Transportas > Transportas",m:"Renginiai, šventės > Renginiai, šventės  |  Nuomos paslaugos > Nuomos paslaugos",c:3},
+  {n:"Medžio darbai, staliai",u:1,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Mikroautobusų nuoma",u:1,h:"Transportas > Transportas",m:"Nuomos paslaugos > Nuomos paslaugos  |  Nuomos paslaugos > Automobilių nuoma  |  Renginiai, šventės > Automobilių nuoma  |  Transportas > Automobilių nuoma",c:5},
+  {n:"Mobiliųjų aplikacijų kūrimas",u:1,h:"Internetas, IT > Internetas, IT",m:"Paslaugos verslui > Paslaugos verslui",c:2},
+  {n:"Pagalbiniai darbininkai",u:1,h:"Transportas > Transportas",m:"Statybos, apdaila > Statybos, apdaila  |  Aplinka, sodas > Aplinka, sodas",c:3},
+  {n:"Programuotojai",u:1,h:"Internetas, IT > Internetas, IT",m:"Paslaugos verslui > Paslaugos verslui",c:2},
+  {n:"Siuvimas, siuvyklos, siuvėjai",u:1,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai  |  Buitinės paslaugos > Buitinės paslaugos",c:3},
+  {n:"Smėliavimas, dažymas",u:1,h:"Statybos, apdaila > Statybos, apdaila",m:"Transportas > Transportas",c:2},
+  {n:"Trinkelių klojimas",u:1,h:"Aplinka, sodas > Aplinka, sodas",m:"Statybos, apdaila > Aplinkos tvarkymas, apželdinimas  |  Aplinka, sodas > Aplinkos tvarkymas, apželdinimas",c:3},
+  {n:"Vejos priežiūra, įrengimas",u:1,h:"Aplinka, sodas > Aplinka, sodas",m:"Statybos, apdaila > Aplinkos tvarkymas, apželdinimas  |  Aplinka, sodas > Aplinkos tvarkymas, apželdinimas",c:3},
+  {n:"Akmens mūras, lauko židiniai, tvoros",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Aplinkos tvarkymas, apželdinimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Aplinka, sodas > Aplinka, sodas",c:2},
+  {n:"Apšiltinimas, šiltinimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Apšvietimo, įgarsinimo paslaugos",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Renginiai, šventės > Muzikantai, dainininkai, grupės",c:2},
+  {n:"Architektai, projektavimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Interjeras, baldai > Interjeras, baldai",c:2},
+  {n:"Baldų projektavimas, dizaineriai",u:0,h:"Interjeras, baldai > Interjeras, baldai",m:"Interjeras, baldai > Baldų gamyba",c:2},
+  {n:"Barmenai, gėrimai renginiams",u:0,h:"Maistas, konditerija > Maistas, konditerija",m:"Renginiai, šventės > Renginiai, šventės",c:2},
+  {n:"Betonavimo darbai, betonavimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Dailės mokytojai",u:0,h:"Mokymai, kursai, kalbos > Mokymai, kursai, kalbos",m:"Dailė, menai, keramika > Dailė, menai, keramika",c:2},
+  {n:"Dietologai",u:0,h:"Grožio paslaugos > Grožio paslaugos",m:"Sveikata, gydymas > Sveikata, gydymas",c:2},
+  {n:"Djs",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Renginiai, šventės > Muzikantai, dainininkai, grupės",c:2},
+  {n:"Dujų įvedimas, pajungimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Santechnikai, santechnikos darbai  |  Buitinės paslaugos > Santechnikai, santechnikos darbai",c:3},
+  {n:"Dviračių, paspirtukų remontas",u:0,h:"Transportas > Transportas",m:"Buitinės paslaugos > Buitinės paslaugos",c:2},
+  {n:"Ekskursijos, gidai",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Laisvalaikis, pramogos, turizmas > Laisvalaikis, pramogos, turizmas",c:2},
+  {n:"Elektronikos inžinieriai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Buitinės paslaugos > Buitinės paslaugos",c:2},
+  {n:"Fotografai verslui",u:0,h:"Reklama, dizainas, spauda > Reklama, dizainas, spauda",m:"Paslaugos verslui > Paslaugos verslui  |  Renginiai, šventės > Fotografai",c:3},
+  {n:"Fotostudijos",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Nuomos paslaugos > Nuomos paslaugos",c:2},
+  {n:"Frezavimas (CNC)",u:0,h:"Gamyba, prototipavimas, techniniai darbai > Gamyba, prototipavimas, techniniai darbai",m:"Paslaugos verslui > Paslaugos verslui",c:2},
+  {n:"Garažo vartai, montavimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Tvoros, vartai, montavimas  |  Aplinka, sodas > Tvoros, vartai, montavimas",c:3},
+  {n:"Grafikos dizaineriai",u:0,h:"Internetas, IT > Internetas, IT",m:"Reklama, dizainas, spauda > Reklama, dizainas, spauda  |  Paslaugos verslui > Paslaugos verslui",c:3},
+  {n:"Graviravimo paslaugos",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Dailė, menai, keramika > Dailė, menai, keramika",c:2},
+  {n:"Griovimo darbai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Vidaus apdailos darbai",c:2},
+  {n:"Grožio specialistų mokymai",u:0,h:"Mokymai, kursai, kalbos > Mokymai, kursai, kalbos",m:"Grožio paslaugos > Grožio paslaugos",c:2},
+  {n:"Iliustruotojai",u:0,h:"Dailė, menai, keramika > Dailė, menai, keramika",m:"Paslaugos verslui > Paslaugos verslui  |  Internetas, IT > Internetas, IT",c:3},
+  {n:"Indų nuoma",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Nuomos paslaugos > Nuomos paslaugos",c:2},
+  {n:"Internetinio verslo konsultantai",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Interneto svetainių kūrimas",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Įrankių nuoma",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Nuomos paslaugos > Nuomos paslaugos  |  Statybos, apdaila > Statybinės technikos nuoma",c:3},
+  {n:"IT specialistai",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Joga, jogos treneriai",u:0,h:"Sveikata, gydymas > Sveikata, gydymas",m:"Sportas, treniruotės > Sportas, treniruotės",c:2},
+  {n:"Juvelyrai, juvelyriniai dirbiniai",u:0,h:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Kailinių siuvimas",u:0,h:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",m:"Tradiciniai amatai > Siuvimas, siuvyklos, siuvėjai  |  Apranga, papuošalai, aksesuarai > Siuvimas, siuvyklos, siuvėjai  |  Buitinės paslaugos > Siuvimas, siuvyklos, siuvėjai",c:4},
+  {n:"Kaligrafijos meistrai",u:0,h:"Dailė, menai, keramika > Dailė, menai, keramika",m:"Renginiai, šventės > Renginiai, šventės",c:2},
+  {n:"Kaminų valymas",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Katilų montavimas, remontas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Buitinės paslaugos > Buitinės paslaugos  |  Statybos, apdaila > Santechnikai, santechnikos darbai  |  Buitinės paslaugos > Santechnikai, santechnikos darbai",c:4},
+  {n:"Keramikai",u:0,h:"Dailė, menai, keramika > Dailė, menai, keramika",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Kineziterapeutai",u:0,h:"Sveikata, gydymas > Sveikata, gydymas",m:"Grožio paslaugos > Grožio paslaugos",c:2},
+  {n:"Kompiuterių remontas",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Internetas, IT > Internetas, IT  |  Buitinės paslaugos > Buitinės paslaugos",c:3},
+  {n:"Laistymo sistemos, įrengimas",u:0,h:"Aplinka, sodas > Aplinka, sodas",m:"Aplinka, sodas > Aplinkos tvarkymas, apželdinimas  |  Statybos, apdaila > Aplinkos tvarkymas, apželdinimas",c:3},
+  {n:"Laivo nuoma",u:0,h:"Nuomos paslaugos > Nuomos paslaugos",m:"Laisvalaikis, pramogos, turizmas > Laisvalaikis, pramogos, turizmas",c:2},
+  {n:"Langai, durys: gamyba, montavimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Buitinės paslaugos > Buitinės paslaugos  |  Statybos, apdaila > Vidaus apdailos darbai",c:3},
+  {n:"Maitinimas, maistas šventėms",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Maistas, konditerija > Maistas, konditerija",c:2},
+  {n:"Malkos: gamyba, pristatymas",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Buitinės paslaugos > Buitinės paslaugos  |  Aplinka, sodas > Aplinka, sodas",c:3},
+  {n:"Medelynai, uogos, gėlės",u:0,h:"Aplinka, sodas > Aplinka, sodas",m:"Prekyba > Prekyba įvairiomis prekėmis",c:2},
+  {n:"Medžių genėjimas, pjovimas",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Aplinka, sodas > Aplinka, sodas  |  Aplinka, sodas > Aplinkos tvarkymas, apželdinimas  |  Statybos, apdaila > Aplinkos tvarkymas, apželdinimas",c:4},
+  {n:"Mezgėjos",u:0,h:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Mobiliųjų telefonų remontas",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Mobilus padangų montavimas",u:0,h:"Transportas > Transportas",m:"Transportas > Techninė pagalba kelyje  |  Transportas > Autoservisai, automobilių remontas",c:3},
+  {n:"Moto nuoma",u:0,h:"Transportas > Transportas",m:"Nuomos paslaugos > Nuomos paslaugos",c:2},
+  {n:"Nuotekų valymo įrenginiai",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Odininkai, odos gaminiai",u:0,h:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",m:"Tradiciniai amatai > Tradiciniai amatai",c:2},
+  {n:"Palapinių, paviljonų nuoma",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Nuomos paslaugos > Nuomos paslaugos  |  Renginiai, šventės > Šventinės įrangos nuoma  |  Nuomos paslaugos > Šventinės įrangos nuoma",c:4},
+  {n:"Paminklai kapams, antkapiai",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Tradiciniai amatai > Kapų tvarkymas, priežiūra",c:2},
+  {n:"Pirties nuoma",u:0,h:"Nuomos paslaugos > Nuomos paslaugos",m:"Sveikata, gydymas > Sveikata, gydymas  |  Laisvalaikis, pramogos, turizmas > Laisvalaikis, pramogos, turizmas",c:3},
+  {n:"Plėvelės klijavimas",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Statybos, apdaila > Statybos, apdaila",c:2},
+  {n:"Pramogos vaikams",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Laisvalaikis, pramogos, turizmas > Laisvalaikis, pramogos, turizmas",c:2},
+  {n:"Rąstinių namų statyba",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Reklamos gamyba",u:0,h:"Reklama, dizainas, spauda > Reklama, dizainas, spauda",m:"Paslaugos verslui > Paslaugos verslui",c:2},
+  {n:"Restauravimas",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Interjeras, baldai > Interjeras, baldai",c:2},
+  {n:"Roletai, žaliuzės, romanetės",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Statybos, apdaila > Statybos, apdaila  |  Interjeras, baldai > Interjeras, baldai",c:3},
+  {n:"SEO paslaugos",u:0,h:"Internetas, IT > Internetas, IT",m:"Paslaugos verslui > Paslaugos verslui  |  Internetas, IT > Interneto svetainių kūrimas  |  Paslaugos verslui > Interneto svetainių kūrimas",c:4},
+  {n:"Signalizacijos, kameros, apsaugos sistemos",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Elektrikai, elektros darbai",c:2},
+  {n:"Šiukšlių išvežimas: statybinių ir kt.",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Aplinka, sodas > Aplinkos tvarkymas, apželdinimas  |  Statybos, apdaila > Aplinkos tvarkymas, apželdinimas",c:3},
+  {n:"Siuvinėjimas",u:0,h:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",m:"Tradiciniai amatai > Tradiciniai amatai  |  Tradiciniai amatai > Siuvimas, siuvyklos, siuvėjai  |  Buitinės paslaugos > Siuvimas, siuvyklos, siuvėjai  |  Apranga, papuošalai, aksesuarai > Siuvimas, siuvyklos, siuvėjai",c:5},
+  {n:"Skulptoriai",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Dailė, menai, keramika > Dailė, menai, keramika",c:2},
+  {n:"Sniego valymas",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Aplinka, sodas > Aplinka, sodas",c:2},
+  {n:"Sodybos nuomai",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Laisvalaikis, pramogos, turizmas > Laisvalaikis, pramogos, turizmas  |  Nuomos paslaugos > Nuomos paslaugos",c:3},
+  {n:"Šokiai, šokių pamokos",u:0,h:"Mokymai, kursai, kalbos > Mokymai, kursai, kalbos",m:"Renginiai, šventės > Renginiai, šventės  |  Sportas, treniruotės > Sportas, treniruotės",c:3},
+  {n:"Spaudos paslaugos",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Reklama, dizainas, spauda > Reklama, dizainas, spauda",c:2},
+  {n:"Srautinis valymas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Buitinės paslaugos > Buitinės paslaugos  |  Buitinės paslaugos > Valymo paslaugos",c:3},
+  {n:"Statybos dokumentų tvarkymas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Stiklo konstrukcijos, montavimas",u:0,h:"Interjeras, baldai > Interjeras, baldai",m:"Statybos, apdaila > Statybos, apdaila",c:2},
+  {n:"Stiklų, veidrodžių gamyba, keitimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Interjeras, baldai > Interjeras, baldai  |  Buitinės paslaugos > Buitinės paslaugos",c:3},
+  {n:"Stilistai",u:0,h:"Grožio paslaugos > Grožio paslaugos",m:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",c:2},
+  {n:"Stogdengiai, stogo darbai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Suknelių nuoma",u:0,h:"Nuomos paslaugos > Nuomos paslaugos",m:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai  |  Renginiai, šventės > Renginiai, šventės",c:3},
+  {n:"Šventinės įrangos nuoma",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Nuomos paslaugos > Nuomos paslaugos",c:2},
+  {n:"Tekstų kūrėjai",u:0,h:"Paslaugos verslui > Paslaugos verslui",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Telekomunikacijų įrangos montuotojai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Internetas, IT > Internetas, IT",c:2},
+  {n:"Užuolaidų siuvimas",u:0,h:"Interjeras, baldai > Interjeras, baldai",m:"Apranga, papuošalai, aksesuarai > Siuvimas, siuvyklos, siuvėjai  |  Tradiciniai amatai > Siuvimas, siuvyklos, siuvėjai  |  Buitinės paslaugos > Siuvimas, siuvyklos, siuvėjai",c:4},
+  {n:"Vandens filtrai: montavimas, keitimas",u:0,h:"Buitinės paslaugos > Buitinės paslaugos",m:"Statybos, apdaila > Statybos, apdaila",c:2},
+  {n:"Vandens gręžiniai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Vėlėjos",u:0,h:"Tradiciniai amatai > Tradiciniai amatai",m:"Apranga, papuošalai, aksesuarai > Apranga, papuošalai, aksesuarai",c:2},
+  {n:"Ventiliacija, vėdinimo sistemos",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Santechnikai, santechnikos darbai  |  Buitinės paslaugos > Santechnikai, santechnikos darbai",c:3},
+  {n:"Vertėjai, vertimų biurai",u:0,h:"Mokymai, kursai, kalbos > Mokymai, kursai, kalbos",m:"Paslaugos verslui > Paslaugos verslui",c:2},
+  {n:"Vestuvių planuotojai",u:0,h:"Renginiai, šventės > Renginiai, šventės",m:"Renginiai, šventės > Renginių organizavimas",c:2},
+  {n:"Video klipų kūrimas",u:0,h:"Reklama, dizainas, spauda > Reklama, dizainas, spauda",m:"Paslaugos verslui > Paslaugos verslui  |  Renginiai, šventės > Renginiai, šventės",c:3},
+  {n:"Vitražai, stiklo interjero detalės",u:0,h:"Interjeras, baldai > Interjeras, baldai",m:"Dailė, menai, keramika > Dailė, menai, keramika",c:2},
+  {n:"Žemės kasimas, lyginimas",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Statybos, apdaila > Statybos darbai",c:2},
+  {n:"Žemės ūkio technikos nuoma",u:0,h:"Transportas > Transportas",m:"Nuomos paslaugos > Nuomos paslaugos",c:2},
+  {n:"Židinių meistrai",u:0,h:"Statybos, apdaila > Statybos, apdaila",m:"Interjeras, baldai > Interjeras, baldai  |  Statybos, apdaila > Vidaus apdailos darbai",c:3},
+];
+
+// Semantiškai ginčytini „namai" — verta tavo žvilgsnio (cross-domain perkėlimai).
+const FLAGGED = {
+  "Kompiuterių remontas":`„Paslaugos verslui" vs „Internetas, IT" ar „Buitinės paslaugos"`,
+  "Interneto svetainių kūrimas":`„Paslaugos verslui" — ar ne „Internetas, IT"?`,
+  "IT specialistai":`„Paslaugos verslui" — ar ne „Internetas, IT"?`,
+  "Internetinio verslo konsultantai":`„Paslaugos verslui" vs „Internetas, IT"`,
+  "Tekstų kūrėjai":`„Paslaugos verslui" vs „Internetas, IT" / „Reklama"`,
+  "Grafikos dizaineriai":`„Internetas, IT" — ar ne „Reklama, dizainas, spauda"?`,
+  "Pagalbiniai darbininkai":`„Transportas" — bendri darbininkai, ar ne „Statybos"?`,
+  "Dietologai":`„Grožio paslaugos" — ar ne „Sveikata, gydymas"?`,
+  "Telekomunikacijų įrangos montuotojai":`„Statybos, apdaila" vs „Internetas, IT"`,
+  "Plėvelės klijavimas":`„Paslaugos verslui" — auto/reklama? vs „Statybos"`,
+  "Stiklo konstrukcijos, montavimas":`„Interjeras, baldai" vs „Statybos, apdaila"`,
+};
+
+function fmtHome(s){
+  const [root,par]=s.split(" > ");
+  if(root===par) return root+" <span style='color:var(--muted);font-weight:400'>(tiesiai po šaknimi)</span>";
+  return root+" <span style='color:var(--muted)'>›</span> "+par;
+}
+function fmtMerged(s){
+  return s.split("  |  ").map(x=>{
+    const [root,par]=x.split(" > ");
+    return root===par?root:root+" › "+par;
+  }).join(" <span class='sep'>•</span> ");
+}
+function row(d){
+  const f=FLAGGED[d.n];
+  return `<tr class="${f?'warn':''}">
+    <td class="grp">${d.n}${d.u>0?' <span class="pill pill-use">naud. '+d.u+'</span>':''}${f?' <span class="pill pill-warn">⚠ peržiūrėk</span>':''}</td>
+    <td><span class="home ${f?'warn':''}">✅ ${fmtHome(d.h)}</span>${f?'<div class="note">'+f+'</div>':''}</td>
+    <td class="merged">${fmtMerged(d.m)}</td>
+    <td style="text-align:center;color:var(--muted)">${d.c}</td>
+  </tr>`;
+}
+function table(rows){
+  return `<table><thead><tr><th>Grupė</th><th>✅ Kanoniniai namai</th><th>Sulieti iš (išjungiama)</th><th>Kop.</th></tr></thead><tbody>${rows.map(row).join("")}</tbody></table>`;
+}
+
+const withUse = DATA.filter(d=>d.u>0);
+const flagged = DATA.filter(d=>d.u===0 && FLAGGED[d.n]);
+const rest = DATA.filter(d=>d.u===0 && !FLAGGED[d.n]);
+
+document.getElementById("sections").innerHTML =
+  `<h2>1. Su naudojimu <span class="count">— ${withUse.length} grupės, prioritetas peržiūrai</span></h2>`+table(withUse)+
+  `<h2>2. ⚠ Verta peržiūrėti <span class="count">— ${flagged.length} grupės, semantiškai ginčytini namai (be naudojimo)</span></h2>`+table(flagged)+
+  `<h2>3. Likusios <span class="count">— ${rest.length} grupės, taisyklė atrodo gerai (be naudojimo)</span></h2>`+table(rest);
+
+document.getElementById("ts").textContent = "108 grupės iš viso ("+withUse.length+" su naud. + "+flagged.length+" žymėtos + "+rest.length+" likusios)";
+</script>
+</body>
+</html>
