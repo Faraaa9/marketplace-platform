@@ -17,6 +17,27 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-09-20 07:27 — Codex
+
+**Commit:** `489ceab` — chore(dev): restore local development workflow
+
+**Pakeitimai:** 6 files changed, 11 insertions(+), 11 deletions(-)
+
+**Failai:**
+- README.md
+- experiments/category-llm-proto/src/branch-eval-old.ts
+- experiments/category-llm-proto/src/branch-eval.ts
+- experiments/category-llm-proto/src/clients.ts
+- experiments/category-llm-proto/src/server.ts
+- package.json
+
+**Toliau:** Darbas tęsiamas `work/resume-2026-09-20` šakoje nuo naujausio
+`savepoint/2026-07-18`. Lokalų projektą paleisti su `pnpm dev` (webpack režimas;
+Turbopack dev šiame Mac pradėjo nekontroliuojamai kurti Node procesus). Naujausio
+savepoint'o pagrindinės kryptys: greitas meistro onboardingas ir kategorijų AI
+prototipas; prieš naują funkciją peržiūrėti jų planus `docs/` kataloge.
+
+
 ## 2026-07-01 00:35 — Claude
 
 **Commit:** `695eda5` — security(db): enable deny-all RLS on category_recognition_log · lokalus
