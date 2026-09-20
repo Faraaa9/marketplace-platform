@@ -4,7 +4,7 @@ Platforma, jungianti paslaugų tiekėjus su klientais Lietuvoje. Klientai pateik
 
 ## Tech Stack
 
-- **Frontend/Backend:** Next.js 14 (App Router) + TypeScript
+- **Frontend/Backend:** Next.js 16 (App Router) + TypeScript
 - **Styling:** Tailwind CSS (mobile-first, dark mode)
 - **Database:** PostgreSQL + Prisma ORM
 - **Auth:** NextAuth.js (Credentials, JWT)
@@ -19,7 +19,7 @@ Platforma, jungianti paslaugų tiekėjus su klientais Lietuvoje. Klientai pateik
 ```bash
 git clone <repo-url>
 cd marketplace-platform
-npm install
+pnpm install
 ```
 
 ### 2. Environment Variables
@@ -37,10 +37,10 @@ Fill in all variables in `.env.local`. See `.env.example` for the full list.
 npx prisma db push
 
 # Seed with test data
-npm run db:seed
+pnpm db:seed
 
 # Open Prisma Studio (optional)
-npm run db:studio
+pnpm db:studio
 ```
 
 ### 4. Stripe Setup
@@ -55,7 +55,7 @@ npm run db:studio
 ### 5. Run
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)

@@ -9,7 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Candidate, denseTopK, embed, fold, pool, prisma } from "./clients";
-import { rerank, runFull } from "./pipeline";
+import { rerank, runFull, type FullJob } from "./pipeline";
 
 const FLASH = "google/gemini-2.5-flash";
 const K = 50;
@@ -84,7 +84,7 @@ async function main() {
   const hard = load("hard_queries.jsonl");
   console.log(`FULL ${hard.length} hard queries: runFull (flash)...`);
   const hardRecs = await pool(hard, 4, async (r) => {
-    let jobs;
+    let jobs: FullJob[];
     try { jobs = await runFull(r.request, { k: K, fewshot: true, model: FLASH }); } catch { jobs = []; }
     const predIds = jobs.map((j) => (j.picks[0] ? candId(j.candidates, j.picks[0].category) : null)).filter(Boolean) as string[];
     return { gold: r.jobs.map((j) => idByName.get(fold(j.category)) ?? null), predIds };

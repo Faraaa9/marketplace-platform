@@ -30,8 +30,8 @@ const load = (f: string): GRec[] =>
 interface Cat { id: string; name: string; depth: number; parentId: string | null; rootId: string | null }
 
 async function main() {
-  const { suggestCategories } = require("@/lib/category-suggestions") as typeof import("@/lib/category-suggestions");
-  const { prisma } = require("@/lib/prisma") as typeof import("@/lib/prisma");
+  const { suggestCategories } = await import("@/lib/category-suggestions");
+  const { prisma } = await import("@/lib/prisma");
 
   const cats = await prisma.$queryRawUnsafe<Cat[]>(`select id, name, depth, "parentId", "rootId" from categories`);
   const byId = new Map(cats.map((c) => [c.id, c]));

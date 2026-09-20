@@ -12,7 +12,6 @@ import { runFull } from "./pipeline";
 
 const PORT = Number(process.env.PROTO_PORT || 5577);
 const MODEL = process.env.PROTO_DEMO_MODEL || "google/gemini-2.5-flash";
-const HTML_PATH = path.join(__dirname, "../public/index.html");
 
 // taxonomy breadcrumb (root -> 2nd-level -> leaf) for the /branch demo, loaded once
 interface Crumb { root: string | null; lvl2: string | null; leaf: string }
