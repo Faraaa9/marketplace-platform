@@ -84,7 +84,7 @@ export default function PrivacyPage() {
         <SectionHeading>Kam perduodame duomenis?</SectionHeading>
         <p>
           Duomenų neparduodame. Juos perduodame tik IT paslaugų įmonėms (duomenų
-          tvarkytojams), be kurių platforma negalėtų veikti. Kiekviena gauna tik
+          tvarkytojams), kurios padeda platformai veikti. Kiekviena gauna tik
           tai, ko reikia jos darbui:
         </p>
         <ul className="list-disc pl-6 space-y-1">

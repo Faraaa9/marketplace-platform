@@ -20,11 +20,13 @@ import {
 import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { creditsLabel } from "@/lib/utils";
+import { CREDITS_PER_UNLOCK } from "@/lib/credits";
+import { FREE_CATEGORY_LIMIT } from "@/lib/category-pricing";
 
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",
   description:
-    "AI sukuria meistro profilį per kelias minutes. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
+    "AI sukuria meistro profilį per kelias minutes. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate kreditais tik už atrakintas užklausas ir papildomas kategorijas.",
 };
 
 // Marketing page — credit packs change rarely.
@@ -99,8 +101,8 @@ export default async function ForProvidersPage() {
           <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
             {[
               { value: "0 €", label: "Registracija" },
-              { value: "0 €", label: "Mėnesinis mokestis" },
-              { value: "1", label: "Kreditas už užklausą" },
+              { value: String(FREE_CATEGORY_LIMIT), label: "Kategorijų nemokamai" },
+              { value: String(CREDITS_PER_UNLOCK), label: "Kreditas už užklausą" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-heading-2 font-bold text-surface-900 dark:text-white">
@@ -327,7 +329,7 @@ export default async function ForProvidersPage() {
               {
                 icon: <Zap className="h-6 w-6" />,
                 title: "Mokėk už rezultatą",
-                desc: "Nėra mėnesinių mokesčių. Mokate tik už atrakintas užklausas — kreditus naudojate tada, kai jums reikia.",
+                desc: `Nėra mėnesinių mokesčių. Kreditais mokate tik už atrakintas užklausas ir, jei norite, už papildomas kategorijas virš ${FREE_CATEGORY_LIMIT}.`,
                 color: "from-purple-500 to-brand-600",
               },
               {
