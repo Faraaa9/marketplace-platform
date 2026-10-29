@@ -9,7 +9,6 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { checkEligibility } from "@/lib/provider-eligibility";
-import { activeCategoryFilter } from "@/lib/category-matching";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await connection();
