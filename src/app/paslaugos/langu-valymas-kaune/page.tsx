@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Sparkles, title: "Tinkleliai ir žaliuzės", text: "Apsauginių tinklelių ir žaliuzių valymas kartu su langais." },
   ],
   pricingHeading: "Kiek kainuoja langų valymas Kaune",
-  offerPrice: "3",
   pricing: [
     { job: "Lango valymas (1 vnt., abi pusės)", price: "nuo 4 €" },
     { job: "Buto langų valymas (1–2 kambariai)", price: "nuo 30 €" },

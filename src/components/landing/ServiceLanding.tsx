@@ -21,6 +21,7 @@ import {
   type LandingCity,
 } from "@/lib/seo-landings";
 import { getFeaturedProviders } from "@/lib/providers-listing";
+import { APP_NAME } from "@/lib/constants";
 import { ProviderCard } from "@/components/tiekejai/ProviderCard";
 
 /**
@@ -56,8 +57,6 @@ export interface ServiceLandingConfig {
 
   pricingHeading: string;
   pricing: { job: string; price: string }[];
-  /** schema.org Offer lowest price, e.g. "15". */
-  offerPrice: string;
 
   faq: { q: string; a: string }[];
 
@@ -110,7 +109,7 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
 
   const steps: { icon: LucideIcon; title: string; text: string }[] = [
     { icon: PencilLine, title: "Aprašykite darbą", text: `Per 2 minutes nurodykite, ko reikia, ir savo rajoną ${cityLocative}. Nemokamai.` },
-    { icon: Users, title: "Gaukite pasiūlymus", text: "Patikrinti specialistai patys pateikia kainas ir terminus." },
+    { icon: Users, title: "Gaukite pasiūlymus", text: "Specialistai patys pateikia kainas ir terminus." },
     { icon: ThumbsUp, title: "Pasirinkite geriausią", text: "Palyginkite atsiliepimus bei kainas ir susisiekite tiesiogiai." },
   ];
 
@@ -122,13 +121,9 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
     description: config.seoDescription,
     url,
     areaServed: { "@type": "City", name: city, containedInPlace: { "@type": "Country", name: "Lietuva" } },
-    provider: { "@type": "Organization", name: "paslaugurinka.lt", url: BASE_URL },
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "EUR",
-      price: config.offerPrice,
-      description: `${config.serviceType} ${cityLocative} nuo ${config.offerPrice} €. Pasiūlymų gavimas nemokamas.`,
-    },
+    // The platform connects clients with masters; it neither performs the work
+    // nor sets a price, so no Offer. The price table is only a guide.
+    provider: { "@type": "Organization", name: APP_NAME, url: BASE_URL },
   };
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -139,15 +134,6 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
       { "@type": "ListItem", position: 3, name: config.h1, item: url },
     ],
   };
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: config.faq.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
 
   const BadgeIcon = config.heroBadgeIcon;
 
@@ -155,7 +141,6 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
     <div className="min-h-screen bg-white dark:bg-surface-950">
       <JsonLd schema={serviceSchema} />
       <JsonLd schema={breadcrumbSchema} />
-      <JsonLd schema={faqSchema} />
 
       <nav aria-label="Naršymo kelias" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6">
         <ol className="flex flex-wrap items-center gap-1.5 text-body-sm text-surface-500 dark:text-surface-400">
@@ -190,7 +175,7 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
             <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-body-sm text-surface-600 dark:text-surface-300">
               <li className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-brand-600" /> Patikrinti specialistai</li>
               <li className="inline-flex items-center gap-1.5"><Wallet className="h-4 w-4 text-brand-600" /> Nemokami pasiūlymai</li>
-              <li className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4 text-brand-600" /> Atsakymai tą pačią dieną</li>
+              <li className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4 text-brand-600" /> Užklausa per 2 minutes</li>
             </ul>
           </div>
 
@@ -235,7 +220,9 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
         <section className="border-y border-surface-100 bg-surface-50/60 dark:border-surface-800 dark:bg-surface-900/40">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
             <h2 className="text-center text-2xl font-bold tracking-[-0.02em] text-surface-900 sm:text-3xl dark:text-white">Kaip tai veikia</h2>
-            <p className="mx-auto mt-2 max-w-xl text-center text-body text-surface-500 dark:text-surface-400">Nuo užklausos iki pasirinkto specialisto — per kelias valandas.</p>
+            <p className="mx-auto mt-2 max-w-xl text-center text-body text-surface-500 dark:text-surface-400">
+              {config.serviceType} {cityLocative}: patvirtintų profilių šioje srityje dar neturime. Paskelbkite užklausą — ją matys platformos specialistai.
+            </p>
             <ol className="mt-10 grid gap-6 sm:grid-cols-3">
               {steps.map((step, i) => (
                 <li key={step.title} className="rounded-2xl border border-surface-200/60 bg-white p-6 dark:border-surface-700/50 dark:bg-surface-900/50">

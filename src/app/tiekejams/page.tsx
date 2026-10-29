@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
-import { LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
 import { MagicCard } from "@/components/magicui/magic-card";
 import {
   ArrowRight,
@@ -21,36 +20,31 @@ import {
 import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { creditsLabel } from "@/lib/utils";
+import { CREDITS_PER_UNLOCK } from "@/lib/credits";
+import { FREE_CATEGORY_LIMIT } from "@/lib/category-pricing";
 
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",
   description:
-    "AI sukuria meistro profilį per 20 sekundžių. Prisijunkite prie PaslaugųRinka — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
+    "AI sukuria meistro profilį per kelias minutes. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate kreditais tik už atrakintas užklausas ir papildomas kategorijas.",
 };
 
-// Marketing page — credit packs change rarely, counts are cosmetic stats.
+// Marketing page — credit packs change rarely.
 // 5-minute cache is more than enough; SWR keeps any miss invisible.
 async function getForProvidersData() {
   "use cache";
   cacheLife({ revalidate: 300 });
   cacheTag("tiekejams-data");
 
-  const [packs, providerCount, requestCount] = await Promise.all([
-    prisma.creditPack.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { id: true, name: true, credits: true, priceCents: true },
-    }),
-    prisma.providerProfile.count({
-      where: { isActive: true, moderationStatus: "APPROVED" },
-    }),
-    prisma.serviceRequest.count(),
-  ]);
-  return { packs, providerCount, requestCount };
+  return prisma.creditPack.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, credits: true, priceCents: true },
+  });
 }
 
 export default async function ForProvidersPage() {
-  const { packs, providerCount, requestCount } = await getForProvidersData();
+  const packs = await getForProvidersData();
 
   return (
     <div>
@@ -62,7 +56,7 @@ export default async function ForProvidersPage() {
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
               <Sparkles className="h-2.5 w-2.5" /> Naujas
             </span>
-            AI sukuria profilį per 20 sekundžių
+            AI sukuria profilį per kelias minutes
           </div>
 
           <h1 className="text-[2.5rem] sm:text-[3.75rem] font-bold tracking-tight leading-[1.05] text-surface-900 dark:text-white">
@@ -102,24 +96,17 @@ export default async function ForProvidersPage() {
             kada
           </p>
 
-          {/* Quick stats — real numbers */}
+          {/* Product facts, not traffic counts: the platform is young and
+              inflated "500+" floors were false. */}
           <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
             {[
-              {
-                value: Math.max(providerCount, 500),
-                suffix: "+",
-                label: "Tiekėjų",
-              },
-              {
-                value: Math.max(requestCount, 2000),
-                suffix: "+",
-                label: "Užklausų",
-              },
-              { value: 20, suffix: "s", label: "Profilis paruoštas" },
+              { value: "0 €", label: "Registracija" },
+              { value: String(FREE_CATEGORY_LIMIT), label: "Kategorijų nemokamai" },
+              { value: String(CREDITS_PER_UNLOCK), label: "Kreditas už užklausą" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-heading-2 font-bold text-surface-900 dark:text-white">
-                  <NumberTicker value={stat.value} suffix={stat.suffix} />
+                  {stat.value}
                 </div>
                 <div className="text-micro text-surface-400">{stat.label}</div>
               </div>
@@ -208,14 +195,14 @@ export default async function ForProvidersPage() {
                 <p className="mt-3 text-body text-surface-600 dark:text-surface-400 leading-relaxed">
                   Užuot rašęs aprašymus, ieškojęs nuotraukų ir derinęs
                   kategorijas — paspausk vieną mygtuką. AI atlieka tai per
-                  kelias sekundes, ne valandas.
+                  kelias minutes, ne valandas.
                 </p>
 
                 <ul className="mt-6 space-y-3">
                   {[
                     "Profesionalus aprašymas (200-300 žodžių)",
                     "Iki 6 tinkamiausių kategorijų",
-                    "Nuotraukos su pašalintais watermark'ais",
+                    "Nuotraukos atrinktos ir paruoštos profiliui",
                     "Kontaktai, kainos, patirtis — automatiškai",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
@@ -322,7 +309,7 @@ export default async function ForProvidersPage() {
               Privalumai
             </div>
             <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Kodėl būtent PaslaugųRinka
+              Kodėl būtent Paslaugų rinka
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -336,13 +323,13 @@ export default async function ForProvidersPage() {
               {
                 icon: <Clock className="h-6 w-6" />,
                 title: "Greitas startas",
-                desc: "Per 20 sekundžių paruoštas profilis vietoj valandų rankinio darbo.",
+                desc: "Profilis paruoštas per kelias minutes, ne per valandas rankinio darbo.",
                 color: "from-amber-500 to-brand-500",
               },
               {
                 icon: <Zap className="h-6 w-6" />,
                 title: "Mokėk už rezultatą",
-                desc: "Nėra mėnesinių mokesčių. Mokate tik už atrakintas užklausas — kreditus naudojate tada, kai jums reikia.",
+                desc: `Nėra mėnesinių mokesčių. Kreditais mokate tik už atrakintas užklausas ir, jei norite, už papildomas kategorijas virš ${FREE_CATEGORY_LIMIT}.`,
                 color: "from-purple-500 to-brand-600",
               },
               {
@@ -354,7 +341,7 @@ export default async function ForProvidersPage() {
               {
                 icon: <Shield className="h-6 w-6" />,
                 title: "Saugumas",
-                desc: "Tu valdyti savo profilį pilnai — gali paslėpti, redaguoti ar ištrinti bet kada.",
+                desc: "Tu visiškai valdai savo profilį — gali paslėpti, redaguoti ar ištrinti bet kada.",
                 color: "from-brand-600 to-emerald-500",
               },
               {
@@ -460,7 +447,7 @@ export default async function ForProvidersPage() {
                 Pradėk gauti klientus šiandien
               </h2>
               <p className="mt-3 text-body text-white/90 max-w-xl mx-auto">
-                AI sukurs tavo profilį per 20 sekundžių. Registracija nemokama —
+                AI sukurs tavo profilį per kelias minutes. Registracija nemokama —
                 pradėk gauti tiesiogines užklausas iš klientų visoje Lietuvoje.
               </p>
               <ProviderCtaLink

@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Thermometer, title: "Konsultacija dėl medžiagų", text: "Tinkamo storio ir medžiagos parinkimas pagal pastatą." },
   ],
   pricingHeading: "Kiek kainuoja fasado šiltinimas Vilniuje",
-  offerPrice: "20",
   pricing: [
     { job: "Fasado šiltinimas polistirolu (m²)", price: "nuo 22 €" },
     { job: "Šiltinimas akmens vata (m²)", price: "nuo 30 €" },

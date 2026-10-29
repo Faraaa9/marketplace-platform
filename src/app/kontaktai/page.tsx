@@ -5,9 +5,10 @@ import { getServerSession } from "next-auth";
 
 export const metadata: Metadata = {
   title: "Kontaktai",
-  description: "Susisiekite su PaslaugųRinka komanda. Atsakome per 24 valandas.",
+  description: "Susisiekite su Paslaugų rinkos komanda. Atsakome per 24 valandas.",
 };
 import { authOptions } from "@/lib/auth";
+import { CONTACT_EMAIL } from "@/lib/constants";
 import Card from "@/components/ui/Card";
 import ContactForm from "./ContactForm";
 
@@ -25,7 +26,7 @@ export default function ContactPage() {
             <Mail className="h-5 w-5 text-brand-600 dark:text-brand-400" />
           </div>
           <h3 className="text-body font-semibold text-surface-900 dark:text-white">El. paštas</h3>
-          <p className="text-body-sm text-surface-500 mt-1">info@send.paslaugurinka.lt</p>
+          <p className="text-body-sm text-surface-500 mt-1">{CONTACT_EMAIL}</p>
         </Card>
         <Card className="text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-950">

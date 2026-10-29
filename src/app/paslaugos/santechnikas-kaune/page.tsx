@@ -46,7 +46,6 @@ const config: ServiceLandingConfig = {
     { icon: Gauge, title: "Kanalizacijos valymas", text: "Užsikimšusios kanalizacijos pravalymas ir priežiūra." },
   ],
   pricingHeading: "Kiek kainuoja santechnikas Kaune",
-  offerPrice: "25",
   pricing: [
     { job: "Maišytuvo keitimas", price: "nuo 25 €" },
     { job: "Klozeto / WC montavimas", price: "40–70 €" },

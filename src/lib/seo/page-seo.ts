@@ -15,7 +15,7 @@ import { passesIndexGate } from "./index-gate";
  */
 
 export const SITE_NAME = "paslaugurinka.lt";
-const TITLE_SUFFIX = "PaslaugųRinka";
+const TITLE_SUFFIX = "Paslaugų rinka";
 const DESCRIPTION_MAX = 157;
 
 export const BASE_URL =
@@ -220,7 +220,7 @@ export function buildPageSeo(input: SeoInput): PageSeoResult {
       return {
         verdict,
         metadata: assemble({
-          title: "Viešos užklausos — PaslaugųRinka",
+          title: "Viešos užklausos — Paslaugų rinka",
           description:
             "Peržiūrėkite aktyvias paslaugų užklausas Lietuvoje. Raskite darbus ir pateikite pasiūlymus.",
           canonical: absoluteUrl("/uzklausos"),

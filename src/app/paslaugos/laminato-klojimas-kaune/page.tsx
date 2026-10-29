@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Hammer, title: "Senos dangos keitimas", text: "Senų grindų demontavimas ir naujos dangos klojimas." },
   ],
   pricingHeading: "Kiek kainuoja laminato klojimas Kaune",
-  offerPrice: "6",
   pricing: [
     { job: "Laminato klojimas (m²)", price: "nuo 6 €" },
     { job: "Klojimas įstrižai / raštu (m²)", price: "nuo 9 €" },

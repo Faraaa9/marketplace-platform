@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Waves, title: "Profilaktinis valymas", text: "Reguliari priežiūra, kad vamzdynas neužsikimštų." },
   ],
   pricingHeading: "Kiek kainuoja kanalizacijos valymas Vilniuje",
-  offerPrice: "30",
   pricing: [
     { job: "Vamzdžio pravalymas (spiralė)", price: "nuo 30 €" },
     { job: "Hidrodinaminis plovimas", price: "nuo 50 €" },

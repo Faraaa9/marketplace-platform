@@ -17,104 +17,98 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // `revalidate` is rejected under cacheComponents in Next >= 16.4.
   "use cache";
   cacheLife({ revalidate: 3600 });
-  const now = new Date();
+
+  // Pull the minimum surface area from DB: slug + updatedAt only.
+  const [activeProviderProfiles, latestRequest] = await Promise.all([
+    prisma.providerProfile.findMany({
+      where: {
+        isActive: true,
+        moderationStatus: "APPROVED",
+        user: { role: "PROVIDER", emailVerified: { not: null } },
+        // Seed/demo fixtures are noindex (see meistrai/[slug] isSeedProfile);
+        // a noindex page must never appear in the sitemap.
+        NOT: {
+          OR: [
+            { displayName: { contains: "(DEMO)" } },
+            { displayName: { contains: "(TEST)" } },
+            { user: { name: { contains: "(DEMO)" } } },
+            { user: { name: { contains: "(TEST)" } } },
+            { user: { email: { endsWith: "@test.lt" } } },
+            { user: { email: { contains: "@example." } } },
+          ],
+        },
+      },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.serviceRequest.findFirst({
+      where: { moderationStatus: "APPROVED" },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  // Only pages backed by data get a lastModified; a fake "now" on every URL
+  // teaches crawlers to ignore the field. Static pages simply omit it.
+  const providersUpdatedAt = activeProviderProfiles.reduce<Date | undefined>(
+    (max, p) => (!max || p.updatedAt > max ? p.updatedAt : max),
+    undefined,
+  );
+  const requestsUpdatedAt = latestRequest?.createdAt;
+  const homeUpdatedAt =
+    providersUpdatedAt && requestsUpdatedAt && requestsUpdatedAt > providersUpdatedAt
+      ? requestsUpdatedAt
+      : providersUpdatedAt ?? requestsUpdatedAt;
 
   const staticEntries: SitemapEntry[] = [
     {
       url: BASE_URL,
-      lastModified: now,
+      lastModified: homeUpdatedAt,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${BASE_URL}/meistrai`,
-      lastModified: now,
+      lastModified: providersUpdatedAt,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/uzklausos`,
-      lastModified: now,
+      lastModified: requestsUpdatedAt,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/uzklausos/nauja`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
       url: `${BASE_URL}/tiekejams`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/paslaugos`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     ...SEO_LANDINGS.map(({ slug }) => ({
       url: `${BASE_URL}/paslaugos/${slug}`,
-      lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
     {
       url: `${BASE_URL}/straipsniai/stogo-darbai`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/kontaktai`,
-      lastModified: now,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/privatumas`,
-      lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,
     },
-    {
-      url: `${BASE_URL}/prisijungti`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
-    {
-      url: `${BASE_URL}/registruotis`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
   ];
-
-  // Pull the minimum surface area from DB: slug + updatedAt only.
-  const activeProviderProfiles = await prisma.providerProfile.findMany({
-    where: {
-      isActive: true,
-      moderationStatus: "APPROVED",
-      user: { role: "PROVIDER", emailVerified: { not: null } },
-      // Seed/demo fixtures are noindex (see meistrai/[slug] isSeedProfile);
-      // a noindex page must never appear in the sitemap.
-      NOT: {
-        OR: [
-          { displayName: { contains: "(DEMO)" } },
-          { displayName: { contains: "(TEST)" } },
-          { user: { name: { contains: "(DEMO)" } } },
-          { user: { name: { contains: "(TEST)" } } },
-          { user: { email: { endsWith: "@test.lt" } } },
-          { user: { email: { contains: "@example." } } },
-        ],
-      },
-    },
-    select: { slug: true, updatedAt: true },
-  });
 
   const providerEntries: SitemapEntry[] = activeProviderProfiles
     .filter((p): p is typeof p & { slug: string } => Boolean(p.slug))

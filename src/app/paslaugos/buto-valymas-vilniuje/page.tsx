@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Building2, title: "Biurai ir patalpos", text: "Komercinių patalpų valymas vienkartinis ar reguliarus." },
   ],
   pricingHeading: "Kiek kainuoja buto valymas Vilniuje",
-  offerPrice: "3",
   pricing: [
     { job: "Reguliarus valymas (m²)", price: "nuo 3 €" },
     { job: "Generalinis valymas (m²)", price: "nuo 5 €" },

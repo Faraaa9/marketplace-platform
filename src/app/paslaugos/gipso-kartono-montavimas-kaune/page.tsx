@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Hammer, title: "Paruošimas dažymui", text: "Siūlių glaistymas, armavimas ir paviršiaus paruošimas apdailai." },
   ],
   pricingHeading: "Kiek kainuoja gipso kartono montavimas Kaune",
-  offerPrice: "12",
   pricing: [
     { job: "Pertvaros montavimas (m²)", price: "nuo 14 €" },
     { job: "Lubų apkalimas (m²)", price: "nuo 12 €" },

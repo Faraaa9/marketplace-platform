@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Ruler, title: "Demontavimas", text: "Senos dangos ir konstrukcijų nuardymas, paruošimas." },
   ],
   pricingHeading: "Kiek kainuoja stogo dengimas Kaune",
-  offerPrice: "10",
   pricing: [
     { job: "Stogo dengimas metalo čerpe (m²)", price: "nuo 12 €" },
     { job: "Bituminės dangos klojimas (m²)", price: "nuo 10 €" },

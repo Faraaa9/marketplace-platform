@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Flame, title: "Krosnių ir katilų priežiūra", text: "Židinių, krosnių ir kietojo kuro katilų dūmtraukių valymas." },
   ],
   pricingHeading: "Kiek kainuoja kaminų valymas Kaune",
-  offerPrice: "30",
   pricing: [
     { job: "Kamino valymas (1 dūmtraukis)", price: "nuo 30 €" },
     { job: "Su valymo pažyma / aktu", price: "nuo 40 €" },

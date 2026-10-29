@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 // the (auth) group layout.
 export const metadata: Metadata = {
   title: "Prisijungimas",
-  description: "Prisijunkite prie savo PaslaugųRinka paskyros.",
+  description: "Prisijunkite prie savo Paslaugų rinkos paskyros.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

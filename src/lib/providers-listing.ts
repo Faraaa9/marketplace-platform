@@ -256,11 +256,11 @@ function providerServesCity(providerLocation: string | null, city: string): bool
  * same card shape the listing renders, so the landing strip stays identical to
  * the catalog.
  *
- * Category match is tree-aware in both directions: a provider is relevant if it
- * shares ANY node on the landing category's root→leaf path. So the
- * "laminato klojimas" page also surfaces a master tagged only with the parent
- * "Vidaus apdailos darbai", and vice versa. Returns an empty array when nothing
- * relevant is live (caller falls back to the generic block).
+ * Category match is downward only: a provider qualifies when tagged with the
+ * landing category or one of its descendants (categoryMatchSlugs already holds
+ * each tag's ancestors). Matching on the landing page's ancestors let anyone
+ * under "Statyba ir apdaila" appear on the electrician page. Returns an empty
+ * array when nothing relevant is live (caller shows an empty state).
  */
 export async function getFeaturedProviders(
   categorySlug: string,
@@ -275,17 +275,12 @@ export async function getFeaturedProviders(
   cacheTag("providers-listing");
 
   const data = await getProvidersListingData();
-  const ancestorSlugs = buildAncestorSlugMap(data.categoryGroups);
-  const landingChain = new Set<string>([
-    categorySlug,
-    ...(ancestorSlugs.get(categorySlug) ?? []),
-  ]);
 
   return buildProviderCards(data)
     .filter(
       (c) =>
         providerServesCity(c.location, city) &&
-        c.categoryMatchSlugs.some((slug) => landingChain.has(slug)),
+        c.categoryMatchSlugs.includes(categorySlug),
     )
     .sort((a, b) => computeProviderScore(b) - computeProviderScore(a))
     .slice(0, limit);

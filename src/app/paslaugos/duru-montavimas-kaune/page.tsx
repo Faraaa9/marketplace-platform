@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: DoorOpen, title: "Senų durų keitimas", text: "Senų durų demontavimas ir naujų montavimas." },
   ],
   pricingHeading: "Kiek kainuoja durų montavimas Kaune",
-  offerPrice: "40",
   pricing: [
     { job: "Vidaus durų montavimas (vnt.)", price: "nuo 45 €" },
     { job: "Su staktos surinkimu (vnt.)", price: "nuo 60 €" },

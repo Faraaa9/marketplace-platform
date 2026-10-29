@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Hammer, title: "Remontas", text: "Pažeistų lentelių keitimas, girgždesio šalinimas." },
   ],
   pricingHeading: "Kiek kainuoja parketo klojimas Kaune",
-  offerPrice: "10",
   pricing: [
     { job: "Parketlentės klojimas (m²)", price: "nuo 10 €" },
     { job: "Masyvo parketo klojimas (m²)", price: "nuo 18 €" },

@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: ShieldCheck, title: "Senų langų išėmimas", text: "Senų langų demontavimas ir išvežimas." },
   ],
   pricingHeading: "Kiek kainuoja langų keitimas Kaune",
-  offerPrice: "40",
   pricing: [
     { job: "Lango keitimas (montavimas, vnt.)", price: "nuo 40 €" },
     { job: "Su angokraščiais (vnt.)", price: "nuo 70 €" },

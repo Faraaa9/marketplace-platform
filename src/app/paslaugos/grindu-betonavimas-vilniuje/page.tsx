@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Droplet, title: "Hidroizoliacija", text: "Pagrindo paruošimas ir drėgmės izoliacija prieš betonavimą." },
   ],
   pricingHeading: "Kiek kainuoja grindų betonavimas Vilniuje",
-  offerPrice: "8",
   pricing: [
     { job: "Grindų betonavimas (m²)", price: "nuo 10 €" },
     { job: "Su armavimu ir lyginimu (m²)", price: "nuo 15 €" },

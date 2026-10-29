@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Hammer, title: "Senos dangos keitimas", text: "Senų grindų demontavimas ir naujos dangos klojimas." },
   ],
   pricingHeading: "Kiek kainuoja laminato klojimas Vilniuje",
-  offerPrice: "6",
   pricing: [
     { job: "Laminato klojimas (m²)", price: "nuo 6 €" },
     { job: "Klojimas įstrižai / eglute (m²)", price: "nuo 10 €" },

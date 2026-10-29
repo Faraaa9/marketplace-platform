@@ -61,7 +61,7 @@ export default function InstallPrompt() {
         </div>
         <div className="flex-1">
           <p className="text-body-sm font-semibold text-surface-900 dark:text-white">
-            Įdiekite PaslaugųRinka
+            Įdiekite Paslaugų rinką
           </p>
           <p className="mt-0.5 text-micro text-surface-500 dark:text-surface-400">
             Greitas priėjimas, dirba ir be interneto. Be App Store.

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { AIProfileSetup } from "@/app/kontaktai/AIProfileSetup";
 
 export const metadata: Metadata = {
-  title: "Sukurti meistro profilį | PaslaugųRinka",
+  title: "Sukurti meistro profilį",
   description:
     "Greitai sukurkite savo meistro profilį su AI pagalba. Tik nurodykite URL ir mes užpildysime visą informaciją.",
 };
