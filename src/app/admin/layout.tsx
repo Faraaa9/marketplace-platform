@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox, Sparkles, Send, Megaphone } from "lucide-react";
+import { Users, UserCog, FileText, Home, Settings, Shield, ShieldAlert, Inbox, Sparkles, Send, Megaphone, BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/admin/laiskai", label: "Laiškai", icon: Inbox, badgeKey: null },
   { href: "/admin/telegram", label: "Telegram", icon: Send, badgeKey: null },
   { href: "/admin/ai", label: "AI", icon: Sparkles, badgeKey: null },
+  { href: "/admin/typesafe", label: "Jev laboratorija", icon: BrainCircuit, badgeKey: null },
   { href: "/admin/pranesimai", label: "Pranešimai", icon: Megaphone, badgeKey: null },
   { href: "/admin/nustatymai", label: "Nustatymai", icon: Settings, badgeKey: null },
 ];
@@ -80,8 +81,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Mobile nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-surface-200/50 bg-white/80 backdrop-blur-xl dark:border-surface-800 dark:bg-surface-950/80">
-        <div className="flex">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-surface-200/50 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl dark:border-surface-800 dark:bg-surface-950/95 md:hidden">
+        <nav
+          aria-label="Administratoriaus skyriai"
+          className="flex overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {navItems.map((item) => {
             const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
             return (
@@ -89,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative flex-1 flex flex-col items-center gap-1 py-2.5 text-micro font-medium transition-colors",
+                  "relative flex min-w-[4.75rem] shrink-0 flex-col items-center gap-1 px-2 py-2.5 text-center text-micro font-medium transition-colors",
                   pathname === item.href ? "text-brand-600 dark:text-brand-400" : "text-surface-500"
                 )}
               >
@@ -105,7 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {/* Content */}

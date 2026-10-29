@@ -11,6 +11,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { moderateText, moderateImages, mergeModeration } from "@/lib/moderation";
 import { isPlaceholderTelegramEmail } from "./link-user";
 import { runShadowRouting } from "@/lib/routing/shadow";
+import { runTypeSafeShadow } from "@/lib/typesafe/shadow";
 import { getCanonicalServiceCategoryRowsById } from "@/lib/service-categories";
 
 const VERIFICATION_VALID_MS = 60 * 60 * 1000;
@@ -281,6 +282,18 @@ export async function createServiceRequest(
         oldPrimaryCategoryId: primaryCategory.id,
         oldCategoryIds: orderedCategories.map((cat) => cat.id),
       }).catch((error) => console.error("Shadow routing dispatch error:", error)),
+    );
+
+    // Optional Jev evaluation is observation-only. It never changes the saved
+    // request, notifications, visibility, moderation, or payment behavior.
+    after(() =>
+      runTypeSafeShadow({
+        requestId: request.id,
+        title: data.title,
+        description: data.description,
+        city: locationValue,
+        status: "OPEN",
+      }).catch((error) => console.error("TypeSafe shadow dispatch error:", error)),
     );
 
     if (clientId) {
