@@ -379,11 +379,14 @@ function NewRequestV2Form() {
             }),
           });
           const mlData = (await mlRes.json().catch(() => null)) as
-            | { enabled?: boolean; jobs?: MlJob[] }
+            | { enabled?: boolean; jobs?: MlJob[]; preselect?: string | null }
             | null;
           if (mlData?.enabled && Array.isArray(mlData.jobs) && mlData.jobs.length > 0) {
             setMultilabelJobs(mlData.jobs);
-            setForm((current) => ({ ...current, categoryIds: [] }));
+            // A confident primary pick is pre-checked so the customer only
+            // confirms; anything uncertain stays for them to tap.
+            const preselect = mlData.preselect;
+            setForm((current) => ({ ...current, categoryIds: preselect ? [preselect] : [] }));
           } else {
             setMultilabelJobs(null);
             await applyImproveCategories();

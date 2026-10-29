@@ -40,6 +40,8 @@ function logEvents(events: unknown[]) {
 export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, onAddManual }: Props) {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const selected = new Set(selectedIds);
+  // A single unnamed job (the Jev path) is one request, not a numbered list.
+  const single = jobs.length === 1 && !jobs[0].phrase;
 
   function tap(job: MlJob, s: MlSuggestion, rank: number) {
     const wasOn = selected.has(s.categoryId);
@@ -58,15 +60,19 @@ export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[0.7rem] text-surface-400">
-        Pilki = pasiūlyta. Tapši, kad priimtum — sistema pati nieko neuždeda.
+        {single
+          ? "Pažymėkite, kas tinka. Galite pridėti ir kitą kategoriją."
+          : "Pilki = pasiūlyta. Tapši, kad priimtum — sistema pati nieko neuždeda."}
       </p>
       {jobs.map((job, ji) => {
         const shown = expanded[ji] ? [...job.suggestions, ...job.more] : job.suggestions;
         return (
-          <div key={ji} className="border-l-2 border-surface-200 pl-3 dark:border-surface-700">
-            <div className="mb-1.5 font-serif text-[0.95rem] text-surface-800 dark:text-surface-200">
-              <span className="text-surface-400">{ji + 1}.</span> {job.phrase}
-            </div>
+          <div key={ji} className={single ? "" : "border-l-2 border-surface-200 pl-3 dark:border-surface-700"}>
+            {!single && (
+              <div className="mb-1.5 font-serif text-[0.95rem] text-surface-800 dark:text-surface-200">
+                <span className="text-surface-400">{ji + 1}.</span> {job.phrase}
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-1.5">
               {shown.map((s, idx) => {
                 const on = selected.has(s.categoryId);
@@ -94,7 +100,7 @@ export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, 
                   onClick={() => setExpanded((p) => ({ ...p, [ji]: true }))}
                   className="px-2 py-1 text-xs text-surface-400 hover:text-brand-600"
                 >
-                  daugiau ({job.more.length})
+                  {single ? "kitos" : "daugiau"} ({job.more.length})
                 </button>
               )}
               <button
@@ -105,7 +111,7 @@ export default function MultilabelCategoryPicker({ jobs, selectedIds, onToggle, 
                 }}
                 className="inline-flex items-center gap-1 rounded-lg border border-dashed border-surface-300 px-2.5 py-1 text-sm text-surface-400 hover:bg-surface-50 dark:border-surface-600 dark:hover:bg-surface-800"
               >
-                + dar viena
+                {single ? "+ kita kategorija" : "+ dar viena"}
               </button>
             </div>
           </div>
