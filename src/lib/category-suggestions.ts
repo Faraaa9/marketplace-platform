@@ -77,6 +77,8 @@ export interface SuggestCategoriesInput {
   text: string;
   title?: string;
   limit?: number;
+  /** Internal callers can keep candidate generation deterministic for a second-stage ranker. */
+  useAiRerank?: boolean;
 }
 
 export interface SuggestCategoriesResult {
@@ -820,7 +822,10 @@ export async function suggestCategories(
   // 12 candidates, not 30: a leaner rerank prompt is faster (less to read +
   // generate) and cheaper, and the correct answer is virtually always in the
   // top-12 deterministic+phrase pool — the reranker only needs to reorder.
-  const rerank = await aiRerank(input, safeScored.slice(0, 12));
+  const rerank =
+    input.useAiRerank === false
+      ? { result: null, attempted: false, ok: false, model: null, usage: null, latencyMs: 0 }
+      : await aiRerank(input, safeScored.slice(0, 12));
   const ai = rerank.result;
 
   let pickedEntries = deterministicPicked;

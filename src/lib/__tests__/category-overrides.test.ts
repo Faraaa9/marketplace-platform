@@ -9,6 +9,8 @@ const STATYBOS_VAMZDYNAI =
   "pr-statybos-apdaila--santechnikai-santechnikos-darbai--santechnikos-sistemu-vamzdynu-remontas";
 const BUITINES_SMULKUS =
   "pr-buitines-paslaugos--santechnikai-santechnikos-darbai--smulkus-santechnikos-darbai";
+const STATYBOS_ELEKTRA =
+  "pr-statybos-apdaila--elektrikai-elektros-darbai--smulkus-elektros-darbai";
 
 const ALL_SLUGS = new Set([
   STATYBOS_SMULKUS,
@@ -20,6 +22,27 @@ const ALL_SLUGS = new Set([
 ]);
 
 const tests: Array<[string, () => void]> = [
+  [
+    "rozečių ir šviestuvų montavimas parenka smulkius elektros darbus",
+    () => {
+      const slug = pickCategoryOverrideSlug(
+        "Reikia sumontuoti šviestuvus ir sutvarkyti dvi neveikiančias rozetes.",
+        new Set([STATYBOS_ELEKTRA]),
+      );
+      assert.equal(slug, STATYBOS_ELEKTRA);
+    },
+  ],
+  [
+    "vien paminėtas šviestuvas be darbo signalo elektros taisyklės neįjungia",
+    () => {
+      const slug = pickCategoryOverrideSlug(
+        "Parduodu senovinį šviestuvą.",
+        new Set([STATYBOS_ELEKTRA]),
+      );
+      assert.equal(slug, null);
+    },
+  ],
+
   // ── Positive: an indoor fixture + a leak verb, no outdoor-water context ──
   [
     "indoor fixture + leak verb (kriauklė + varva) returns the first valid repair slug",
