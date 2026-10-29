@@ -1,5 +1,5 @@
-// Real-key Jev benchmark on public paslaugos.lt listings (2026-10-29, customer
-// names omitted). Run: pnpm exec tsx scripts/jev-benchmark.ts with
+// Real-key Jev benchmark on public paslaugos.lt listings (two batches of 15,
+// both 2026-10-29; customer names omitted). Run: pnpm exec tsx scripts/jev-benchmark.ts with
 // TYPESAFE_API_KEY, OPENROUTER_API_KEY and DATABASE_URL set. Reads only.
 import { prisma } from "@/lib/prisma";
 import { prepareMarketplaceContext } from "@/lib/typesafe/marketplace-context";
@@ -22,6 +22,23 @@ const CASES: { title: string; text: string; city: string; accept: string[] }[] =
   { title: "Fiskaro nuoma", text: "Reikalingas fiskaras atvezti irengima is Svencioneliu i Pabrade. irengimo svoris 9500kg", city: "Švenčionių r.", accept: ["Fiskaro nuoma", "Fiskaras, fiskaro paslaugos"] },
   { title: "Autoelektrikai", text: "Citroen C4 Picasso. Neužsiveda po lietaus arba jei orų drėgmė aukšta. Taip pat reikėtų kėbulo darbų", city: "Vilnius", accept: ["Autoelektrikai"] },
   { title: "Siuvinėjimas žvyneliais", text: "Norėčiau panašiai išsiuvinėti megztinį.", city: "Vilnius", accept: ["Drabužių siuvinėjimas", "Siuvinėjimas"] },
+  // Batch 2. "Registracijos adresas" has no exact category in our taxonomy;
+  // it stays as a known miss that Jev should send to review, not auto-route.
+  { title: "Šulinio valymas", text: "Noriu išvalyti šulinį kaime. Vanduo bus išpumpuotas.", city: "Panevėžys", accept: ["Šulinių valymas"] },
+  { title: "Siuvimas, siuvyklos, siuvėjai", text: "Darbo kėdei reikia atnaujinti nugarėlės ir porankių medžiagą", city: "Vilnius", accept: ["Baldų aptraukimas", "Baldų pervilkimas", "Siuvimas, siuvyklos, siuvėjai"] },
+  { title: "Foto sienelės nuoma Kaune", text: "70m jubiliejaus proga, užeiga Valančiaus g. 2026-11-25", city: "Kaunas", accept: ["Foto sienelės nuoma"] },
+  { title: "Skalbyklės būgno bako pjovimas/virinimas", text: "Skalbyklė/džiovyklė AEG L9WBC61B tikėtasi pakeisti guolius, bet šio modelio bakas yra neardomas, todėl reikėtų jį perpjauti. Pakeitus guolius, vėl sandariai sujungti (suvirinti / sulituoti arba kitu patikimu būdu hermetizuoti).", city: "Kaunas", accept: ["Skalbimo mašinų remontas", "Buitinės technikos remontas", "Džiovyklių remontas"] },
+  { title: "Ieškome žmonių griovimo darbams Atiškiuose, Pasvalio r.", text: "Reikalingi žmonės 3 senų medinių pastatų griovimo ir ardymo darbams. Dėl darbų apimties, atlikimo laiko ir atlygio susitarsime individualiai.", city: "Pasvalio r.", accept: ["Pastatų griovimas", "Griovimo darbai"] },
+  { title: "Maitinimas, maistas šventėms", text: "Reikalingas maitinimas lapkričio 27d Simno kultūros namuose Alytaus raj. švediško stalo principu su padavėjais. Žmonių būtų apie 150", city: "Alytaus r.", accept: ["Maitinimas, maistas šventėms", "Banketų ir furšetų ruošimas", "Banketų organizavimas"] },
+  { title: "Išvežti medienos atliekas utilizuoti", text: "Išvežti medienos atliekas utilizuoti", city: "Šiauliai", accept: ["Šiukšlių išvežimas: statybinių ir kt.", "Šiukšlių išvežimas", "Statybinių atliekų išvežimas"] },
+  { title: "Skalda, smėlis, žvyras, juodžemis", text: "Smėlis 8 kubai lapkričio 5d. Liudyne", city: "Panevėžio r.", accept: ["Smėlis", "Skalda, smėlis, žvyras, juodžemis"] },
+  { title: "Medžio darbai, staliai", text: "Reikia padaryti paprastas medines duris į lauke esantį rūsį Kėdainiuose.", city: "Kėdainių r.", accept: ["Lauko durys, montavimas", "Medžio darbai, staliai", "Durų montavimas"] },
+  { title: "Grindų betonavimas ūkiniame pastate", text: "Reikia išbetonuoti ūkinio pastato grindis – 32 m² (Jonava). Plotas – 32 m². Betono sluoksnis – apie 7 cm. Pagrindas jau paruoštas: sudėtas 5 cm polistirolas, paklotas armavimo tinklas. Reikia tik išbetonuoti ir išlyginti.", city: "Jonavos r.", accept: ["Grindų betonavimas", "Betonavimo darbai, betonavimas"] },
+  { title: "Tralo paslaugos", text: "Reikia iš Klaipėdos paimti lengvąją auto, nuvežti į Kauną (daugiabučių kiemą) ir iš ten parvežti kitą nevažiuojančią lengvąją į Klaipėdą. Kokia kaina?", city: "Klaipėda", accept: ["Tralo paslaugos", "Automobilių pervežimas, transportavimas"] },
+  { title: "Lietuvių kalbos korepetitoriai", text: "Sveiki! Ieškau lietuvių kalbos korepetitoriaus pasiruošti PUPP egzaminui. Labiausiai reikėtų pagalbos su rašiniais, skyryba, gramatika ir kitomis lietuvių kalbos temomis. Idealiausia būtų, jei pamokos kainuotų apie 15 € už valandą.", city: "Rietavas", accept: ["Ruošimas lietuvių kalbos egzaminams", "Lietuvių kalbos korepetitoriai", "Papildomas lietuvių kalbos mokymas"] },
+  { title: "Registracijos adresas įmonei", text: "Laba diena. Ieškome registracijos adreso įmonėms Ignalinos raj., Visagino ir Jonavos raj. savivaldybėse.", city: "Ignalinos r.", accept: ["Įmonių steigimas (UAB, MB, VšĮ)"] },
+  { title: "Praleidžia grindinis šildymas", text: "Prateka grindinis šildymas. Name gyvenama 1.5 metų, problema pasimatė prieš mėnesį. Užregistruotas namo draudiminis įvykis, ieškau meistrų, kurie galėtų identifikuoti vietą, kur prateka, pataisyti vamzdį ir užpilti grindis betonu. Grindis/plyteles surasim kas sudės.", city: "Vilnius", accept: ["Grindinio šildymo defektų nustatymas", "Šildomų grindų įrengimas"] },
+  { title: "Pasirodymai, šou renginiams", text: "Įmonės vakarėlis, ~15-20 asmenų. Valandos-dviejų pramoga. Patalpoje. Gali būti mūsų vieta arba Jūsų pasiūlyta, su maitinimu. Domina magai, bingo ar panaši veikla.", city: "Vilnius", accept: ["Pasirodymai, šou renginiams", "Iliuzionisto pasirodymai", "Pramogų organizatoriai"] },
 ];
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
