@@ -201,7 +201,23 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   events: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
+      // The Google provider's profile() drops email_verified, so the adapter
+      // stores emailVerified = null. Google vouches for the address; record it
+      // so Google-only providers pass the verified-email gates.
+      const googleVerified =
+        (profile as { email_verified?: boolean } | undefined)?.email_verified === true;
+      if (account?.provider === "google" && googleVerified && user.id) {
+        try {
+          await prisma.user.updateMany({
+            where: { id: user.id, emailVerified: null },
+            data: { emailVerified: new Date() },
+          });
+        } catch (err) {
+          console.error("Failed to mark Google email verified:", err);
+        }
+      }
+
       // Auto-bind any unbound SupplierIdentity records that match this user's email
       if (user.id && user.email) {
         try {
@@ -269,8 +285,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("SESSION_REVOKED");
         }
         const fingerprint = passwordFingerprint(dbUser.password);
-        // Tokens issued before this check existed adopt the current stamp.
-        if (typeof token.pwf !== "string") {
+        // Stamp at sign-in. A token without a stamp predates this check and
+        // can't prove it survived a reset, so it is dropped (one re-login).
+        if (user) {
           token.pwf = fingerprint;
         } else if (token.pwf !== fingerprint) {
           throw new Error("SESSION_REVOKED");

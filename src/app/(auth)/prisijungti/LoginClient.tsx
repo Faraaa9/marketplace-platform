@@ -297,9 +297,10 @@ function TelegramQrLogin({
       try {
         const res = await fetch(`/api/auth/telegram-login?token=${encodeURIComponent(challenge.token)}`);
         const data = await res.json();
-        if (cancelled || !data.success) return;
+        if (cancelled) return;
 
-        if (data.data.status === "EXPIRED") {
+        // 404 = challenge gone or bound to another tab/browser: start over.
+        if (res.status === 404 || data.data?.status === "EXPIRED") {
           setStatus("expired");
           setMessage("QR kodas nebegalioja. Sugeneruokite naują.");
           return;

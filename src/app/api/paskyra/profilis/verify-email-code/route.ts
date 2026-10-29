@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
-import { hashEmailChangeCode } from "@/lib/auth-guards";
+import { emailVerificationCodeMatches } from "@/lib/email-verification";
 import { sendEmail } from "@/lib/email";
 
 const schema = z.object({
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       data: { attempts: { increment: 1 } },
     });
 
-    if (record.code !== hashEmailChangeCode(email, code)) {
+    if (!emailVerificationCodeMatches(email, code, record.code)) {
       const remaining = record.maxAttempts - record.attempts - 1;
       return NextResponse.json(
         {
@@ -138,7 +138,12 @@ export async function POST(req: NextRequest) {
 
     // Tell the old address, so a hijacked session can't silently move the
     // account away from its owner.
-    if (previous?.email && previous.email.toLowerCase() !== email) {
+    // Telegram/phone-only accounts carry a placeholder address nobody reads.
+    if (
+      previous?.email &&
+      previous.email.toLowerCase() !== email &&
+      !previous.email.endsWith("@telegram.paslaugurinka.lt")
+    ) {
       const masked = email.replace(/^(.{2}).*@/, "$1***@");
       await sendEmail({
         to: previous.email,

@@ -75,7 +75,9 @@ export async function requireActiveProvider(req?: NextRequest): Promise<Provider
   });
   const user = profile?.user;
 
-  if (user?.blocked || (tokenPwf && tokenPwf !== passwordFingerprint(user?.password))) {
+  // Raw tokens must carry the password stamp; one without it predates the
+  // revocation check (see the jwt callback in auth.ts).
+  if (user?.blocked || (token && tokenPwf !== passwordFingerprint(user?.password))) {
     return {
       authorized: false,
       response: NextResponse.json(

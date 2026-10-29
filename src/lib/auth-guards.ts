@@ -1,4 +1,4 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { rateLimitAsync } from "@/lib/rate-limit";
 
 // Per-account limit stops guessing one password; the looser per-IP limit stops
@@ -32,12 +32,3 @@ export function passwordFingerprint(passwordHash: string | null | undefined): st
   return createHash("sha256").update(passwordHash).digest("base64url").slice(0, 16);
 }
 
-/**
- * Email-change codes are stored as a keyed hash: a leaked row doesn't reveal
- * the code, and 6 digits can't be brute-forced offline without the secret.
- */
-export function hashEmailChangeCode(email: string, code: string): string {
-  return createHmac("sha256", process.env.NEXTAUTH_SECRET ?? "")
-    .update(`email-change:${email.trim().toLowerCase()}:${code}`)
-    .digest("hex");
-}

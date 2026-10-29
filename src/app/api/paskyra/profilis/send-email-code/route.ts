@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, changeEmailVerificationEmail } from "@/lib/email";
 import { rateLimitAsync, RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
-import { hashEmailChangeCode } from "@/lib/auth-guards";
+import { hashEmailVerificationCode } from "@/lib/email-verification";
 
 const RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_RESENDS = 4;
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     }
 
     const code = crypto.randomInt(100000, 999999).toString();
-    const codeHash = hashEmailChangeCode(email, code);
+    const codeHash = hashEmailVerificationCode(email, code);
     const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
     await prisma.requestEmailVerification.upsert({

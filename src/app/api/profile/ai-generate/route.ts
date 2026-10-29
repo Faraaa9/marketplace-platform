@@ -177,8 +177,13 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
     const images: string[] = [];
     const seen = new Set<string>();
 
+    let safeOgImage: string | undefined;
     if (ogImage) {
       const absUrl = new URL(ogImage, baseUrl).toString();
+      if (await assertPublicHttpUrl(absUrl).then(() => true, () => false)) safeOgImage = absUrl;
+    }
+    if (safeOgImage) {
+      const absUrl = safeOgImage;
       images.push(absUrl);
       seen.add(absUrl);
     }
@@ -271,7 +276,7 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
     return {
       text: text.slice(0, 6000),
       images: finalImages,
-      ogImage,
+      ogImage: safeOgImage,
       title,
     };
   } catch (error) {
