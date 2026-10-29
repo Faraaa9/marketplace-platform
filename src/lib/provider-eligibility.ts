@@ -49,7 +49,14 @@ export function categoriesMatch(a: CategoryNode, b: CategoryNode): boolean {
  */
 export function checkEligibility(
   providerId: string,
-  request: { status: string; clientId: string | null; category: CategoryNode | null },
+  request: {
+    status: string;
+    clientId: string | null;
+    category: CategoryNode | null;
+    /** All linked categories (primary + up to 2 extras). Any match qualifies,
+     *  mirroring the lead feed and the new-request notifier. */
+    categories?: { category: CategoryNode }[];
+  },
   providerCategories: CategoryNode[],
 ): EligibilityResult {
   if (request.status !== "OPEN") {
@@ -68,13 +75,16 @@ export function checkEligibility(
     };
   }
 
+  const requestCategories = [
+    ...(request.category ? [request.category] : []),
+    ...(request.categories ?? []).map((link) => link.category),
+  ];
   // A request with no curated category is open to any provider.
-  if (request.category === null) {
+  if (requestCategories.length === 0) {
     return { allowed: true, code: "OK", message: "" };
   }
 
-  const reqCategory = request.category;
-  if (!providerCategories.some((c) => categoriesMatch(c, reqCategory))) {
+  if (!providerCategories.some((c) => requestCategories.some((r) => categoriesMatch(c, r)))) {
     return {
       allowed: false,
       code: "SPECIALIZATION_MISMATCH",

@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, requestExpiredEmail } from "@/lib/email";
 import { isPlaceholderTelegramEmail } from "@/lib/service-requests/link-user";
 
-/** An OPEN request with no activity (edit, reopen or new offer) for this long
+/** An OPEN request with no activity (edit, reopen, offer, chat message or a
+ *  provider's paid unlock) for this long
  *  is hidden from the board and lead feed, and the customer is told once. */
 export const REQUEST_EXPIRY_DAYS = 30;
 export const EXPIRED_STATUS = "EXPIRED";
@@ -22,14 +23,22 @@ export interface ExpiryCandidate {
   moderationStatus: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Latest offer or chat message (Response.lastMessageAt). */
   lastResponseAt: Date | null;
+  /** A provider who just paid to unlock must still be able to answer. */
+  lastUnlockAt: Date | null;
 }
 
 /** The single expiry rule; the DB query below is only its pre-filter. */
 export function shouldExpire(r: ExpiryCandidate, now: Date): boolean {
   if (r.status !== "OPEN" || r.moderationStatus !== "APPROVED") return false;
   const cutoff = now.getTime() - REQUEST_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-  const lastActivity = Math.max(r.createdAt.getTime(), r.updatedAt.getTime(), r.lastResponseAt?.getTime() ?? 0);
+  const lastActivity = Math.max(
+    r.createdAt.getTime(),
+    r.updatedAt.getTime(),
+    r.lastResponseAt?.getTime() ?? 0,
+    r.lastUnlockAt?.getTime() ?? 0,
+  );
   return lastActivity < cutoff;
 }
 
@@ -40,7 +49,8 @@ function candidateWhere(now: Date): Prisma.ServiceRequestWhereInput {
     moderationStatus: "APPROVED",
     createdAt: { lt: cutoff },
     updatedAt: { lt: cutoff },
-    responses: { none: { createdAt: { gte: cutoff } } },
+    responses: { none: { lastMessageAt: { gte: cutoff } } },
+    leadUnlocks: { none: { createdAt: { gte: cutoff } } },
   };
 }
 
@@ -59,10 +69,16 @@ async function findCandidates(now: Date, take?: number) {
       clientName: true,
       clientEmail: true,
       trackingToken: true,
-      responses: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
+      responses: { orderBy: { lastMessageAt: "desc" }, take: 1, select: { lastMessageAt: true } },
+      leadUnlocks: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
     },
   });
-  return rows.filter((r) => shouldExpire({ ...r, lastResponseAt: r.responses[0]?.createdAt ?? null }, now));
+  return rows.filter((r) =>
+    shouldExpire(
+      { ...r, lastResponseAt: r.responses[0]?.lastMessageAt ?? null, lastUnlockAt: r.leadUnlocks[0]?.createdAt ?? null },
+      now,
+    ),
+  );
 }
 
 /** Dry-run count for the cron report while the flag is off. */

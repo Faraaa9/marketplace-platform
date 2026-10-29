@@ -33,6 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       select: {
         id: true, category: true, categoryId: true, status: true, clientId: true,
         categoryRef: { select: { id: true, rootId: true, parentId: true } },
+        categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         clientName: true, clientEmail: true, title: true, trackingToken: true,
       },
     });
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const providerCategories = (profile?.categories ?? []).map((c) => c.category);
     const eligibility = checkEligibility(
       guard.userId,
-      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      { status: request.status, clientId: request.clientId, category: request.categoryRef, categories: request.categories },
       providerCategories,
     );
 

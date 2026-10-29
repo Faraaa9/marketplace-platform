@@ -3,6 +3,7 @@ import { requestCategoryWhere, requestInMatchSet } from "../category-matching";
 import { shouldExpire, REQUEST_EXPIRY_DAYS } from "../request-expiry";
 import { escapeEmailHtml, newRequestAlertEmail, claimRejectedEmail, requestExpiredEmail } from "../email";
 import { rateLimitAsync } from "../rate-limit";
+import { checkEligibility } from "../provider-eligibility";
 import {
   MULTILABEL_RATE_LIMIT,
   MULTILABEL_LOG_RATE_LIMIT,
@@ -19,6 +20,7 @@ const open = {
   createdAt: ago(60),
   updatedAt: ago(60),
   lastResponseAt: null as Date | null,
+  lastUnlockAt: null as Date | null,
 };
 
 const tests: Array<[string, () => void | Promise<void>]> = [
@@ -42,6 +44,16 @@ const tests: Array<[string, () => void | Promise<void>]> = [
     },
   ],
 
+  [
+    "a provider can unlock/respond to a lead that matches only via a secondary category",
+    () => {
+      const node = (id: string) => ({ id, rootId: "root", parentId: "root" });
+      const request = { status: "OPEN", clientId: null, category: node("tiling"), categories: [{ category: node("plumbing") }] };
+      assert.equal(checkEligibility("p1", request, [node("plumbing")]).allowed, true);
+      assert.equal(checkEligibility("p1", request, [node("painting")]).code, "SPECIALIZATION_MISMATCH");
+    },
+  ],
+
   // ── expiry selection ──
   ["an approved OPEN request idle past the window expires", () => assert.equal(shouldExpire(open, now), true)],
   [
@@ -52,10 +64,11 @@ const tests: Array<[string, () => void | Promise<void>]> = [
     },
   ],
   [
-    "a recent offer or edit counts as activity",
+    "a recent offer, chat message, edit or paid unlock counts as activity",
     () => {
       assert.equal(shouldExpire({ ...open, lastResponseAt: ago(3) }, now), false);
       assert.equal(shouldExpire({ ...open, updatedAt: ago(3) }, now), false);
+      assert.equal(shouldExpire({ ...open, lastUnlockAt: ago(1) }, now), false, "a paid unlock keeps it open");
     },
   ],
   [

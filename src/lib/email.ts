@@ -15,7 +15,10 @@ export function escapeEmailHtml(value: string): string {
 }
 const esc = escapeEmailHtml;
 
-const isProduction = () => process.env.NODE_ENV === "production";
+// Vercel previews also run NODE_ENV=production but get no mail env vars; only
+// the real production deployment must fail loudly.
+const isProduction = () =>
+  process.env.VERCEL_ENV ? process.env.VERCEL_ENV === "production" : process.env.NODE_ENV === "production";
 
 /** Public site origin for links. A localhost link in a real customer's inbox is
  *  a silent failure, so production refuses to guess. */
@@ -23,6 +26,7 @@ export function appUrl(): string {
   const url = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (url) return url.replace(/\/$/, "");
   if (isProduction()) throw new Error("NEXT_PUBLIC_APP_URL is not set — refusing to email localhost links");
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
 

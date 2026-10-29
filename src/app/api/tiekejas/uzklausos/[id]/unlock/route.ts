@@ -26,6 +26,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           status: true,
           clientId: true,
           categoryRef: { select: { id: true, rootId: true, parentId: true } },
+          categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         },
       }),
       prisma.providerProfile.findUnique({
@@ -48,7 +49,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const providerCategories = (profile?.categories ?? []).map((c) => c.category);
     const eligibility = checkEligibility(
       guard.userId,
-      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      { status: request.status, clientId: request.clientId, category: request.categoryRef, categories: request.categories },
       providerCategories,
     );
     if (!eligibility.allowed) {

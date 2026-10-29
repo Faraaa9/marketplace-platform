@@ -18,9 +18,12 @@ const EMAIL_BATCH = 10;
 export async function notifyRelevantProviders(
   title: string,
   categoryIds: string[],
-  location: string,
+  requestLocation: string,
   excludeUserId?: string | null,
 ) {
+  // An empty location means "anywhere" (create.ts already maps it; the email
+  // verify path does not).
+  const location = requestLocation.trim() || "Visa Lietuva";
   const validCategoryIds = categoryIds.filter(Boolean);
   // A request with no curated categories has nothing to match providers on.
   if (validCategoryIds.length === 0) return;

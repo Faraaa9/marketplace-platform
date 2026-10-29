@@ -136,7 +136,7 @@ export default function RequestActions({ trackingToken, status, publicHref }: Re
             {busy === "close" ? "Uždaroma…" : "Uždaryti"}
           </button>
         )}
-        {isOpen && (
+        {(isOpen || isExpired) && (
           <button
             type="button"
             onClick={deleteRequest}
