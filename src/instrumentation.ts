@@ -9,7 +9,8 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
   const { sendAlert } = await import("@/lib/alert");
   await sendAlert(`req:${context.routePath}:${err.message.slice(0, 100)}`, `Klaida ${context.routePath}`, {
     Klaida: err.message,
-    Kelias: `${request.method} ${request.path}`,
+    // Query strings carry verification/login tokens; keep them out of the inbox.
+    Kelias: `${request.method} ${request.path.split("?")[0]}`,
     Maršrutas: `${context.routePath} (${context.routeType}, ${context.routerKind})`,
     Digest: digest,
     Stack: err.stack?.split("\n").slice(0, 8).join("\n"),

@@ -42,7 +42,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
             </button>
             {/* Full reload on purpose: the client router is what just crashed. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/"style={{ padding: "12px 24px", fontSize: 14, color: "#2563eb" }}>
+            <a href="/" style={{ padding: "12px 24px", fontSize: 14, color: "#2563eb" }}>
               Į pradžią
             </a>
           </div>

@@ -17,7 +17,7 @@
  */
 
 const path = require("path");
-const { chromium } = require("playwright-core");
+const { chromium } = require("playwright");
 
 // ── CLI args ──────────────────────────────────────────────────────────
 
