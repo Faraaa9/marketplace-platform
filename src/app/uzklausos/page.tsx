@@ -14,6 +14,12 @@ import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching"
 import { MapPin, Clock, MessageSquare, ArrowRight, Search, Wallet, Sparkles, TrendingUp, Check } from "lucide-react";
 import RequestFilterBar from "@/components/uzklausos/RequestFilterBar";
 import PinnedRequestPhotos from "@/components/requests/PinnedRequestPhotos";
+import OutcomeStamp from "@/components/requests/OutcomeStamp";
+import { requestOutcomeStamp } from "@/lib/account/request-progress";
+
+// Requests that stopped taking offers stay pinned below the open ones as social
+// proof, stamped "Tiekėjas rastas" / "Tiekėjas nerastas per 30 dienų".
+const CLOSED_BOARD_STATUSES = ["IN_PROGRESS", "CLOSED", "EXPIRED"];
 
 interface PageProps {
   searchParams: Promise<{
@@ -79,19 +85,7 @@ async function getBoardListing(
   cacheLife({ revalidate: 30 });
   cacheTag("requests");
 
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    // The board shows open requests plus ones matched to a provider
-    // (IN_PROGRESS / CLOSED) within the last 24h — those linger with a
-    // "Tiekėjas rastas" stamp.
-    const conditions: Record<string, unknown>[] = [
-      {
-        OR: [
-          { status: "OPEN" },
-          { status: { in: ["IN_PROGRESS", "CLOSED"] }, updatedAt: { gte: oneDayAgo } },
-        ],
-      },
-    ];
+    const conditions: Record<string, unknown>[] = [];
     if (matchIds) {
       conditions.push({ categoryId: { in: matchIds } });
     }
@@ -120,32 +114,56 @@ async function getBoardListing(
       where.location = filters.location;
     }
 
-    const [requests, total] = await Promise.all([
-      prisma.serviceRequest.findMany({
-        where,
-        select: {
-          id: true,
-          trackingToken: true,
-          title: true,
-          description: true,
-          categoryRef: { select: { name: true } },
-          categories: {
-            select: { category: { select: { name: true } } },
-            orderBy: { sortOrder: "asc" },
-          },
-          location: true,
-          budget: true,
-          clientId: true,
-          status: true,
-          attachmentUrls: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * perPage,
-        take: perPage,
-      }),
-      prisma.serviceRequest.count({ where }),
+    const select = {
+      id: true,
+      trackingToken: true,
+      title: true,
+      description: true,
+      categoryRef: { select: { name: true } },
+      categories: {
+        select: { category: { select: { name: true } } },
+        orderBy: { sortOrder: "asc" as const },
+      },
+      location: true,
+      budget: true,
+      clientId: true,
+      status: true,
+      acceptedResponseId: true,
+      attachmentUrls: true,
+      createdAt: true,
+    };
+    // Open requests first (newest), then closed ones (most recently closed).
+    // Paginated as one list across the two queries.
+    const openWhere = { ...where, status: "OPEN" };
+    const closedWhere = { ...where, status: { in: CLOSED_BOARD_STATUSES } };
+    const [openTotal, closedTotal] = await Promise.all([
+      prisma.serviceRequest.count({ where: openWhere }),
+      prisma.serviceRequest.count({ where: closedWhere }),
     ]);
+    const skip = (page - 1) * perPage;
+    const openRows =
+      skip < openTotal
+        ? await prisma.serviceRequest.findMany({
+            where: openWhere,
+            select,
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: perPage,
+          })
+        : [];
+    const closedTake = perPage - openRows.length;
+    const closedRows =
+      closedTake > 0
+        ? await prisma.serviceRequest.findMany({
+            where: closedWhere,
+            select,
+            orderBy: { updatedAt: "desc" },
+            skip: Math.max(0, skip - openTotal),
+            take: closedTake,
+          })
+        : [];
+    const requests = [...openRows, ...closedRows];
+    const total = openTotal + closedTotal;
 
     // Response counts in a single grouped query instead of a correlated
     // subquery per row — much cheaper than Prisma's `_count.responses` for
@@ -259,10 +277,12 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
     : undefined;
 
   // Client-side sort for response count (kept post-cache so it doesn't bloat the key surface)
+  const closedLast = (a: { status: string }, b: { status: string }) =>
+    Number(a.status !== "OPEN") - Number(b.status !== "OPEN");
   if (sort === "responses-asc") {
-    requests.sort((a, b) => a.responseCount - b.responseCount);
+    requests.sort((a, b) => closedLast(a, b) || a.responseCount - b.responseCount);
   } else if (sort === "responses-desc") {
-    requests.sort((a, b) => b.responseCount - a.responseCount);
+    requests.sort((a, b) => closedLast(a, b) || b.responseCount - a.responseCount);
   }
 
   const visibleRequestIds = requests.map((request) => request.id);
@@ -424,7 +444,8 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
           <div className="uzklausa-grid grid gap-7 sm:gap-8">
             {requests.map((r, i) => {
               const competition = competitionLevel(r.responseCount);
-              const isMatched = r.status === "IN_PROGRESS" || r.status === "CLOSED";
+              const stamp = requestOutcomeStamp(r);
+              const isMatched = r.status !== "OPEN";
               const isOwnRequest = !!currentUserId && r.clientId === currentUserId;
               const isOpenedRequest = openRequestId === r.id;
               const ownResponseId = ownResponseByRequest.get(r.id);
@@ -555,12 +576,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                     </div>
                   </div>
 
-                  {isMatched && (
-                    <span className="found-stamp">
-                      <span className="found-stamp__lead">Tiekėjas</span>
-                      <span className="found-stamp__main">Rastas</span>
-                    </span>
-                  )}
+                  {stamp && <OutcomeStamp stamp={stamp} />}
 
                   <span aria-hidden className="pin absolute left-1/2 top-3 -translate-x-1/2" />
                 </article>

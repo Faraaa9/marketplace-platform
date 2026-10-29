@@ -312,10 +312,10 @@ export function requestExpiredEmail(
     ? `Jūsų užklausa „${decodeHtmlEntities(requests[0].title)}" nebegalioja — PaslaugųRinka`
     : `Jūsų ${requests.length} užklausos nebegalioja — PaslaugųRinka`;
   const body = single
-    ? `<p>Jūsų užklausa „${esc(requests[0].title)}" per ${days} dienų nesulaukė naujų pasiūlymų, todėl ją paslėpėme iš užklausų sąrašo.</p>
-        <p>Jei paslaugos vis dar reikia, užklausą galite atnaujinti — ji vėl bus matoma meistrams.</p>
+    ? `<p>Jūsų užklausa „${esc(requests[0].title)}" per ${days} dienų nesulaukė naujų pasiūlymų, todėl ją uždarėme — meistrai nebegali siųsti naujų pasiūlymų.</p>
+        <p>Jei paslaugos vis dar reikia, užklausą galite atnaujinti — meistrai vėl galės siųsti pasiūlymus.</p>
         <p>${button(requests[0].trackingToken, "Atnaujinti užklausą")}</p>`
-    : `<p>Šios jūsų užklausos per ${days} dienų nesulaukė naujų pasiūlymų, todėl jas paslėpėme iš užklausų sąrašo:</p>
+    : `<p>Šios jūsų užklausos per ${days} dienų nesulaukė naujų pasiūlymų, todėl jas uždarėme — meistrai nebegali siųsti naujų pasiūlymų:</p>
         <ul>${requests
           .map((r) => `<li style="margin-bottom: 8px;">${esc(r.title)} — <a href="${appUrl()}/uzklausos/sekti/${r.trackingToken}">atnaujinti</a></li>`)
           .join("")}</ul>

@@ -13,6 +13,8 @@ import { checkEligibility } from "@/lib/provider-eligibility";
 import { competitionLabel } from "@/lib/account/provider-leads";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 import LeadOfferPanel from "./LeadOfferPanel";
+import OutcomeStamp from "@/components/requests/OutcomeStamp";
+import { requestOutcomeStamp } from "@/lib/account/request-progress";
 
 export const metadata: Metadata = { title: "Užklausa" };
 
@@ -47,6 +49,7 @@ async function Lead({ userId, params }: { userId: string; params: Params }) {
         deadline: true,
         attachmentUrls: true,
         status: true,
+        acceptedResponseId: true,
         moderationStatus: true,
         clientId: true,
         clientName: true,
@@ -94,11 +97,15 @@ async function Lead({ userId, params }: { userId: string; params: Params }) {
   );
   const accountReady = profile.isActive && !!user?.emailVerified;
   const comp = competitionLabel(request._count.responses);
+  const stamp = requestOutcomeStamp(request);
 
   return (
     <>
       <div>
-        {request.categoryRef?.name && <Chip tone="progress">{request.categoryRef.name}</Chip>}
+        <div className="flex flex-wrap items-center gap-3">
+          {request.categoryRef?.name && <Chip tone="progress">{request.categoryRef.name}</Chip>}
+          {stamp && <OutcomeStamp stamp={stamp} inline />}
+        </div>
         <h1 className="mt-2.5 font-serif text-[26px] font-semibold leading-tight text-surface-900 dark:text-white sm:text-[28px]">
           {decodeHtmlEntities(request.title)}
         </h1>
