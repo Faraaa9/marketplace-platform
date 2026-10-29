@@ -1,8 +1,8 @@
 "use client";
 
+import { Avatar } from "@/components/account/ui";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import Card from "@/components/ui/Card";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
@@ -146,38 +146,12 @@ export default function InquiryConversationClient() {
       <Card>
         {/* Provider header inside the chat card — always visible */}
         <div className="mb-4 flex items-center gap-3 border-b border-surface-200/60 pb-4 dark:border-surface-700">
-          <div className="relative shrink-0 [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
-            <div className="relative h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950 dark:to-surface-800">
-              {conversation.providerImage ? (
-                <Image
-                  src={conversation.providerImage}
-                  alt={providerName}
-                  width={44}
-                  height={44}
-                  sizes="44px"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-body-sm font-semibold text-brand-700 dark:text-brand-300">
-                  {providerName[0]?.toUpperCase() ?? "T"}
-                </span>
-              )}
-            </div>
-            {conversation.presenceLevel && (
-              <span
-                className="pointer-events-none absolute bottom-[1px] right-[1px] flex h-[12px] w-[12px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)]"
-                aria-label={conversation.presenceLabel ?? "Aktyvus neseniai"}
-                title={conversation.presenceLabel ?? "Aktyvus neseniai"}
-              >
-                <span
-                  className={`h-[7px] w-[7px] rounded-full ${
-                    conversation.presenceLevel === "online" ? "bg-emerald-500" : "bg-surface-400"
-                  }`}
-                  aria-hidden
-                />
-              </span>
-            )}
-          </div>
+          <Avatar
+            name={providerName}
+            image={conversation.providerImage}
+            size={44}
+            presence={conversation.presenceLevel}
+          />
           <div className="min-w-0">
             <p className="truncate text-body font-semibold text-surface-900 dark:text-white">
               {providerName}
