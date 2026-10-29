@@ -193,7 +193,7 @@ model ServiceRequestCategory {
 
 model ServiceRequest {
   id                           String    @id @default(cuid())
-  trackingToken                String    @unique @default(cuid())
+  trackingToken                String    @unique @default(uuid()) // crypto-random; older rows keep their cuid tokens
   requestVerificationToken     String?   @unique
   requestVerificationExpiresAt DateTime?
   contactVerifiedAt            DateTime?
@@ -405,7 +405,7 @@ model Review {
 
 model DirectInquiry {
   id               String    @id @default(cuid())
-  trackingToken    String    @unique @default(cuid())
+  trackingToken    String    @unique @default(uuid()) // crypto-random; older rows keep their cuid tokens
   providerId       String
   description      String    @db.Text
   budget           String?

@@ -37,7 +37,10 @@ export async function processAndUploadImage(
 
   try {
     // 1. Download the original
+    // Callers pass guarded public URLs; refusing redirects keeps a public
+    // image URL from bouncing the server to a private address.
     const response = await fetch(sourceUrl, {
+      redirect: "error",
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",

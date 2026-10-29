@@ -23,6 +23,7 @@
     "test:routing-review": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/routing/__tests__/review-queue.test.ts",
     "test:category-rules": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-selection-rules.test.ts",
     "test:category-overrides": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/category-overrides.test.ts",
+    "test:security": "npx ts-node --transpile-only -r ./scripts/_register-paths.js --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/security-guards.test.ts",
     "test:eligibility": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/provider-eligibility.test.ts",
     "test:eligibility-contract": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/eligibility-contract.test.ts",
     "test:taxonomy-depth": "npx ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' src/lib/__tests__/taxonomy-depth-tripwire.test.ts",

@@ -16,12 +16,18 @@ import {
   resolvePromptVersion,
 } from "@/lib/ai/prompt-config";
 import { callOpenRouter, type OpenRouterUsage } from "@/lib/ai/openrouter";
+import { assertPublicHttpUrl, UnsafeUrlError } from "@/lib/ssrf-guard";
 
 export const maxDuration = 300;
 
 const PROFILE_MODEL = "anthropic/claude-haiku-4.5";
 const PROFILE_PROMPT_VERSION = "provider_profile_v1";
 const PROFILE_TIMEOUT_MS = 60_000;
+// image_generate is the bulk of AI spend and signups are free, so the per-user
+// limit alone doesn't bound it. Over the cap the profile is saved without an
+// AI hero image.
+const AI_IMAGE_GLOBAL_DAILY_CAP = 20;
+const SKIPPED_RESOURCE_TYPES = new Set(["image", "media", "font", "stylesheet"]);
 
 function isServerlessEnv(): boolean {
   return (
@@ -122,10 +128,37 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
       extraHTTPHeaders: {
         "Accept-Language": "lt-LT,lt;q=0.9,en-US;q=0.8,en;q=0.7",
       },
+      serviceWorkers: "block",
     });
 
+    // Every request the page makes (navigation, redirects, XHR, scripts) goes
+    // through the SSRF guard. Requests are fetched with redirects disabled and
+    // the 3xx handed back to the browser, so each redirect hop re-enters this
+    // handler and is checked too.
+    await context.route("**/*", async (route) => {
+      const request = route.request();
+      if (SKIPPED_RESOURCE_TYPES.has(request.resourceType())) return route.abort();
+      try {
+        await assertPublicHttpUrl(request.url());
+      } catch {
+        return route.abort("blockedbyclient");
+      }
+      try {
+        const response = await route.fetch({ maxRedirects: 0 });
+        return route.fulfill({ response });
+      } catch {
+        return route.abort();
+      }
+    });
+    await context.routeWebSocket(/.*/, (ws) => ws.close());
+
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+    // A blocked hop leaves Chromium's own error page (or the unfollowed 3xx);
+    // scraping that would turn an error message into a profile.
+    if (!response?.ok() || page.url().startsWith("chrome-error:")) {
+      throw new Error("Failed to fetch URL content");
+    }
     await page.waitForTimeout(2000);
 
     const html = await page.content();
@@ -144,8 +177,13 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
     const images: string[] = [];
     const seen = new Set<string>();
 
+    let safeOgImage: string | undefined;
     if (ogImage) {
       const absUrl = new URL(ogImage, baseUrl).toString();
+      if (await assertPublicHttpUrl(absUrl).then(() => true, () => false)) safeOgImage = absUrl;
+    }
+    if (safeOgImage) {
+      const absUrl = safeOgImage;
       images.push(absUrl);
       seen.add(absUrl);
     }
@@ -226,19 +264,26 @@ async function fetchAndScrape(url: string): Promise<ScrapedData> {
     $("script, style, nav, footer, header, noscript, iframe").remove();
     const text = $("body").text().replace(/\s+/g, " ").trim();
 
-    const finalImages = images.slice(0, 8);
+    const publicImages: string[] = [];
+    for (const img of images) {
+      if (publicImages.length === 8) break;
+      if (await assertPublicHttpUrl(img).then(() => true, () => false)) publicImages.push(img);
+    }
+    const finalImages = publicImages;
     console.log(`Scraped ${finalImages.length} images from ${url}:`);
     finalImages.forEach((img, i) => console.log(`  [${i}] ${img}`));
 
     return {
       text: text.slice(0, 6000),
       images: finalImages,
-      ogImage,
+      ogImage: safeOgImage,
       title,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("Scrape error details:", { errorMsg, url });
+
+    if (error instanceof UnsafeUrlError) throw error;
 
     if (errorMsg.includes("Timeout")) {
       throw new Error(
@@ -580,7 +625,7 @@ export async function POST(req: NextRequest) {
   const started = Date.now();
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.user?.id || !session.user.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (!(await isAiTouchpointEnabled("profile_generate"))) {
@@ -592,7 +637,7 @@ export async function POST(req: NextRequest) {
 
     // Rate limit: max 3 generations per user per 24h
     const rl = await rateLimitAsync(
-      `ai-profile:user:${session.user.email}`,
+      `ai-profile:user:${session.user.id}`,
       { maxRequests: 3, windowMs: 24 * 60 * 60 * 1000 }
     );
     if (!rl.success) {
@@ -628,14 +673,17 @@ export async function POST(req: NextRequest) {
       }
     } else {
       try {
-        new URL(body.url!);
+        await assertPublicHttpUrl(body.url!);
       } catch {
-        return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Nurodykite viešą svetainės adresą (http:// arba https://)." },
+          { status: 400 }
+        );
       }
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       select: {
         id: true,
         role: true,
@@ -737,16 +785,13 @@ export async function POST(req: NextRequest) {
       nextModerationStatus = "PENDING";
     }
 
-    // Ensure PROVIDER role + emailVerified so the public profile is visible.
-    // Authenticated users with AI-generated profiles are considered verified —
-    // they completed the signup auth flow.
-    if (user.role !== "PROVIDER" || !user.emailVerified) {
+    // Become a provider, but never touch emailVerified: an unverified email
+    // must stay unverified (provider guard and the Google account-linking guard
+    // both rely on it).
+    if (user.role !== "PROVIDER") {
       await prisma.user.update({
         where: { id: user.id },
-        data: {
-          role: "PROVIDER",
-          emailVerified: user.emailVerified ?? new Date(),
-        },
+        data: { role: "PROVIDER" },
         select: { id: true },
       });
     }
@@ -785,7 +830,14 @@ export async function POST(req: NextRequest) {
     if (
       isScratchMode &&
       aiResult.imagePrompt &&
-      imagesToSave.length === 0
+      imagesToSave.length === 0 &&
+      (
+        await rateLimitAsync(
+          "ai-image:global",
+          { maxRequests: AI_IMAGE_GLOBAL_DAILY_CAP, windowMs: 24 * 60 * 60 * 1000 },
+          { failClosed: true },
+        )
+      ).success
     ) {
       console.log(`Generating AI image: ${aiResult.imagePrompt.slice(0, 100)}`);
       const aiImage = await generateAIImage(aiResult.imagePrompt, {
@@ -888,17 +940,19 @@ export async function POST(req: NextRequest) {
     }
     profileEntityId = providerProfile.id;
 
-    // 6. Replace categories
+    // 6. Replace the free categories only. Paid ones (expiresAt set) were
+    // bought and must survive regeneration; skipDuplicates keeps a paid row
+    // when the AI picks the same category again.
     await prisma.providerProfileCategory.deleteMany({
-      where: { providerProfileId: providerProfile.id },
+      where: { providerProfileId: providerProfile.id, expiresAt: null },
     });
-
-    for (const categoryId of selectedCategoryIds) {
-      await prisma.providerProfileCategory.create({
-        data: { providerProfileId: providerProfile.id, categoryId },
-        select: { id: true },
-      });
-    }
+    await prisma.providerProfileCategory.createMany({
+      data: selectedCategoryIds.map((categoryId) => ({
+        providerProfileId: providerProfile.id,
+        categoryId,
+      })),
+      skipDuplicates: true,
+    });
 
     await recordAiRun({
       feature: "profile_generate",
@@ -981,6 +1035,9 @@ export async function POST(req: NextRequest) {
     if (errorMsg.includes("Timeout")) {
       clientMessage = "Šaltinis per ilgai atsiliepė. Pabandykite kitą URL arba turėkite kantrybės.";
       statusCode = 408;
+    } else if (error instanceof UnsafeUrlError) {
+      clientMessage = "Nurodykite viešą svetainės adresą (http:// arba https://).";
+      statusCode = 400;
     } else if (errorMsg.includes("Invalid URL") || errorMsg.includes("ENOTFOUND") || errorMsg.includes("ERR_NAME_NOT_RESOLVED")) {
       clientMessage = "URL'as neteisingas arba nepasiekiamas. Patikrinkite ir bandykite iš naujo.";
       statusCode = 400;

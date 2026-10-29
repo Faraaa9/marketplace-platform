@@ -174,7 +174,7 @@ const deps: BotDeps = {
       name || from.username || undefined,
     );
 
-    await prisma.$transaction([
+    const [, confirmed] = await prisma.$transaction([
       prisma.telegramSession.upsert({
         where: { telegramUserId },
         create: {
@@ -188,17 +188,19 @@ const deps: BotDeps = {
           userId,
         },
       }),
-      prisma.telegramLoginToken.update({
-        where: { token },
+      // Conditional so a token confirmed twice (double tap, two Telegram
+      // accounts racing) binds only the first confirmer.
+      prisma.telegramLoginToken.updateMany({
+        where: { token, status: "PENDING", consumedAt: null, expiresAt: { gt: now } },
         data: {
           status: "CONFIRMED",
           telegramUserId,
           userId,
           confirmedAt: now,
         },
-        select: { id: true },
       }),
     ]);
+    if (confirmed.count !== 1) return { status: "expired" };
 
     const callbackPath = row.callbackUrl?.startsWith("/") ? row.callbackUrl : "/";
     return { status: "ok", returnUrl: `${baseUrl()}${callbackPath}` };

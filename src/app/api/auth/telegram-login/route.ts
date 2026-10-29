@@ -8,6 +8,9 @@ import {
   createTelegramLoginToken,
   getTelegramBotUsername,
   isSafeCallbackPath,
+  TELEGRAM_LOGIN_BIND_COOKIE,
+  telegramLoginBinding,
+  telegramLoginBindingMatches,
   telegramLoginExpiresAt,
 } from "@/lib/telegram-login";
 
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     success: true,
     data: {
       token,
@@ -56,6 +59,15 @@ export async function POST(req: NextRequest) {
       expiresInSeconds: 5 * 60,
     },
   });
+  // Binds the challenge to this browser: polling and sign-in both require it.
+  res.cookies.set(TELEGRAM_LOGIN_BIND_COOKIE, telegramLoginBinding(token), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 6 * 60,
+  });
+  return res;
 }
 
 export async function GET(req: NextRequest) {
@@ -64,6 +76,10 @@ export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token")?.slice(0, TOKEN_TAKE) ?? "";
   if (!token) {
     return NextResponse.json({ success: false, error: "Trūksta tokeno" }, { status: 400 });
+  }
+
+  if (!telegramLoginBindingMatches(token, req.headers.get("cookie") ?? undefined)) {
+    return NextResponse.json({ success: false, error: "Prisijungimas nerastas" }, { status: 404 });
   }
 
   const row = await prisma.telegramLoginToken.findUnique({

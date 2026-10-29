@@ -94,7 +94,7 @@ export const MSG = {
   contactNotOwn: "Pasidalinkite savo kontaktu, ne kito žmogaus.",
   genericError: "Įvyko klaida. Pabandykite dar kartą.",
   loginConfirm:
-    "Patvirtinkite prisijungimą prie paslaugurinka.lt. Jei šio veiksmo nepradėjote jūs, tiesiog ignoruokite šią žinutę.",
+    "Patvirtinkite prisijungimą prie paslaugurinka.lt.\n\nSpauskite tik jei PATYS ką tik atidarėte prisijungimą savo naršyklėje. Jei QR kodą ar nuorodą jums atsiuntė kitas žmogus, nespauskite: jis gautų prieigą prie jūsų paskyros.",
   loginConfirmed:
     "Prisijungimas patvirtintas. Grįžkite į naršyklę - puslapis prisijungs automatiškai.",
   loginExpired:

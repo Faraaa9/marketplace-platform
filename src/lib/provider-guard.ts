@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { passwordFingerprint } from "@/lib/auth-guards";
 
 export type ProviderGuardResult =
   | {
@@ -47,7 +48,12 @@ export async function requireActiveProvider(req?: NextRequest): Promise<Provider
     };
   }
 
-  const cached = activeProviderCache.get(userId);
+  // A raw getToken() skips the jwt callback, so the revocation checks it does
+  // (blocked user, password reset) are repeated against the DB below. The
+  // cache key carries the token's password stamp so a reset can't ride a hit.
+  const tokenPwf = typeof token?.pwf === "string" ? token.pwf : null;
+  const cacheKey = `${userId}:${tokenPwf ?? ""}`;
+  const cached = activeProviderCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return {
       authorized: true,
@@ -64,10 +70,22 @@ export async function requireActiveProvider(req?: NextRequest): Promise<Provider
       id: true,
       isActive: true,
       creditBalance: true,
-      user: { select: { emailVerified: true, role: true } },
+      user: { select: { emailVerified: true, role: true, blocked: true, password: true } },
     },
   });
   const user = profile?.user;
+
+  // Raw tokens must carry the password stamp; one without it predates the
+  // revocation check (see the jwt callback in auth.ts).
+  if (user?.blocked || (token && tokenPwf !== passwordFingerprint(user?.password))) {
+    return {
+      authorized: false,
+      response: NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      ),
+    };
+  }
 
   if (user?.role !== "PROVIDER") {
     return {
@@ -117,7 +135,7 @@ export async function requireActiveProvider(req?: NextRequest): Promise<Provider
     };
   }
 
-  activeProviderCache.set(userId, {
+  activeProviderCache.set(cacheKey, {
     providerProfileId: profile.id,
     creditBalance: profile.creditBalance,
     expiresAt: Date.now() + ACTIVE_PROVIDER_CACHE_TTL_MS,

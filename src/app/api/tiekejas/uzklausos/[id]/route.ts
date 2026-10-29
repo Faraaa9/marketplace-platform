@@ -32,13 +32,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const request = await prisma.serviceRequest.findUnique({
       where: { id },
       select: {
-        id: true, category: true, categoryId: true, status: true, clientId: true,
+        id: true, category: true, categoryId: true, status: true, clientId: true, moderationStatus: true,
         categoryRef: { select: { id: true, rootId: true, parentId: true } },
         categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         clientName: true, clientEmail: true, title: true, trackingToken: true,
       },
     });
-    if (!request) {
+    if (!request || request.moderationStatus !== "APPROVED") {
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 

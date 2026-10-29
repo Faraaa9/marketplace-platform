@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import QRCode from "qrcode";
 import { getBotInfo } from "@/lib/telegram/api";
 
@@ -7,6 +7,33 @@ const EXPIRES_MINUTES = 5;
 
 export function createTelegramLoginToken(): string {
   return randomBytes(TOKEN_BYTES).toString("base64url");
+}
+
+export const TELEGRAM_LOGIN_BIND_COOKIE = "tg_login_bind";
+
+// The binding cookie value is derived from the token with the server secret, so
+// it needs no extra column and can't be computed by someone who only saw the QR.
+export function telegramLoginBinding(token: string): string {
+  return createHmac("sha256", process.env.NEXTAUTH_SECRET ?? "")
+    .update(`telegram-login:${token}`)
+    .digest("base64url");
+}
+
+function readCookie(header: string | undefined, name: string): string | null {
+  for (const part of header?.split(";") ?? []) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return decodeURIComponent(rest.join("="));
+  }
+  return null;
+}
+
+/** True when the request's cookie header carries the binding for `token`. */
+export function telegramLoginBindingMatches(token: string, cookieHeader: string | undefined): boolean {
+  const actual = readCookie(cookieHeader, TELEGRAM_LOGIN_BIND_COOKIE);
+  if (!actual || !process.env.NEXTAUTH_SECRET) return false;
+  const expected = Buffer.from(telegramLoginBinding(token));
+  const given = Buffer.from(actual);
+  return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
 export function telegramLoginExpiresAt(): Date {
