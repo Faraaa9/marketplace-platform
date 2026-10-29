@@ -4,6 +4,8 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientIp } from "@/lib/rate-limit";
+import { hashEmailChangeCode } from "@/lib/auth-guards";
+import { sendEmail } from "@/lib/email";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email("Neteisingas el. pašto formatas"),
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (record.expiresAt < new Date()) {
+    if (record.verifiedAt || record.expiresAt < new Date()) {
       return NextResponse.json(
         { success: false, error: "Kodas nebegalioja. Išsiųskite kodą iš naujo.", expired: true },
         { status: 410 },
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
       data: { attempts: { increment: 1 } },
     });
 
-    if (record.code !== code) {
+    if (record.code !== hashEmailChangeCode(email, code)) {
       const remaining = record.maxAttempts - record.attempts - 1;
       return NextResponse.json(
         {
@@ -101,26 +103,49 @@ export async function POST(req: NextRequest) {
 
     const verifiedAt = new Date();
 
-    const [updatedUser] = await prisma.$transaction([
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: { email, emailVerified: verifiedAt },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          phone: true,
-          emailVerified: true,
-          phoneVerifiedAt: true,
-          createdAt: true,
-          _count: { select: { serviceRequests: true } },
-        },
-      }),
-      prisma.requestEmailVerification.update({
-        where: { email },
-        data: { verifiedAt },
-      }),
-    ]);
+    // Burn the code first, conditionally, so it works exactly once even
+    // under concurrent submits.
+    const consumed = await prisma.requestEmailVerification.updateMany({
+      where: { email, verifiedAt: null, code: record.code },
+      data: { verifiedAt },
+    });
+    if (consumed.count !== 1) {
+      return NextResponse.json(
+        { success: false, error: "Kodas nebegalioja. Išsiųskite kodą iš naujo.", expired: true },
+        { status: 410 },
+      );
+    }
+
+    const previous = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true },
+    });
+
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: { email, emailVerified: verifiedAt },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        emailVerified: true,
+        phoneVerifiedAt: true,
+        createdAt: true,
+        _count: { select: { serviceRequests: true } },
+      },
+    });
+
+    // Tell the old address, so a hijacked session can't silently move the
+    // account away from its owner.
+    if (previous?.email && previous.email.toLowerCase() !== email) {
+      const masked = email.replace(/^(.{2}).*@/, "$1***@");
+      await sendEmail({
+        to: previous.email,
+        subject: "Jūsų paskyros el. paštas pakeistas",
+        html: `<p>Sveiki,</p><p>Jūsų paslaugurinka.lt paskyros el. pašto adresas ką tik pakeistas į <b>${masked}</b>.</p><p>Jei to nedarėte jūs, nedelsdami atsakykite į šį laišką.</p>`,
+      }).catch((err: unknown) => console.error("Email-change notice to old address failed:", err));
+    }
 
     return NextResponse.json({ success: true, data: updatedUser });
   } catch (error) {

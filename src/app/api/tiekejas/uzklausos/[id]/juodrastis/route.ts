@@ -4,6 +4,8 @@ import { requireActiveProvider } from "@/lib/provider-guard";
 import { rateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit";
 import { generateProposalDraft, AiProposalError } from "@/lib/ai-proposal";
 import { isAiTouchpointEnabled } from "@/lib/ai/prompt-config";
+import { checkEligibility } from "@/lib/provider-eligibility";
+import { activeCategoryFilter } from "@/lib/category-matching";
 
 /**
  * Generates an AI proposal draft for the provider, built from their own
@@ -44,7 +46,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         select: {
           title: true,
           description: true,
-          categoryRef: { select: { name: true } },
+          status: true,
+          clientId: true,
+          moderationStatus: true,
+          categoryRef: { select: { id: true, rootId: true, parentId: true, name: true } },
           location: true,
           budget: true,
           deadline: true,
@@ -58,7 +63,11 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           description: true,
           services: true,
           experienceYears: true,
-          categories: { select: { category: { select: { name: true } } }, orderBy: { sortOrder: "asc" } },
+          categories: {
+            where: activeCategoryFilter(),
+            select: { category: { select: { id: true, rootId: true, name: true } } },
+            orderBy: { sortOrder: "asc" },
+          },
           offersInvoices: true,
           availableForUrgent: true,
         },
@@ -75,8 +84,22 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       }),
     ]);
 
-    if (!request) {
+    // Unmoderated requests are invisible to providers; don't spend AI on them.
+    if (!request || request.moderationStatus !== "APPROVED") {
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
+    }
+
+    // Same gate as responding: no draft for a request the provider can't answer.
+    const eligibility = checkEligibility(
+      guard.userId,
+      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      (profile?.categories ?? []).map((c) => c.category),
+    );
+    if (!eligibility.allowed) {
+      return NextResponse.json(
+        { success: false, error: eligibility.message, code: eligibility.code },
+        { status: 403 },
+      );
     }
 
     const categoryLabel = request.categoryRef?.name ?? "";

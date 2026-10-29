@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { attachIdentityToUserByEmail } from "./imported/supplier-access";
 import { normalizeBrandColor } from "./brand-theme";
+import { loginAllowed, passwordFingerprint } from "./auth-guards";
+import { telegramLoginBindingMatches } from "./telegram-login";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -30,28 +32,37 @@ export const authOptions: NextAuthOptions = {
         signinToken: { label: "Auto signin token", type: "text" },
         telegramLoginToken: { label: "Telegram login token", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         // Branch 0: Telegram QR login confirmed in the bot. The browser only
         // receives this token after the bot writes userId onto the challenge.
         if (credentials?.telegramLoginToken) {
-          const tokenRow = await prisma.telegramLoginToken.findUnique({
-            where: { token: credentials.telegramLoginToken },
-            select: {
-              token: true,
-              status: true,
-              expiresAt: true,
-              consumedAt: true,
-              userId: true,
-            },
-          });
+          const loginToken = credentials.telegramLoginToken;
+          // Only the browser that started the login holds the binding cookie,
+          // so a token seen elsewhere (QR screenshot, shared link) is useless.
+          if (!telegramLoginBindingMatches(loginToken, req?.headers?.cookie)) {
+            throw new Error("Telegram prisijungimas nebegalioja");
+          }
 
-          if (
-            !tokenRow ||
-            tokenRow.status !== "CONFIRMED" ||
-            tokenRow.consumedAt ||
-            tokenRow.expiresAt < new Date() ||
-            !tokenRow.userId
-          ) {
+          // Consume in one conditional write so two concurrent sign-ins with
+          // the same token can't both pass.
+          const consumed = await prisma.telegramLoginToken.updateMany({
+            where: {
+              token: loginToken,
+              status: "CONFIRMED",
+              consumedAt: null,
+              expiresAt: { gt: new Date() },
+              userId: { not: null },
+            },
+            data: { consumedAt: new Date() },
+          });
+          const tokenRow =
+            consumed.count === 1
+              ? await prisma.telegramLoginToken.findUnique({
+                  where: { token: loginToken },
+                  select: { userId: true },
+                })
+              : null;
+          if (!tokenRow?.userId) {
             throw new Error("Telegram prisijungimas nebegalioja");
           }
 
@@ -71,12 +82,6 @@ export const authOptions: NextAuthOptions = {
           if (!user || user.blocked) {
             throw new Error("Paskyra nerasta arba užblokuota");
           }
-
-          await prisma.telegramLoginToken.update({
-            where: { token: tokenRow.token },
-            data: { consumedAt: new Date() },
-            select: { id: true },
-          });
 
           return {
             id: user.id,
@@ -125,11 +130,15 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Paskyra užblokuota");
           }
 
-          // Burn the token so it can't be replayed.
-          await prisma.pendingSignInToken.update({
-            where: { id: tokenRow.id },
+          // Burn the token so it can't be replayed; conditional so a
+          // concurrent second use loses.
+          const burned = await prisma.pendingSignInToken.updateMany({
+            where: { id: tokenRow.id, usedAt: null },
             data: { usedAt: new Date() },
           });
+          if (burned.count !== 1) {
+            throw new Error("Patvirtinimo nuoroda nebegalioja");
+          }
 
           return {
             id: tokenRow.user.id,
@@ -144,6 +153,13 @@ export const authOptions: NextAuthOptions = {
         // Branch B: classic email + password.
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Įveskite el. paštą ir slaptažodį");
+        }
+
+        const forwardedFor = req?.headers?.["x-forwarded-for"];
+        const ip =
+          (typeof forwardedFor === "string" ? forwardedFor.split(",")[0]?.trim() : "") || "unknown";
+        if (!(await loginAllowed(credentials.email, ip))) {
+          throw new Error("Per daug bandymų. Pabandykite po 15 minučių.");
         }
 
         const user = await prisma.user.findUnique({
@@ -240,16 +256,27 @@ export const authOptions: NextAuthOptions = {
         !!token.id &&
         (trigger === "update" || lastRoleSync === 0 || Date.now() - lastRoleSync > 60_000);
 
-      // Keep authorization decisions aligned with the current database role.
+      // Keep authorization decisions aligned with the current database row.
+      // Throwing here makes next-auth drop the session (and clear the cookie
+      // where it can), so a block, a deleted account or a password reset ends
+      // every existing session within a minute.
       if (shouldSyncRole) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, brandColor: true },
+          select: { role: true, brandColor: true, blocked: true, password: true },
         });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.brandColor = normalizeBrandColor(dbUser.brandColor);
+        if (!dbUser || dbUser.blocked) {
+          throw new Error("SESSION_REVOKED");
         }
+        const fingerprint = passwordFingerprint(dbUser.password);
+        // Tokens issued before this check existed adopt the current stamp.
+        if (typeof token.pwf !== "string") {
+          token.pwf = fingerprint;
+        } else if (token.pwf !== fingerprint) {
+          throw new Error("SESSION_REVOKED");
+        }
+        token.role = dbUser.role;
+        token.brandColor = normalizeBrandColor(dbUser.brandColor);
         token.roleSyncedAt = Date.now();
       }
 
