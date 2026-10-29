@@ -26,7 +26,7 @@ import {
 export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description:
-    "Paslaugų rinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
+    "Paslaugų rinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų.",
   alternates: {
     canonical: process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt",
   },
@@ -77,7 +77,7 @@ const FAQ_ITEMS = [
     value: "speed",
     question: "Per kiek laiko gausiu pasiūlymų?",
     answer:
-      "Dažniausiai pirmų atsakymų sulaukiama tą pačią dieną, o skubesnėse kategorijose ir greičiau. Tikslus greitis priklauso nuo miesto, kategorijos ir užklausos aiškumo.",
+      "Specialistai atsako, kai pamato jūsų užklausą. Greitis priklauso nuo miesto, kategorijos ir užklausos aiškumo — kuo tiksliau aprašysite darbą, tuo lengviau atsakyti.",
   },
   {
     value: "registration",
@@ -134,7 +134,7 @@ async function getHomePageData() {
           providerProfile: { isActive: true, moderationStatus: "APPROVED" },
         },
       }),
-      prisma.serviceRequest.count(),
+      prisma.serviceRequest.count({ where: { moderationStatus: "APPROVED" } }),
       prisma.response.count(),
     ]);
 
@@ -184,11 +184,11 @@ async function HomePageContent() {
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
   const stats = [
-    { value: providerCount || 1, label: "Specialistų" },
-    { value: requestCount || 1, label: "Pateiktų užklausų" },
-    { value: responseCount || 1, label: "Pateiktų pasiūlymų" },
-    { value: categoryCount || 1, label: "Kategorijų" },
-  ];
+    { value: providerCount, label: "Specialistų" },
+    { value: requestCount, label: "Pateiktų užklausų" },
+    { value: responseCount, label: "Pateiktų pasiūlymų" },
+    { value: categoryCount, label: "Kategorijų" },
+  ].filter((stat) => stat.value > 0);
 
   return (
     <div>
@@ -460,6 +460,7 @@ async function HomePageContent() {
       </section>
 
       {/* ──────────────────────── Stats ───────────────────────── */}
+      {stats.length > 0 && (
       <section className="py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="rounded-3xl border border-[#E2DDD2] bg-[#FBFAF6] p-10 dark:border-surface-800 dark:bg-surface-900">
@@ -478,6 +479,7 @@ async function HomePageContent() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ─────────────────────────  FAQ  ──────────────────────── */}
       <section className="py-20">
@@ -525,7 +527,7 @@ async function HomePageContent() {
             Esi paslaugų tiekėjas?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[#B3AEA3]">
-            Prisijunk prie platformos ir gauk naujų klientų kiekvieną dieną.
+            Prisijunk prie platformos ir gauk užklausų iš klientų savo srityje.
             Pradėti nieko nekainuoja.
           </p>
           <ProviderCtaLink

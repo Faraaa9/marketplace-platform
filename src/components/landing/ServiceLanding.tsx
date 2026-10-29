@@ -109,7 +109,7 @@ export async function ServiceLanding({ config }: { config: ServiceLandingConfig 
 
   const steps: { icon: LucideIcon; title: string; text: string }[] = [
     { icon: PencilLine, title: "Aprašykite darbą", text: `Per 2 minutes nurodykite, ko reikia, ir savo rajoną ${cityLocative}. Nemokamai.` },
-    { icon: Users, title: "Gaukite pasiūlymus", text: "Patikrinti specialistai patys pateikia kainas ir terminus." },
+    { icon: Users, title: "Gaukite pasiūlymus", text: "Specialistai patys pateikia kainas ir terminus." },
     { icon: ThumbsUp, title: "Pasirinkite geriausią", text: "Palyginkite atsiliepimus bei kainas ir susisiekite tiesiogiai." },
   ];
 

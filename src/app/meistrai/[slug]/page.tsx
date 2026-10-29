@@ -165,8 +165,10 @@ export async function generateMetadata({
   // here), so an unknown slug can't get a real 404 short of a DB check in
   // proxy. Say noindex here so it doesn't contradict the injected noindex.
   if (!row) return NOT_FOUND_METADATA;
+  // Hidden/unapproved profiles 404 for visitors (only the owner sees them),
+  // so keep the neutral title but match the injected noindex.
   if (!row.isActive || row.moderationStatus !== "APPROVED") {
-    return DEFAULT_METADATA;
+    return { ...DEFAULT_METADATA, robots: { index: false, follow: true } };
   }
 
   const name = row.displayName || row.user?.name || "Paslaugų tiekėjas";

@@ -68,12 +68,12 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Teisėtas interesas</strong> – platformos saugumas, sukčiavimo
-            prevencija, turinio moderavimas, paslaugos tobulinimas pagal apibendrintą
-            statistiką.
+            prevencija, turinio moderavimas, paslaugos tobulinimas pagal lankomumo
+            statistiką (Google Analytics).
           </li>
           <li>
-            <strong>Sutikimas</strong> – analitikos slapukai ir rinkodaros pranešimai
-            (sutikimą galite bet kada atšaukti).
+            <strong>Sutikimas</strong> – rinkodaros pranešimai (sutikimą galite bet
+            kada atšaukti).
           </li>
           <li>
             <strong>Teisinė pareiga</strong> – buhalterinės apskaitos ir kiti teisės
@@ -83,23 +83,29 @@ export default function PrivacyPage() {
 
         <SectionHeading>Kam perduodame duomenis?</SectionHeading>
         <p>
-          Duomenų neparduodame. Juos perduodame tik paslaugų teikėjams (duomenų
-          tvarkytojams), be kurių platforma negalėtų veikti. Kiekvienas gauna tik
-          tai, ko reikia jo darbui:
+          Duomenų neparduodame. Juos perduodame tik IT paslaugų įmonėms (duomenų
+          tvarkytojams), be kurių platforma negalėtų veikti. Kiekviena gauna tik
+          tai, ko reikia jos darbui:
         </p>
         <ul className="list-disc pl-6 space-y-1">
           <li><strong>Vercel</strong> – svetainės talpinimas (ES, Frankfurtas). Gauna visas svetainės užklausas, IP adresą ir naršyklės duomenis, apibendrintus puslapių greičio rodiklius.</li>
           <li><strong>Supabase</strong> – duomenų bazė (ES, Paryžius). Saugo visus platformos duomenis.</li>
           <li><strong>Upstash</strong> – piktnaudžiavimo ribojimas. Gauna IP adresą ar paskyros identifikatorių ir užklausų skaičių.</li>
-          <li><strong>OpenRouter</strong> ir per jį pasiekiami dirbtinio intelekto modelių teikėjai – užklausų tekstas, balso įrašai ir nuotraukos, kai juos pateikiate; tiekėjo profilio tekstas ir nuoroda, iš kurios kuriamas profilis. Naudojama tekstui sutvarkyti, kategorijai parinkti, balsui paversti tekstu ir turiniui moderuoti.</li>
-          <li><strong>TypeSafe</strong> – dirbtinio intelekto užklausų analizė. Gauna užklausos tekstą ir miestą, kad būtų parinkta tinkama kategorija.</li>
+          <li><strong>OpenRouter</strong> ir per jį pasiekiami dirbtinio intelekto modelių teikėjai. Gauna užklausų tekstą, biudžetą, balso įrašus ir nuotraukas; žinutes, atsiliepimus, istorijų tekstą ir darbų nuotraukas; tiekėjo profilio tekstą ir nuorodą, iš kurios kuriamas profilis; užklausos ir profilio duomenis, kai tiekėjui ruošiamas pasiūlymo juodraštis. Naudojama tekstui sutvarkyti, kategorijai parinkti, balsui paversti tekstu, juodraščiams ruošti ir turiniui moderuoti.</li>
+          <li><strong>TypeSafe</strong> – dirbtinio intelekto užklausų analizė. Gauna užklausos tekstą ir miestą bei tinkamų tiekėjų viešo profilio duomenis (vardą ar pavadinimą, aprašymą, paslaugas, miestą), kad būtų parinkta kategorija ir tiekėjai.</li>
           <li><strong>Cloudinary</strong> – nuotraukų talpinimas. Gauna jūsų įkeltas nuotraukas.</li>
           <li><strong>Resend</strong> – el. laiškai. Gauna jūsų el. pašto adresą, laiškų turinį ir atsakymus į juos.</li>
+          <li><strong>Google (Gmail)</strong> – mūsų pašto dėžutė. Gauna kontaktų formos žinutes ir mums atsiųstus laiškus.</li>
           <li><strong>Telnyx</strong> – SMS žinutės. Gauna telefono numerį ir patvirtinimo kodą.</li>
-          <li><strong>Telegram</strong> – jei jungiatės ar kuriate užklausą per Telegram: Telegram paskyros identifikatorius, vardas ir jūsų žinutės botui.</li>
-          <li><strong>Google</strong> – prisijungimas su Google (paskyros identifikatorius, vardas, el. paštas) ir, tik su jūsų sutikimu, Google Analytics lankomumo statistika.</li>
+          <li><strong>Google Analytics</strong> – lankomumo statistika. Gauna IP adresą, naršyklės duomenis ir aplankytus puslapius.</li>
           <li><strong>Stripe</strong> – mokėjimai (PCI DSS). Gauna mokėjimo duomenis ir el. pašto adresą.</li>
         </ul>
+        <p>
+          Jei jungiatės per Google ar Telegram arba kuriate užklausą per Telegram
+          botą, šios bendrovės jūsų duomenis (paskyros identifikatorių, vardą,
+          el. paštą, žinutes botui) tvarko kaip savarankiški duomenų valdytojai
+          pagal savo privatumo politikas.
+        </p>
         <p>
           Dirbtinis intelektas tik padeda sutvarkyti ir priskirti užklausas – jis
           nepriima sprendimų, turinčių jums teisinių pasekmių.
@@ -109,12 +115,12 @@ export default function PrivacyPage() {
         <p>
           Dalis aukščiau išvardytų tvarkytojų (pvz., OpenRouter ir dirbtinio
           intelekto modelių teikėjai, TypeSafe, Google, Stripe, Cloudinary, Resend,
-          Telnyx, Telegram, Upstash) gali tvarkyti duomenis už Europos ekonominės
-          erdvės ribų, dažniausiai JAV. Tokiu atveju duomenys perduodami remiantis
-          BDAR numatytomis apsaugos priemonėmis – ES ir JAV duomenų apsaugos sistema
+          Telnyx, Upstash) gali tvarkyti duomenis už Europos ekonominės erdvės
+          ribų, dažniausiai JAV. Tokiu atveju duomenys perduodami remiantis BDAR
+          numatytomis apsaugos priemonėmis – ES ir JAV duomenų privatumo sistema
           arba Europos Komisijos patvirtintomis standartinėmis sutarčių sąlygomis,
-          numatytomis tų paslaugų teikėjų duomenų tvarkymo sutartyse. Daugiau apie
-          tai galite paklausti el. paštu {CONTACT_EMAIL}.
+          numatytomis tų bendrovių duomenų tvarkymo sutartyse. Daugiau apie tai
+          galite paklausti el. paštu {CONTACT_EMAIL}.
         </p>
         <p>
           Kliento kontaktai (telefonas, el. paštas) atskleidžiami paslaugų teikėjui tik
@@ -131,9 +137,10 @@ export default function PrivacyPage() {
 
         <SectionHeading>Slapukai</SectionHeading>
         <p>
-          Naudojame būtinuosius slapukus (prisijungimo sesija, pasirinkta tema) ir –
-          tik su jūsų sutikimu – Google Analytics statistikos slapukus. Būtinieji
-          slapukai reikalingi svetainei veikti ir jų išjungti negalima.
+          Naudojame būtinuosius slapukus (prisijungimo sesija, pasirinkta tema) ir
+          Google Analytics statistikos slapukus. Būtinieji slapukai reikalingi
+          svetainei veikti. Statistikos slapukus galite išjungti naršyklės
+          nustatymuose arba Google Analytics išjungimo priedu.
         </p>
 
         <SectionHeading>Jūsų teisės</SectionHeading>

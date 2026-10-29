@@ -269,7 +269,7 @@ export default function ProviderFilterBar({
             Skubūs
           </FilterToggle>
           <FilterToggle active={top} onClick={() => onChange({ top: !top })} icon={<Star className="h-3.5 w-3.5" />}>
-            Įvertinimas 4.5+
+            Įvertinimas 4,5+
           </FilterToggle>
 
           {/* Spacer + count + view toggle */}
@@ -506,7 +506,7 @@ export default function ProviderFilterBar({
                 </label>
                 <div className="space-y-2">
                   <MobileToggle active={mobileUrgent} onClick={() => setMobileUrgent(!mobileUrgent)} icon={<Zap className="h-4 w-4" />} label="Skubūs darbai" sublabel="Priima skubius užsakymus" />
-                  <MobileToggle active={mobileTop} onClick={() => setMobileTop(!mobileTop)} icon={<Star className="h-4 w-4" />} label="Aukštas įvertinimas" sublabel="4.5+ žvaigždučių vertinimas" />
+                  <MobileToggle active={mobileTop} onClick={() => setMobileTop(!mobileTop)} icon={<Star className="h-4 w-4" />} label="Aukštas įvertinimas" sublabel="4,5+ žvaigždučių vertinimas" />
                 </div>
               </div>
             </div>

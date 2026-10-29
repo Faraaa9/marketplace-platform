@@ -24,7 +24,7 @@ import { creditsLabel } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",
   description:
-    "AI sukuria meistro profilį per 20 sekundžių. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
+    "AI sukuria meistro profilį per kelias minutes. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
 };
 
 // Marketing page — credit packs change rarely.
@@ -54,7 +54,7 @@ export default async function ForProvidersPage() {
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
               <Sparkles className="h-2.5 w-2.5" /> Naujas
             </span>
-            AI sukuria profilį per 20 sekundžių
+            AI sukuria profilį per kelias minutes
           </div>
 
           <h1 className="text-[2.5rem] sm:text-[3.75rem] font-bold tracking-tight leading-[1.05] text-surface-900 dark:text-white">
@@ -100,7 +100,7 @@ export default async function ForProvidersPage() {
             {[
               { value: "0 €", label: "Registracija" },
               { value: "0 €", label: "Mėnesinis mokestis" },
-              { value: "20 s", label: "Profilis paruoštas" },
+              { value: "1", label: "Kreditas už užklausą" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-heading-2 font-bold text-surface-900 dark:text-white">
@@ -193,7 +193,7 @@ export default async function ForProvidersPage() {
                 <p className="mt-3 text-body text-surface-600 dark:text-surface-400 leading-relaxed">
                   Užuot rašęs aprašymus, ieškojęs nuotraukų ir derinęs
                   kategorijas — paspausk vieną mygtuką. AI atlieka tai per
-                  kelias sekundes, ne valandas.
+                  kelias minutes, ne valandas.
                 </p>
 
                 <ul className="mt-6 space-y-3">
@@ -321,7 +321,7 @@ export default async function ForProvidersPage() {
               {
                 icon: <Clock className="h-6 w-6" />,
                 title: "Greitas startas",
-                desc: "Per 20 sekundžių paruoštas profilis vietoj valandų rankinio darbo.",
+                desc: "Profilis paruoštas per kelias minutes, ne per valandas rankinio darbo.",
                 color: "from-amber-500 to-brand-500",
               },
               {
@@ -339,7 +339,7 @@ export default async function ForProvidersPage() {
               {
                 icon: <Shield className="h-6 w-6" />,
                 title: "Saugumas",
-                desc: "Tu pilnai valdai savo profilį — gali paslėpti, redaguoti ar ištrinti bet kada.",
+                desc: "Tu visiškai valdai savo profilį — gali paslėpti, redaguoti ar ištrinti bet kada.",
                 color: "from-brand-600 to-emerald-500",
               },
               {
@@ -445,7 +445,7 @@ export default async function ForProvidersPage() {
                 Pradėk gauti klientus šiandien
               </h2>
               <p className="mt-3 text-body text-white/90 max-w-xl mx-auto">
-                AI sukurs tavo profilį per 20 sekundžių. Registracija nemokama —
+                AI sukurs tavo profilį per kelias minutes. Registracija nemokama —
                 pradėk gauti tiesiogines užklausas iš klientų visoje Lietuvoje.
               </p>
               <ProviderCtaLink
