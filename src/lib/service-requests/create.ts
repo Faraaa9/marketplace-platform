@@ -293,6 +293,7 @@ export async function createServiceRequest(
         description: data.description,
         city: locationValue,
         status: "OPEN",
+        moderationStatus,
       }).catch((error) => console.error("TypeSafe shadow dispatch error:", error)),
     );
 

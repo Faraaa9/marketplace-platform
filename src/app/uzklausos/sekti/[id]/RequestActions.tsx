@@ -33,12 +33,13 @@ interface RequestActionsProps {
 export default function RequestActions({ trackingToken, status, publicHref }: RequestActionsProps) {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
-  const [busy, setBusy] = useState<"" | "close" | "delete">("");
+  const [busy, setBusy] = useState<"" | "close" | "delete" | "reopen">("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
   const isOpen = status === "OPEN";
-  const isClosed = status === "CLOSED";
+  const isExpired = status === "EXPIRED";
+  const isClosed = status === "CLOSED" || isExpired;
 
   async function share() {
     if (!publicHref) return;
@@ -58,24 +59,28 @@ export default function RequestActions({ trackingToken, status, publicHref }: Re
     }
   }
 
-  async function closeRequest() {
-    if (!confirm("Ar tikrai norite uždaryti šią užklausą? Nauji pasiūlymai nebebus priimami.")) return;
-    setBusy("close");
+  async function changeStatus(action: "close" | "reopen", failMessage: string) {
+    setBusy(action);
     setError("");
     try {
       const res = await fetch(`/api/tracking/${trackingToken}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "close" }),
+        body: JSON.stringify({ action }),
       });
       const data = await res.json().catch(() => null);
       if (data?.success) router.refresh();
-      else setError(data?.error || "Nepavyko uždaryti užklausos");
+      else setError(data?.error || failMessage);
     } catch {
-      setError("Nepavyko uždaryti užklausos");
+      setError(failMessage);
     } finally {
       setBusy("");
     }
+  }
+
+  async function closeRequest() {
+    if (!confirm("Ar tikrai norite uždaryti šią užklausą? Nauji pasiūlymai nebebus priimami.")) return;
+    await changeStatus("close", "Nepavyko uždaryti užklausos");
   }
 
   async function deleteRequest() {
@@ -97,7 +102,7 @@ export default function RequestActions({ trackingToken, status, publicHref }: Re
     setBusy("");
   }
 
-  if (isClosed && !publicHref) return null;
+  if (isClosed && !isExpired && !publicHref) return null;
 
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -114,6 +119,16 @@ export default function RequestActions({ trackingToken, status, publicHref }: Re
         {publicHref && (
           <button type="button" onClick={share} className={BUTTON_GHOST}>
             {copied ? "Nuoroda nukopijuota" : "Dalintis nuoroda"}
+          </button>
+        )}
+        {isExpired && (
+          <button
+            type="button"
+            onClick={() => changeStatus("reopen", "Nepavyko atnaujinti užklausos")}
+            disabled={busy !== ""}
+            className={BUTTON_GHOST}
+          >
+            {busy === "reopen" ? "Atnaujinama…" : "Atnaujinti užklausą"}
           </button>
         )}
         {!isClosed && (

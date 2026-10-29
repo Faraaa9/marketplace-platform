@@ -25,13 +25,44 @@ export function activeCategoryFilter(): Prisma.ProviderProfileCategoryWhereInput
  * categories they can serve) or a request's category (-> the provider
  * categories that serve it).
  */
-export async function expandToMatchSet(ids: string[]): Promise<string[]> {
-  if (ids.length === 0) return [];
+// ~2k rows that change only on a taxonomy import; reloading them on every
+// lead-feed render and notification was the hottest category query. Same
+// 5-minute TTL as the service-categories cache.
+const TAXONOMY_TTL_MS = 5 * 60_000;
+let cachedTaxonomy: { rows: { id: string; parentId: string | null }[]; expiresAt: number } | null = null;
 
+async function loadTaxonomy() {
+  if (cachedTaxonomy && cachedTaxonomy.expiresAt > Date.now()) return cachedTaxonomy.rows;
   const rows = await prisma.category.findMany({
     where: SERVICE_CATEGORY_WHERE,
     select: { id: true, parentId: true },
   });
+  cachedTaxonomy = { rows, expiresAt: Date.now() + TAXONOMY_TTL_MS };
+  return rows;
+}
+
+/**
+ * A request matches when ANY of its categories (primary or the up-to-2 extras)
+ * is in the match set — the same rule the new-request notifier uses.
+ */
+export function requestCategoryWhere(matchSet: string[]): Prisma.ServiceRequestWhereInput {
+  return {
+    OR: [{ categoryId: { in: matchSet } }, { categories: { some: { categoryId: { in: matchSet } } } }],
+  };
+}
+
+export function requestInMatchSet(
+  request: { categoryId: string | null; categories: { categoryId: string }[] },
+  matchSet: Set<string>,
+): boolean {
+  if (request.categoryId && matchSet.has(request.categoryId)) return true;
+  return request.categories.some((c) => matchSet.has(c.categoryId));
+}
+
+export async function expandToMatchSet(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+
+  const rows = await loadTaxonomy();
 
   const byId = new Map(rows.map((row) => [row.id, row]));
   const childrenByParent = new Map<string, string[]>();

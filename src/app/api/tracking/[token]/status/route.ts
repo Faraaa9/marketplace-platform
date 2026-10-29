@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { EXPIRED_STATUS } from "@/lib/request-expiry";
 
 /**
  * Client lifecycle actions on a request, authenticated by tracking token.
@@ -10,6 +11,7 @@ import { prisma } from "@/lib/prisma";
  * Supported actions:
  *   { action: "accept", responseId: "..." }  — Accept a provider's response → IN_PROGRESS
  *   { action: "close" }                      — Close the request → CLOSED
+ *   { action: "reopen" }                     — Put an EXPIRED request back on the board → OPEN
  *
  * Auth: tracking token proves ownership. For logged-in clients, session.user.id
  * must match request.clientId if one exists.
@@ -21,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
     const body = await req.json();
     const { action, responseId } = body;
 
-    if (!action || !["accept", "close"].includes(action)) {
+    if (!action || !["accept", "close", "reopen"].includes(action)) {
       return NextResponse.json({ success: false, error: "Netinkamas veiksmas" }, { status: 400 });
     }
 
@@ -98,6 +100,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
 
       revalidateTag("requests", { expire: 0 });
 
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "reopen") {
+      // Only expiry is undoable; a customer's own close stays closed. The status
+      // write bumps updatedAt, which restarts the expiry clock.
+      const { count } = await prisma.serviceRequest.updateMany({
+        where: { id: request.id, status: EXPIRED_STATUS },
+        data: { status: "OPEN" },
+      });
+      if (count !== 1) {
+        return NextResponse.json({ success: false, error: "Šios užklausos atnaujinti negalima" }, { status: 400 });
+      }
+      revalidateTag("requests", { expire: 0 });
       return NextResponse.json({ success: true });
     }
 

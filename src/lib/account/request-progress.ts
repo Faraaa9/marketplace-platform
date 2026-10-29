@@ -36,6 +36,7 @@ export function requestStatusChip(r: RequestProgressInput): { label: string; ton
     return { label: "Meistras pasirinktas", tone: "progress" };
   }
   if (r.status === "CLOSED") return { label: "Uždaryta", tone: "closed" };
+  if (r.status === "EXPIRED") return { label: "Nebegalioja", tone: "closed" };
   return r.responseCount > 0
     ? { label: "Gauta pasiūlymų", tone: "open" }
     : { label: "Laukiama pasiūlymų", tone: "wait" };

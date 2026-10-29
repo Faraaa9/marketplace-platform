@@ -183,6 +183,7 @@ export default function AdminRequestsPage() {
                         <option value="OPEN">Atidaryta</option>
                         <option value="IN_PROGRESS">Vykdoma</option>
                         <option value="CLOSED">Uždaryta</option>
+                        <option value="EXPIRED">Nebegalioja</option>
                       </select>
                     </td>
                     <td className="py-3 px-4 text-surface-500">{req._count.responses}</td>
