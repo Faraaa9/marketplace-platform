@@ -19,7 +19,7 @@ Konvencija:
       tekstą (palikti tik „min. 15 simbolių"). Apatinė eilutė po brūkšniu — ne
       „✦ Atpažins miestą/biudžetą/terminą", o kaip buvo anksčiau: pliusiukai
       („+ miestas", „+ biudžetas", „+ terminas"). PATVIRTINTA pagal
-      `mockups/nauja-uzklausa-su-nuoroda.html` + PALIKTI record (mikrofonо)
+      `docs/mockups/nauja-uzklausa-su-nuoroda.html` + PALIKTI record (mikrofonо)
       mygtuką prie lauko.
 - [x] ~~Užklausos kūrimo žingsnių juosta — spalvos.~~ ATŠAUKTA — spalvos
       paliekamos kaip yra („ai poxui, geros tos spalvos").
@@ -61,7 +61,7 @@ Konvencija:
       naujausią aktyvumą; (3) užklausos puslapyje pasiūlymai — neskaityti
       pirmi; (4) unread skaičiai sumuojasi aukštyn (pokalbis → užklausa →
       dashboard). Globalaus žinučių inbox'o nedaryti.
-      PATVIRTINTA + vizualas: `mockups/uzklausu-hierarchija.html` (labai patiko,
+      PATVIRTINTA + vizualas: `docs/mockups/uzklausu-hierarchija.html` (labai patiko,
       „būtinai!"). VIETOS PLANAS (patikslinta):
       - 3 lygis (užklausos puslapis): `/uzklausos/sekti/[id]` — yra, tvarkyti pagal #5.
       - 2 lygis (sąrašas): `/paskyra/uzklausos` — jau egzistuoja (USER ir PROVIDER),
@@ -81,7 +81,7 @@ Konvencija:
       užklausos (- laukia tavęs)" + suminis naujų badge'as + „Mano užklausos →"
       (į /paskyra/uzklausos), nepriklausomai nuo skaičiaus (su viena — „1 aktyvi
       užklausa"). Be naujų — be badge'o, rami juostelė.
-      Vizualas: `mockups/nauja-uzklausa-su-nuoroda.html` (ten pat parodyta
+      Vizualas: `docs/mockups/nauja-uzklausa-su-nuoroda.html` (ten pat parodyta
       #1 supaprastinta kortelė ir #2 neutralus stepper'is kartu).
 - [x] **Tiekėjo „Reikia dėmesio" — užklausos sulietos su žinutėmis** (56b5053).
       Pateiktos užklausos rodomos tame pačiame sąraše su tagu „Užklausa",
@@ -286,7 +286,11 @@ Likę darbai prieš/po launch:
   (`providers`/`reviews`/`stories`), nes jie yra ant VISŲ reliuojančių cache'ų;
   specifiniai `:user:` tik kur turim userId.
 
-- [ ] **Vercel install grąžintas į npm.** `vercel.json` po
+- [x] **2026-10-29 — Vercel vėl diegia per pnpm su lockfile'u.** `.npmrc`
+  `node-linker=hoisted` duoda plokščią `node_modules` (be symlink'ų), todėl
+  chromium `outputFileTracingIncludes` keliai veikia kaip su npm.
+  `vercel.json` → `pnpm install --frozen-lockfile`. Istorija žemiau.
+- [x] ~~**Vercel install grąžintas į npm.**~~ `vercel.json` po
   `d5ba0a7` naudoja `npm install`, ne `pnpm install --frozen-lockfile`.
   Priežastis: pnpm switch'as sukėlė deploy'ų "Deploying outputs..."
   klaidą — įtarimas, kad chromium tracing per

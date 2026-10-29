@@ -84,3 +84,6 @@ data/routing/eval/label-audit.md
 
 # Ad-hoc screenshots dropped in the repo root
 /*.png
+
+# Local SQLite leftovers
+prisma/*.db

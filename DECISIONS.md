@@ -40,3 +40,21 @@
 - API routes validate with Zod schemas
 - Admin routes verify ADMIN role server-side
 - Provider routes verify PROVIDER role server-side
+
+## 2026-10-29
+
+### Infra: pinned installs, alerts, CI
+- **pnpm on Vercel with `node-linker=hoisted`** — production installs exactly
+  `pnpm-lock.yaml` (`--frozen-lockfile`). The hoisted layout keeps
+  `node_modules/@sparticuz/chromium` a real directory, which the May pnpm
+  attempt broke for `outputFileTracingIncludes`.
+- **Ship Next 16.4.3, pinned exactly** — the version production already ran
+  after the 16.4 sitemap fix; `eslint-config-next` matches it.
+- **Error alerts by email, no paid monitor** — `src/instrumentation.ts`
+  `onRequestError` and the cron catch blocks call `sendAlert` (`src/lib/alert.ts`),
+  which emails `ALERT_EMAIL` (fallback `INBOUND_FORWARD_TO`) through Resend,
+  max 1 per distinct error per 30 min and 20 per hour (Upstash). Sentry stays
+  optional for later.
+- **CI = production** — Node 24, plus `next build` against a throwaway empty
+  Postgres service (schema via `prisma db push`) so cacheComponents prerender works.
+- React 18 on Next 16 is deprecated (Next 17 drops it) — separate upgrade task.

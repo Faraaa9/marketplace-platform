@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendAlert } from "@/lib/alert";
 
 const PENDING_CLEANUP_DAYS = 7;
 
@@ -22,7 +23,13 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    // Vercel only sends the bearer when CRON_SECRET is set, so without it
+    // every scheduled run is rejected and the job silently never runs.
+    await sendAlert("cron:cleanup-pending:no-secret", "Cron cleanup-pending neveikia: nenustatytas CRON_SECRET", {});
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -47,6 +54,9 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("[cleanup-pending] Error:", error);
+    await sendAlert("cron:cleanup-pending", "Cron cleanup-pending nepavyko", {
+      Klaida: error instanceof Error ? error.stack ?? error.message : String(error),
+    });
     return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 });
   }
 }
