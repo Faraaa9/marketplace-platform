@@ -6,7 +6,7 @@ import {
   type Questions,
 } from "@typesafe-ai/sdk";
 
-export const TYPESAFE_PROMPT_VERSION = "marketplace-jev-v2";
+export const TYPESAFE_PROMPT_VERSION = "marketplace-jev-v3";
 // Pinned because the policy thresholds below were set against this version;
 // the jev-latest alias moves on release and would shift them silently.
 export const TYPESAFE_PINNED_MODEL = "jev-1.14.0";
@@ -181,9 +181,11 @@ function makeQuestions(input: MarketplaceIntelligenceInput): Questions {
       true: "The request states or clearly implies urgency",
       false: "No urgency is stated or implied",
     }),
-    missing_details: noul("Would a provider need to ask the customer for key details before quoting (scope, size, quantity, address area or photos)?", {
-      true: "A provider could not give a reasonable quote from this text alone",
-      false: "The text has enough detail for a provider to quote",
+    // The earlier "could a provider quote?" wording scored 85-97% on almost
+    // every real request (nearly all need a site visit), so it separated nothing.
+    missing_details: noul("Is the request so vague that a provider could not tell what work is needed or roughly how big the job is?", {
+      true: "The work itself or its rough size cannot be understood from the text",
+      false: "A provider can understand what work is needed and roughly its size, even if exact details still need a call or visit",
     }),
   };
 
