@@ -14,6 +14,16 @@ const SMALL_ELECTRICAL_WORK_SLUGS = [
   "elektros-darbai",
 ];
 
+// Existing "Buitinės paslaugos > Valymo paslaugos" leaves for business cleaning.
+// They already exist in the taxonomy; the gap is purely routing — "biuro valymas"
+// (sing.) never reaches "Biurų valymas" (plur., 4-char root "biur") and "valymas"
+// is a generic token, so the request used to fall back to an unrelated cleaning
+// leaf (roof cleaning). These map the common phrasings to the right category.
+const OFFICE_CLEANING_SLUG =
+  "pr-buitines-paslaugos--valymo-paslaugos--biuru-valymas";
+const COMMERCIAL_PREMISES_CLEANING_SLUG =
+  "pr-buitines-paslaugos--valymo-paslaugos--komerciniu-patalpu-valymas";
+
 const normalize = (value: string) =>
   value
     .toLowerCase()
@@ -65,6 +75,22 @@ export function pickCategoryOverrideSlug(
     /\blietaus nuved/,
   ]);
   if (outdoorWater) return null;
+
+  // Business-premises cleaning. Only fires on an explicit cleaning verb, so it
+  // never hijacks "biuro baldų gamyba" (no cleaning word) or "stogo valymas"
+  // (returned null above as outdoor). Commercial/administrative premises take
+  // precedence over the plain office leaf.
+  const isCleaning = hasAny(normalized, [/\bvalym/, /\btvarkym/]);
+  if (isCleaning) {
+    const commercialPremises = hasAny(normalized, [/\bkomercin/, /\badministracin/]);
+    if (commercialPremises && validSlugs.has(COMMERCIAL_PREMISES_CLEANING_SLUG)) {
+      return COMMERCIAL_PREMISES_CLEANING_SLUG;
+    }
+    const office = hasAny(normalized, [/\bbiur/, /\bofis/]);
+    if (office && validSlugs.has(OFFICE_CLEANING_SLUG)) {
+      return OFFICE_CLEANING_SLUG;
+    }
+  }
 
   const indoorFixture = hasAny(normalized, [
     /\bkriaukl/,
