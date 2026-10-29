@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import TelegramSourceBadge from "@/components/TelegramSourceBadge";
 import { BUTTON_GHOST, Chip, Notice, StepBar } from "@/components/account/ui";
-import { requestStatusChip, requestStep } from "@/lib/account/request-progress";
+import { requestOutcomeStamp, requestStatusChip, requestStep } from "@/lib/account/request-progress";
+import OutcomeStamp from "@/components/requests/OutcomeStamp";
 import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
 import RequestActions, { BackToRequests, ResendConfirmation } from "../RequestActions";
 import { getTrackedRequestSummary } from "../data";
@@ -27,6 +28,7 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
     reviewed: request.acceptedReviewed,
   };
   const chip = requestStatusChip(progress);
+  const stamp = requestOutcomeStamp(request);
   const categoryLabel = (request.categoryNames.length > 0 ? request.categoryNames : [request.category])
     .filter(Boolean)
     .join(" · ");
@@ -45,6 +47,7 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
           <div className="flex flex-wrap items-center gap-2">
             <Chip tone={chip.tone}>{chip.label}</Chip>
             {request.source === "telegram" && <TelegramSourceBadge />}
+            {stamp && <OutcomeStamp stamp={stamp} inline />}
           </div>
           <h1 className="mt-2.5 font-serif text-[26px] font-semibold leading-tight text-surface-900 dark:text-white sm:text-[28px]">
             {decodeHtmlEntities(request.title)}

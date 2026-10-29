@@ -4,6 +4,7 @@ import { shouldExpire, REQUEST_EXPIRY_DAYS } from "../request-expiry";
 import { escapeEmailHtml, newRequestAlertEmail, claimRejectedEmail, requestExpiredEmail } from "../email";
 import { rateLimitAsync } from "../rate-limit";
 import { checkEligibility } from "../provider-eligibility";
+import { requestOutcomeStamp } from "../account/request-progress";
 import {
   MULTILABEL_RATE_LIMIT,
   MULTILABEL_LOG_RATE_LIMIT,
@@ -78,6 +79,20 @@ const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(shouldExpire({ ...open, status }, now), false, status);
       }
       assert.equal(shouldExpire({ ...open, moderationStatus: "PENDING" }, now), false);
+    },
+  ],
+
+  // ── board stamps ──
+  [
+    "closed requests get the right stamp; open ones none",
+    () => {
+      assert.equal(requestOutcomeStamp({ status: "OPEN", acceptedResponseId: null }), null);
+      assert.equal(requestOutcomeStamp({ status: "IN_PROGRESS", acceptedResponseId: "r1" })?.main, "Rastas");
+      assert.equal(requestOutcomeStamp({ status: "IN_PROGRESS", acceptedResponseId: null })?.main, "Rastas");
+      assert.equal(requestOutcomeStamp({ status: "CLOSED", acceptedResponseId: "r1" })?.main, "Rastas");
+      const expired = requestOutcomeStamp({ status: "EXPIRED", acceptedResponseId: null });
+      assert.equal(`${expired?.lead} ${expired?.main} ${expired?.note}`, "Tiekėjas Nerastas per 30 dienų");
+      assert.equal(requestOutcomeStamp({ status: "CLOSED", acceptedResponseId: null })?.tone, "closed");
     },
   ],
 

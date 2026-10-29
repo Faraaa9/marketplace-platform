@@ -3,11 +3,12 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, requestExpiredEmail } from "@/lib/email";
 import { isPlaceholderTelegramEmail } from "@/lib/service-requests/link-user";
+import { REQUEST_EXPIRY_DAYS } from "@/lib/account/request-progress";
 
 /** An OPEN request with no activity (edit, reopen, offer, chat message or a
- *  provider's paid unlock) for this long
- *  is hidden from the board and lead feed, and the customer is told once. */
-export const REQUEST_EXPIRY_DAYS = 30;
+ *  provider's paid unlock) for REQUEST_EXPIRY_DAYS leaves the lead feed, gets a
+ *  "Tiekėjas nerastas" stamp on the board, and the customer is told once. */
+export { REQUEST_EXPIRY_DAYS };
 export const EXPIRED_STATUS = "EXPIRED";
 // Bounds one cron run's email burst; the backlog drains over a few days.
 const MAX_PER_RUN = 50;

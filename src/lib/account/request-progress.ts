@@ -1,5 +1,32 @@
 import type { ChipTone } from "@/components/account/ui";
 
+/** Days an OPEN request may sit idle before the expiry cron closes it. Lives
+ *  here (not in request-expiry) so client-side stamp text can use it too. */
+export const REQUEST_EXPIRY_DAYS = 30;
+
+export interface RequestOutcomeStamp {
+  tone: "found" | "not-found" | "closed";
+  lead: string;
+  main: string;
+  note?: string;
+}
+
+/**
+ * The rubber stamp for a request that no longer takes offers; null while it is
+ * still OPEN (or not yet confirmed). A customer who closes without choosing a
+ * provider gets a neutral stamp: "not found in 30 days" would be untrue there.
+ */
+export function requestOutcomeStamp(r: { status: string; acceptedResponseId: string | null }): RequestOutcomeStamp | null {
+  if (r.status === "OPEN" || r.status === "PENDING_CONFIRMATION") return null;
+  // IN_PROGRESS without an accepted offer exists too (admin-set status).
+  if (r.acceptedResponseId || r.status === "IN_PROGRESS") return { tone: "found", lead: "Tiekėjas", main: "Rastas" };
+  if (r.status === "EXPIRED") {
+    return { tone: "not-found", lead: "Tiekėjas", main: "Nerastas", note: `per ${REQUEST_EXPIRY_DAYS} dienų` };
+  }
+  if (r.status === "CLOSED") return { tone: "closed", lead: "Užklausa", main: "Uždaryta" };
+  return null;
+}
+
 /** The minimum a request needs to place it on the 5-step customer timeline
  *  (Pateikta → Pasiūlymai → Meistras pasirinktas → Atlikta → Įvertinta). */
 export interface RequestProgressInput {
