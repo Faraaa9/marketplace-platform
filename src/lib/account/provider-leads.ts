@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { activeCategoryFilter, expandToMatchSet } from "@/lib/category-matching";
 import { getUnlockedRequestIds } from "@/lib/credits";
 import { ltCount } from "@/lib/utils";
+import { recordAiRun } from "@/lib/ai/audit";
+import { calculateSemanticMatch, summarizeSemanticScores } from "@/lib/semantic-match";
 
 /**
  * Lead feed for the provider account: open, approved requests in the
@@ -18,7 +20,15 @@ async function providerMatchSet(userId: string) {
     select: {
       id: true,
       location: true,
-      categories: { where: activeCategoryFilter(), select: { categoryId: true } },
+      headline: true,
+      description: true,
+      services: true,
+      primaryService: true,
+      specializations: true,
+      categories: {
+        where: activeCategoryFilter(),
+        select: { categoryId: true, category: { select: { name: true } } },
+      },
     },
   });
   const categoryIds = profile?.categories.map((c) => c.categoryId) ?? [];
@@ -68,6 +78,7 @@ export async function getLeadFeed(userId: string, scope: LeadScope) {
   });
 
   const unlocked = profile ? await getUnlockedRequestIds(profile.id, rows.map((r) => r.id)) : new Set<string>();
+  if (profile) recordSemanticShadow(userId, profile, rows, scope);
   const match = new Set(matchSet);
 
   return {
@@ -92,4 +103,43 @@ export async function getLeadFeed(userId: string, scope: LeadScope) {
 
 export function competitionLabel(n: number) {
   return n === 0 ? "Pasiūlymų dar nėra" : `Jau ${ltCount(n, ["pasiūlymas", "pasiūlymai", "pasiūlymų"])}`;
+}
+
+type ShadowProfile = NonNullable<Awaited<ReturnType<typeof providerMatchSet>>["profile"]>;
+
+/** Keeps the admin "semantic_match_shadow" health signal alive (formerly
+ *  logged by the leads list API). Scores are recorded, never shown. */
+function recordSemanticShadow(
+  userId: string,
+  profile: ShadowProfile,
+  rows: { title: string; description: string; budget: string | null; deadline: string | null; categoryRef: { name: string } | null }[],
+  scope: LeadScope,
+) {
+  const started = Date.now();
+  const scores = rows.map(
+    (r) =>
+      calculateSemanticMatch(
+        {
+          headline: profile.headline,
+          description: profile.description,
+          services: profile.services,
+          primaryService: profile.primaryService,
+          specializations: profile.specializations,
+          categories: profile.categories.map((c) => c.category.name),
+        },
+        { title: r.title, description: r.description, budget: r.budget, deadline: r.deadline, categoryName: r.categoryRef?.name },
+      ).score,
+  );
+  void recordAiRun({
+    feature: "semantic_match_shadow",
+    status: "success",
+    provider: "deterministic",
+    model: "weighted-token-v1",
+    promptVersion: "semantic_shadow_v1",
+    latencyMs: Date.now() - started,
+    actorUserId: userId,
+    entityType: "ProviderProfile",
+    entityId: profile.id,
+    metadata: { candidateCount: rows.length, scope, ...summarizeSemanticScores(scores) },
+  });
 }

@@ -1,5 +1,7 @@
 # Marketplace-Platform — Routing Integration Audit (multi-routing v4)
 
+> **Update 2026-10-29:** the provider pull board and its `semantic_match_shadow` logging moved from `src/app/api/tiekejas/uzklausos/route.ts` (deleted) to `getLeadFeed` in `src/lib/account/provider-leads.ts`, rendered by `/tiekejas/uzklausos`. Line references below are to the old file.
+
 **Status:** audit + plan only — no code changed, no migrations run, no production behavior touched.
 **Date:** 2026-06-08
 **Audited app:** `~/Documents/Projects/marketplace-platform` (Next.js 16 App Router · Prisma + PostgreSQL · NextAuth v4 · pnpm · OpenRouter · Resend · Telnyx · Upstash · Telegram · Stripe)
