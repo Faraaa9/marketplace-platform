@@ -163,7 +163,7 @@ async function Lead({ userId, params }: { userId: string; params: Params }) {
           </Panel>
           <Panel>
             <PanelTitle>Klientas</PanelTitle>
-            {unlocked ? (
+            {unlocked && accountReady ? (
               <Details
                 rows={[
                   ["Vardas", request.clientName || "—"],

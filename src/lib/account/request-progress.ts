@@ -26,10 +26,6 @@ export function canRate(r: RequestProgressInput): boolean {
   return !!r.acceptedResponseId && !r.reviewed && (r.status === "IN_PROGRESS" || r.status === "CLOSED");
 }
 
-export function isActiveRequest(r: Pick<RequestProgressInput, "status">): boolean {
-  return r.status !== "CLOSED";
-}
-
 export function requestStatusChip(r: RequestProgressInput): { label: string; tone: ChipTone } {
   if (r.moderationStatus === "PENDING") return { label: "Peržiūrima", tone: "warn" };
   if (r.moderationStatus === "REJECTED") return { label: "Nepaskelbta", tone: "closed" };

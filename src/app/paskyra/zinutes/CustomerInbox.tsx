@@ -22,6 +22,7 @@ type Conversation = {
   lastMessageAt: string;
   unread: boolean;
   fromMe: boolean;
+  closed: boolean;
 };
 
 type ApiMessage = {
@@ -166,8 +167,40 @@ export default function CustomerInbox() {
         setConversations(items);
         const wanted = new URLSearchParams(window.location.search).get("thread");
         const match = wanted ? items.find((c) => c.threadId === wanted || c.id === wanted) : null;
-        if (match) void open(match);
-        else if (wanted) setThreadError("Pokalbis nerastas arba jau ištrintas.");
+        if (match) return open(match);
+        if (!wanted) return;
+        // Older direct threads fall outside the list window; the token alone
+        // authorizes the thread, so open it directly.
+        if (!wanted.startsWith("response-")) {
+          return fetch(`/api/zinutes/${encodeURIComponent(wanted)}`, { cache: "no-store" })
+            .then((r) => r.json())
+            .then((d) => {
+              if (cancelled) return;
+              if (!d.success) throw new Error();
+              return open({
+                kind: "direct",
+                threadId: wanted,
+                token: wanted,
+                id: d.data.id,
+                providerId: d.data.providerId,
+                providerName: d.data.providerName || "Meistras",
+                providerImage: d.data.providerImage ?? null,
+                about: "Tiesioginė žinutė",
+                preview: d.data.description,
+                lastMessageAt: d.data.createdAt,
+                unread: false,
+                fromMe: true,
+                closed: false,
+              });
+            })
+            .catch(() => {
+              if (cancelled) return;
+              setSelectedId(wanted);
+              setThreadError("Pokalbis nerastas arba jau ištrintas.");
+            });
+        }
+        setSelectedId(wanted);
+        setThreadError("Pokalbis nerastas arba jau ištrintas.");
       })
       .catch(() => {
         if (!cancelled) {
@@ -336,6 +369,7 @@ export default function CustomerInbox() {
                   hasMoreMessages={thread.hasMoreMessages}
                   loadOlderMessages={loadOlderMessages}
                   sendMessage={sendMessage}
+                  disabled={thread.conversation.closed}
                   fillHeight
                   showTopBorder={false}
                   placeholder="Rašykite žinutę…"

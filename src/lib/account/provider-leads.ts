@@ -6,9 +6,9 @@ import { getUnlockedRequestIds } from "@/lib/credits";
 import { ltCount } from "@/lib/utils";
 
 /**
- * Lead feed for the provider account. Uses the same tree-aware matching as the
- * leads API (/api/tiekejas/uzklausos): open, approved requests in the
- * provider's active categories, never their own.
+ * Lead feed for the provider account: open, approved requests in the
+ * provider's active categories (tree-aware via expandToMatchSet, the same
+ * matcher checkEligibility mirrors), never their own.
  */
 export type LeadScope = "mine" | "fresh" | "all";
 

@@ -56,6 +56,11 @@ export default function LeadOfferPanel({
     // ponytail: no start-date column on Response — it travels as the last line
     // of the message; add a field if customers need to sort by it.
     const fullMessage = start.trim() ? `${message.trim()}\n\nGaliu pradėti: ${start.trim()}` : message.trim();
+    if (fullMessage.length > 2000) {
+      setError("Žinutė per ilga — sutrumpinkite iki 2000 simbolių.");
+      setBusy(false);
+      return;
+    }
     const priceValue = price.trim() ? Number(price.replace(/\s/g, "").replace(",", ".")) : undefined;
     if (priceValue !== undefined && !(priceValue > 0)) {
       setError("Kaina turi būti teigiamas skaičius");

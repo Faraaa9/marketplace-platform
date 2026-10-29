@@ -17,6 +17,8 @@ export type CustomerConversation = {
   token: string;
   /** Response id for offer threads, inquiry id for direct threads. */
   id: string;
+  /** Offer threads on a closed request are read-only (the API rejects sends). */
+  closed: boolean;
   providerId: string;
   providerName: string;
   providerImage: string | null;
@@ -60,7 +62,7 @@ export async function GET() {
           createdAt: true,
           lastMessageAt: true,
           clientLastReadAt: true,
-          request: { select: { title: true, trackingToken: true } },
+          request: { select: { title: true, trackingToken: true, status: true } },
           provider: { select: PROVIDER_SELECT },
           messages: LAST_MESSAGE,
         },
@@ -95,6 +97,7 @@ export async function GET() {
         threadId: `response-${r.id}`,
         token: r.request.trackingToken,
         id: r.id,
+        closed: r.request.status === "CLOSED",
         providerId: r.providerId,
         providerName: r.provider.name || "Meistras",
         providerImage: getProviderAvatarImage(r.provider),
@@ -114,6 +117,7 @@ export async function GET() {
         threadId: q.trackingToken,
         token: q.trackingToken,
         id: q.id,
+        closed: false,
         providerId: q.providerId,
         providerName: q.provider.name || "Meistras",
         providerImage: getProviderAvatarImage(q.provider),
