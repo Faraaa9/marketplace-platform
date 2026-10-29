@@ -17,7 +17,7 @@ export async function GET() {
       data: {
         attention: overview.attention.length,
         active: overview.active.length,
-        unreadMessages: overview.attention.filter((a) => a.tone === "msg").length,
+        unreadMessages: overview.unreadThreads,
       },
     });
   } catch (error) {

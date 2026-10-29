@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getProviderAvatarImage } from "@/lib/provider-image";
+import { isCustomerThreadUnread } from "@/lib/account/request-progress";
 
 /**
  * Customer inbox — every conversation the signed-in user has with providers:
@@ -86,12 +87,13 @@ export async function GET() {
 
     const offerThreads: CustomerConversation[] = responses.map((r) => {
       const last = r.messages[0] ?? null;
-      const lastRead = r.clientLastReadAt?.getTime() ?? 0;
-      // Unread = the provider spoke last after the customer's last visit (a
-      // brand-new offer counts: the offer itself is the provider's message).
-      const unread = last
-        ? last.senderId === r.providerId && r.lastMessageAt.getTime() > lastRead
-        : r.createdAt.getTime() > lastRead;
+      const unread = isCustomerThreadUnread({
+        lastSenderId: last ? last.senderId : undefined,
+        providerId: r.providerId,
+        lastMessageAt: r.lastMessageAt,
+        lastReadAt: r.clientLastReadAt,
+        offerCreatedAt: r.createdAt,
+      });
       return {
         kind: "response",
         threadId: `response-${r.id}`,
@@ -111,7 +113,6 @@ export async function GET() {
 
     const directThreads: CustomerConversation[] = inquiries.map((q) => {
       const last = q.messages[0] ?? null;
-      const lastRead = q.clientLastReadAt?.getTime() ?? 0;
       return {
         kind: "direct",
         threadId: q.trackingToken,
@@ -125,7 +126,12 @@ export async function GET() {
         // First send has no chat messages yet → preview the opening inquiry.
         preview: last ? last.content : q.description,
         lastMessageAt: q.lastMessageAt,
-        unread: !!last && last.senderId === q.providerId && q.lastMessageAt.getTime() > lastRead,
+        unread: isCustomerThreadUnread({
+          lastSenderId: last ? last.senderId : undefined,
+          providerId: q.providerId,
+          lastMessageAt: q.lastMessageAt,
+          lastReadAt: q.clientLastReadAt,
+        }),
         fromMe: last ? last.senderId !== q.providerId : true,
       };
     });

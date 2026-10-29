@@ -40,3 +40,19 @@ export function requestStatusChip(r: RequestProgressInput): { label: string; ton
     ? { label: "Gauta pasiūlymų", tone: "open" }
     : { label: "Laukiama pasiūlymų", tone: "wait" };
 }
+
+/** Unread rule shared by the customer inbox and its sidebar badge: the
+ *  provider spoke last after the customer's last visit. A brand-new offer with
+ *  no chat yet counts (the offer is the provider's message); a direct inquiry
+ *  with no reply does not. */
+export function isCustomerThreadUnread(t: {
+  lastSenderId: string | null | undefined;
+  providerId: string;
+  lastMessageAt: Date;
+  lastReadAt: Date | null;
+  offerCreatedAt?: Date;
+}): boolean {
+  const lastRead = t.lastReadAt?.getTime() ?? 0;
+  if (t.lastSenderId === undefined) return !!t.offerCreatedAt && t.offerCreatedAt.getTime() > lastRead;
+  return t.lastSenderId === t.providerId && t.lastMessageAt.getTime() > lastRead;
+}

@@ -36,7 +36,13 @@ async function providerMatchSet(userId: string) {
 }
 
 function baseWhere(userId: string): Prisma.ServiceRequestWhereInput {
-  return { status: "OPEN", moderationStatus: "APPROVED", clientId: { not: userId } };
+  // `{ not: userId }` alone compiles to `clientId <> $1`, which drops guest
+  // requests (clientId NULL) — they are leads too.
+  return {
+    status: "OPEN",
+    moderationStatus: "APPROVED",
+    OR: [{ clientId: null }, { clientId: { not: userId } }],
+  };
 }
 
 /** Matching leads this provider has not answered yet — the sidebar/KPI count. */

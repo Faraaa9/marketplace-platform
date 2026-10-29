@@ -1,6 +1,6 @@
 // Run: pnpm test:request-progress — pure, no DB.
 import assert from "node:assert/strict";
-import { canRate, requestStatusChip, requestStep } from "../request-progress";
+import { canRate, isCustomerThreadUnread, requestStatusChip, requestStep } from "../request-progress";
 
 const base = { status: "OPEN", moderationStatus: "APPROVED", responseCount: 0, acceptedResponseId: null, reviewed: false };
 
@@ -21,3 +21,11 @@ assert.equal(requestStatusChip({ ...base, status: "CLOSED", acceptedResponseId: 
 assert.equal(requestStatusChip({ ...base, status: "CLOSED" }).label, "Uždaryta");
 
 console.log("request-progress: ok");
+
+const t0 = new Date("2026-10-01T10:00:00Z");
+const t1 = new Date("2026-10-02T10:00:00Z");
+assert.equal(isCustomerThreadUnread({ lastSenderId: undefined, providerId: "p", lastMessageAt: t0, lastReadAt: null, offerCreatedAt: t0 }), true, "new offer");
+assert.equal(isCustomerThreadUnread({ lastSenderId: undefined, providerId: "p", lastMessageAt: t0, lastReadAt: t1, offerCreatedAt: t0 }), false, "seen offer");
+assert.equal(isCustomerThreadUnread({ lastSenderId: undefined, providerId: "p", lastMessageAt: t0, lastReadAt: null }), false, "unanswered inquiry");
+assert.equal(isCustomerThreadUnread({ lastSenderId: "p", providerId: "p", lastMessageAt: t1, lastReadAt: t0 }), true, "provider replied");
+assert.equal(isCustomerThreadUnread({ lastSenderId: "c", providerId: "p", lastMessageAt: t1, lastReadAt: t0 }), false, "customer spoke last");

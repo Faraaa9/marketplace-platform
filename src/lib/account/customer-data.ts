@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { AttentionItem } from "@/components/account/ui";
 import { decodeHtmlEntities, ltCount } from "@/lib/utils";
-import { canRate, type RequestProgressInput } from "./request-progress";
+import { canRate, isCustomerThreadUnread, type RequestProgressInput } from "./request-progress";
 
 export interface CustomerRequestRow extends RequestProgressInput {
   id: string;
@@ -42,6 +42,7 @@ async function loadRequests(userId: string) {
       moderationStatus: true,
       acceptedResponseId: true,
       createdAt: true,
+      updatedAt: true,
       categoryRef: { select: { name: true } },
       reviews: { select: { responseId: true } },
       responses: { select: RESPONSE_SELECT, orderBy: { createdAt: "desc" } },
@@ -97,6 +98,11 @@ export async function getCustomerOverview(userId: string) {
 
   const rows = requests.map(toRow);
   const attention: AttentionItem[] = [];
+  // The review form is open from the pick on, but asking right after the pick
+  // means rating work that hasn't happened yet: prompt once the customer closed
+  // the request, or a week after the pick.
+  // ponytail: updatedAt stands in for the pick time; add acceptedAt if edits skew it.
+  const rateAfter = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   for (const r of requests) {
     const row = rows.find((x) => x.id === r.id)!;
@@ -152,7 +158,7 @@ export async function getCustomerOverview(userId: string) {
         }
       }
     }
-    if (canRate(row)) {
+    if (canRate(row) && (r.status === "CLOSED" || r.updatedAt < rateAfter)) {
       attention.push({
         key: `rate-${r.id}`,
         tone: "rate",
@@ -178,6 +184,31 @@ export async function getCustomerOverview(userId: string) {
     });
   }
 
+  // Same rule as /api/paskyra/zinutes so the Žinutės badge matches the inbox dots.
+  const unreadThreads =
+    requests.reduce(
+      (n, r) =>
+        n +
+        r.responses.filter((resp) =>
+          isCustomerThreadUnread({
+            lastSenderId: resp.messages[0] ? resp.messages[0].senderId : undefined,
+            providerId: resp.providerId,
+            lastMessageAt: resp.lastMessageAt,
+            lastReadAt: resp.clientLastReadAt,
+            offerCreatedAt: resp.createdAt,
+          }),
+        ).length,
+      0,
+    ) +
+    inquiries.filter((q) =>
+      isCustomerThreadUnread({
+        lastSenderId: q.messages[0] ? q.messages[0].senderId : undefined,
+        providerId: q.providerId,
+        lastMessageAt: q.lastMessageAt,
+        lastReadAt: q.clientLastReadAt,
+      }),
+    ).length;
+
   const firstName = (user?.name?.trim() || user?.email?.split("@")[0] || "").split(/\s+/)[0];
 
   return {
@@ -186,6 +217,7 @@ export async function getCustomerOverview(userId: string) {
     active: rows.filter((r) => r.status !== "CLOSED"),
     closed: rows.filter((r) => r.status === "CLOSED"),
     attention,
+    unreadThreads,
   };
 }
 

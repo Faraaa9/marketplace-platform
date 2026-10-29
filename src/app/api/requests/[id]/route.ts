@@ -79,10 +79,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Užklausa nerasta" }, { status: 404 });
     }
 
+    // The inbox opens one offer thread at a time (?responseId=); stamping every
+    // offer there would clear unread replies from the other providers.
+    const readResponseId = req.nextUrl.searchParams.get("responseId");
     const clientReadAt = new Date();
     try {
       await prisma.response.updateMany({
-        where: { requestId: request.id },
+        where: { requestId: request.id, ...(readResponseId ? { id: readResponseId } : {}) },
         data: { clientLastReadAt: clientReadAt },
       });
     } catch {
@@ -104,7 +107,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       const { images, heroImageUrl, ...providerProfile } = resp.provider.providerProfile ?? {};
       return {
         ...resp,
-        clientLastReadAt: clientReadAt,
+        clientLastReadAt: !readResponseId || resp.id === readResponseId ? clientReadAt : resp.clientLastReadAt,
         provider: {
           ...resp.provider,
           image: getProviderAvatarImage(resp.provider),
