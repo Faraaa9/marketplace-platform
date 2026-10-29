@@ -170,7 +170,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ t
       return NextResponse.json({ success: false, error: "Neturite teisės valdyti šios užklausos" }, { status: 403 });
     }
 
-    if (request.status !== "OPEN") {
+    if (request.status !== "OPEN" && request.status !== "EXPIRED") {
       return NextResponse.json(
         { success: false, error: "Negalima ištrinti — užklausa jau vykdoma arba uždaryta." },
         { status: 409 },

@@ -1,7 +1,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { activeCategoryFilter, expandToMatchSet } from "@/lib/category-matching";
+import { activeCategoryFilter, expandToMatchSet, requestCategoryWhere, requestInMatchSet } from "@/lib/category-matching";
 import { getUnlockedRequestIds } from "@/lib/credits";
 import { ltCount } from "@/lib/utils";
 import { recordAiRun } from "@/lib/ai/audit";
@@ -50,17 +50,19 @@ export async function countNewLeads(userId: string): Promise<number> {
   const { matchSet } = await providerMatchSet(userId);
   if (matchSet.length === 0) return 0;
   return prisma.serviceRequest.count({
-    where: { ...baseWhere(userId), categoryId: { in: matchSet }, responses: { none: { providerId: userId } } },
+    where: {
+      AND: [baseWhere(userId), requestCategoryWhere(matchSet)],
+      responses: { none: { providerId: userId } },
+    },
   });
 }
 
 export async function getLeadFeed(userId: string, scope: LeadScope) {
   const { profile, categoryIds, matchSet } = await providerMatchSet(userId);
   const where: Prisma.ServiceRequestWhereInput = {
-    ...baseWhere(userId),
     // "Visos" browses every open request; the lead page then explains
     // eligibility for ones outside the provider's categories.
-    ...(scope === "all" ? {} : { categoryId: { in: matchSet } }),
+    AND: scope === "all" ? [baseWhere(userId)] : [baseWhere(userId), requestCategoryWhere(matchSet)],
     ...(scope === "fresh" ? { responses: { none: {} } } : {}),
   };
 
@@ -77,6 +79,7 @@ export async function getLeadFeed(userId: string, scope: LeadScope) {
       deadline: true,
       createdAt: true,
       categoryId: true,
+      categories: { select: { categoryId: true } },
       categoryRef: { select: { name: true } },
       _count: { select: { responses: true } },
       responses: { where: { providerId: userId }, select: { id: true }, take: 1 },
@@ -102,7 +105,7 @@ export async function getLeadFeed(userId: string, scope: LeadScope) {
       offerCount: r._count.responses,
       sentResponseId: r.responses[0]?.id ?? null,
       unlocked: unlocked.has(r.id),
-      inMyCategories: !!r.categoryId && match.has(r.categoryId),
+      inMyCategories: requestInMatchSet(r, match),
     })),
   };
 }

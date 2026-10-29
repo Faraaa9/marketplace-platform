@@ -1,7 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { sendEmail, newRequestAlertEmail } from "@/lib/email";
+import { sendEmail, newRequestAlertEmail, unsubscribeUrl } from "@/lib/email";
 import { expandToMatchSet, activeCategoryFilter } from "@/lib/category-matching";
 import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
+
+// ponytail: 200 recipients per request is ~10x today's whole provider base; a
+// request matching more than that needs a queue, not a bigger loop.
+const MAX_RECIPIENTS = 200;
+const EMAIL_BATCH = 10;
 
 /**
  * Notify providers whose curated categories match a new request. Matching is
@@ -13,9 +18,12 @@ import { SERVICE_CATEGORY_WHERE } from "@/lib/service-categories";
 export async function notifyRelevantProviders(
   title: string,
   categoryIds: string[],
-  location: string,
+  requestLocation: string,
   excludeUserId?: string | null,
 ) {
+  // An empty location means "anywhere" (create.ts already maps it; the email
+  // verify path does not).
+  const location = requestLocation.trim() || "Visa Lietuva";
   const validCategoryIds = categoryIds.filter(Boolean);
   // A request with no curated categories has nothing to match providers on.
   if (validCategoryIds.length === 0) return;
@@ -33,43 +41,45 @@ export async function notifyRelevantProviders(
     where: {
       role: "PROVIDER",
       emailVerified: { not: null },
+      // Skip the request creator (prevent self-notification)
+      ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
       providerProfile: {
         isActive: true,
+        // "Visa Lietuva" on either side matches everywhere.
+        ...(location === "Visa Lietuva" ? {} : { location: { in: [location, "Visa Lietuva"] } }),
         categories: {
           some: { categoryId: { in: matchSet }, ...activeCategoryFilter() },
         },
       },
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      providerProfile: { select: { location: true } },
-    },
+    orderBy: { createdAt: "asc" },
+    take: MAX_RECIPIENTS,
+    select: { id: true, name: true, email: true, emailAlertsOptOut: true },
+  });
+  if (providers.length === 0) return;
+  if (providers.length === MAX_RECIPIENTS) {
+    console.warn(`[notify] recipient cap ${MAX_RECIPIENTS} hit for "${title}" — some providers were not alerted`);
+  }
+
+  await prisma.notification.createMany({
+    data: providers.map((provider) => ({
+      userId: provider.id,
+      type: "NEW_REQUEST",
+      title: "Nauja užklausa",
+      body: `Nauja užklausa „${title}" kategorijoje „${categoryLabel}"`,
+      link: "/uzklausos",
+    })),
   });
 
-  for (const provider of providers) {
-    // Skip the request creator (prevent self-notification)
-    if (excludeUserId && provider.id === excludeUserId) continue;
-
-    const providerLocation = provider.providerProfile?.location || "";
-    const locationMatch =
-      providerLocation === location ||
-      providerLocation === "Visa Lietuva" ||
-      location === "Visa Lietuva";
-    if (!locationMatch) continue;
-
-    const emailData = newRequestAlertEmail(provider.name || "Tiekėjau", title, categoryLabel);
-    sendEmail({ to: provider.email, ...emailData }).catch(() => {});
-
-    await prisma.notification.create({
-      data: {
-        userId: provider.id,
-        type: "NEW_REQUEST",
-        title: "Nauja užklausa",
-        body: `Nauja užklausa „${title}" kategorijoje „${categoryLabel}"`,
-        link: "/uzklausos",
-      },
-    });
+  const recipients = providers.filter((p) => !p.emailAlertsOptOut);
+  for (let i = 0; i < recipients.length; i += EMAIL_BATCH) {
+    await Promise.allSettled(
+      recipients.slice(i, i + EMAIL_BATCH).map((provider) =>
+        sendEmail({
+          to: provider.email,
+          ...newRequestAlertEmail(provider.name || "Tiekėjau", title, categoryLabel, unsubscribeUrl(provider.id)),
+        }),
+      ),
+    );
   }
 }

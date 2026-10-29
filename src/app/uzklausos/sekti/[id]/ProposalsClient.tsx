@@ -48,6 +48,7 @@ export default function ProposalsClient({ trackingToken, request }: { trackingTo
 
   const isOpen = request.status === "OPEN";
   const isClosed = request.status === "CLOSED";
+  const isExpired = request.status === "EXPIRED";
   const accepted = request.responses.find((r) => r.id === request.acceptedResponseId) ?? null;
 
   const sorted = useMemo(() => {
@@ -175,7 +176,11 @@ export default function ProposalsClient({ trackingToken, request }: { trackingTo
 
       {request.responses.length === 0 ? (
         <EmptyPanel>
-          {isClosed ? "Užklausa uždaryta, pasiūlymų negauta." : "Kol kas pasiūlymų nėra — kai meistras atsiųs, jis atsiras čia ir gausite pranešimą."}
+          {isClosed
+            ? "Užklausa uždaryta, pasiūlymų negauta."
+            : isExpired
+              ? "Užklausa nebegalioja, pasiūlymų negauta. Atnaujinkite ją, jei paslaugos vis dar reikia."
+              : "Kol kas pasiūlymų nėra — kai meistras atsiųs, jis atsiras čia ir gausite pranešimą."}
         </EmptyPanel>
       ) : (
         <div className="grid gap-3 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">

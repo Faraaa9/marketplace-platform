@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { activeCategoryFilter } from "@/lib/category-matching";
 import { responseSchema } from "@/lib/validations";
 import { sendEmail, newResponseEmail } from "@/lib/email";
 import { buildReplyAddress } from "@/lib/inbound-email";
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       select: {
         id: true, category: true, categoryId: true, status: true, clientId: true,
         categoryRef: { select: { id: true, rootId: true, parentId: true } },
+        categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         clientName: true, clientEmail: true, title: true, trackingToken: true,
       },
     });
@@ -44,13 +46,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const profile = await prisma.providerProfile.findUnique({
       where: { id: guard.providerProfileId },
       select: {
-        categories: { select: { category: { select: { id: true, rootId: true } } } },
+        // Same shape as unlock: without parentId a provider who paid to unlock a
+        // lead filed under their service's subcategory was refused here.
+        categories: {
+          where: activeCategoryFilter(),
+          select: { category: { select: { id: true, rootId: true, parentId: true } } },
+        },
       },
     });
     const providerCategories = (profile?.categories ?? []).map((c) => c.category);
     const eligibility = checkEligibility(
       guard.userId,
-      { status: request.status, clientId: request.clientId, category: request.categoryRef },
+      { status: request.status, clientId: request.clientId, category: request.categoryRef, categories: request.categories },
       providerCategories,
     );
 

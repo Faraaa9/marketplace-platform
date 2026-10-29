@@ -93,7 +93,7 @@ export async function PATCH(req: NextRequest) {
     if (action === "delete") {
       await prisma.serviceRequest.delete({ where: { id } });
     } else if (action === "updateStatus" && status) {
-      const validStatuses = ["PENDING_CONFIRMATION", "OPEN", "IN_PROGRESS", "CLOSED"];
+      const validStatuses = ["PENDING_CONFIRMATION", "OPEN", "IN_PROGRESS", "CLOSED", "EXPIRED"];
       if (!validStatuses.includes(status)) {
         return NextResponse.json({ success: false, error: "Netinkamas statusas" }, { status: 400 });
       }

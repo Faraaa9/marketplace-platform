@@ -54,6 +54,7 @@ async function Lead({ userId, params }: { userId: string; params: Params }) {
         clientPhone: true,
         createdAt: true,
         categoryRef: { select: { id: true, rootId: true, parentId: true, name: true } },
+        categories: { select: { category: { select: { id: true, rootId: true, parentId: true } } } },
         _count: { select: { responses: true } },
         responses: { where: { providerId: userId }, select: { id: true }, take: 1 },
       },
@@ -88,7 +89,7 @@ async function Lead({ userId, params }: { userId: string; params: Params }) {
   const sentResponseId = request.responses[0]?.id ?? null;
   const eligibility = checkEligibility(
     userId,
-    { status: request.status, clientId: request.clientId, category: request.categoryRef },
+    { status: request.status, clientId: request.clientId, category: request.categoryRef, categories: request.categories },
     profile.categories.map((c) => c.category),
   );
   const accountReady = profile.isActive && !!user?.emailVerified;

@@ -214,8 +214,8 @@ export async function getCustomerOverview(userId: string) {
   return {
     firstName,
     rows,
-    active: rows.filter((r) => r.status !== "CLOSED"),
-    closed: rows.filter((r) => r.status === "CLOSED"),
+    active: rows.filter((r) => r.status !== "CLOSED" && r.status !== "EXPIRED"),
+    closed: rows.filter((r) => r.status === "CLOSED" || r.status === "EXPIRED"),
     attention,
     unreadThreads,
   };

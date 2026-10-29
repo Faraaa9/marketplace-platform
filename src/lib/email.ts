@@ -1,7 +1,59 @@
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { getEmailDeliverySettings } from "@/lib/platform-settings";
-import { creditsLabel } from "@/lib/utils";
+import { creditsLabel, decodeHtmlEntities } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
+
+/**
+ * HTML-escape a value for an email template. Decodes first because request
+ * titles are stored already escaped (sanitizeHtml at write time) — escaping
+ * twice would show "&amp;amp;" to the reader.
+ */
+export function escapeEmailHtml(value: string): string {
+  return sanitizeHtml(decodeHtmlEntities(value));
+}
+const esc = escapeEmailHtml;
+
+// Vercel previews also run NODE_ENV=production but get no mail env vars; only
+// the real production deployment must fail loudly.
+const isProduction = () =>
+  process.env.VERCEL_ENV ? process.env.VERCEL_ENV === "production" : process.env.NODE_ENV === "production";
+
+/** Public site origin for links. A localhost link in a real customer's inbox is
+ *  a silent failure, so production refuses to guess. */
+export function appUrl(): string {
+  const url = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (url) return url.replace(/\/$/, "");
+  if (isProduction()) throw new Error("NEXT_PUBLIC_APP_URL is not set — refusing to email localhost links");
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
+// ── Unsubscribe (non-essential mail only: new-lead alerts) ──────────────
+// Stateless HMAC link so it works without logging in and needs no token table.
+function unsubscribeSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET?.trim();
+  if (secret) return secret;
+  // Previews share the production DB, so a guessable secret there would let
+  // anyone forge opt-outs for real providers. Only a local run may fall back.
+  if (isProduction() || process.env.VERCEL_ENV) throw new Error("NEXTAUTH_SECRET is not set");
+  return "development-unsubscribe-secret";
+}
+
+export function unsubscribeToken(userId: string): string {
+  return crypto.createHmac("sha256", unsubscribeSecret()).update(`unsubscribe:${userId}`).digest("hex").slice(0, 32);
+}
+
+export function verifyUnsubscribeToken(userId: string, token: string): boolean {
+  const expected = Buffer.from(unsubscribeToken(userId));
+  const given = Buffer.from(token);
+  return expected.length === given.length && crypto.timingSafeEqual(expected, given);
+}
+
+export function unsubscribeUrl(userId: string): string {
+  return `${appUrl()}/api/email/unsubscribe?u=${encodeURIComponent(userId)}&t=${unsubscribeToken(userId)}`;
+}
 
 interface SendEmailParams {
   to: string;
@@ -9,6 +61,8 @@ interface SendEmailParams {
   html: string;
   /** Per-call Reply-To override. Falls back to the EMAIL_REPLY_TO env when unset. */
   replyTo?: string;
+  /** Set for non-essential mail: adds List-Unsubscribe + one-click headers. */
+  unsubscribeUrl?: string;
 }
 
 export interface SendEmailResult {
@@ -64,7 +118,7 @@ function readEnvFileValue(name: string) {
   }
 }
 
-export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams): Promise<SendEmailResult> {
+export async function sendEmail({ to, subject, html, replyTo, unsubscribeUrl: listUnsubscribe }: SendEmailParams): Promise<SendEmailResult> {
   // Email test mode: when enabled in admin settings, outbound mail reaches only
   // allowlisted addresses. Shields real clients from dev/test traffic.
   try {
@@ -96,12 +150,13 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
   const runtimeEmailFrom = process.env.EMAIL_FROM?.trim();
   const emailFrom =
     runtimeEmailFrom || readEnvFileValue("EMAIL_FROM")?.trim() || "PaslaugųRinka <onboarding@resend.dev>";
-  if (process.env.NODE_ENV === "production" && emailFrom.includes("resend.dev")) {
-    console.warn(
-      "[email] EMAIL_FROM not set — using the Resend test domain, which only " +
-        "delivers to the Resend account owner. Set EMAIL_FROM to an address on " +
-        "a verified domain.",
+  // The Resend test domain only delivers to the account owner, and a missing key
+  // used to "succeed" as a mock — both silently drop real customers' mail.
+  if (isProduction() && (!resendApiKey || emailFrom.includes("resend.dev"))) {
+    console.error(
+      `[email] NOT SENT to ${to}: ${!resendApiKey ? "RESEND_API_KEY" : "EMAIL_FROM (verified domain)"} is not configured`,
     );
+    return { success: false, error: "Email is not configured" };
   }
   const emailReplyTo = process.env.EMAIL_REPLY_TO?.trim() || readEnvFileValue("EMAIL_REPLY_TO")?.trim();
   const effectiveReplyTo = replyTo?.trim() || emailReplyTo;
@@ -139,6 +194,14 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
         subject,
         html,
         ...(effectiveReplyTo ? { reply_to: effectiveReplyTo } : {}),
+        ...(listUnsubscribe
+          ? {
+              headers: {
+                "List-Unsubscribe": `<${listUnsubscribe}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            }
+          : {}),
       }),
     });
 
@@ -167,12 +230,12 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
 }
 
 export function requestConfirmationEmail(name: string, trackingToken: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
+  const url = `${appUrl()}/uzklausos/sekti/${trackingToken}`;
   return {
     subject: "Jūsų užklausa gauta — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(name)}!</h2>
         <p>Jūsų užklausa sėkmingai pateikta. Paslaugų tiekėjai netrukus peržiūrės ją ir atsiųs pasiūlymus.</p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Sekti užklausą</a></p>
         <p style="color: #6b7280; font-size: 14px;">Išsaugokite šią nuorodą — ji leidžia sekti jūsų užklausos būseną.</p>
@@ -182,15 +245,15 @@ export function requestConfirmationEmail(name: string, trackingToken: string) {
 }
 
 export function requestVerificationEmail(name: string, verificationToken: string, trackingToken: string) {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/requests/verify?token=${verificationToken}`;
-  const trackingUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
+  const verifyUrl = `${appUrl()}/api/requests/verify?token=${verificationToken}`;
+  const trackingUrl = `${appUrl()}/uzklausos/sekti/${trackingToken}`;
   return {
     subject: "Patvirtinkite užklausą — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(name)}!</h2>
         <p>Dar liko vienas žingsnis: patvirtinkite savo el. pašto adresą, kad aktyvuotume jūsų užklausą ir perduotume ją paslaugų tiekėjams.</p>
-        <p><a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti užklausą</a></p>
+        <p><a href="${esc(verifyUrl)}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti užklausą</a></p>
         <p style="color: #6b7280; font-size: 14px;">Nuoroda galioja 24 valandas.</p>
         <p style="color: #6b7280; font-size: 14px;">Jei norite tik peržiūrėti užklausą, naudokite šią nuorodą: <a href="${trackingUrl}">sekti užklausą</a>.</p>
       </div>
@@ -199,28 +262,71 @@ export function requestVerificationEmail(name: string, verificationToken: string
 }
 
 export function newResponseEmail(clientName: string, requestTitle: string, trackingToken: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos/sekti/${trackingToken}`;
+  const url = `${appUrl()}/uzklausos/sekti/${trackingToken}`;
   return {
-    subject: `Naujas pasiūlymas: ${requestTitle} — PaslaugųRinka`,
+    subject: `Naujas pasiūlymas: ${decodeHtmlEntities(requestTitle)} — PaslaugųRinka`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${clientName}!</h2>
-        <p>Gavote naują pasiūlymą dėl jūsų užklausos „${requestTitle}".</p>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(clientName)}!</h2>
+        <p>Gavote naują pasiūlymą dėl jūsų užklausos „${esc(requestTitle)}".</p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti pasiūlymą</a></p>
       </div>
     `,
   };
 }
 
-export function newRequestAlertEmail(providerName: string, requestTitle: string, category: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos`;
+export function newRequestAlertEmail(
+  providerName: string,
+  requestTitle: string,
+  category: string,
+  unsubscribeLink: string,
+) {
+  const url = `${appUrl()}/uzklausos`;
   return {
-    subject: `Nauja užklausa: ${requestTitle} — PaslaugųRinka`,
+    subject: `Nauja užklausa: ${decodeHtmlEntities(requestTitle)} — PaslaugųRinka`,
+    unsubscribeUrl: unsubscribeLink,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${providerName}!</h2>
-        <p>Atsirado nauja užklausa kategorijoje „${category}": <strong>${requestTitle}</strong></p>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(providerName)}!</h2>
+        <p>Atsirado nauja užklausa kategorijoje „${esc(category)}": <strong>${esc(requestTitle)}</strong></p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
+        <p style="color: #6b7280; font-size: 12px;">Nebenorite gauti laiškų apie naujas užklausas? <a href="${esc(unsubscribeLink)}">Atsisakyti</a></p>
+      </div>
+    `,
+  };
+}
+
+/** Sent once per customer per expiry run, listing every request of theirs that
+ *  expired (some customers have a dozen). A service notice about their own
+ *  requests, so no unsubscribe link. */
+export function requestExpiredEmail(
+  clientName: string,
+  requests: { title: string; trackingToken: string }[],
+  days: number,
+) {
+  const newUrl = `${appUrl()}/uzklausos/nauja`;
+  const button = (token: string, label: string) =>
+    `<a href="${appUrl()}/uzklausos/sekti/${token}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">${label}</a>`;
+  const single = requests.length === 1;
+  const subject = single
+    ? `Jūsų užklausa „${decodeHtmlEntities(requests[0].title)}" nebegalioja — PaslaugųRinka`
+    : `Jūsų ${requests.length} užklausos nebegalioja — PaslaugųRinka`;
+  const body = single
+    ? `<p>Jūsų užklausa „${esc(requests[0].title)}" per ${days} dienų nesulaukė naujų pasiūlymų, todėl ją paslėpėme iš užklausų sąrašo.</p>
+        <p>Jei paslaugos vis dar reikia, užklausą galite atnaujinti — ji vėl bus matoma meistrams.</p>
+        <p>${button(requests[0].trackingToken, "Atnaujinti užklausą")}</p>`
+    : `<p>Šios jūsų užklausos per ${days} dienų nesulaukė naujų pasiūlymų, todėl jas paslėpėme iš užklausų sąrašo:</p>
+        <ul>${requests
+          .map((r) => `<li style="margin-bottom: 8px;">${esc(r.title)} — <a href="${appUrl()}/uzklausos/sekti/${r.trackingToken}">atnaujinti</a></li>`)
+          .join("")}</ul>
+        <p>Jei kurios nors paslaugos vis dar reikia, atidarykite ją ir paspauskite „Atnaujinti užklausą“.</p>`;
+  return {
+    subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Sveiki, ${esc(clientName)}!</h2>
+        ${body}
+        <p style="color: #6b7280; font-size: 14px;">Arba <a href="${newUrl}">pateikite naują užklausą</a> — kartais padeda tikslesnis aprašymas ar kita kategorija. Jei paslaugos nebereikia, nieko daryti nereikia.</p>
       </div>
     `,
   };
@@ -231,21 +337,21 @@ export function providerActivatedEmail(name: string) {
     subject: "Jūsų paskyra aktyvuota — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(name)}!</h2>
         <p>Jūsų tiekėjo paskyra buvo aktyvuota. Dabar galite peržiūrėti ir atsakyti į klientų užklausas.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/tiekejas" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
+        <p><a href="${appUrl()}/tiekejas" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
       </div>
     `,
   };
 }
 
 export function passwordResetEmail(name: string, token: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/slaptazodis/reset?token=${token}`;
+  const url = `${appUrl()}/slaptazodis/reset?token=${token}`;
   return {
     subject: "Slaptažodžio atstatymas — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4f46e5;">Sveiki, ${name}!</h2>
+        <h2 style="color: #4f46e5;">Sveiki, ${esc(name)}!</h2>
         <p>Gavome jūsų prašymą atstatyti slaptažodį. Spauskite žemiau esantį mygtuką:</p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; border-radius: 12px;">Atstatyti slaptažodį</a></p>
         <p style="color: #6b7280; font-size: 14px;">Ši nuoroda galioja 1 valandą. Jei neprašėte atstatyti slaptažodžio, ignoruokite šį laišką.</p>
@@ -255,12 +361,12 @@ export function passwordResetEmail(name: string, token: string) {
 }
 
 export function emailVerificationEmail(name: string, token: string) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/verify-email?token=${token}`;
+  const url = `${appUrl()}/api/auth/verify-email?token=${token}`;
   return {
     subject: "Patvirtinkite el. paštą — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4f46e5;">Sveiki, ${name}!</h2>
+        <h2 style="color: #4f46e5;">Sveiki, ${esc(name)}!</h2>
         <p>Dėkojame už registraciją. Patvirtinkite savo el. pašto adresą spausdami žemiau:</p>
         <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; border-radius: 12px;">Patvirtinti el. paštą</a></p>
         <p style="color: #6b7280; font-size: 14px;">Ši nuoroda galioja 24 valandas.</p>
@@ -325,9 +431,9 @@ export function claimVerificationEmail(supplierName: string, verifyUrl: string) 
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Tiekėjo perėmimo užklausa</h2>
-        <p>Gavome jūsų prašymą perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą.</p>
+        <p>Gavome jūsų prašymą perimti tiekėjo <strong>„${esc(supplierName)}"</strong> paskyrą.</p>
         <p>Patvirtinkite savo el. pašto adresą spausdami žemiau esantį mygtuką:</p>
-        <p><a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti el. paštą</a></p>
+        <p><a href="${esc(verifyUrl)}" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Patvirtinti el. paštą</a></p>
         <p style="color: #6b7280; font-size: 14px;">Nuoroda galioja 7 dienas. Po paspaudimo galėsite susikurti prisijungimą su slaptažodžiu. Administratorius atskirai peržiūrės patį profilio perėmimą.</p>
         <p style="color: #6b7280; font-size: 14px;">Jei šio prašymo nepateikėte, ignoruokite šį laišką.</p>
       </div>
@@ -337,7 +443,7 @@ export function claimVerificationEmail(supplierName: string, verifyUrl: string) 
 
 export function claimApprovedEmail(supplierName: string, dashboardUrl: string, registerUrl?: string) {
   const accountHelp = registerUrl
-    ? `<p style="color: #6b7280; font-size: 14px;">Jei dar neturite paskyros, susikurkite ją tuo pačiu el. paštu: <a href="${registerUrl}">sukurti paskyrą</a>.</p>`
+    ? `<p style="color: #6b7280; font-size: 14px;">Jei dar neturite paskyros, susikurkite ją tuo pačiu el. paštu: <a href="${esc(registerUrl)}">sukurti paskyrą</a>.</p>`
     : "";
 
   return {
@@ -345,9 +451,9 @@ export function claimApprovedEmail(supplierName: string, dashboardUrl: string, r
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #16a34a;">Prašymas patvirtintas!</h2>
-        <p>Jūsų prašymas perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą buvo patvirtintas.</p>
+        <p>Jūsų prašymas perimti tiekėjo <strong>„${esc(supplierName)}"</strong> paskyrą buvo patvirtintas.</p>
         <p>Prisijunkite tuo pačiu el. paštu ir galėsite valdyti savo tiekėjo profilį:</p>
-        <p><a href="${dashboardUrl}" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
+        <p><a href="${esc(dashboardUrl)}" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: white; text-decoration: none; border-radius: 8px;">Eiti į valdymo panelę</a></p>
         ${accountHelp}
       </div>
     `,
@@ -356,14 +462,14 @@ export function claimApprovedEmail(supplierName: string, dashboardUrl: string, r
 
 export function claimRejectedEmail(supplierName: string, reason?: string) {
   const reasonBlock = reason
-    ? `<p><strong>Priežastis:</strong> ${reason}</p>`
+    ? `<p><strong>Priežastis:</strong> ${esc(reason)}</p>`
     : `<p>Jei turite klausimų, susisiekite su mumis.</p>`;
   return {
     subject: `Jūsų prašymas atmestas — „${supplierName}" — PaslaugųRinka`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Prašymas atmestas</h2>
-        <p>Deja, jūsų prašymas perimti tiekėjo <strong>„${supplierName}"</strong> paskyrą buvo atmestas.</p>
+        <p>Deja, jūsų prašymas perimti tiekėjo <strong>„${esc(supplierName)}"</strong> paskyrą buvo atmestas.</p>
         ${reasonBlock}
         <p style="color: #6b7280; font-size: 14px;">Jei manote, kad tai klaida, galite pateikti naują prašymą arba susisiekti su mumis el. paštu.</p>
       </div>
@@ -376,11 +482,11 @@ export function creditPurchaseEmail(name: string, credits: number, balance: numb
     subject: "Kreditai pridėti — PaslaugųRinka",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Sveiki, ${name}!</h2>
+        <h2 style="color: #2563eb;">Sveiki, ${esc(name)}!</h2>
         <p>Jūsų paskyrą papildėme <strong>${credits} ${creditsLabel(credits)}</strong>.</p>
         <p>Dabartinis balansas: <strong>${balance} ${creditsLabel(balance)}</strong>.</p>
         <p>Kreditus naudokite klientų užklausoms atrakinti — vienas kreditas atrakina vieną užklausą.</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uzklausos" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
+        <p><a href="${appUrl()}/uzklausos" style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">Peržiūrėti užklausas</a></p>
       </div>
     `,
   };

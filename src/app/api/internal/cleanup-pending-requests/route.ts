@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse, connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendAlert } from "@/lib/alert";
+import {
+  countExpiryCandidates,
+  expireStaleRequests,
+  isRequestExpiryEnabled,
+  REQUEST_EXPIRY_DAYS,
+} from "@/lib/request-expiry";
 
 const PENDING_CLEANUP_DAYS = 7;
 
@@ -14,9 +20,9 @@ const PENDING_CLEANUP_DAYS = 7;
  * Auth: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. Same convention
  * used by /api/internal/claims/expire.
  *
- * TODO: consider soft-delete (status: "EXPIRED" or archivedAt column) once we
- * want to keep history. For now hard delete keeps the table lean.
- * TODO: optional "your request is about to expire — confirm now" email before deletion.
+ * Also expires OPEN requests idle for REQUEST_EXPIRY_DAYS (status EXPIRED +
+ * one email to the customer). That part runs only with REQUEST_EXPIRY_ENABLED;
+ * while off it reports how many requests WOULD expire.
  */
 export async function GET(req: NextRequest) {
   await connection();
@@ -47,10 +53,16 @@ export async function GET(req: NextRequest) {
       `[cleanup-pending] Deleted ${result.count} stale PENDING_CONFIRMATION requests older than ${PENDING_CLEANUP_DAYS}d`,
     );
 
+    const expiry = isRequestExpiryEnabled()
+      ? { enabled: true, ...(await expireStaleRequests()) }
+      : { enabled: false, wouldExpire: await countExpiryCandidates() };
+    console.info(`[cleanup-pending] Request expiry (${REQUEST_EXPIRY_DAYS}d):`, JSON.stringify(expiry));
+
     return NextResponse.json({
       success: true,
       deletedCount: result.count,
       cutoff: cutoff.toISOString(),
+      expiry,
     });
   } catch (error) {
     console.error("[cleanup-pending] Error:", error);

@@ -14,6 +14,7 @@ model User {
   password        String?
   role            String    @default("CLIENT")
   emailVerified   DateTime?
+  emailAlertsOptOut Boolean @default(false) // unsubscribed from new-lead alert emails
   phone           String?
   phoneVerifiedAt DateTime?
   image           String?

@@ -41,6 +41,7 @@ export async function denseTopK(embedding: number[], k = 15): Promise<DenseCandi
       select c.id, c.slug, c.name
       from category_embedding e
       join categories c on c.id = e.category_id
+      where c."isActive" = true
       order by e.embedding <=> ${vec}::vector
       limit ${k}
     `;
