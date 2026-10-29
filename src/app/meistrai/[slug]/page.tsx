@@ -209,6 +209,12 @@ interface PageProps {
   searchParams: Promise<{ welcome?: string; v2?: string }>;
 }
 
+function distinctAvatar(userImage: string | null, cover: string | undefined): string | null {
+  const avatar = getSafeProviderImageUrl(userImage);
+  if (!avatar) return null;
+  return cover && avatar === getSafeProviderImageUrl(cover) ? null : avatar;
+}
+
 export default function PublicProviderProfilePage(props: PageProps) {
   // Cache Components: session check + per-request lookups stream inside a
   // Suspense boundary so the rest of the route can prerender. The fallback is
@@ -885,9 +891,11 @@ async function getProviderProfileUncached(
     name: profile.displayName || provider.name || "Tiekėjas",
     // Representative/SEO image — gallery work photo preferred (LocalBusiness schema).
     image: getSafeProviderImageUrl(images[0] || provider.image),
-    // Avatar — the person's face photo preferred, gallery only as fallback so the
-    // hero circle never shows the same cropped work photo as the cover.
-    avatarImage: getSafeProviderImageUrl(provider.image || images[0]),
+    // Avatar — only a distinct face/logo photo. Falling back to the gallery put
+    // the cover's own work photo, cropped, in the hero circle on every profile
+    // (profile save also copies the first gallery image into User.image), so a
+    // missing or duplicate photo renders initials instead.
+    avatarImage: distinctAvatar(provider.image, images[0]),
     images,
     gallery: buildWorkGallery(profile.metadataJson, images),
     description: profile.description,

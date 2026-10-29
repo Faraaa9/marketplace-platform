@@ -13,6 +13,12 @@ interface StoryAvatarButtonProps {
   isOnline?: boolean;
 }
 
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? "?").slice(0, 1);
+  return letters.toLocaleUpperCase("lt-LT");
+}
+
 export default function StoryAvatarButton({
   stories,
   providerName,
@@ -87,7 +93,7 @@ export default function StoryAvatarButton({
               />
             ) : (
               <span className="text-2xl font-bold text-brand-700 sm:text-3xl dark:text-brand-300">
-                {providerName[0].toUpperCase()}
+                {initials(providerName)}
               </span>
             )}
           </div>
