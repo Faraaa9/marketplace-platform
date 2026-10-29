@@ -18,17 +18,17 @@ export function getUserMenuLinks(role?: string): UserMenuLink[] {
   }
   if (role === "PROVIDER") {
     return [
-      { href: "/tiekejas", label: "Valdymo panelė" },
+      { href: "/tiekejas", label: "Meistro paskyra" },
       { href: "/tiekejas/zinutes", label: "Žinutės" },
-      { href: "/tiekejas/profilis", label: "Teikėjo profilis" },
-      { href: "/tiekejas/planai", label: "Kreditai" },
-      { href: "/paskyra/profilis", label: "Paskyros nustatymai" },
+      { href: "/tiekejas/planai", label: "Kreditai ir sąskaitos" },
+      { href: "/paskyra", label: "Kliento paskyra" },
     ];
   }
   return [
-    { href: "/paskyra/profilis", label: "Profilis" },
+    { href: "/paskyra", label: "Mano paskyra" },
     { href: "/paskyra/uzklausos", label: "Mano užklausos" },
     { href: "/paskyra/zinutes", label: "Žinutės" },
-    { href: "/tapti-tiekeju", label: "Tapti tiekėju" },
+    { href: "/paskyra/profilis", label: "Mano duomenys" },
+    { href: "/tapti-tiekeju", label: "Tapti meistru" },
   ];
 }

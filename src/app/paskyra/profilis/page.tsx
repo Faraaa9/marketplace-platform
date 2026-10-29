@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { FileText } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import Button from "@/components/ui/Button";
+import { PageHeader } from "@/components/account/ui";
 import Skeleton from "@/components/ui/Skeleton";
 import ProfileForm from "./ProfileForm";
 
 export const metadata: Metadata = {
-  title: "Mano profilis | PaslaugųRinka",
+  title: "Mano duomenys",
   description: "Tvarkykite pagrindinius kliento profilio kontaktus.",
 };
 
@@ -20,34 +18,14 @@ export default function ClientProfilePage() {
   // Cache Components: the static header paints with the prerendered shell, while
   // the session-reading loader streams in under the Suspense boundary below.
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <ProfileHeader />
-        <Suspense fallback={<ProfileFormSkeleton />}>
-          <ProfileFormLoader />
-        </Suspense>
-      </div>
-    </div>
-  );
-}
-
-function ProfileHeader() {
-  return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p className="text-body-sm font-medium text-surface-500 dark:text-surface-400">
-          Paskyra
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
-          Mano profilis
-        </h1>
-      </div>
-      <Link href="/paskyra/uzklausos">
-        <Button variant="outline" size="sm">
-          <FileText className="mr-1.5 h-4 w-4" />
-          Mano užklausos
-        </Button>
-      </Link>
+    <div className="flex max-w-[860px] flex-col gap-[18px]">
+      <PageHeader
+        title="Mano duomenys"
+        sub="Kontaktai, kuriuos gauna jūsų pasirinktas meistras, el. paštas, telefonas ir slaptažodis."
+      />
+      <Suspense fallback={<ProfileFormSkeleton />}>
+        <ProfileFormLoader />
+      </Suspense>
     </div>
   );
 }
@@ -83,7 +61,7 @@ function ProfileFormSkeleton() {
   // streamed form lands without layout shift. The header renders above.
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
-      <section className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm dark:border-surface-700/50 dark:bg-surface-900/50">
+      <section className="rounded-xl border border-surface-100 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
         <div className="mb-5 flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded" />
           <Skeleton className="h-4 w-24" />
@@ -115,7 +93,7 @@ function ProfileFormSkeleton() {
         </div>
       </section>
 
-      <aside className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm dark:border-surface-700/50 dark:bg-surface-900/50">
+      <aside className="rounded-xl border border-surface-100 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="mt-3 h-2 w-full rounded-full" />
         <Skeleton className="mt-2 h-6 w-12" />

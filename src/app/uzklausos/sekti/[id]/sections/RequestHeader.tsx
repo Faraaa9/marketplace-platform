@@ -1,33 +1,16 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  MapPin,
-  Clock,
-  CalendarClock,
-  Euro,
-  Search as SearchIcon,
-  Handshake,
-  ArrowUpRight,
-  Pencil,
-  ImagePlus,
-  Wallet,
-} from "lucide-react";
-import Badge from "@/components/ui/Badge";
 import TelegramSourceBadge from "@/components/TelegramSourceBadge";
-import { formatRelativeDate } from "@/lib/utils";
+import { BUTTON_GHOST, Chip, Notice, StepBar } from "@/components/account/ui";
+import { requestStatusChip, requestStep } from "@/lib/account/request-progress";
+import { decodeHtmlEntities, formatRelativeDate } from "@/lib/utils";
+import RequestActions, { BackToRequests, ResendConfirmation } from "../RequestActions";
 import { getTrackedRequestSummary } from "../data";
 
 interface RequestHeaderProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ verification?: string; delivery?: string }>;
 }
-
-const statusMap: Record<string, { label: string; variant: "warning" | "brand" | "default" }> = {
-  PENDING_CONFIRMATION: { label: "Laukia patvirtinimo", variant: "warning" },
-  OPEN: { label: "Atidaryta", variant: "brand" },
-  IN_PROGRESS: { label: "Vykdoma", variant: "brand" },
-  CLOSED: { label: "Uždaryta", variant: "default" },
-};
 
 export default async function RequestHeader({ params, searchParams }: RequestHeaderProps) {
   const { id } = await params;
@@ -36,184 +19,96 @@ export default async function RequestHeader({ params, searchParams }: RequestHea
 
   const { verification: verificationState, delivery: deliveryState } = await searchParams;
 
-  const categoryLabels =
-    request.categoryNames.length > 0
-      ? request.categoryNames
-      : request.category
-        ? [request.category]
-        : [];
-
-  const status = statusMap[request.status] || statusMap.OPEN;
-  const displayStatus =
-    request.moderationStatus === "PENDING"
-      ? { label: "Peržiūrima", variant: "warning" as const }
-      : request.moderationStatus === "REJECTED"
-        ? { label: "Atmesta", variant: "default" as const }
-        : status;
+  const progress = {
+    status: request.status,
+    moderationStatus: request.moderationStatus,
+    responseCount: request.responseCount,
+    acceptedResponseId: request.acceptedResponseId,
+    reviewed: request.acceptedReviewed,
+  };
+  const chip = requestStatusChip(progress);
+  const categoryLabel = (request.categoryNames.length > 0 ? request.categoryNames : [request.category])
+    .filter(Boolean)
+    .join(" · ");
   const isOpen = request.status === "OPEN";
-  const isApproved =
-    request.moderationStatus !== "PENDING" && request.moderationStatus !== "REJECTED";
-  const publicRequestHref = `/uzklausos?search=${encodeURIComponent(request.title)}&open=${encodeURIComponent(request.id)}#uzklausa-${request.id}`;
+  const isApproved = request.moderationStatus !== "PENDING" && request.moderationStatus !== "REJECTED";
+  const publicHref = isApproved && isOpen
+    ? `/uzklausos?search=${encodeURIComponent(request.title)}&open=${encodeURIComponent(request.id)}#uzklausa-${request.id}`
+    : null;
 
   return (
-    <>
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            {isOpen && isApproved ? (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-caption font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                <span
-                  aria-hidden
-                  className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse"
-                />
-                Gyvai
-              </span>
-            ) : (
-              <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
-            )}
+    <div className="flex flex-col gap-4">
+      <BackToRequests />
+
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone={chip.tone}>{chip.label}</Chip>
             {request.source === "telegram" && <TelegramSourceBadge />}
-            {categoryLabels.length > 0 && (
-              <span className="truncate text-body-sm text-surface-500">
-                {categoryLabels.join(" · ")}
-              </span>
-            )}
           </div>
-          {isApproved && (
-            <Link
-              href={publicRequestHref}
-              aria-label="Atidaryti viešą skelbimą"
-              title="Atidaryti viešą skelbimą"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-surface-200/80 bg-white/70 text-surface-500 shadow-sm transition-all hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-surface-700 dark:bg-surface-900/70 dark:text-surface-300 dark:hover:bg-surface-800"
-            >
-              <ArrowUpRight className="h-4.5 w-4.5" />
-            </Link>
-          )}
+          <h1 className="mt-2.5 font-serif text-[26px] font-semibold leading-tight text-surface-900 dark:text-white sm:text-[28px]">
+            {decodeHtmlEntities(request.title)}
+          </h1>
+          <p className="mt-1.5 text-body-sm text-surface-500">
+            {[request.location, categoryLabel, `pateikta ${formatRelativeDate(request.createdAt).toLowerCase()}`]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         </div>
-        <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white">{request.title}</h1>
-        <div className="mt-3 flex flex-wrap gap-4 text-body-sm text-surface-500">
-          <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{request.location}</span>
-          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{formatRelativeDate(request.createdAt)}</span>
-          {request.budget && <span className="flex items-center gap-1.5"><Euro className="h-4 w-4" />{request.budget}</span>}
-          {request.deadline && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{request.deadline}</span>}
-        </div>
+        <RequestActions trackingToken={id} status={request.status} publicHref={publicHref} />
       </div>
 
+      {request.moderationStatus !== "REJECTED" && request.status !== "PENDING_CONFIRMATION" && (
+        <StepBar current={requestStep(progress)} />
+      )}
+
+      {request.status === "PENDING_CONFIRMATION" && <ResendConfirmation trackingToken={id} />}
       {request.moderationStatus === "PENDING" && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-500/10">
-          <p className="text-body-sm font-semibold text-amber-900 dark:text-amber-200">
-            Užklausa peržiūrima
-          </p>
-          <p className="mt-0.5 text-body-sm text-amber-800 dark:text-amber-300">
-            Jūsų užklausa tikrinama prieš paskelbiant ir kol kas nematoma tiekėjams.
-            Paprastai peržiūra trunka neilgai.
-          </p>
-        </div>
+        <Notice tone="warn" title="Užklausa peržiūrima">
+          Jūsų užklausa tikrinama prieš paskelbiant ir kol kas nematoma meistrams. Paprastai peržiūra trunka neilgai.
+        </Notice>
       )}
-
       {request.moderationStatus === "REJECTED" && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-500/10">
-          <p className="text-body-sm font-semibold text-red-900 dark:text-red-200">
-            Užklausa nepaskelbta
-          </p>
-          <p className="mt-0.5 text-body-sm text-red-800 dark:text-red-300">
-            Užklausa neatitiko platformos taisyklių dėl netinkamo turinio. Suredaguokite
-            tekstą ar nuotraukas ir bandykite dar kartą.
-          </p>
-        </div>
+        <Notice tone="error" title="Užklausa nepaskelbta">
+          Užklausa neatitiko platformos taisyklių dėl netinkamo turinio. Suredaguokite tekstą ar nuotraukas ir
+          bandykite dar kartą.
+        </Notice>
       )}
-
       {verificationState === "success" && (
-        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-body-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-          El. paštas patvirtintas. Užklausa aktyvuota ir perduota tiekėjams.
-        </div>
+        <Notice tone="ok">El. paštas patvirtintas. Užklausa aktyvuota ir perduota meistrams.</Notice>
       )}
-
-      {verificationState === "already-confirmed" && (
-        <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-body-sm text-brand-800 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
-          Ši užklausa jau buvo patvirtinta anksčiau.
-        </div>
-      )}
-
+      {verificationState === "already-confirmed" && <Notice tone="info">Ši užklausa jau buvo patvirtinta anksčiau.</Notice>}
       {verificationState === "expired" && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-body-sm text-amber-800 dark:border-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-          Patvirtinimo nuoroda nebegalioja. Išsiųskite naują patvirtinimo laišką.
-        </div>
+        <Notice tone="warn">Patvirtinimo nuoroda nebegalioja. Išsiųskite naują patvirtinimo laišką.</Notice>
       )}
-
       {deliveryState === "failed" && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-body-sm text-red-800 dark:border-red-700 dark:bg-red-500/10 dark:text-red-300">
+        <Notice tone="error">
           Užklausa sukurta, bet patvirtinimo laiško išsiųsti nepavyko. Galite pabandyti dar kartą šiame puslapyje.
-        </div>
+        </Notice>
       )}
-
       {deliveryState === "mock" && (
-        <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-body-sm text-brand-800 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
-          Veikiate development režime: vietoj tikro laiško naudokite dev email preview, kad atidarytumėte patvirtinimo nuorodą.
-        </div>
+        <Notice tone="info">
+          Veikiate development režime: vietoj tikro laiško naudokite dev email preview, kad atidarytumėte patvirtinimo
+          nuorodą.
+        </Notice>
       )}
 
       {isOpen && isApproved && request.responseCount === 0 && (
-        <p className="mb-6 text-body-sm text-surface-500 dark:text-surface-400">
-          Tiekėjai mato tavo užklausą - pirmieji pasiūlymai dažniausiai ateina per kelias valandas.
-        </p>
-      )}
-
-      {isOpen && isApproved && request.responseCount === 0 && (
-        <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-body-sm font-semibold text-brand-900 dark:text-brand-100">
-                Padidinkite šansą gauti pirmą pasiūlymą
-              </p>
-              <p className="mt-1 text-body-sm text-brand-800/80 dark:text-brand-200/80">
-                Geriausiai veikia aiškus aprašymas, orientacinis biudžetas ir kelios nuotraukos.
-              </p>
-            </div>
-            <Link
-              href={`/uzklausos/sekti/${id}/redaguoti#description`}
-              className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700"
-            >
-              <Pencil className="h-4 w-4" />
-              Pagerinti užklausą
-            </Link>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Link
-              href={`/uzklausos/sekti/${id}/redaguoti#photos`}
-              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
-            >
-              <ImagePlus className="h-4 w-4 shrink-0" />
-              Pridėti nuotraukų
-            </Link>
-            <Link
-              href={`/uzklausos/sekti/${id}/redaguoti#budget`}
-              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
-            >
-              <Wallet className="h-4 w-4 shrink-0" />
-              Patikslinti biudžetą
-            </Link>
-            <Link
-              href={`/uzklausos/sekti/${id}/redaguoti#category`}
-              className="flex min-h-[44px] items-center gap-2 rounded-xl border border-brand-200 bg-white/70 px-3 py-2 text-caption font-semibold text-brand-800 transition-colors hover:bg-white dark:border-brand-800/50 dark:bg-surface-900/60 dark:text-brand-200"
-            >
-              <SearchIcon className="h-4 w-4 shrink-0" />
-              Patikrinti kategoriją
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {request.status === "IN_PROGRESS" && (
-        <div className="mb-6 rounded-2xl border border-brand-200/60 bg-brand-50/50 p-5 dark:border-brand-800/40 dark:bg-brand-950/30">
-          <div className="flex items-center gap-2 mb-1">
-            <Handshake className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-            <p className="text-body-sm font-semibold text-brand-900 dark:text-brand-200">Pasiūlymas priimtas</p>
-          </div>
-          <p className="text-body-sm text-brand-800/80 dark:text-brand-300/80">
-            Susisiekite su tiekėju per žinučių sistemą žemiau ir suderinkite darbo detales. Kai darbas bus atliktas, galite uždaryti užklausą.
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-brand-200 bg-brand-50/60 px-4 py-3.5 dark:border-brand-800/50 dark:bg-brand-950/30">
+          <p className="min-w-0 flex-[1_1_280px]">
+            <strong>Pasiūlymų dar nėra.</strong>{" "}
+            <span className="text-surface-600 dark:text-surface-300">
+              Meistrai jau mato užklausą — su nuotraukomis ir biudžetu atsakymų sulaukiama greičiau.
+            </span>
           </p>
+          <Link href={`/uzklausos/sekti/${id}/redaguoti#photos`} className={BUTTON_GHOST}>
+            Pridėti nuotraukų
+          </Link>
+          <Link href={`/uzklausos/sekti/${id}/redaguoti#budget`} className={BUTTON_GHOST}>
+            Nurodyti biudžetą
+          </Link>
         </div>
       )}
-    </>
+    </div>
   );
 }

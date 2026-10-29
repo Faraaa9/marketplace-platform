@@ -24,7 +24,7 @@ function getSafeCallbackPath(callbackUrl: string | null) {
 
 function normalizeCallbackPath(path: string | null) {
   if (!path) return null;
-  if (path.startsWith("/tiekejas/atsakymai")) return "/tiekejas/zinutes";
+  if (path.startsWith("/tiekejas/atsakymai")) return "/tiekejas/pasiulymai";
   return path;
 }
 

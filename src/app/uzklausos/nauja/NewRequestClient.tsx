@@ -630,14 +630,12 @@ function NewRequestV2Form() {
         if (!isLoggedIn) saveGuestRequest(data.data.trackingToken, form.title);
         clearListingDraft();
         // ?created=1 fires the short "Užklausa paskelbta" toast on the target
-        // page. Logged-in users land where their requests live (the tracker
-        // page is being retired); guests have no inbox, so the tracker page
-        // with its magic-link flow remains their destination.
+        // page. Signed-in users (providers too) land in the customer account,
+        // where their own requests live; guests go to the tracker page with
+        // its magic-link flow.
         const target = !isLoggedIn
           ? `/uzklausos/sekti/${data.data.trackingToken}?created=1`
-          : session?.user?.role === "PROVIDER"
-            ? "/tiekejas/zinutes?created=1"
-            : "/paskyra/uzklausos?created=1";
+          : "/paskyra/uzklausos?created=1";
         router.push(target);
       } else {
         trackEvent("request_publish_failed", {

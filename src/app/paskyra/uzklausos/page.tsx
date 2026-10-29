@@ -1,89 +1,94 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { SessionGate } from "@/components/auth/SessionGate";
-import { AnnouncementCards } from "@/components/announcements/AnnouncementCards";
-import Button from "@/components/ui/Button";
+import CreatedToast from "@/components/ui/CreatedToast";
 import { MyRequestsListSkeleton } from "@/components/ui/skeletons";
-import MyRequestsList from "./MyRequestsList";
+import { ButtonLink, Chip, EmptyPanel, PageHeader, Tabs } from "@/components/account/ui";
+import { getCustomerOverview, offersLabel } from "@/lib/account/customer-data";
+import { requestStatusChip } from "@/lib/account/request-progress";
+import { formatRelativeDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Mano užklausos | PaslaugųRinka",
+  title: "Mano užklausos",
   description: "Jūsų pateiktos užklausos ir gauti pasiūlymai.",
 };
 
-interface PageProps {
-  searchParams: Promise<{ status?: string; created?: string }>;
-}
+type SearchParams = Promise<{ tab?: string; status?: string; created?: string }>;
 
-// Cache Components: the shell prerenders, then the auth gate streams in. Both
-// USER and PROVIDER may view this page — only the title and the role toggle
-// differ — so the gate runs auth-only (no requireRole) and the role is read
-// for the header. The request list streams on its own inner boundary.
-export default function MyRequestsPage({ searchParams }: PageProps) {
+export default function MyRequestsPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <Suspense fallback={<MyRequestsListSkeleton withHeader />}>
-          <SessionGate callbackUrl="/paskyra/uzklausos">
-            {(userId) => (
-              <MyRequestsView userId={userId} searchParams={searchParams} />
-            )}
-          </SessionGate>
-        </Suspense>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Mano užklausos"
+        sub="Visos jūsų užklausos vienoje vietoje."
+        actions={
+          <ButtonLink href="/uzklausos/nauja" variant="primary">
+            + Nauja užklausa
+          </ButtonLink>
+        }
+      />
+      <Suspense fallback={<MyRequestsListSkeleton />}>
+        <SessionGate callbackUrl="/paskyra/uzklausos">
+          {(userId) => <MyRequestsView userId={userId} searchParams={searchParams} />}
+        </SessionGate>
+      </Suspense>
     </div>
   );
 }
 
-async function MyRequestsView({
-  userId,
-  searchParams,
-}: {
-  userId: string;
-  searchParams: Promise<{ status?: string; created?: string }>;
-}) {
-  const session = await getServerSession(authOptions);
-  const isProvider = session?.user?.role === "PROVIDER";
+async function MyRequestsView({ userId, searchParams }: { userId: string; searchParams: SearchParams }) {
+  const sp = await searchParams;
+  // `?status=CLOSED` is the pre-redesign filter param; old links keep working.
+  const showClosed = sp.tab === "uzbaigtos" || sp.status === "CLOSED";
+  const { active, closed } = await getCustomerOverview(userId);
+  const list = showClosed ? closed : active;
 
   return (
-    <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
-          {isProvider ? "Mano pateiktos užklausos" : "Mano užklausos"}
-        </h1>
-        <Link href="/uzklausos/nauja">
-          <Button size="sm">
-            <Plus className="mr-1 h-4 w-4" /> Nauja
-          </Button>
-        </Link>
+    <div>
+      {sp.created === "1" && <CreatedToast />}
+      <Tabs
+        items={[
+          { href: "/paskyra/uzklausos", label: `Aktyvios (${active.length})`, active: !showClosed },
+          { href: "/paskyra/uzklausos?tab=uzbaigtos", label: `Užbaigtos (${closed.length})`, active: showClosed },
+        ]}
+      />
+      <div className="mt-4 flex flex-col gap-2.5">
+        {list.length === 0 ? (
+          <EmptyPanel>
+            {showClosed ? (
+              "Užbaigtų užklausų dar nėra."
+            ) : (
+              <>
+                Aktyvių užklausų nėra.{" "}
+                <Link href="/uzklausos/nauja" className="font-semibold text-brand-700 hover:underline">
+                  Pateikti užklausą
+                </Link>
+              </>
+            )}
+          </EmptyPanel>
+        ) : (
+          list.map((r) => {
+            const chip = requestStatusChip(r);
+            return (
+              <Link
+                key={r.id}
+                href={`/uzklausos/sekti/${r.trackingToken}`}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-surface-100 bg-white px-4 py-3.5 transition-colors hover:border-surface-300 dark:border-surface-800 dark:bg-surface-900"
+              >
+                <div className="min-w-0 flex-[1_1_260px]">
+                  <p className="truncate text-body font-semibold text-surface-900 dark:text-white">{r.title}</p>
+                  <p className="text-caption font-normal text-surface-500">
+                    {[r.location, r.categoryName, formatRelativeDate(r.createdAt)].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <span className="text-caption font-normal text-surface-500">{offersLabel(r.responseCount)}</span>
+                <Chip tone={chip.tone}>{chip.label}</Chip>
+              </Link>
+            );
+          })
+        )}
       </div>
-
-      <AnnouncementCards surface="client" className="mb-5" />
-
-      {isProvider && (
-        <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-surface-100 p-1 dark:bg-surface-800">
-          <Link
-            href="/uzklausos"
-            className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg px-3 text-body-sm font-medium text-surface-500 transition-colors hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 sm:flex-none"
-          >
-            Klientų
-          </Link>
-          <span
-            aria-current="page"
-            className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-3 text-body-sm font-semibold text-surface-900 shadow-sm dark:bg-surface-700 dark:text-white sm:flex-none"
-          >
-            Mano pateiktos
-          </span>
-        </div>
-      )}
-
-      <Suspense fallback={<MyRequestsListSkeleton />}>
-        <MyRequestsList userId={userId} searchParams={searchParams} />
-      </Suspense>
-    </>
+    </div>
   );
 }

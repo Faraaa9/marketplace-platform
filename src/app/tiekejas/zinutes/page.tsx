@@ -1,25 +1,14 @@
-import { Suspense } from "react";
+import type { Metadata } from "next";
+import { PageHeader } from "@/components/account/ui";
 import ProviderInboxClient from "./ProviderInboxClient";
-import CreatedToast from "@/components/ui/CreatedToast";
 
-interface PageProps {
-  searchParams: Promise<{ created?: string }>;
-}
+export const metadata: Metadata = { title: "Žinutės" };
 
-// The inbox shell prerenders; the post-publish toast depends on the search
-// param, so it resolves inside its own boundary without blocking the page.
-export default function ProviderInboxPage({ searchParams }: PageProps) {
+export default function ProviderInboxPage() {
   return (
-    <>
-      <Suspense fallback={null}>
-        <CreatedToastGate searchParams={searchParams} />
-      </Suspense>
+    <div className="flex flex-col gap-[18px]">
+      <PageHeader title="Žinutės" sub="Pokalbiai su klientais. Prie kiekvieno — užklausos santrauka." />
       <ProviderInboxClient />
-    </>
+    </div>
   );
-}
-
-async function CreatedToastGate({ searchParams }: PageProps) {
-  const { created } = await searchParams;
-  return created === "1" ? <CreatedToast /> : null;
 }

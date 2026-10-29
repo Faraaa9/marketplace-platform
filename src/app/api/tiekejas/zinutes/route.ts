@@ -1,7 +1,6 @@
 import { NextResponse, connection, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveProvider } from "@/lib/provider-guard";
-import { getProviderAvatarImage } from "@/lib/provider-image";
 import { formatLastSeen, getPresenceLevel, type PresenceLevel } from "@/lib/presence";
 import { getProviderInboxCache, setProviderInboxCache } from "@/lib/provider-inbox-cache";
 import { createServerTimer } from "@/lib/server-timing";
@@ -89,7 +88,7 @@ export async function GET(req: NextRequest) {
 
     if (summaryOnly) {
       const unreadCap = 100;
-      const [responseRows, incomingInquiryRows, sentInquiryRows] = await Promise.all([
+      const [responseRows, incomingInquiryRows] = await Promise.all([
         prisma.$queryRaw<{ count: number }[]>`
           SELECT COUNT(*)::int AS count
           FROM responses
@@ -104,27 +103,14 @@ export async function GET(req: NextRequest) {
             AND status <> 'ARCHIVED'
             AND "lastMessageAt" > "providerLastReadAt"
         `,
-        prisma.$queryRaw<{ count: number }[]>`
-          SELECT COUNT(*)::int AS count
-          FROM direct_inquiries
-          WHERE "senderUserId" = ${providerId}
-            AND "providerId" <> ${providerId}
-            AND "moderationStatus" = 'APPROVED'
-            AND status <> 'ARCHIVED'
-            AND ("clientLastReadAt" IS NULL OR "lastMessageAt" > "clientLastReadAt")
-        `,
       ]);
       timer.mark("summaryQuery");
-      const cappedTotal =
-        (responseRows[0]?.count ?? 0) +
-        (incomingInquiryRows[0]?.count ?? 0) +
-        (sentInquiryRows[0]?.count ?? 0);
+      const cappedTotal = (responseRows[0]?.count ?? 0) + (incomingInquiryRows[0]?.count ?? 0);
       const totalUnread = Math.min(cappedTotal, unreadCap);
       timer.end({
         mode: "summary",
         responseUnread: responseRows[0]?.count ?? 0,
         incomingUnread: incomingInquiryRows[0]?.count ?? 0,
-        sentUnread: sentInquiryRows[0]?.count ?? 0,
       });
 
       return NextResponse.json({
@@ -169,9 +155,10 @@ export async function GET(req: NextRequest) {
       shouldFetchInquiries ? prisma.directInquiry.findMany({
         where: {
           AND: [
-            { OR: [{ providerId }, { senderUserId: providerId }] },
+            // Inquiries the provider sent as a customer live in /paskyra/zinutes.
+            { providerId },
             { moderationStatus: "APPROVED" },
-            ...(directThreadId ? [{ OR: [{ id: directThreadId }, { trackingToken: directThreadId }] }] : []),
+            ...(directThreadId ? [{ id: directThreadId }] : []),
             ...(cursor ? [{ lastMessageAt: { lt: cursor } }] : []),
           ],
         },
@@ -179,23 +166,12 @@ export async function GET(req: NextRequest) {
         take: pageTake,
         select: {
           id: true,
-          trackingToken: true,
-          providerId: true,
           description: true,
           senderName: true,
           senderEmail: true,
           status: true,
           lastMessageAt: true,
           providerLastReadAt: true,
-          clientLastReadAt: true,
-          provider: {
-            select: {
-              name: true,
-              image: true,
-              lastSeenAt: true,
-              providerProfile: { select: { images: true, heroImageUrl: true } },
-            },
-          },
           sender: { select: { image: true, lastSeenAt: true } },
           messages: {
             select: { content: true, createdAt: true, senderId: true },
@@ -230,33 +206,22 @@ export async function GET(req: NextRequest) {
 
     const directItems: ConversationItem[] = inquiries.map((q) => {
       const last = q.messages[0] ?? null;
-      const viewerIsProvider = q.providerId === providerId;
-      // Outgoing direct inquiry (provider acting as sender) lives at the
-      // tracking-token route; incoming lives in the provider inbox detail.
-      const href = viewerIsProvider
-        ? `/tiekejas/zinutes/${q.id}`
-        : `/zinutes/${q.trackingToken}`;
-      const title = viewerIsProvider
-        ? (q.senderName?.trim() || q.senderEmail)
-        : (q.provider.name || "Tiekėjas");
-      const subtitle = viewerIsProvider ? q.senderEmail : "Mano išsiųsta žinutė";
-      const lastReadAt = viewerIsProvider ? q.providerLastReadAt : q.clientLastReadAt;
       return {
         type: "direct",
         id: q.id,
-        href,
-        title,
-        subtitle,
+        href: `/tiekejas/zinutes/${q.id}`,
+        title: q.senderName?.trim() || q.senderEmail,
+        subtitle: q.senderEmail,
         // No chat messages yet → preview the opening inquiry.
         preview: last ? last.content : q.description,
         lastMessageAt: q.lastMessageAt,
-        unread: lastReadAt ? q.lastMessageAt > lastReadAt : !viewerIsProvider,
-        fromProvider: last ? last.senderId === providerId : viewerIsProvider,
+        unread: q.lastMessageAt > q.providerLastReadAt,
+        fromProvider: last ? last.senderId === providerId : false,
         status: q.status,
         archived: q.status === "ARCHIVED",
-        avatarImage: viewerIsProvider ? q.sender?.image ?? null : getProviderAvatarImage(q.provider),
-        presenceLevel: viewerIsProvider ? getPresenceLevel(q.sender?.lastSeenAt) : getPresenceLevel(q.provider.lastSeenAt),
-        presenceLabel: viewerIsProvider ? formatLastSeen(q.sender?.lastSeenAt) : formatLastSeen(q.provider.lastSeenAt),
+        avatarImage: q.sender?.image ?? null,
+        presenceLevel: getPresenceLevel(q.sender?.lastSeenAt),
+        presenceLabel: formatLastSeen(q.sender?.lastSeenAt),
       };
     });
 

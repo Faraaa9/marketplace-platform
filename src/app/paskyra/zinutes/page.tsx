@@ -1,39 +1,19 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { InquiriesListSkeleton } from "@/components/ui/skeletons";
-import SentInquiriesView from "./SentInquiriesView";
+import { PageHeader } from "@/components/account/ui";
+import CustomerInbox from "./CustomerInbox";
 
 export const metadata: Metadata = {
-  title: "Žinutės | PaslaugųRinka",
-  description: "Pokalbiai, kuriuos pradėjote rašydami tiekėjams.",
+  title: "Žinutės",
+  description: "Pokalbiai su meistrais — dėl pasiūlymų ir tiesioginiai klausimai.",
 };
 
-interface PageProps {
-  searchParams: Promise<{ tab?: string }>;
-}
-
-// Cache Components requires the session check (uncached) to live inside a
-// Suspense boundary. The page shell prerenders statically; <SessionGate />
-// streams in once the session resolves and either redirects or renders the
-// inquiry view. The skeleton fallback mirrors that view so nothing shifts.
-export default function SentInquiriesPage({ searchParams }: PageProps) {
+// Auth is enforced by src/proxy.ts; the inbox itself loads client-side so the
+// page shell prerenders.
+export default function CustomerMessagesPage() {
   return (
-    <Suspense fallback={<InquiriesListSkeleton />}>
-      <SessionGate searchParams={searchParams} />
-    </Suspense>
+    <div className="flex flex-col gap-[18px]">
+      <PageHeader title="Žinutės" sub="Visi pokalbiai su meistrais — ir dėl pasiūlymų, ir tiesioginiai klausimai." />
+      <CustomerInbox />
+    </div>
   );
-}
-
-async function SessionGate({ searchParams }: PageProps) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    redirect(`/prisijungti?callbackUrl=${encodeURIComponent("/paskyra/zinutes")}`);
-  }
-  if (session.user.role === "PROVIDER") {
-    redirect("/tiekejas/zinutes");
-  }
-  return <SentInquiriesView userId={session.user.id} searchParams={searchParams} />;
 }

@@ -15,6 +15,9 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Save, Check, X, ImageIcon, Camera, MapPin, Wrench, Euro, Clock, FileCheck, Zap, User, CheckCircle2, Mail, Eye, Sparkles, ChevronDown, Lock, Plus } from "lucide-react";
 import { FREE_CATEGORY_LIMIT, CREDITS_PER_CATEGORY_MONTH, MAX_CATEGORY_MONTHS } from "@/lib/category-pricing";
 import SectionHeader from "./components/SectionHeader";
+import ProfilePreviewCard from "./components/ProfilePreviewCard";
+import StoryModal from "./components/StoryModal";
+import { ButtonLink, PageHeader } from "@/components/account/ui";
 import GroupedCategoryPicker from "@/components/categories/GroupedCategoryPicker";
 
 type PaidCategory = { categoryId: string; expiresAt: string };
@@ -39,6 +42,7 @@ export default function ProviderProfilePage() {
   // Story state (read-only — management moved to dashboard)
   const [stories, setStories] = useState<{ id: string }[]>([]);
   const [storyEnabled, setStoryEnabled] = useState(true);
+  const [storyModalOpen, setStoryModalOpen] = useState(false);
 
   const [account, setAccount] = useState<{
     userName: string | null;
@@ -440,11 +444,18 @@ export default function ProviderProfilePage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-10 pb-24">
-      <h1 className="text-heading-1 font-bold text-surface-900 dark:text-white mb-1">Profilio redagavimas</h1>
-      <p className="text-body-sm text-surface-500 dark:text-surface-400 mb-5">
-        Užpildykite profilį — klientai matys jūsų informaciją prieš kreipdamiesi.
-      </p>
+    <div className="flex flex-col gap-[18px] pb-24">
+      <PageHeader
+        title="Mano profilis"
+        sub="Taip jus mato klientai. Užpildytas profilis — daugiau priimtų pasiūlymų."
+        actions={
+          account.isActive && account.emailVerified && account.userId ? (
+            <ButtonLink href={`/meistrai/${account.slug ?? account.userId}`}>Peržiūrėti viešą profilį</ButtonLink>
+          ) : undefined
+        }
+      />
+      <div className="flex flex-wrap items-start gap-5">
+      <div className="min-w-0 flex-[999_1_480px]">
 
       {/* AI profile generation CTA */}
       {completeness.percent < 100 && (
@@ -554,7 +565,7 @@ export default function ProviderProfilePage() {
       <div className="space-y-5">
         {/* Section 1: Basic Info */}
         <Card>
-          <SectionHeader icon={<User className="h-4 w-4" />} title="Pagrindinė informacija" step={1} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
+          <SectionHeader icon={<User className="h-4 w-4" />} title="Antraštė ir aprašymas" />
           <div className="space-y-4">
             <div>
               <Input
@@ -587,6 +598,15 @@ export default function ProviderProfilePage() {
               )}
             </div>
 
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader
+            icon={<Wrench className="h-4 w-4" />}
+            title={`Veiklos sritys (${Math.min(form.categoryIds.length, FREE_CATEGORY_LIMIT)} iš ${FREE_CATEGORY_LIMIT} nemokamų)`}
+          />
+          <div className="space-y-4">
             <div id="categories">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-body-sm font-medium text-surface-700 dark:text-surface-300">
@@ -724,7 +744,7 @@ export default function ProviderProfilePage() {
         {/* Section 2: Services & Experience */}
         <div id="images">
         <Card>
-          <SectionHeader icon={<Wrench className="h-4 w-4" />} title="Paslaugos ir patirtis" step={2} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
+          <SectionHeader icon={<Euro className="h-4 w-4" />} title="Kainos ir sąlygos" />
           <div className="space-y-4">
             <Textarea
               id="services"
@@ -802,7 +822,7 @@ export default function ProviderProfilePage() {
 
         {/* Section 3: Photos */}
         <Card>
-          <SectionHeader icon={<Camera className="h-4 w-4" />} title="Nuotraukos ir darbų pavyzdžiai" step={3} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
+          <SectionHeader icon={<Camera className="h-4 w-4" />} title={`Darbų nuotraukos (${images.length})`} />
 
           {/* Profile photo */}
           <div className="mb-4">
@@ -915,22 +935,30 @@ export default function ProviderProfilePage() {
                   }
                 </p>
                 <p className="text-micro text-surface-400 mt-0.5">
-                  Story galite greitai valdyti valdymo panelėje — paspaudę ant savo avataro.
+                  Trumpos nuotraukos su tekstu, matomos 24 val. puslapio viršuje.
                 </p>
               </div>
-              <Link
-                href="/tiekejas"
+              <button
+                type="button"
+                onClick={() => setStoryModalOpen(true)}
                 className="shrink-0 rounded-xl bg-brand-50 px-3 py-2 text-body-sm font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20 transition-colors"
               >
                 Valdyti →
-              </Link>
+              </button>
             </div>
+            <StoryModal
+              open={storyModalOpen}
+              onClose={() => setStoryModalOpen(false)}
+              onStoryChange={(delta) =>
+                setStories((prev) => (delta > 0 ? [...prev, { id: `new-${Date.now()}` }] : prev.slice(0, Math.max(0, prev.length + delta))))
+              }
+            />
           </Card>
         )}
 
         {/* Section 5: Location & Contact */}
         <Card>
-          <SectionHeader icon={<MapPin className="h-4 w-4" />} title="Kontaktai ir lokacija" step={account.isActive && storyEnabled ? 5 : 4} totalSteps={account.isActive && storyEnabled ? 5 : 4} />
+          <SectionHeader icon={<MapPin className="h-4 w-4" />} title="Kur dirbate ir kontaktai" />
           <div className="space-y-4">
             <div>
               <Select
@@ -1054,8 +1082,22 @@ export default function ProviderProfilePage() {
         </Card>
       </div>
 
-      {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-10 px-4 pb-4 pt-2 pointer-events-none">
+      </div>
+      <aside className="min-w-0 flex-[1_1_280px] md:sticky md:top-[96px]">
+        <ProfilePreviewCard
+          name={account.userName || "Jūsų vardas"}
+          headline={form.headline}
+          location={form.location}
+          images={images.map((img) => img.url)}
+          experienceYears={form.experienceYears}
+          priceFrom={form.priceFrom}
+          isActive={account.isActive}
+        />
+      </aside>
+      </div>
+
+      {/* Sticky save bar — sits above the mobile bottom nav, right of the sidebar */}
+      <div className="pointer-events-none fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 px-4 pb-3 pt-2 md:bottom-0 md:left-[232px] md:pb-4">
         <div className="mx-auto max-w-3xl pointer-events-auto">
           <div className="rounded-2xl border border-surface-200/60 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg dark:border-surface-700/50 dark:bg-surface-900/95 flex items-center justify-between gap-2">
             <p className="text-micro text-surface-400 hidden sm:block">
