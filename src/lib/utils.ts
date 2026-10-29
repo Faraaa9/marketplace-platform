@@ -69,3 +69,21 @@ export function creditsLabel(n: number): string {
   if (last >= 2 && last <= 9) return "kreditai";
   return "kreditų";
 }
+
+/**
+ * Lithuanian count + noun with the right plural form, e.g.
+ * ltCount(1, ["pasiūlymas", "pasiūlymai", "pasiūlymų"]) → "1 pasiūlymas".
+ * Forms: [1, 21, 31…] · [2–9, 22–29…] · [0, 10–20, 30…].
+ */
+export function ltCount(n: number, forms: [string, string, string]): string {
+  const abs = Math.abs(Math.trunc(n)) % 100;
+  const last = abs % 10;
+  const form = abs >= 11 && abs <= 19 ? forms[2] : last === 1 ? forms[0] : last >= 2 && last <= 9 ? forms[1] : forms[2];
+  return `${n} ${form}`;
+}
+
+export function initialsOf(name: string): string {
+  const parts = decodeHtmlEntities(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+}

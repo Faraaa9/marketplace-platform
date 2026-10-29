@@ -74,18 +74,17 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // The provider's internal requests board is retired; the work center is
-      // /tiekejas/zinutes. The lead detail/unlock page moved to
-      // /tiekejas/uzklausa/[id] — old per-request links (stored in DB
-      // notifications) redirect there.
-      {
-        source: "/tiekejas/uzklausos",
-        destination: "/tiekejas/zinutes",
-        permanent: false,
-      },
+      // Provider account: /tiekejas/uzklausos is the lead feed and the lead
+      // page lives at /tiekejas/uzklausa/[id]; older per-request links (stored
+      // in DB notifications) and the retired responses page redirect.
       {
         source: "/tiekejas/uzklausos/:id",
         destination: "/tiekejas/uzklausa/:id",
+        permanent: false,
+      },
+      {
+        source: "/tiekejas/atsakymai",
+        destination: "/tiekejas/pasiulymai",
         permanent: false,
       },
       {

@@ -434,10 +434,10 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                 : userRole === "PROVIDER"
                   ? hasSentOffer
                     ? `/tiekejas/zinutes?thread=response-${ownResponseId}`
-                    : `/tiekejas/zinutes?request=${r.id}`
+                    : `/tiekejas/uzklausa/${r.id}`
                   : userRole
                     ? `/tapti-tiekeju`
-                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/zinutes?request=${r.id}`)}`;
+                    : `/prisijungti?callbackUrl=${encodeURIComponent(`/tiekejas/uzklausa/${r.id}`)}`;
               const ctaLabel = isOwnRequest
                 ? "Valdyti užklausą"
                 : hasSentOffer

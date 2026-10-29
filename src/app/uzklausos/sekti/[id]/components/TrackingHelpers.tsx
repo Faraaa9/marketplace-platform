@@ -1,32 +1,6 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { cn } from "@/lib/utils";
-
-export function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full px-3 py-1.5 text-body-sm font-medium transition-colors",
-        active
-          ? "bg-brand-600 text-white"
-          : "bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function BookmarkReminder() {
   const { data: session } = useSession();

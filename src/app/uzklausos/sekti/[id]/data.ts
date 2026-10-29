@@ -34,6 +34,8 @@ export interface TrackerSummary {
   createdAt: string;
   viewCount: number;
   responseCount: number;
+  /** The accepted response already has a review (drives the 5-step bar). */
+  acceptedReviewed: boolean;
 }
 
 export interface TrackerProposals {
@@ -73,6 +75,7 @@ export const getTrackedRequestSummary = cache(
         clientId: true,
         source: true,
         createdAt: true,
+        reviews: { select: { responseId: true } },
         _count: { select: { views: true, responses: true } },
       },
     });
@@ -108,6 +111,9 @@ export const getTrackedRequestSummary = cache(
       createdAt: request.createdAt.toISOString(),
       viewCount: request._count.views,
       responseCount: request._count.responses,
+      acceptedReviewed:
+        !!request.acceptedResponseId &&
+        request.reviews.some((r) => r.responseId === request.acceptedResponseId),
     };
   },
 );
@@ -151,6 +157,8 @@ export async function getTrackedRequestProposals(
                   isPremium: true,
                   isYoungTalent: true,
                   isGoat: true,
+                  rating: true,
+                  reviewCount: true,
                   images: true,
                   heroImageUrl: true,
                 },
@@ -211,6 +219,8 @@ export async function getTrackedRequestProposals(
               isPremium: profile.isPremium,
               isYoungTalent: profile.isYoungTalent,
               isGoat: profile.isGoat,
+              rating: profile.rating,
+              reviewCount: profile.reviewCount,
             }
           : undefined,
       },

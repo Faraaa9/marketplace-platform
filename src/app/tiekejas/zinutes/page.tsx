@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import ProviderInboxClient from "./ProviderInboxClient";
+import { PageHeader } from "@/components/account/ui";
 import CreatedToast from "@/components/ui/CreatedToast";
+import ProviderInboxClient from "./ProviderInboxClient";
+
+export const metadata: Metadata = { title: "Žinutės" };
 
 interface PageProps {
   searchParams: Promise<{ created?: string }>;
@@ -10,12 +14,13 @@ interface PageProps {
 // param, so it resolves inside its own boundary without blocking the page.
 export default function ProviderInboxPage({ searchParams }: PageProps) {
   return (
-    <>
+    <div className="flex flex-col gap-[18px]">
       <Suspense fallback={null}>
         <CreatedToastGate searchParams={searchParams} />
       </Suspense>
+      <PageHeader title="Žinutės" sub="Pokalbiai su klientais. Prie kiekvieno — užklausos santrauka." />
       <ProviderInboxClient />
-    </>
+    </div>
   );
 }
 

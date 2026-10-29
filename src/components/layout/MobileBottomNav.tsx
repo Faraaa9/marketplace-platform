@@ -4,43 +4,41 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { LayoutDashboard, ClipboardList, MessageCircle, User } from "lucide-react";
+import { Home, ClipboardList, FileText, MessageCircle, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: typeof LayoutDashboard;
-  matchPrefix: string;
+  icon: typeof Home;
+  /** Path prefixes that light this tab up; the longest match wins. */
+  match: string[];
+  exact?: boolean;
   badgeKey?: "messages";
 };
 
+// Mirrors the account sidebars (AccountSidebar) — on phones this bar IS the
+// account menu. Credits and the account switch live in the shell's top strip.
 const PROVIDER_ITEMS: NavItem[] = [
-  { href: "/tiekejas", label: "Panelė", icon: LayoutDashboard, matchPrefix: "/tiekejas" },
-  { href: "/tiekejas/zinutes", label: "Žinutės", icon: MessageCircle, matchPrefix: "/tiekejas/zinutes", badgeKey: "messages" },
-  { href: "/tiekejas/profilis", label: "Profilis", icon: User, matchPrefix: "/tiekejas/profilis" },
+  { href: "/tiekejas", label: "Šiandien", icon: Home, match: ["/tiekejas"], exact: true },
+  { href: "/tiekejas/uzklausos", label: "Užklausos", icon: Search, match: ["/tiekejas/uzklausos", "/tiekejas/uzklausa"] },
+  { href: "/tiekejas/pasiulymai", label: "Pasiūlymai", icon: FileText, match: ["/tiekejas/pasiulymai"] },
+  { href: "/tiekejas/zinutes", label: "Žinutės", icon: MessageCircle, match: ["/tiekejas/zinutes"], badgeKey: "messages" },
+  { href: "/tiekejas/profilis", label: "Profilis", icon: User, match: ["/tiekejas/profilis", "/tiekejas/planai"] },
 ];
 
 const CUSTOMER_ITEMS: NavItem[] = [
-  { href: "/uzklausos", label: "Užklausos", icon: ClipboardList, matchPrefix: "/uzklausos" },
-  { href: "/paskyra/uzklausos", label: "Mano", icon: ClipboardList, matchPrefix: "/paskyra/uzklausos" },
-  { href: "/paskyra/zinutes", label: "Žinutės", icon: MessageCircle, matchPrefix: "/paskyra/zinutes", badgeKey: "messages" },
-  { href: "/paskyra/profilis", label: "Profilis", icon: User, matchPrefix: "/paskyra/profilis" },
+  { href: "/paskyra", label: "Pradžia", icon: Home, match: ["/paskyra"], exact: true },
+  { href: "/paskyra/uzklausos", label: "Užklausos", icon: ClipboardList, match: ["/paskyra/uzklausos", "/uzklausos/sekti"] },
+  { href: "/paskyra/zinutes", label: "Žinutės", icon: MessageCircle, match: ["/paskyra/zinutes"], badgeKey: "messages" },
+  { href: "/paskyra/profilis", label: "Duomenys", icon: User, match: ["/paskyra/profilis"] },
 ];
 
-const HIDDEN_PREFIXES = ["/admin", "/prisijungti", "/registruotis", "/zinutes/", "/tiekejas/zinutes"];
+const HIDDEN_PREFIXES = ["/admin", "/prisijungti", "/registruotis", "/zinutes/"];
 
-function isActive(pathname: string, item: NavItem, allItems: NavItem[]) {
-  // For nested routes like /tiekejas/zinutes, prefer the more specific match
-  // over the parent /tiekejas, so only one tab highlights at a time.
-  const matches = allItems.filter((i) =>
-    i.href === "/tiekejas"
-      ? pathname === "/tiekejas"
-      : pathname === i.matchPrefix || pathname.startsWith(`${i.matchPrefix}/`)
-  );
-  if (matches.length === 0) return false;
-  const best = matches.reduce((a, b) => (b.matchPrefix.length > a.matchPrefix.length ? b : a));
-  return best.href === item.href;
+function isActive(pathname: string, item: NavItem) {
+  if (item.exact) return pathname === item.href;
+  return item.match.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 export default function MobileBottomNav() {
@@ -50,6 +48,11 @@ export default function MobileBottomNav() {
   const role = session?.user?.role;
   const userId = session?.user?.id;
   const isHiddenRoute = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
+  // The area decides the menu, not the role: a provider browsing their own
+  // requests under /paskyra gets the customer menu.
+  const inProviderArea =
+    pathname.startsWith("/tiekejas") ||
+    (role === "PROVIDER" && !pathname.startsWith("/paskyra") && !pathname.startsWith("/uzklausos/sekti"));
 
   useEffect(() => {
     if (status !== "authenticated" || !userId || isHiddenRoute) {
@@ -60,7 +63,7 @@ export default function MobileBottomNav() {
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
     if (!isMobile) return;
 
-    const endpoint = role === "PROVIDER" ? "/api/tiekejas/zinutes?summary=1" : "/api/paskyra/zinutes";
+    const endpoint = inProviderArea ? "/api/tiekejas/zinutes?summary=1" : "/api/paskyra/zinutes";
 
     const loadUnreadMessages = () => {
       if (document.visibilityState !== "visible") return;
@@ -88,12 +91,12 @@ export default function MobileBottomNav() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [isHiddenRoute, role, status, userId]);
+  }, [inProviderArea, isHiddenRoute, status, userId]);
 
   if (status !== "authenticated" || !session?.user) return null;
   if (isHiddenRoute) return null;
 
-  const items = role === "PROVIDER" ? PROVIDER_ITEMS : CUSTOMER_ITEMS;
+  const items = inProviderArea ? PROVIDER_ITEMS : CUSTOMER_ITEMS;
 
   return (
     <nav
@@ -102,7 +105,7 @@ export default function MobileBottomNav() {
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-around">
         {items.map((item) => {
-          const active = isActive(pathname, item, items);
+          const active = isActive(pathname, item);
           const Icon = item.icon;
           const showBadge = item.badgeKey === "messages" && unreadMessages > 0;
           return (

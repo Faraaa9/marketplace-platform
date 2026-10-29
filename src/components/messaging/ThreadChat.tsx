@@ -468,11 +468,17 @@ export default function ThreadChat({
     };
   }, [sendTypingState]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change. In fillHeight mode the stream
+  // scrolls itself; scrollIntoView would also drag the page down.
   useEffect(() => {
     if (isLoadingOlder) return;
+    const stream = messageStreamRef.current;
+    if (fillHeight && stream) {
+      stream.scrollTo({ top: stream.scrollHeight, behavior: "smooth" });
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [isLoadingOlder, messages.length]);
+  }, [fillHeight, isLoadingOlder, messages.length]);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];

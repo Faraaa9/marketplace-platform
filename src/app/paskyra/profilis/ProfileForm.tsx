@@ -123,7 +123,7 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
-      <section className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm dark:border-surface-700/50 dark:bg-surface-900/50">
+      <section className="rounded-xl border border-surface-100 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
         <div className="mb-5 flex items-center gap-2">
           <UserRound className="h-4 w-4 text-brand-600 dark:text-brand-400" />
           <h2 className="text-body font-semibold text-surface-900 dark:text-white">
@@ -291,7 +291,7 @@ export default function ProfileForm({ initialProfile }: ProfileFormProps) {
         </div>
       </section>
 
-      <aside className="rounded-2xl border border-surface-200/60 bg-white p-5 shadow-sm dark:border-surface-700/50 dark:bg-surface-900/50">
+      <aside className="rounded-xl border border-surface-100 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
         <p className="text-body-sm font-semibold text-surface-900 dark:text-white">
           Profilio pilnumas
         </p>

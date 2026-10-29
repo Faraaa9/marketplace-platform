@@ -83,7 +83,7 @@ export default function GenerateProposalButton({
           type="button"
           onClick={handleGenerate}
           disabled={isGenerating}
-          aria-label="Sukurti pasiūlymą su dirbtiniu intelektu"
+          aria-label="Paruošti pasiūlymo juodraštį su dirbtiniu intelektu"
           className={cn(
             "inline-flex items-center gap-2 rounded-full text-sm font-medium transition-colors",
             "border border-surface-200 bg-white px-3.5 py-1.5 text-surface-700 hover:border-surface-300 hover:bg-surface-50",
@@ -97,10 +97,10 @@ export default function GenerateProposalButton({
             <Sparkles className="h-4 w-4 text-brand-600 dark:text-brand-400" />
           )}
           {isGenerating
-            ? "Kuriamas pasiūlymas…"
+            ? "Ruošiamas juodraštis…"
             : hasContent
-              ? "Perkurti pasiūlymą su AI"
-              : "Sukurti pasiūlymą su AI"}
+              ? "Paruošti naują juodraštį su AI"
+              : "Paruošti juodraštį su AI"}
         </button>
 
         {showUndo && (

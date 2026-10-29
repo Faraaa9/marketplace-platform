@@ -14,10 +14,4 @@
  *
  * Shapes are added per page as each Suspense PR lands.
  */
-export { ThreadViewSkeleton } from "./ThreadViewSkeleton";
-export { ConversationListSkeleton } from "./ConversationListSkeleton";
-export { default as InquiriesListSkeleton } from "./InquiriesListSkeleton";
 export { default as MyRequestsListSkeleton } from "./MyRequestsListSkeleton";
-export { AccountCardSkeleton } from "./AccountCardSkeleton";
-export { ProfileCompletenessSkeleton } from "./ProfileCompletenessSkeleton";
-export { FollowUpsSkeleton } from "./FollowUpsSkeleton";

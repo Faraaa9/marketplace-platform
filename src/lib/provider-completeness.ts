@@ -17,6 +17,7 @@ export interface CompletenessProfileInput {
 export function computeProfileCompleteness(input: CompletenessProfileInput): {
   completeness: number;
   missingItems: string[];
+  items: { done: boolean; label: string }[];
 } {
   const items = [
     { done: !!(input.description && input.description.length >= 20), label: "Aprašymas" },
@@ -31,5 +32,5 @@ export function computeProfileCompleteness(input: CompletenessProfileInput): {
     (items.filter((i) => i.done).length / items.length) * 100,
   );
   const missingItems = items.filter((i) => !i.done).map((i) => i.label);
-  return { completeness, missingItems };
+  return { completeness, missingItems, items };
 }
