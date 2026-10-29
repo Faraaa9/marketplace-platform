@@ -49,40 +49,58 @@ async function getCategoryPromptData(input: ImproveDescriptionInput): Promise<{ 
   const categories = await getFlatServiceCategories();
   const byId = new Map(categories.map((category) => [category.id, category]));
   const query = `${input.title ?? ""} ${input.category ?? ""} ${input.description}`;
-  const rootSignal = inferRequestRoots(query, buildDomainIndex(categories));
-
-  const candidates = categories
-    .filter((category) => (category.depth ?? 0) > 0)
-    .map((category) => {
-      const names: string[] = [category.name];
-      let parent = category.parentId ? byId.get(category.parentId) : undefined;
-      while (parent) {
-        names.unshift(parent.name);
-        parent = parent.parentId ? byId.get(parent.parentId) : undefined;
-      }
-      const breadcrumb = names.join(" > ");
-      return {
-        category,
-        breadcrumb,
-        score: scoreCategory(query, breadcrumb, category.depth),
-      };
-    })
-    .filter(({ category }) =>
-      categoryMatchesRequestIntent(
-        {
-          id: category.id,
-          slug: category.slug,
-          name: category.name,
-          depth: category.depth ?? null,
-          parentId: category.parentId ?? null,
-          rootId: category.rootId ?? null,
-        },
-        query,
-        rootSignal,
-      ),
-    )
-    .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
-    .slice(0, 140);
+  // ponytail: getFlatServiceCategories() serializes nodes WITHOUT depth/parentId/
+  // rootId (dropped to slim the /uzklausos RSC payload), so the `depth > 0` filter
+  // below matches NOTHING and the LLM candidate list comes back empty on every
+  // request — ai-improve's category pick is currently dead, and the web form +
+  // telegram bot both fall back to suggestCategories. Compute the depth-eligible
+  // set first and skip the wasted domain-index scan (buildDomainIndex over ~2k
+  // categories + inferRequestRoots) when it's empty, which is the live case. The
+  // override keyword path below still runs and can inject a category.
+  // Real fix (deferred — see NOTES.md): load raw category rows WITH depth via a
+  // dedicated prisma query (like suggestCategories' loadCandidates), not the
+  // UI-slimmed flat list.
+  type ScoredCategory = {
+    category: (typeof categories)[number];
+    breadcrumb: string;
+    score: number;
+  };
+  const depthEligible = categories.filter((category) => (category.depth ?? 0) > 0);
+  let candidates: ScoredCategory[] = [];
+  if (depthEligible.length > 0) {
+    const rootSignal = inferRequestRoots(query, buildDomainIndex(categories));
+    candidates = depthEligible
+      .map((category) => {
+        const names: string[] = [category.name];
+        let parent = category.parentId ? byId.get(category.parentId) : undefined;
+        while (parent) {
+          names.unshift(parent.name);
+          parent = parent.parentId ? byId.get(parent.parentId) : undefined;
+        }
+        const breadcrumb = names.join(" > ");
+        return {
+          category,
+          breadcrumb,
+          score: scoreCategory(query, breadcrumb, category.depth),
+        };
+      })
+      .filter(({ category }) =>
+        categoryMatchesRequestIntent(
+          {
+            id: category.id,
+            slug: category.slug,
+            name: category.name,
+            depth: category.depth ?? null,
+            parentId: category.parentId ?? null,
+            rootId: category.rootId ?? null,
+          },
+          query,
+          rootSignal,
+        ),
+      )
+      .sort((a, b) => b.score - a.score || (b.category.depth ?? 0) - (a.category.depth ?? 0))
+      .slice(0, 140);
+  }
 
   const allValidSlugs = new Set(categories.map((category) => category.slug));
   const overrideSlug = pickCategoryOverrideSlug(query, allValidSlugs);
