@@ -7,6 +7,13 @@ const INDOOR_PLUMBING_REPAIR_SLUGS = [
   "pr-buitines-paslaugos--santechnikai-santechnikos-darbai--santechnikas-i-namus",
 ];
 
+const SMALL_ELECTRICAL_WORK_SLUGS = [
+  "pr-statybos-apdaila--elektrikai-elektros-darbai--smulkus-elektros-darbai",
+  "pr-buitines-paslaugos--meistrai-i-namus--smulkus-elektros-darbai",
+  "pr-statybos-apdaila--elektrikai-elektros-darbai--elektros-instaliacija",
+  "elektros-darbai",
+];
+
 const normalize = (value: string) =>
   value
     .toLowerCase()
@@ -26,6 +33,26 @@ export function pickCategoryOverrideSlug(
 ): string | null {
   const normalized = normalize(text);
   if (!normalized) return null;
+
+  const electricalFixture = hasAny(normalized, [
+    /\brozet/,
+    /\bjungikl/,
+    /\belektros lizd/,
+    /\bsviestuv/,
+    /\blamp/,
+  ]);
+  const electricalWork = hasAny(normalized, [
+    /\belektrik/,
+    /\belektros\b/,
+    /\bneveikia\b/,
+    /\bmontu/,
+    /\bpajung/,
+    /\bsutvark/,
+    /\bkeist/,
+  ]);
+  if (electricalFixture && electricalWork) {
+    return SMALL_ELECTRICAL_WORK_SLUGS.find((slug) => validSlugs.has(slug)) ?? null;
+  }
 
   const outdoorWater = hasAny(normalized, [
     /\blietaus\b/,
