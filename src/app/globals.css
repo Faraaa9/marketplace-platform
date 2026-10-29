@@ -352,6 +352,9 @@
   .dark .found-stamp--muted {
     border-color: #8a8272;
     background-color: rgba(44, 41, 36, 0.92);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(138, 130, 114, 0.28),
+      0 4px 10px rgba(0, 0, 0, 0.3);
     color: #c4bba8;
   }
   .found-stamp__note {

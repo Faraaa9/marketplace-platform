@@ -157,7 +157,8 @@ async function getBoardListing(
         ? await prisma.serviceRequest.findMany({
             where: closedWhere,
             select,
-            orderBy: { updatedAt: "desc" },
+            // id tiebreak: the expiry cron stamps many rows in one run.
+            orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
             skip: Math.max(0, skip - openTotal),
             take: closedTake,
           })
@@ -505,7 +506,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
                       {/* title */}
                       <h3
                         className={`mt-3.5 font-serif text-[1.5rem] font-semibold leading-snug text-surface-900 dark:text-white sm:text-[1.7rem]${
-                          isMatched ? " pr-[96px] sm:pr-[172px]" : ""
+                          isMatched ? " pr-[124px] sm:pr-[172px]" : ""
                         }`}
                       >
                         {r.title}
