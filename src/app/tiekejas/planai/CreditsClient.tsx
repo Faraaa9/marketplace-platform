@@ -36,6 +36,8 @@ const TYPE_LABEL: Record<string, string> = {
   ADMIN_GRANT: "Administratoriaus dovana",
   STARTER_GRANT: "Startiniai kreditai",
   CATEGORY_UNLOCK: "Papildoma veiklos sritis",
+  REFUND_REVERSAL: "Grąžinimas",
+  DISPUTE_REVERSAL: "Mokėjimo ginčas",
 };
 
 const CREDIT_FORMS: [string, string, string] = ["kreditas", "kreditai", "kreditų"];
@@ -56,17 +58,24 @@ export default function CreditsClient() {
   const canceled = searchParams.get("canceled");
 
   useEffect(() => {
-    fetch("/api/tiekejas/kreditai", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) {
-          setData(d.data);
-        } else if (d.code === "EMAIL_NOT_VERIFIED" || d.code === "ACCOUNT_NOT_ACTIVE" || d.code === "NOT_PROVIDER") {
-          router.push("/tiekejas");
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
+    const load = () =>
+      fetch("/api/tiekejas/kreditai", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success) {
+            setData(d.data);
+          } else if (d.code === "EMAIL_NOT_VERIFIED" || d.code === "ACCOUNT_NOT_ACTIVE" || d.code === "NOT_PROVIDER") {
+            router.push("/tiekejas");
+          }
+        })
+        .finally(() => setLoading(false));
+    load();
+    // Stripe redirects back before its webhook has always landed; reload
+    // once more so the new balance shows up without a manual refresh.
+    if (!success) return;
+    const timer = setTimeout(load, 4000);
+    return () => clearTimeout(timer);
+  }, [router, success]);
 
   async function handleBuy(packId: string) {
     setCheckoutPackId(packId);
@@ -101,7 +110,7 @@ export default function CreditsClient() {
         sub="Kreditais atrakinamos užklausos. Prenumeratos nėra — mokate tik už tai, ką naudojate."
       />
 
-      {success && <Notice tone="ok">Kreditai sėkmingai pridėti!</Notice>}
+      {success && <Notice tone="ok">Mokėjimas gautas. Kreditai pridedami per kelias sekundes.</Notice>}
       {canceled && <Notice tone="info">Mokėjimas atšauktas.</Notice>}
 
       {loading || !data ? (

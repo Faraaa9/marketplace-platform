@@ -34,7 +34,8 @@ export type CreditTransactionType =
   | "ADMIN_GRANT"
   | "STARTER_GRANT"
   | "CATEGORY_UNLOCK"
-  | "REFUND_REVERSAL";
+  | "REFUND_REVERSAL"
+  | "DISPUTE_REVERSAL";
 
 /** A paid category counts as active while it has no expiry or expires later. */
 export function isCategoryActive(expiresAt: Date | null | undefined): boolean {
@@ -139,67 +140,44 @@ export interface GrantCreditsResult {
   alreadyProcessed: boolean;
 }
 
+/** A Prisma client or an open interactive transaction. */
+type Db = Prisma.TransactionClient;
+
+/**
+ * Take a row lock on the provider's profile for the rest of the transaction.
+ * Every balance change updates this row, so holding the lock serialises
+ * check-then-write sequences (starter grant, refund reconciliation) against
+ * each other and against concurrent spends.
+ */
+async function lockProviderProfile(db: Db, providerProfileId: string): Promise<void> {
+  await db.$queryRaw`SELECT id FROM provider_profiles WHERE id = ${providerProfileId} FOR UPDATE`;
+}
+
 /**
  * Add credits to a provider and write a ledger row, atomically. Used for
  * purchases, admin gifts and starter grants. When `stripeCheckoutSessionId`
  * is supplied the grant is idempotent — a redelivered Stripe webhook for the
  * same checkout session credits the account only once.
+ *
+ * Pass `db` to run inside the caller's transaction (the Stripe webhook does,
+ * so the grant and the event claim commit or roll back together). In that
+ * mode a unique-constraint race is not swallowed: it aborts the caller's
+ * transaction, and the caller's retry sees the winning grant.
  */
 export async function grantCredits(
   input: GrantCreditsInput,
+  db?: Db,
 ): Promise<GrantCreditsResult> {
-  const {
-    providerProfileId,
-    amount,
-    type,
-    note,
-    adminUserId,
-    creditPackId,
-    requestId,
-    stripeCheckoutSessionId,
-    stripeChargeId,
-  } = input;
+  const { amount, stripeCheckoutSessionId } = input;
 
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error(`grantCredits: amount must be a positive integer, got ${amount}`);
   }
 
+  if (db) return applyGrant(db, input);
+
   try {
-    return await prisma.$transaction(async (tx) => {
-      // Idempotency: a checkout session credits the account exactly once.
-      if (stripeCheckoutSessionId) {
-        const existing = await tx.creditTransaction.findUnique({
-          where: { stripeCheckoutSessionId },
-          select: { balanceAfter: true },
-        });
-        if (existing) {
-          return { balance: existing.balanceAfter, alreadyProcessed: true };
-        }
-      }
-
-      const updated = await tx.providerProfile.update({
-        where: { id: providerProfileId },
-        data: { creditBalance: { increment: amount } },
-        select: { creditBalance: true },
-      });
-
-      await tx.creditTransaction.create({
-        data: {
-          providerProfileId,
-          amount,
-          balanceAfter: updated.creditBalance,
-          type,
-          note,
-          adminUserId,
-          creditPackId,
-          requestId,
-          stripeCheckoutSessionId,
-          stripeChargeId,
-        },
-      });
-
-      return { balance: updated.creditBalance, alreadyProcessed: false };
-    });
+    return await prisma.$transaction((tx) => applyGrant(tx, input));
   } catch (error) {
     // Concurrent webhook delivery lost the race on the unique session id —
     // the purchase was already credited by the winning call.
@@ -212,6 +190,54 @@ export async function grantCredits(
     }
     throw error;
   }
+}
+
+async function applyGrant(tx: Db, input: GrantCreditsInput): Promise<GrantCreditsResult> {
+  const {
+    providerProfileId,
+    amount,
+    type,
+    note,
+    adminUserId,
+    creditPackId,
+    requestId,
+    stripeCheckoutSessionId,
+    stripeChargeId,
+  } = input;
+
+  // Idempotency: a checkout session credits the account exactly once.
+  if (stripeCheckoutSessionId) {
+    const existing = await tx.creditTransaction.findUnique({
+      where: { stripeCheckoutSessionId },
+      select: { balanceAfter: true },
+    });
+    if (existing) {
+      return { balance: existing.balanceAfter, alreadyProcessed: true };
+    }
+  }
+
+  const updated = await tx.providerProfile.update({
+    where: { id: providerProfileId },
+    data: { creditBalance: { increment: amount } },
+    select: { creditBalance: true },
+  });
+
+  await tx.creditTransaction.create({
+    data: {
+      providerProfileId,
+      amount,
+      balanceAfter: updated.creditBalance,
+      type,
+      note,
+      adminUserId,
+      creditPackId,
+      requestId,
+      stripeCheckoutSessionId,
+      stripeChargeId,
+    },
+  });
+
+  return { balance: updated.creditBalance, alreadyProcessed: false };
 }
 
 export type UnlockResult =
@@ -291,11 +317,13 @@ export async function unlockLead(input: {
     });
   } catch (error) {
     if (error instanceof InsufficientCreditsError) {
-      return {
-        ok: false,
-        reason: "INSUFFICIENT_CREDITS",
-        balance: await getCreditBalance(providerProfileId),
-      };
+      // A concurrent unlock of this same lead may have spent the last credit
+      // while we waited on the row lock — that is success, not a shortfall.
+      const balance = await getCreditBalance(providerProfileId);
+      if (await isLeadUnlocked(providerProfileId, requestId)) {
+        return { ok: true, alreadyUnlocked: true, balance };
+      }
+      return { ok: false, reason: "INSUFFICIENT_CREDITS", balance };
     }
     // A concurrent unlock won the race; our transaction rolled back fully.
     // The lead is unlocked and was charged exactly once — report success.
@@ -432,134 +460,170 @@ export async function unlockCategory(input: {
   }
 }
 
-export type ReverseRefundResult =
-  | { ok: true; alreadyReversed: boolean; balance: number; reversed: number }
+/** Net credits a reversal row wrote off as uncollectable (see its note markers). */
+function writtenOff(note: string | null): number {
+  const short = note?.match(/neišieškota (\d+) kr\./);
+  const cancelled = note?.match(/skola panaikinta (\d+) kr\./);
+  return (short ? Number(short[1]) : 0) - (cancelled ? Number(cancelled[1]) : 0);
+}
+
+export type ChargeReversalType = "REFUND_REVERSAL" | "DISPUTE_REVERSAL";
+
+export type ChargeReversalResult =
+  | {
+      ok: true;
+      /** Credits moved by this call: positive = taken back, negative = restored. */
+      reversed: number;
+      /** Credits that should have been taken back but the balance did not cover. */
+      shortfall: number;
+      balance: number;
+    }
   | { ok: false; reason: "PURCHASE_NOT_FOUND" };
 
 /**
- * Reverse a previously granted purchase after Stripe reports a refund.
+ * Bring the credits of a Stripe-paid purchase in line with the money the
+ * platform has lost on that charge — for refunds and for disputes.
  *
- * Idempotent on (originalCheckoutSessionId): a redelivered or repeated
- * `charge.refunded` event will not double-reverse. The reversal can take the
- * balance negative — that is intentional. If the provider already spent the
- * credits we still owe the platform, and admin gets a visible negative
- * balance to follow up on.
+ * The target is proportional: losing 3 € of a 10 € charge takes back 30 % of
+ * the purchased credits. Stripe reports cumulative amounts (`amount_refunded`,
+ * a dispute's amount), so the call computes target minus what this reversal
+ * type already took and moves only the difference. That makes it idempotent
+ * and lets several partial refunds add up correctly. A target below what was
+ * taken (a dispute closed in the provider's favour → lostCents 0) restores
+ * the difference.
+ *
+ * The balance is never driven below zero: when the provider already spent the
+ * credits, only what is left is taken and the uncovered remainder is written
+ * off — recorded in the ledger note and logged for manual follow-up, never
+ * silently collected from a later purchase.
+ *
+ * Must run inside a transaction (`db`), so the caller can commit it together
+ * with its own bookkeeping (the webhook event claim).
  */
-export async function reverseRefund(input: {
-  /** The PURCHASE ledger row to reverse, located via Stripe charge id. */
-  stripeChargeId: string;
-  /** Refunded amount in the original currency unit (cents). For audit only. */
-  refundedAmountCents?: number;
-  /** Stripe refund id — included in the note for audit. */
-  refundId?: string;
-}): Promise<ReverseRefundResult> {
-  const { stripeChargeId, refundedAmountCents, refundId } = input;
+export async function reconcileChargeReversal(
+  db: Db,
+  input: {
+    stripeChargeId: string;
+    type: ChargeReversalType;
+    /** Cumulative cents lost on the charge for this type; 0 restores everything. */
+    lostCents: number;
+    /** The charge's full amount in cents. */
+    chargeAmountCents: number;
+    /** Stripe refund/dispute id, for the ledger note. */
+    reference?: string;
+  },
+): Promise<ChargeReversalResult> {
+  const { stripeChargeId, type, lostCents, chargeAmountCents, reference } = input;
 
-  const purchase = await prisma.creditTransaction.findFirst({
+  const purchase = await db.creditTransaction.findFirst({
     where: { stripeChargeId, type: "PURCHASE" },
-    select: {
-      id: true,
-      amount: true,
-      providerProfileId: true,
-      stripeCheckoutSessionId: true,
-    },
+    select: { amount: true, providerProfileId: true },
   });
-  if (!purchase) {
-    return { ok: false, reason: "PURCHASE_NOT_FOUND" };
-  }
+  if (!purchase) return { ok: false, reason: "PURCHASE_NOT_FOUND" };
+  const { providerProfileId } = purchase;
 
-  const existingReversal = await prisma.creditTransaction.findFirst({
+  await lockProviderProfile(db, providerProfileId);
+
+  const prior = await db.creditTransaction.findMany({
     where: {
-      type: "REFUND_REVERSAL",
+      providerProfileId,
       stripeChargeId,
-      providerProfileId: purchase.providerProfileId,
+      type: { in: ["REFUND_REVERSAL", "DISPUTE_REVERSAL"] },
     },
-    select: { id: true, balanceAfter: true },
+    select: { type: true, amount: true, note: true },
   });
-  if (existingReversal) {
-    return {
-      ok: true,
-      alreadyReversed: true,
-      balance: existingReversal.balanceAfter,
-      reversed: 0,
-    };
+  // A reversal is settled by credits actually taken (negative ledger amounts)
+  // plus credits written off as uncollectable. The write-off lives in the
+  // note — the schema has no column for it — and counting it keeps a later
+  // event on this charge from collecting the same debt again.
+  // ponytail: note-encoded write-off; add an `uncollected` column if reporting needs it.
+  const settledOf = (rows: typeof prior) =>
+    rows.reduce((sum, r) => sum - r.amount + writtenOff(r.note), 0);
+  const sameType = prior.filter((r) => r.type === type);
+  const takenSameType = -sameType.reduce((sum, r) => sum + r.amount, 0);
+  const settledSameType = settledOf(sameType);
+  const settledAll = settledOf(prior);
+
+  const ratio = chargeAmountCents > 0 ? Math.min(Math.max(lostCents / chargeAmountCents, 0), 1) : 1;
+  const target = Math.round(purchase.amount * ratio);
+  let delta = target - settledSameType;
+  // Refund + dispute together never take back more than was bought.
+  if (delta > 0) delta = Math.min(delta, purchase.amount - settledAll);
+
+  const profile = await db.providerProfile.findUnique({
+    where: { id: providerProfileId },
+    select: { creditBalance: true },
+  });
+  const balanceBefore = profile?.creditBalance ?? 0;
+  if (delta === 0) return { ok: true, reversed: 0, shortfall: 0, balance: balanceBefore };
+
+  let take: number;
+  let shortfall = 0;
+  let forgiven = 0;
+  if (delta > 0) {
+    take = Math.min(delta, Math.max(balanceBefore, 0));
+    shortfall = delta - take;
+  } else {
+    // Give back only what was really taken; a written-off debt is just cancelled.
+    const restore = Math.min(-delta, takenSameType);
+    forgiven = -delta - restore;
+    take = -restore;
   }
 
-  const reverseAmount = purchase.amount;
+  const updated = await db.providerProfile.update({
+    where: { id: providerProfileId },
+    data: { creditBalance: { decrement: take } },
+    select: { creditBalance: true },
+  });
 
-  try {
-    return await prisma.$transaction(async (tx) => {
-      const updated = await tx.providerProfile.update({
-        where: { id: purchase.providerProfileId },
-        data: { creditBalance: { decrement: reverseAmount } },
-        select: { creditBalance: true },
-      });
-
-      const noteParts = [`Stripe grąžinimas (${reverseAmount} kr.)`];
-      if (refundId) noteParts.push(`refund=${refundId}`);
-      if (refundedAmountCents != null) {
-        noteParts.push(`refunded=${(refundedAmountCents / 100).toFixed(2)}`);
-      }
-
-      await tx.creditTransaction.create({
-        data: {
-          providerProfileId: purchase.providerProfileId,
-          amount: -reverseAmount,
-          balanceAfter: updated.creditBalance,
-          type: "REFUND_REVERSAL",
-          note: noteParts.join(" · "),
-          stripeChargeId,
-        },
-      });
-
-      return {
-        ok: true as const,
-        alreadyReversed: false,
-        balance: updated.creditBalance,
-        reversed: reverseAmount,
-      };
-    });
-  } catch (error) {
-    // Lost the race to a concurrent webhook delivery — the other call wrote
-    // the reversal. Refetch and report alreadyReversed.
-    if (isUniqueConstraintError(error)) {
-      const existing = await prisma.creditTransaction.findFirst({
-        where: {
-          type: "REFUND_REVERSAL",
-          stripeChargeId,
-          providerProfileId: purchase.providerProfileId,
-        },
-        select: { balanceAfter: true },
-      });
-      return {
-        ok: true,
-        alreadyReversed: true,
-        balance: existing?.balanceAfter ?? 0,
-        reversed: 0,
-      };
-    }
-    throw error;
+  const label = type === "DISPUTE_REVERSAL" ? "Stripe ginčas" : "Stripe grąžinimas";
+  const noteParts = [
+    delta > 0 ? `${label} (−${take} kr.)` : `${label} laimėtas (+${-take} kr.)`,
+    `prarasta ${(lostCents / 100).toFixed(2)} iš ${(chargeAmountCents / 100).toFixed(2)}`,
+  ];
+  if (reference) noteParts.push(reference);
+  if (shortfall > 0) {
+    noteParts.push(`neišieškota ${shortfall} kr.`);
+    console.error(
+      `[credits] ${type} on ${stripeChargeId}: provider ${providerProfileId} lacked ${shortfall} credits to reverse — manual follow-up needed.`,
+    );
   }
+  if (forgiven > 0) noteParts.push(`skola panaikinta ${forgiven} kr.`);
+
+  await db.creditTransaction.create({
+    data: {
+      providerProfileId,
+      amount: -take,
+      balanceAfter: updated.creditBalance,
+      type,
+      note: noteParts.join(" · "),
+      stripeChargeId,
+    },
+  });
+
+  return { ok: true, reversed: take, shortfall, balance: updated.creditBalance };
 }
 
 /**
  * Grant a new provider their free starter credits. Idempotent — a provider
  * receives exactly one starter grant ever, regardless of how often this runs.
+ * The profile row lock makes the check-then-grant safe under concurrency.
  */
 export async function grantStarterCredits(providerProfileId: string): Promise<void> {
-  const existing = await prisma.creditTransaction.findFirst({
-    where: { providerProfileId, type: "STARTER_GRANT" },
-    select: { id: true },
-  });
-  if (existing) return;
-
   const amount = await getFreeStarterCredits();
   if (amount <= 0) return;
 
-  await grantCredits({
-    providerProfileId,
-    amount,
-    type: "STARTER_GRANT",
-    note: "Startiniai kreditai",
+  await prisma.$transaction(async (tx) => {
+    await lockProviderProfile(tx, providerProfileId);
+    const existing = await tx.creditTransaction.findFirst({
+      where: { providerProfileId, type: "STARTER_GRANT" },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    await grantCredits(
+      { providerProfileId, amount, type: "STARTER_GRANT", note: "Startiniai kreditai" },
+      tx,
+    );
   });
 }

@@ -10,15 +10,20 @@ export type WebhookSource = "stripe" | "resend" | "telegram";
  *
  * Returns `true` if THIS call claimed the event (proceed with side effects).
  * Returns `false` if another call already claimed it (skip — return 200 quickly).
+ *
+ * Pass `db` (an interactive transaction) to make the claim part of the work:
+ * if the side effects fail, the claim rolls back with them and a redelivery
+ * is processed again. Inside a transaction a `false` result means the
+ * transaction is already aborted — the caller must throw, not continue.
  */
 export async function claimWebhookEvent(input: {
   source: WebhookSource;
   externalId: string;
   eventType?: string;
   payload?: Record<string, unknown>;
-}): Promise<boolean> {
+}, db: Prisma.TransactionClient = prisma): Promise<boolean> {
   try {
-    await prisma.webhookEvent.create({
+    await db.webhookEvent.create({
       data: {
         source: input.source,
         externalId: input.externalId,
