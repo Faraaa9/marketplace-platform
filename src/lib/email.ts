@@ -35,7 +35,9 @@ export function appUrl(): string {
 function unsubscribeSecret(): string {
   const secret = process.env.NEXTAUTH_SECRET?.trim();
   if (secret) return secret;
-  if (isProduction()) throw new Error("NEXTAUTH_SECRET is not set");
+  // Previews share the production DB, so a guessable secret there would let
+  // anyone forge opt-outs for real providers. Only a local run may fall back.
+  if (isProduction() || process.env.VERCEL_ENV) throw new Error("NEXTAUTH_SECRET is not set");
   return "development-unsubscribe-secret";
 }
 
