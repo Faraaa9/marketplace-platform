@@ -173,8 +173,15 @@ async function prepare(event: Stripe.Event, lookups: StripeLookups): Promise<Pre
     case "charge.dispute.created":
     case "charge.dispute.closed": {
       const dispute = event.data.object;
+      // Inquiries (warning_* statuses) are questions from the bank; Stripe does
+      // not take the money, so they open with no credit change and close as a win.
+      if (event.type === "charge.dispute.created" && dispute.status.startsWith("warning_")) {
+        return { kind: "ignore" };
+      }
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge.id;
-      const won = event.type === "charge.dispute.closed" && dispute.status === "won";
+      const won =
+        event.type === "charge.dispute.closed" &&
+        (dispute.status === "won" || dispute.status === "warning_closed");
       return {
         kind: "reversal",
         input: {
@@ -203,13 +210,18 @@ async function prepare(event: Stripe.Event, lookups: StripeLookups): Promise<Pre
 const liveLookups: StripeLookups = {
   async checkoutChargeId(session) {
     const intent = session.payment_intent;
-    if (!intent) return undefined;
+    // A fully discounted session has nothing to charge or refund. Any other
+    // gap throws: a Stripe retry beats storing a purchase no refund can find.
+    if (!intent) {
+      if (!session.amount_total) return undefined;
+      throw new Error(`[stripe] paid checkout ${session.id} has no payment_intent`);
+    }
     const charge =
       typeof intent === "object" && intent.latest_charge
         ? intent.latest_charge
         : (await getStripe().paymentIntents.retrieve(typeof intent === "string" ? intent : intent.id))
             .latest_charge;
-    if (!charge) return undefined;
+    if (!charge) throw new Error(`[stripe] paid checkout ${session.id} has no charge yet`);
     return typeof charge === "string" ? charge : charge.id;
   },
   async chargeAmountCents(chargeId) {

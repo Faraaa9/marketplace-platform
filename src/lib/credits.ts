@@ -460,6 +460,13 @@ export async function unlockCategory(input: {
   }
 }
 
+/** Net credits a reversal row wrote off as uncollectable (see its note markers). */
+function writtenOff(note: string | null): number {
+  const short = note?.match(/neišieškota (\d+) kr\./);
+  const cancelled = note?.match(/skola panaikinta (\d+) kr\./);
+  return (short ? Number(short[1]) : 0) - (cancelled ? Number(cancelled[1]) : 0);
+}
+
 export type ChargeReversalType = "REFUND_REVERSAL" | "DISPUTE_REVERSAL";
 
 export type ChargeReversalResult =
@@ -487,7 +494,8 @@ export type ChargeReversalResult =
  *
  * The balance is never driven below zero: when the provider already spent the
  * credits, only what is left is taken and the uncovered remainder is written
- * into the ledger note and logged for manual follow-up.
+ * off — recorded in the ledger note and logged for manual follow-up, never
+ * silently collected from a later purchase.
  *
  * Must run inside a transaction (`db`), so the caller can commit it together
  * with its own bookkeeping (the webhook event claim).
@@ -522,19 +530,25 @@ export async function reconcileChargeReversal(
       stripeChargeId,
       type: { in: ["REFUND_REVERSAL", "DISPUTE_REVERSAL"] },
     },
-    select: { type: true, amount: true },
+    select: { type: true, amount: true, note: true },
   });
-  // Ledger rows store reversals as negative amounts; count them as credits taken.
-  const takenSameType = -prior
-    .filter((r) => r.type === type)
-    .reduce((sum, r) => sum + r.amount, 0);
-  const takenAll = -prior.reduce((sum, r) => sum + r.amount, 0);
+  // A reversal is settled by credits actually taken (negative ledger amounts)
+  // plus credits written off as uncollectable. The write-off lives in the
+  // note — the schema has no column for it — and counting it keeps a later
+  // event on this charge from collecting the same debt again.
+  // ponytail: note-encoded write-off; add an `uncollected` column if reporting needs it.
+  const settledOf = (rows: typeof prior) =>
+    rows.reduce((sum, r) => sum - r.amount + writtenOff(r.note), 0);
+  const sameType = prior.filter((r) => r.type === type);
+  const takenSameType = -sameType.reduce((sum, r) => sum + r.amount, 0);
+  const settledSameType = settledOf(sameType);
+  const settledAll = settledOf(prior);
 
   const ratio = chargeAmountCents > 0 ? Math.min(Math.max(lostCents / chargeAmountCents, 0), 1) : 1;
   const target = Math.round(purchase.amount * ratio);
-  let delta = target - takenSameType;
+  let delta = target - settledSameType;
   // Refund + dispute together never take back more than was bought.
-  if (delta > 0) delta = Math.min(delta, purchase.amount - takenAll);
+  if (delta > 0) delta = Math.min(delta, purchase.amount - settledAll);
 
   const profile = await db.providerProfile.findUnique({
     where: { id: providerProfileId },
@@ -543,8 +557,18 @@ export async function reconcileChargeReversal(
   const balanceBefore = profile?.creditBalance ?? 0;
   if (delta === 0) return { ok: true, reversed: 0, shortfall: 0, balance: balanceBefore };
 
-  const take = delta > 0 ? Math.min(delta, Math.max(balanceBefore, 0)) : delta;
-  const shortfall = delta > 0 ? delta - take : 0;
+  let take: number;
+  let shortfall = 0;
+  let forgiven = 0;
+  if (delta > 0) {
+    take = Math.min(delta, Math.max(balanceBefore, 0));
+    shortfall = delta - take;
+  } else {
+    // Give back only what was really taken; a written-off debt is just cancelled.
+    const restore = Math.min(-delta, takenSameType);
+    forgiven = -delta - restore;
+    take = -restore;
+  }
 
   const updated = await db.providerProfile.update({
     where: { id: providerProfileId },
@@ -554,16 +578,17 @@ export async function reconcileChargeReversal(
 
   const label = type === "DISPUTE_REVERSAL" ? "Stripe ginčas" : "Stripe grąžinimas";
   const noteParts = [
-    take >= 0 ? `${label} (−${take} kr.)` : `${label} laimėtas (+${-take} kr.)`,
+    delta > 0 ? `${label} (−${take} kr.)` : `${label} laimėtas (+${-take} kr.)`,
     `prarasta ${(lostCents / 100).toFixed(2)} iš ${(chargeAmountCents / 100).toFixed(2)}`,
   ];
   if (reference) noteParts.push(reference);
   if (shortfall > 0) {
-    noteParts.push(`neišieškota ${shortfall} kr. (išleisti)`);
+    noteParts.push(`neišieškota ${shortfall} kr.`);
     console.error(
       `[credits] ${type} on ${stripeChargeId}: provider ${providerProfileId} lacked ${shortfall} credits to reverse — manual follow-up needed.`,
     );
   }
+  if (forgiven > 0) noteParts.push(`skola panaikinta ${forgiven} kr.`);
 
   await db.creditTransaction.create({
     data: {

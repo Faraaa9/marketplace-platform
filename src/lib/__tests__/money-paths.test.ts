@@ -206,6 +206,35 @@ const tests: Array<[string, () => Promise<void>]> = [
       assert.ok(row);
       assert.equal(row.amount, 0);
       assert.match(row.note ?? "", /neišieškota 2 kr\./);
+
+      // The written-off debt is not collected from a later, unrelated purchase.
+      await buy("evt_buy_spent_2", p, 5);
+      await handleStripeEvent(refundEvent("evt_re_spent_again", charge, 1000, 1000), lookups);
+      assert.equal(await balanceOf(p), 5);
+    },
+  ],
+  [
+    "dispute: lost after the credits were spent is written off, and a later win restores only what was taken",
+    async () => {
+      const p = await makeProvider();
+      const charge = await buy("evt_buy_dp_spent", p, 4);
+      for (let i = 0; i < 3; i++) await credits.unlockLead({ providerProfileId: p, requestId: await makeRequest() });
+      await handleStripeEvent(disputeEvent("evt_dps_open", "charge.dispute.created", charge, 1000, "needs_response"), lookups);
+      assert.equal(await balanceOf(p), 0, "1 left was taken, 3 written off");
+      await handleStripeEvent(disputeEvent("evt_dps_won", "charge.dispute.closed", charge, 1000, "won"), lookups);
+      assert.equal(await balanceOf(p), 1, "only the 1 credit actually taken comes back");
+      const rows = (await ledger(p)).filter((r) => r.type === "DISPUTE_REVERSAL");
+      assert.match(rows[1].note ?? "", /skola panaikinta 3 kr\./);
+    },
+  ],
+  [
+    "dispute: an inquiry (warning_*) changes no credits",
+    async () => {
+      const p = await makeProvider();
+      const charge = await buy("evt_buy_inquiry", p, 10);
+      await handleStripeEvent(disputeEvent("evt_inq_open", "charge.dispute.created", charge, 1000, "warning_needs_response"), lookups);
+      await handleStripeEvent(disputeEvent("evt_inq_close", "charge.dispute.closed", charge, 1000, "warning_closed"), lookups);
+      assert.equal(await balanceOf(p), 10);
     },
   ],
   [
