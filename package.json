@@ -39,12 +39,10 @@
     "test:routing-all": "pnpm routing:identity && pnpm test:routing-v4 && pnpm test:taxonomy-map && pnpm test:routing-review && pnpm test:category-rules && pnpm test:eligibility-contract && pnpm test:taxonomy-depth && pnpm shadow:smoke && pnpm routing:eval-golden"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/client": "^6.19.3",
     "@sparticuz/chromium": "^148.0.0",
-    "@stripe/stripe-js": "^9.1.0",
     "@supabase/supabase-js": "^2.102.1",
     "@types/bcryptjs": "^2.4.6",
     "@typesafe-ai/sdk": "0.7.0",
@@ -60,7 +58,7 @@
     "framer-motion": "^12.38.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.7.0",
-    "next": "^16.2.3",
+    "next": "16.4.3",
     "next-auth": "^4.24.13",
     "playwright-core": "^1.60.0",
     "prisma": "^6.19.3",
@@ -79,13 +77,13 @@
     "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.3",
-    "playwright": "^1.59.1",
+    "eslint-config-next": "16.4.3",
+    "playwright": "1.60.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

@@ -1,8 +1,8 @@
 name: CI
 
-# Deterministic gate for the routing / category-selection logic. These suites are
-# pure (no DB, no network, no LLM), so they can run on every push and PR and must
-# stay green before any routing change lands. See docs/ai-routing/.
+# Gate for every push and PR: lint, typecheck, the deterministic routing /
+# category-selection suites (pure: no DB, no network, no LLM) and a full
+# `next build` on the same Node and lockfile as production. See docs/ai-routing/.
 
 on:
   push:
@@ -15,8 +15,33 @@ concurrency:
 
 jobs:
   test:
-    name: Lint & deterministic routing tests
+    name: Lint, typecheck, routing tests, build
     runs-on: ubuntu-latest
+
+    # `next build` prerenders cacheComponents routes that query Prisma. An empty
+    # throwaway Postgres with the current schema lets them render (empty lists)
+    # without touching real data or needing secrets in CI.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXTAUTH_SECRET: ci-only-not-a-secret
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +51,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -35,11 +60,6 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      # Catch type errors and Prisma drift before they hit production. `next
-      # build` would be stricter, but it needs a live DB to prerender the
-      # cacheComponents routes that read from Prisma; tsc on the whole tree
-      # catches the same class of regression (missing fields, renamed APIs,
-      # broken imports) without provisioning Postgres in CI.
       - name: Prisma generate
         run: pnpm exec prisma generate
 
@@ -60,3 +80,9 @@ jobs:
 
       - name: Shadow routing smoke
         run: pnpm shadow:smoke
+
+      - name: Create schema in the CI database
+        run: pnpm exec prisma db push --skip-generate
+
+      - name: Build
+        run: pnpm build

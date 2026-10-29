@@ -71,7 +71,7 @@ Focus: Zero-error builds.
 
 Directives:
 
-- Before finishing a task, run `npm run build` unless the user explicitly asks
+- Before finishing a task, run `pnpm build` unless the user explicitly asks
   for documentation-only or no-build work.
 - If a build fails, analyze the trace and attempt up to three reasonable fixes
   before asking the user for help.
@@ -125,11 +125,15 @@ when available and verify against current Supabase documentation.
 
 ## Commands
 
-- Start dev server: `npm run dev`
-- Build: `npm run build`
-- Prisma generate: `npx prisma generate`
-- Push Prisma schema: `npm run db:push`
-- Seed database: `npm run db:seed`
+Package manager is pnpm (lockfile `pnpm-lock.yaml`, hoisted layout via `.npmrc`;
+Vercel installs with `pnpm install --frozen-lockfile`). Never add a
+`package-lock.json`.
+
+- Start dev server: `pnpm dev`
+- Build: `pnpm build`
+- Prisma generate: `pnpm exec prisma generate`
+- Push Prisma schema: `pnpm db:push`
+- Seed database: `pnpm db:seed`
 
 ## Environment and Tooling
 
@@ -176,4 +180,4 @@ follow-up `chore(log): ...` commit.
 - Are mobile touch targets at least 44x44 px?
 - Does filtering feel local instead of network-bound?
 - Are important images optimized through `next/image` and Cloudinary helpers?
-- Did `npm run build` pass, or is any failure clearly explained?
+- Did `pnpm build` pass, or is any failure clearly explained?

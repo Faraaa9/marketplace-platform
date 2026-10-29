@@ -4,8 +4,8 @@
 **Kodėl:** Scrape'inta duomenų kokybė per žema (mažos nuotraukos, trūksta info), CTA ant `/meistrai` nepateisino vietos. Vartotojo srautas vis tiek labiau remiasi į user-driven user request kūrimą, ne į katalogo naršymą.
 
 > Susijusios istorinės dokumentacijos:
-> - [`claim-planas-marketplace-architektura.md`](../../claim-planas-marketplace-architektura.md) — pilnas pradinis architektūros planas (872 eilutės)
-> - [`CLAIM_V1_TESTING.md`](../../CLAIM_V1_TESTING.md) — claim flow manual test scenarijai (113 eilutės)
+> - [`claim-planas-marketplace-architektura.md`](claim-planas-marketplace-architektura.md) — pilnas pradinis architektūros planas (872 eilutės)
+> - [`CLAIM_V1_TESTING.md`](CLAIM_V1_TESTING.md) — claim flow manual test scenarijai (113 eilutės)
 
 ---
 
@@ -181,7 +181,7 @@ Tai atstato visus 16+ failų pakeitimus vienu commit'u. Po revert'o:
 1. **Pasitikrinti scrape'o aktualumą** — `SupplierRecord.updatedAt` reikšmės bus senos. Jei reikia naujesnių duomenų, paleisti `paslaugos-crawler` (atskiras Node įrankis, ne šiame repo).
 2. **Pasitikrinti DB schema'ą** — ar po išjungimo periodo nebuvo schema migracijų, kurios paveiktų `SupplierRecord`/`ClaimRequest`. Jei buvo — patobulinti repository sluoksnį.
 3. **Cron'o atstatymas** — patikrinti `vercel.json` ar yra `crons` entry'as `/api/internal/claims/expire`. Jei ne — pridėti.
-4. **Manual smoke test'as** — vykdyti scenarijus iš [`CLAIM_V1_TESTING.md`](../../CLAIM_V1_TESTING.md).
+4. **Manual smoke test'as** — vykdyti scenarijus iš [`CLAIM_V1_TESTING.md`](CLAIM_V1_TESTING.md).
 
 ### Rankinis kelias (jei revert'as susijaukia su nekonfliktuojančiais pakeitimais)
 
