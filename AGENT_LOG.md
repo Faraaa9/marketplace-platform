@@ -17,6 +17,15 @@ sprendžia kontekstą iš diff'o.
 
 <!-- AGENT_LOG:ENTRIES -->
 
+## 2026-10-29 23:23 — Claude
+
+**Commit:** `3ab7665` + `e8a3766` — fix(payments): atomic Stripe webhook, proportional refunds, disputes, race-safe starter credits
+
+**Failai:** src/lib/{credits,stripe,stripe-webhook,webhook-events}.ts, api/stripe/*, tiekejas/planai/CreditsClient.tsx, src/lib/__tests__/money-paths.test.ts
+
+**Toliau:** `pnpm test:money` reikia vietinės Postgres (TEST_DATABASE_URL, žr. testo antraštę) — dar ne CI. Stripe webhook'e turi būti užsakyti įvykiai checkout.session.completed, charge.refunded, charge.dispute.created, charge.dispute.closed. Pirmas tikras pirkimas dar neišbandytas gyvai.
+
+
 ## 2026-06-28 02:11 — Claude
 
 **Commit:** `1734cc9` — feat(paslaugos): show featured city providers in service articles · lokalus
