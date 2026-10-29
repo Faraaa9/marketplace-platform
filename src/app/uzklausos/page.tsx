@@ -363,7 +363,7 @@ export default async function PublicRequestsPage({ searchParams }: PageProps) {
       {/* ── Board header ── */}
       <header className="mx-auto max-w-5xl px-4 pb-6 pt-12 text-center sm:px-6 sm:pt-16">
         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brand-600 dark:text-brand-400">
-          PaslaugųRinka
+          Paslaugų rinka
         </p>
         <h1 className="mt-2.5 font-serif text-[2.35rem] font-semibold leading-[1.08] tracking-tight text-surface-900 dark:text-white sm:text-[3rem]">
           Užklausų lenta

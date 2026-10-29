@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Ruler, title: "Demontavimas", text: "Senos dangos ir konstrukcijų nuardymas, paruošimas." },
   ],
   pricingHeading: "Kiek kainuoja stogo dengimas Vilniuje",
-  offerPrice: "10",
   pricing: [
     { job: "Stogo dengimas čerpe (m²)", price: "nuo 14 €" },
     { job: "Skardinės dangos klojimas (m²)", price: "nuo 12 €" },

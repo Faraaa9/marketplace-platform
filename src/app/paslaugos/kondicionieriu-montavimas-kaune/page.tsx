@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Thermometer, title: "Demontavimas, perkėlimas", text: "Senų įrenginių nuėmimas ir perkėlimas į kitą vietą." },
   ],
   pricingHeading: "Kiek kainuoja kondicionieriaus montavimas Kaune",
-  offerPrice: "150",
   pricing: [
     { job: "Split kondicionieriaus montavimas", price: "nuo 150 €" },
     { job: "Multi-split (2+ vidiniai blokai)", price: "nuo 300 €" },

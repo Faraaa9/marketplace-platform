@@ -1,4 +1,7 @@
 export const APP_NAME = "Paslaugų rinka";
+// ponytail: send.* is the Resend sending subdomain and may not receive mail;
+// swap in a real inbox here once the founder names one.
+export const CONTACT_EMAIL = "info@send.paslaugurinka.lt";
 
 export const BUDGET_OPTIONS = [
   { value: "iki-100", label: "Iki €100" },

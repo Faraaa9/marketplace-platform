@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 // (auth) group layout.
 export const metadata: Metadata = {
   title: "Registracija",
-  description: "Sukurkite paskyrą ir pradėkite naudotis PaslaugųRinka.",
+  description: "Sukurkite paskyrą ir pradėkite naudotis Paslaugų rinka.",
   // /registruotis?intent=provider is the same page — consolidate it onto the
   // bare URL so the variant doesn't read as duplicate content.
   alternates: { canonical: "/registruotis" },

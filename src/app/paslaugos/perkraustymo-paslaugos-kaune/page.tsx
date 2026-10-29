@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: ShieldCheck, title: "Sunkūs daiktai", text: "Pianinų, seifų, buitinės technikos atsargus gabenimas." },
   ],
   pricingHeading: "Kiek kainuoja perkraustymas Kaune",
-  offerPrice: "25",
   pricing: [
     { job: "Krovėjo darbas (val.)", price: "nuo 15 €" },
     { job: "Furgonas su vairuotoju (val.)", price: "nuo 25 €" },

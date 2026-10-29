@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Ruler, title: "Senos tvoros keitimas", text: "Senos tvoros demontavimas ir naujos statymas." },
   ],
   pricingHeading: "Kiek kainuoja tvoros montavimas Vilniuje",
-  offerPrice: "20",
   pricing: [
     { job: "Segmentinės tvoros montavimas (m)", price: "nuo 25 €" },
     { job: "Tinklinės tvoros montavimas (m)", price: "nuo 15 €" },

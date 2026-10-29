@@ -74,7 +74,7 @@ function bucketFor(diffMs: number): PresenceBucket | null {
 
 function renderBucket(bucket: PresenceBucket, mode: "short" | "long"): string {
   if (bucket.kind === "online") {
-    return mode === "long" ? "Prisijungęs dabar" : "Online";
+    return mode === "long" ? "Prisijungęs dabar" : "Prisijungęs";
   }
   const prefix = mode === "long" ? "Prisijungęs " : "";
   if (bucket.kind === "minutes") return `${prefix}prieš ${bucket.value} min.`;
@@ -88,7 +88,7 @@ function renderBucket(bucket: PresenceBucket, mode: "short" | "long"): string {
 }
 
 /**
- * Short label for listing card pills: "Online", "Prieš 10 min",
+ * Short label for listing card pills: "Prisijungęs", "Prieš 10 min",
  * "Prieš 2 val.", "Prieš 5 val.+", "Prieš 12 val.+". Capitalized for
  * pill display. Null when older than 24h.
  */

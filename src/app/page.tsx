@@ -26,20 +26,11 @@ import {
 export const metadata: Metadata = {
   title: "Raskite geriausius paslaugų tiekėjus Lietuvoje",
   description:
-    "PaslaugųRinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
+    "Paslaugų rinka – patikima platforma paslaugų paieškai. Pateikite užklausą ir gaukite pasiūlymus iš patikrintų specialistų per kelias minutes.",
   alternates: {
     canonical: process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt",
   },
 };
-
-const AVATARS = [
-  { initials: "JK", color: "#C25E3A" },
-  { initials: "RM", color: "#5E8C50" },
-  { initials: "AB", color: "#5A79A4" },
-  { initials: "GT", color: "#7C6AA6" },
-  { initials: "VL", color: "#B08A2E" },
-  { initials: "DP", color: "#9A6440" },
-];
 
 const HOW_IT_WORKS = [
   {
@@ -192,12 +183,6 @@ async function HomePageContent() {
   const budgetLabel = (val: string) =>
     BUDGET_OPTIONS.find((b) => b.value === val)?.label || val;
 
-  const trustCount = Math.max(providerCount, requestCount);
-  const trustText =
-    trustCount >= 25
-      ? `Mumis pasitiki ${Math.floor(trustCount / 10) * 10}+ žmonių visoje Lietuvoje`
-      : "Patikrinti specialistai iš visos Lietuvos";
-
   const stats = [
     { value: providerCount || 1, label: "Specialistų" },
     { value: requestCount || 1, label: "Pateiktų užklausų" },
@@ -267,7 +252,7 @@ async function HomePageContent() {
                 <div className="h-1.5 w-3/4 rounded-full bg-[#E8E3D8] dark:bg-surface-800" />
               </div>
               <div className="mt-3.5 flex items-center justify-between border-t border-[#EAE5DA] pt-2.5 dark:border-surface-800">
-                <span className="text-[11px] text-[#8C877D] dark:text-surface-400">6 specialistai atsakė</span>
+                <span className="text-[11px] text-[#8C877D] dark:text-surface-400">Laukia pasiūlymų</span>
                 <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C25E3A] text-[9px] font-bold text-white">
                   P
                 </span>
@@ -324,22 +309,11 @@ async function HomePageContent() {
           </div>
         </div>
 
-        {/* Social proof */}
+        {/* Plain promise instead of social proof: no invented counts or faces. */}
         <div className="relative z-10 flex justify-center px-6 pb-12">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {AVATARS.map((a) => (
-                <span
-                  key={a.initials}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-semibold text-white ring-2 ring-[#ECE9E2] dark:ring-surface-900"
-                  style={{ backgroundColor: a.color }}
-                >
-                  {a.initials}
-                </span>
-              ))}
-            </div>
-            <span className="text-sm text-[#6B6760] dark:text-surface-300">{trustText}</span>
-          </div>
+          <span className="text-sm text-[#6B6760] dark:text-surface-300">
+            Užklausos pateikimas nemokamas · Specialistai atsako patys
+          </span>
         </div>
       </section>
 

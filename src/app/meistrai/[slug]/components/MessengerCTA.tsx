@@ -21,7 +21,7 @@ export default function MessengerCTA({ phone, providerName }: MessengerCTAProps)
   if (!formatted) return null;
 
   const message = encodeURIComponent(
-    `Sveiki, ${providerName}, radau jus PaslaugųRinka platformoje. Norėčiau gauti pasiūlymą.`
+    `Sveiki, ${providerName}, radau jus Paslaugų rinkoje. Norėčiau gauti pasiūlymą.`
   );
   const waNumber = formatted.replace("+", "");
   const waUrl = `https://wa.me/${waNumber}?text=${message}`;

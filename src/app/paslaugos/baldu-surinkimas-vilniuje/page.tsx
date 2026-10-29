@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Truck, title: "Išardymas perkraustant", text: "Baldų išardymas ir surinkimas naujoje vietoje." },
   ],
   pricingHeading: "Kiek kainuoja baldų surinkimas Vilniuje",
-  offerPrice: "20",
   pricing: [
     { job: "Spintos surinkimas (vnt.)", price: "nuo 25 €" },
     { job: "Komodos / lentynos surinkimas", price: "nuo 15 €" },

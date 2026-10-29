@@ -70,9 +70,13 @@ import {
 
 const SITE_NAME = "paslaugurinka.lt";
 const DEFAULT_METADATA: Metadata = {
-  title: "Tiekėjo profilis — PaslaugųRinka",
+  title: "Tiekėjo profilis",
   description:
     "Peržiūrėkite paslaugų tiekėjo profilį, darbus, atsiliepimus ir susisiekite tiesiogiai.",
+};
+const NOT_FOUND_METADATA: Metadata = {
+  title: "Meistras nerastas",
+  robots: { index: false, follow: true },
 };
 
 /**
@@ -156,7 +160,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const row = await getMetadataRow(slug);
-  if (!row || !row.isActive || row.moderationStatus !== "APPROVED") {
+  // Under Cache Components the static shell is flushed with 200 before the
+  // body's notFound() runs (tried both a pre-Suspense lookup and notFound()
+  // here), so an unknown slug can't get a real 404 short of a DB check in
+  // proxy. Say noindex here so it doesn't contradict the injected noindex.
+  if (!row) return NOT_FOUND_METADATA;
+  if (!row.isActive || row.moderationStatus !== "APPROVED") {
     return DEFAULT_METADATA;
   }
 

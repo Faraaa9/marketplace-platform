@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Ruler, title: "Pilna buto apdaila", text: "Apdaila nuo sienų iki grindų pagal projektą." },
   ],
   pricingHeading: "Kiek kainuoja apdailos darbai Kaune",
-  offerPrice: "4",
   pricing: [
     { job: "Sienų glaistymas (m²)", price: "nuo 6 €" },
     { job: "Sienų dažymas (m²)", price: "nuo 4 €" },

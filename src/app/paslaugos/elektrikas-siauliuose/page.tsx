@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: FileText, title: "Elektros projektai", text: "Projektavimas ir derinimas didesniems objektams." },
   ],
   pricingHeading: "Kiek kainuoja elektrikas Šiauliuose",
-  offerPrice: "15",
   pricing: [
     { job: "Rozetės ar jungiklio montavimas", price: "nuo 15 €" },
     { job: "Elektros taško įrengimas (su laidais)", price: "25–45 €" },

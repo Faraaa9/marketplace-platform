@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: ShieldCheck, title: "Matavimai ir aktai", text: "Varžų matavimai ir saugą patvirtinantys protokolai." },
   ],
   pricingHeading: "Kiek kainuoja elektros instaliacija Kaune",
-  offerPrice: "25",
   pricing: [
     { job: "Elektros taškas (rozetė/jungiklis su laidu)", price: "25–45 €" },
     { job: "Buto instaliacija (1–2 kambariai)", price: "nuo 600 €" },

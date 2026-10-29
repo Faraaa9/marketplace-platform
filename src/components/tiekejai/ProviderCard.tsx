@@ -29,7 +29,7 @@ export function pickBadge(
   p: ProviderCardData
 ): { label: string; cls: string } | null {
   if (p.avgRating !== null && p.avgRating >= 4.5)
-    return { label: "Top", cls: "bg-amber-500/80 text-white" };
+    return { label: "Aukštai vertinamas", cls: "bg-amber-500/80 text-white" };
   if (p.avgResponseTimeHours !== null && p.avgResponseTimeHours < 4)
     return { label: "Greitai atsako", cls: "bg-blue-500/80 text-white" };
   if (p.isRecentlyActive)

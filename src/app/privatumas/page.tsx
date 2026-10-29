@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, CONTACT_EMAIL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Privatumo politika",
-  description: "PaslaugųRinka privatumo politika – kaip renkame, saugome ir naudojame jūsų duomenis.",
+  description: "Paslaugų rinkos privatumo politika – kaip renkame, saugome ir naudojame jūsų duomenis.",
 };
-
-const CONTACT_EMAIL = "info@send.paslaugurinka.lt";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -39,7 +37,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Užklausų duomenys:</strong> paslaugos aprašymas, miestas, biudžetas,
-            kontaktinis el. paštas ir telefonas, pridėtos nuotraukos.
+            kontaktinis el. paštas ir telefonas, pridėtos nuotraukos ir balso įrašai.
           </li>
           <li>
             <strong>Tiekėjo profilio duomenys:</strong> viešai rodomas vardas ar įmonės
@@ -85,17 +83,39 @@ export default function PrivacyPage() {
 
         <SectionHeading>Kam perduodame duomenis?</SectionHeading>
         <p>
-          Duomenų neparduodame. Jie perduodami tik šiems tvarkytojams, be kurių
-          paslauga negalėtų veikti:
+          Duomenų neparduodame. Juos perduodame tik paslaugų teikėjams (duomenų
+          tvarkytojams), be kurių platforma negalėtų veikti. Kiekvienas gauna tik
+          tai, ko reikia jo darbui:
         </p>
         <ul className="list-disc pl-6 space-y-1">
-          <li><strong>Vercel</strong> – svetainės talpinimas (ES regionas, Frankfurtas)</li>
-          <li><strong>Supabase</strong> – duomenų bazė (ES regionas, Airija)</li>
-          <li><strong>Stripe</strong> – mokėjimų apdorojimas (PCI DSS)</li>
-          <li><strong>Cloudinary</strong> – nuotraukų talpinimas</li>
-          <li><strong>Resend</strong> – el. laiškų siuntimas</li>
-          <li><strong>Google Analytics</strong> – apibendrinta lankomumo statistika</li>
+          <li><strong>Vercel</strong> – svetainės talpinimas (ES, Frankfurtas). Gauna visas svetainės užklausas, IP adresą ir naršyklės duomenis, apibendrintus puslapių greičio rodiklius.</li>
+          <li><strong>Supabase</strong> – duomenų bazė (ES, Paryžius). Saugo visus platformos duomenis.</li>
+          <li><strong>Upstash</strong> – piktnaudžiavimo ribojimas. Gauna IP adresą ar paskyros identifikatorių ir užklausų skaičių.</li>
+          <li><strong>OpenRouter</strong> ir per jį pasiekiami dirbtinio intelekto modelių teikėjai – užklausų tekstas, balso įrašai ir nuotraukos, kai juos pateikiate; tiekėjo profilio tekstas ir nuoroda, iš kurios kuriamas profilis. Naudojama tekstui sutvarkyti, kategorijai parinkti, balsui paversti tekstu ir turiniui moderuoti.</li>
+          <li><strong>TypeSafe</strong> – dirbtinio intelekto užklausų analizė. Gauna užklausos tekstą ir miestą, kad būtų parinkta tinkama kategorija.</li>
+          <li><strong>Cloudinary</strong> – nuotraukų talpinimas. Gauna jūsų įkeltas nuotraukas.</li>
+          <li><strong>Resend</strong> – el. laiškai. Gauna jūsų el. pašto adresą, laiškų turinį ir atsakymus į juos.</li>
+          <li><strong>Telnyx</strong> – SMS žinutės. Gauna telefono numerį ir patvirtinimo kodą.</li>
+          <li><strong>Telegram</strong> – jei jungiatės ar kuriate užklausą per Telegram: Telegram paskyros identifikatorius, vardas ir jūsų žinutės botui.</li>
+          <li><strong>Google</strong> – prisijungimas su Google (paskyros identifikatorius, vardas, el. paštas) ir, tik su jūsų sutikimu, Google Analytics lankomumo statistika.</li>
+          <li><strong>Stripe</strong> – mokėjimai (PCI DSS). Gauna mokėjimo duomenis ir el. pašto adresą.</li>
         </ul>
+        <p>
+          Dirbtinis intelektas tik padeda sutvarkyti ir priskirti užklausas – jis
+          nepriima sprendimų, turinčių jums teisinių pasekmių.
+        </p>
+
+        <SectionHeading>Duomenų perdavimas už ES ribų</SectionHeading>
+        <p>
+          Dalis aukščiau išvardytų tvarkytojų (pvz., OpenRouter ir dirbtinio
+          intelekto modelių teikėjai, TypeSafe, Google, Stripe, Cloudinary, Resend,
+          Telnyx, Telegram, Upstash) gali tvarkyti duomenis už Europos ekonominės
+          erdvės ribų, dažniausiai JAV. Tokiu atveju duomenys perduodami remiantis
+          BDAR numatytomis apsaugos priemonėmis – ES ir JAV duomenų apsaugos sistema
+          arba Europos Komisijos patvirtintomis standartinėmis sutarčių sąlygomis,
+          numatytomis tų paslaugų teikėjų duomenų tvarkymo sutartyse. Daugiau apie
+          tai galite paklausti el. paštu {CONTACT_EMAIL}.
+        </p>
         <p>
           Kliento kontaktai (telefonas, el. paštas) atskleidžiami paslaugų teikėjui tik
           tada, kai šis atsako į jūsų užklausą platformoje numatyta tvarka.
@@ -137,7 +157,7 @@ export default function PrivacyPage() {
           esminius pakeitimus registruotus naudotojus informuosime el. paštu.
         </p>
 
-        <p className="text-body-sm text-surface-400">Paskutinį kartą atnaujinta: 2026-06-11</p>
+        <p className="text-body-sm text-surface-400">Paskutinį kartą atnaujinta: 2026-10-29</p>
       </div>
     </div>
   );

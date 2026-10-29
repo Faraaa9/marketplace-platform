@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Ruler, title: "Senos dangos keitimas", text: "Senų trinkelių ar asfalto demontavimas ir perklojimas." },
   ],
   pricingHeading: "Kiek kainuoja trinkelių klojimas Kaune",
-  offerPrice: "12",
   pricing: [
     { job: "Trinkelių klojimas (m²)", price: "nuo 12 €" },
     { job: "Klojimas su pagrindo paruošimu (m²)", price: "nuo 20 €" },

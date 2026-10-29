@@ -39,22 +39,22 @@ const lora = Lora({
 
 export const metadata: Metadata = {
   title: {
-    default: "PaslaugųRinka – Paslaugų marketplace Lietuvoje",
-    template: "%s | PaslaugųRinka",
+    default: "Paslaugų rinka – meistrai ir paslaugos visoje Lietuvoje",
+    template: "%s | Paslaugų rinka",
   },
   description: "Patikima platforma, jungianti paslaugų tiekėjus su klientais visoje Lietuvoje. Raskite geriausius specialistus arba pritraukite naujų klientų.",
-  keywords: ["paslaugos", "marketplace", "Lietuva", "tiekėjai", "klientai", "remontas", "valymas", "statyba"],
+  keywords: ["paslaugos", "Lietuva", "tiekėjai", "klientai", "remontas", "valymas", "statyba"],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PaslaugųRinka",
+    title: "Paslaugų rinka",
   },
   openGraph: {
     type: "website",
     locale: "lt_LT",
-    siteName: "PaslaugųRinka",
-    title: "PaslaugųRinka – Paslaugų marketplace Lietuvoje",
+    siteName: "Paslaugų rinka",
+    title: "Paslaugų rinka – meistrai ir paslaugos visoje Lietuvoje",
     description: "Patikima platforma, jungianti paslaugų tiekėjus su klientais visoje Lietuvoje.",
   },
   robots: {

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ProviderCtaLink from "@/components/marketing/ProviderCtaLink";
-import { LazyNumberTicker as NumberTicker } from "@/components/magicui/lazy";
 import { MagicCard } from "@/components/magicui/magic-card";
 import {
   ArrowRight,
@@ -25,32 +24,25 @@ import { creditsLabel } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Tiekėjams – Pritraukite naujų klientų",
   description:
-    "AI sukuria meistro profilį per 20 sekundžių. Prisijunkite prie PaslaugųRinka — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
+    "AI sukuria meistro profilį per 20 sekundžių. Prisijunkite prie Paslaugų rinkos — gaukite užklausas iš klientų visoje Lietuvoje. Mokate tik už atrakintas užklausas.",
 };
 
-// Marketing page — credit packs change rarely, counts are cosmetic stats.
+// Marketing page — credit packs change rarely.
 // 5-minute cache is more than enough; SWR keeps any miss invisible.
 async function getForProvidersData() {
   "use cache";
   cacheLife({ revalidate: 300 });
   cacheTag("tiekejams-data");
 
-  const [packs, providerCount, requestCount] = await Promise.all([
-    prisma.creditPack.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { id: true, name: true, credits: true, priceCents: true },
-    }),
-    prisma.providerProfile.count({
-      where: { isActive: true, moderationStatus: "APPROVED" },
-    }),
-    prisma.serviceRequest.count(),
-  ]);
-  return { packs, providerCount, requestCount };
+  return prisma.creditPack.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, credits: true, priceCents: true },
+  });
 }
 
 export default async function ForProvidersPage() {
-  const { packs, providerCount, requestCount } = await getForProvidersData();
+  const packs = await getForProvidersData();
 
   return (
     <div>
@@ -102,24 +94,17 @@ export default async function ForProvidersPage() {
             kada
           </p>
 
-          {/* Quick stats — real numbers */}
+          {/* Product facts, not traffic counts: the platform is young and
+              inflated "500+" floors were false. */}
           <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
             {[
-              {
-                value: Math.max(providerCount, 500),
-                suffix: "+",
-                label: "Tiekėjų",
-              },
-              {
-                value: Math.max(requestCount, 2000),
-                suffix: "+",
-                label: "Užklausų",
-              },
-              { value: 20, suffix: "s", label: "Profilis paruoštas" },
+              { value: "0 €", label: "Registracija" },
+              { value: "0 €", label: "Mėnesinis mokestis" },
+              { value: "20 s", label: "Profilis paruoštas" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-heading-2 font-bold text-surface-900 dark:text-white">
-                  <NumberTicker value={stat.value} suffix={stat.suffix} />
+                  {stat.value}
                 </div>
                 <div className="text-micro text-surface-400">{stat.label}</div>
               </div>
@@ -215,7 +200,7 @@ export default async function ForProvidersPage() {
                   {[
                     "Profesionalus aprašymas (200-300 žodžių)",
                     "Iki 6 tinkamiausių kategorijų",
-                    "Nuotraukos su pašalintais watermark'ais",
+                    "Nuotraukos atrinktos ir paruoštos profiliui",
                     "Kontaktai, kainos, patirtis — automatiškai",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
@@ -322,7 +307,7 @@ export default async function ForProvidersPage() {
               Privalumai
             </div>
             <h2 className="text-heading-1 font-bold text-surface-900 dark:text-white">
-              Kodėl būtent PaslaugųRinka
+              Kodėl būtent Paslaugų rinka
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -354,7 +339,7 @@ export default async function ForProvidersPage() {
               {
                 icon: <Shield className="h-6 w-6" />,
                 title: "Saugumas",
-                desc: "Tu valdyti savo profilį pilnai — gali paslėpti, redaguoti ar ištrinti bet kada.",
+                desc: "Tu pilnai valdai savo profilį — gali paslėpti, redaguoti ar ištrinti bet kada.",
                 color: "from-brand-600 to-emerald-500",
               },
               {

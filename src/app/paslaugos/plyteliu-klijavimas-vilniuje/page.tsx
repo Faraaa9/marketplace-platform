@@ -39,7 +39,6 @@ const config: ServiceLandingConfig = {
     { icon: Hammer, title: "Senų plytelių keitimas", text: "Senų plytelių demontavimas ir naujų klijavimas." },
   ],
   pricingHeading: "Kiek kainuoja plytelių klijavimas Vilniuje",
-  offerPrice: "16",
   pricing: [
     { job: "Sienų plytelių klijavimas (m²)", price: "nuo 18 €" },
     { job: "Grindų plytelių klijavimas (m²)", price: "nuo 16 €" },

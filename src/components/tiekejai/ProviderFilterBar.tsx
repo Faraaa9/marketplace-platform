@@ -269,7 +269,7 @@ export default function ProviderFilterBar({
             Skubūs
           </FilterToggle>
           <FilterToggle active={top} onClick={() => onChange({ top: !top })} icon={<Star className="h-3.5 w-3.5" />}>
-            Top
+            Įvertinimas 4.5+
           </FilterToggle>
 
           {/* Spacer + count + view toggle */}
@@ -343,12 +343,12 @@ export default function ProviderFilterBar({
               ))}
               {presence !== "all" && (
                 <ActiveChip
-                  label={presence === "online" ? "Online dabar" : "Šiandien"}
+                  label={presence === "online" ? "Prisijungę dabar" : "Šiandien"}
                   onRemove={() => onChange({ presence: "all" })}
                 />
               )}
               {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
-              {top && <ActiveChip label="Top" onRemove={() => onChange({ top: false })} />}
+              {top && <ActiveChip label="Aukštas įvertinimas" onRemove={() => onChange({ top: false })} />}
             </>
           )}
           <div className="ml-auto">
@@ -471,7 +471,7 @@ export default function ProviderFilterBar({
                   {(["all", "online", "today"] as const).map((option) => {
                     const isActive = mobilePresence === option;
                     const label =
-                      option === "all" ? "Visi" : option === "online" ? "Online" : "Šiandien";
+                      option === "all" ? "Visi" : option === "online" ? "Prisijungę" : "Šiandien";
                     return (
                       <button
                         key={option}
@@ -506,7 +506,7 @@ export default function ProviderFilterBar({
                 </label>
                 <div className="space-y-2">
                   <MobileToggle active={mobileUrgent} onClick={() => setMobileUrgent(!mobileUrgent)} icon={<Zap className="h-4 w-4" />} label="Skubūs darbai" sublabel="Priima skubius užsakymus" />
-                  <MobileToggle active={mobileTop} onClick={() => setMobileTop(!mobileTop)} icon={<Star className="h-4 w-4" />} label="Top reitingas" sublabel="4.5+ žvaigždučių vertinimas" />
+                  <MobileToggle active={mobileTop} onClick={() => setMobileTop(!mobileTop)} icon={<Star className="h-4 w-4" />} label="Aukštas įvertinimas" sublabel="4.5+ žvaigždučių vertinimas" />
                 </div>
               </div>
             </div>
@@ -554,12 +554,12 @@ export default function ProviderFilterBar({
           ))}
           {presence !== "all" && (
             <ActiveChip
-              label={presence === "online" ? "Online dabar" : "Aktyvūs šiandien"}
+              label={presence === "online" ? "Prisijungę dabar" : "Aktyvūs šiandien"}
               onRemove={() => onChange({ presence: "all" })}
             />
           )}
           {urgent && <ActiveChip label="Skubūs" onRemove={() => onChange({ urgent: false })} />}
-          {top && <ActiveChip label="Top reitingas" onRemove={() => onChange({ top: false })} />}
+          {top && <ActiveChip label="Aukštas įvertinimas" onRemove={() => onChange({ top: false })} />}
           <button
             onClick={handleClearAll}
             className="text-body-sm text-surface-400 hover:text-surface-600 transition-colors dark:hover:text-surface-300 ml-1"
@@ -624,7 +624,7 @@ function PresenceChip({
   active: boolean;
   onClick: () => void;
 }) {
-  const label = level === "online" ? "Online dabar" : "Šiandien";
+  const label = level === "online" ? "Prisijungę dabar" : "Šiandien";
   const dotClass =
     level === "online" ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500";
   return (
