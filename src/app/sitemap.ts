@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { cacheLife } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { SEO_LANDINGS } from "@/lib/seo-landings";
 
@@ -8,13 +9,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://paslaugurinka.lt";
 // switch to a sitemap index. Keep a safety budget so we fail loudly before then.
 const SITEMAP_URL_LIMIT = 50_000;
 
-// Refresh hourly so newly verified providers / new supplier slugs appear quickly
-// without re-running expensive DB queries on every Googlebot hit.
-export const revalidate = 3600;
-
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Refresh hourly so newly verified providers / new supplier slugs appear quickly
+  // without re-running expensive DB queries on every Googlebot hit. Segment-level
+  // `revalidate` is rejected under cacheComponents in Next >= 16.4.
+  "use cache";
+  cacheLife({ revalidate: 3600 });
   const now = new Date();
 
   const staticEntries: SitemapEntry[] = [
