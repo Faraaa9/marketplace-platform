@@ -15,9 +15,11 @@ export default function ProfileShareButton({
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
+    // No `text`: some share targets (macOS "Copy", Messages) glue text onto the
+    // url with no space, turning /meistrai/gerasoras into a 404ing
+    // /meistrai/gerasorasSimonas.
     const shareData = {
       title: providerName,
-      text: providerName,
       url: profileUrl,
     };
 
