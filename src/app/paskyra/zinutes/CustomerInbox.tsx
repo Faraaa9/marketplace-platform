@@ -56,8 +56,10 @@ function toThreadMessage(m: ApiMessage): ThreadMessage {
 async function fetchThread(c: Conversation): Promise<OpenThread> {
   if (c.kind === "response") {
     // The tracker API returns every offer on the request with full history and
-    // stamps the customer's read time.
-    const res = await fetch(`/api/requests/${encodeURIComponent(c.token)}`, { cache: "no-store" });
+    // stamps the customer's read time on this offer only.
+    const res = await fetch(`/api/requests/${encodeURIComponent(c.token)}?responseId=${encodeURIComponent(c.id)}`, {
+      cache: "no-store",
+    });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || "Klaida");
     const resp = (
