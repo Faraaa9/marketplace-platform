@@ -216,34 +216,62 @@ export function Tabs({ items }: { items: { href: string; label: string; active: 
   );
 }
 
+// The one avatar circle for the whole site (founder-approved mockup,
+// 2026-10-29): a thin even ring only when it sits on a photo, and the presence
+// dot centred exactly on the circumference at 45°, so its cut-out never bulges
+// into the circle.
 export function Avatar({
   name,
   image,
   size = 40,
+  presence,
+  ring = false,
 }: {
   name: string;
   image?: string | null;
   size?: number;
+  presence?: "online" | "recent" | null;
+  ring?: boolean;
 }) {
-  if (image) {
-    return (
-      <Image
-        src={image}
-        alt=""
-        width={size}
-        height={size}
-        className="shrink-0 rounded-full object-cover"
-        style={{ width: size, height: size }}
-      />
-    );
-  }
+  const circle = cn(
+    "block shrink-0 rounded-full",
+    ring && "shadow-[0_0_0_2px_#fff] dark:shadow-[0_0_0_2px_#25221e]",
+  );
+  const dot = Math.max(5, Math.round(size * 0.12));
+  const dotBox = dot + 4;
+  const dotOffset = Math.round(size * 0.8536 - dotBox / 2);
   return (
-    <span
-      className="grid shrink-0 place-items-center rounded-full bg-surface-100 font-semibold text-surface-700 dark:bg-surface-800 dark:text-surface-200"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
-      aria-hidden
-    >
-      {initialsOf(name)}
+    <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>
+      {image ? (
+        <Image
+          src={image}
+          alt=""
+          width={size}
+          height={size}
+          className={cn(circle, "object-cover")}
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        <span
+          className={cn(circle, "grid place-items-center bg-brand-100 font-semibold text-brand-900 dark:bg-brand-900/50 dark:text-brand-100")}
+          style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
+          aria-hidden
+        >
+          {initialsOf(name)}
+        </span>
+      )}
+      {presence && (
+        <span
+          className={cn(
+            "pointer-events-none absolute rounded-full border-2 border-white dark:border-[#25221e]",
+            presence === "online" ? "bg-emerald-600" : "bg-surface-400",
+          )}
+          style={{ width: dotBox, height: dotBox, left: dotOffset, top: dotOffset }}
+          role="img"
+          aria-label={presence === "online" ? "Prisijungęs dabar" : "Aktyvus neseniai"}
+          title={presence === "online" ? "Prisijungęs dabar" : "Aktyvus neseniai"}
+        />
+      )}
     </span>
   );
 }

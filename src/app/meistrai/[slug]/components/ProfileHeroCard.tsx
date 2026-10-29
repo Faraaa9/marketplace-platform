@@ -79,7 +79,7 @@ export default function ProfileHeroCard({
           </div>
         )}
 
-        <div className="absolute bottom-[26px] left-[26px] z-10 rounded-full bg-white p-[3px] shadow-md dark:bg-surface-900">
+        <div className="absolute bottom-[26px] left-[26px] z-10">
           <StoryAvatarButton
             stories={stories}
             providerName={provider.name}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import { Avatar } from "@/components/account/ui";
 import StoryViewer from "./StoryViewer";
 import type { StoryData } from "./types";
 import { useUIStore } from "@/store/useUIStore";
@@ -11,12 +11,6 @@ interface StoryAvatarButtonProps {
   providerName: string;
   providerImage: string | null;
   isOnline?: boolean;
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? "?").slice(0, 1);
-  return letters.toLocaleUpperCase("lt-LT");
 }
 
 export default function StoryAvatarButton({
@@ -59,55 +53,30 @@ export default function StoryAvatarButton({
 
   return (
     <>
-      <div className="relative [--presence-cutout-bg:#fff] dark:[--presence-cutout-bg:#25221e]">
-        <button
-          type="button"
-          onClick={() => {
-            if (!hasStories) return;
-            setStoryIndex(0);
-            setSeen(true);
-            openStory(stories[0]?.id ?? null);
-          }}
-          className={`relative h-[70px] w-[70px] shrink-0 rounded-full transition-all sm:h-[78px] sm:w-[78px] ${
-            hasStories
-              ? `cursor-pointer hover:scale-[1.03] ${seen ? "story-ring-seen" : "story-ring"}`
-              : "cursor-default"
-          }`}
-          disabled={!hasStories}
-          aria-label={hasStories ? "Peržiūrėti tiekėjo story" : providerName}
-        >
-          <div
-            className={`absolute flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950 dark:to-surface-800 ${
-              hasStories ? "inset-[3px]" : "inset-0"
-            }`}
-          >
-            {providerImage ? (
-              <Image
-                src={providerImage}
-                alt={providerName}
-                width={80}
-                height={80}
-                priority
-                sizes="(max-width: 640px) 64px, 72px"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-bold text-brand-700 sm:text-3xl dark:text-brand-300">
-                {initials(providerName)}
-              </span>
-            )}
-          </div>
-        </button>
-        {isOnline && (
-          <span
-            className="pointer-events-none absolute bottom-[6.5px] right-[6.5px] flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[18px] sm:w-[18px]"
-            aria-label="Prisijungęs dabar"
-            title="Prisijungęs dabar"
-          >
-            <span className="h-[10px] w-[10px] rounded-full bg-emerald-500 sm:h-[13px] sm:w-[13px]" aria-hidden />
-          </span>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={() => {
+          if (!hasStories) return;
+          setStoryIndex(0);
+          setSeen(true);
+          openStory(stories[0]?.id ?? null);
+        }}
+        className={`relative block shrink-0 rounded-full transition-transform ${
+          hasStories
+            ? `cursor-pointer p-[3px] hover:scale-[1.03] ${seen ? "story-ring-seen" : "story-ring"}`
+            : "cursor-default"
+        }`}
+        disabled={!hasStories}
+        aria-label={hasStories ? "Peržiūrėti tiekėjo story" : providerName}
+      >
+        <Avatar
+          name={providerName}
+          image={providerImage}
+          size={88}
+          ring
+          presence={isOnline ? "online" : null}
+        />
+      </button>
 
       {isStoryOpen && hasStories && (
         <StoryViewer

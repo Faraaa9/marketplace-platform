@@ -98,18 +98,15 @@ function PresenceDot({
   const isOnline = level === "online";
   const tooltip = isOnline ? "Prisijungęs dabar" : `Prisijungęs ${label.toLowerCase()}`;
   return (
+    // Same dot as the shared Avatar: small, 2px cut-out, sitting on the corner.
     <span
-      className="pointer-events-none absolute bottom-0 right-0 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[var(--presence-cutout-bg)] sm:h-[20px] sm:w-[20px]"
+      className={`pointer-events-none absolute -bottom-1 -right-1 h-[14px] w-[14px] rounded-full border-2 border-[var(--presence-cutout-bg)] ${
+        isOnline ? "bg-emerald-600" : "bg-surface-400 dark:bg-surface-500"
+      }`}
+      role="img"
       aria-label={tooltip}
       title={tooltip}
-    >
-      <span
-        className={`h-[9px] w-[9px] rounded-full sm:h-[10px] sm:w-[10px] ${
-          isOnline ? "bg-emerald-500" : "bg-surface-400 dark:bg-surface-500"
-        }`}
-        aria-hidden
-      />
-    </span>
+    />
   );
 }
 
